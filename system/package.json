@@ -1,0 +1,25 @@
+{
+  "name": "system",
+  "version": "1.0.0",
+  "description": "My virtual computer system for loading and running disks.",
+  "scripts": {
+    "dev": "http-server public -S -C ssl-dev/server.crt -K ssl-dev/server.key -p 8080 --cors"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/whistlegraph/system.git"
+  },
+  "author": "Jeffrey Alan Scudder",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/whistlegraph/system/issues"
+  },
+  "homepage": "https://github.com/whistlegraph/system#readme",
+  "dependencies": {
+    "gl-matrix": "^3.4.3"
+  },
+  "devDependencies": {
+    "http-server": "^14.0.0",
+    "prettier": "^2.4.1"
+  }
+}
