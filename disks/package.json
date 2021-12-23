@@ -1,7 +1,7 @@
 {
   "name": "disks",
   "version": "1.0.0",
-  "description": "A bunch of disks that are compatible with the \"whistlegraph/system\" repo.",
+  "description": "A bunch of disks that are compatible with the `whistlegraph/system` repo.",
   "main": "blank.js",
   "scripts": {
     "dev": "http-server public -S -C ssl-dev/server.crt -K ssl-dev/server.key -p 8081 --cors"
