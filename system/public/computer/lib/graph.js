@@ -164,12 +164,15 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   //}
 }
 
+// Copies pixels from a source buffer to the active buffer and returns
+// the source buffer.
 function paste(from, destX = 0, destY = 0) {
   for (let x = 0; x < from.width; x += 1) {
     for (let y = 0; y < from.height; y += 1) {
       copy(destX + x, destY + y, x, y, from);
     }
   }
+  return from;
 }
 
 function line(x0, y0, x1, y1) {

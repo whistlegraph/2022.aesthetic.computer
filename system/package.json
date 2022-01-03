@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "My virtual computer system for loading and running disks.",
   "scripts": {
-    "dev": "http-server public -S -C ssl-dev/server.crt -K ssl-dev/server.key -p 8080 --cors"
+    "dev": "http-server public -S -C ../ssl-dev/localhost.pem -K ../ssl-dev/localhost-key.pem -p 8080 --cors"
   },
   "repository": {
     "type": "git",

@@ -6,6 +6,8 @@ export class Pen {
   x;
   y;
   delta;
+  pressure;
+  pointerType;
 
   down = false;
   changed = false;
@@ -35,14 +37,18 @@ export class Pen {
       e.returnValue = false;
     }
 
+    // TODO: Test for Apple Pencil touch down event?
+
     // Add pointer events.
     const pen = this;
 
-    // touch
-    window.addEventListener("pointerdown", function (e) {
+    // Touch
+    window.addEventListener("pointerdown", (e) => {
       if (!e.isPrimary) return;
+      pen.pointerType = e.pointerType;
 
       Object.assign(pen, point(e.x, e.y));
+      pen.pressure = e.pressure;
 
       pen.down = true;
       pen.#dragging = true;
@@ -54,13 +60,16 @@ export class Pen {
       if (e.pointerType !== "mouse") pen.penCursor = false;
     });
 
-    // hover and draw
-    window.addEventListener("pointermove", function (e) {
+    // Hover and Draw
+    window.addEventListener("pointermove", (e) => {
       if (!e.isPrimary) return;
+      pen.pointerType = e.pointerType;
 
       Object.assign(pen, point(e.x, e.y));
+      pen.pressure = e.pressure;
 
-      if (pen.#dragging) { // draw
+      if (pen.#dragging) {
+        // draw
         const penDragAmount = {
           x: pen.x - pen.#penDragStartPos.x,
           y: pen.y - pen.#penDragStartPos.y,
@@ -75,7 +84,8 @@ export class Pen {
 
         // TODO: Only set to draw if
         pen.#event("draw");
-      } else { // move
+      } else {
+        // move
         pen.#event("move");
       }
 
@@ -84,9 +94,10 @@ export class Pen {
       if (e.pointerType !== "mouse") pen.penCursor = false;
     });
 
-    // lift
-    window.addEventListener("pointerup", function (e) {
+    // Lift
+    window.addEventListener("pointerup", (e) => {
       if (!e.isPrimary) return;
+      pen.pointerType = e.pointerType;
 
       pen.down = false;
       if (pen.#dragging) pen.#event("lift");
@@ -113,11 +124,20 @@ export class Pen {
 
     this.delta = delta;
 
+    // If pressure doesn't exist then force it to be 1.
+    this.pressure = this.pressure || 1;
+    // Unless the device type is a pen, then make it 0. This assumes all pens
+    // have pressure sensitivity.
+    if (this.pointerType === "pen" && this.pressure === 1) {
+      this.pressure = 0;
+    }
+
     this.events.push({
       name: this.event,
       x: this.x,
       y: this.y,
       delta,
+      pressure: this.pressure,
       drag: this.dragBox,
     });
 

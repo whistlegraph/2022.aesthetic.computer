@@ -1,6 +1,16 @@
 // Jeffrey's in-Project Notes
 // See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
 
+// - Write a server for disks so that they can be reloaded upon file-save, using
+//   websockets.
+
+// - Write an export format that actually works all clientside... via IPFS?
+//   - Can I use fetch for IPFS?
+
+// - Add a new deployment scheme that actually allows my websocket server to
+//   function... this might mean leaving behind Vercel, or running separate
+//   server code.
+
 // - Finish Oliver + Mija's tracker / player interface.
 
 // - Add system font / main terminal? (Working in "plot").
@@ -109,11 +119,13 @@ if (window.location.hash === "#pull") {
 } else if (window.location.hash === "#prompt") {
   boot("prompt", bpm, host, undefined, debug);
 } else if (window.location.hash === "#plot") {
+  boot("spray", bpm, host, undefined, debug);
+} else if (window.location.hash === "#spray") {
   boot("plot", bpm, host, undefined, debug);
 } else if (window.location.hash === "#tracker") {
   boot("tracker", bpm, host, { width: 320, height: 180 }, debug);
 } else {
-  boot("stage", bpm, host);
+  boot("spray", bpm, host, undefined, debug);
 }
 
 // boot("metronome-test", bpm, host);
