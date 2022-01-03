@@ -138,7 +138,13 @@ const $paintApiUnwrapped = {
   },
   copy: graph.copy,
   paste: graph.paste,
-  plot: graph.plot, // TODO: Should this be renamed to set?
+  plot: function () {
+    if (arguments.length === 1) {
+      graph.plot(arguments[0].x, arguments[0].y);
+    } else {
+      graph.plot(...arguments);
+    }
+  }, // TODO: Should this be renamed to set?
   point: graph.point,
   line: graph.line,
   box: graph.box,
@@ -176,7 +182,7 @@ class Painting {
       }
     }
 
-    // Creates a new pixel buffer with it's own layering wrapper / context
+    // Creates a new pixel buffer with its own layering wrapper / context
     // on top of the base painting API.
     this.api.painting = function () {
       return graph.makeBuffer(...arguments, new Painting());
@@ -205,7 +211,6 @@ const painting = new Painting();
 
 // 2. ✔ Loading the disk.
 const { load, send } = (() => {
-  let loadUrlCount = 1;
   let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
 
   async function load(path, host = loadHost, search) {
@@ -219,10 +224,9 @@ const { load, send } = (() => {
 
     console.log("💾 Loading:", path, "🌐 from:", host);
 
-    // The `loadUrlCount` query parameter busts the cache so changes can be seen
-    // if the disk code changes.
-    const fullUrl = "https://" + host + "/" + path + ".js?lc=" + loadUrlCount;
-    loadUrlCount += 1;
+    // The `time` query parameter busts the cache so changes can be seen
+    // if the disk code changes. This is especially important for Safari.
+    const fullUrl = "https://" + host + "/" + path + ".js?time=" + Date.now();
 
     const module = await import(fullUrl);
     loadHost = host;

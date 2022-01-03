@@ -98,6 +98,16 @@ async function boot(
           needsReframe = true;
         }, 500);
       });
+
+      // Prevent canvas touchstart events from triggering magnifying glass on
+      // iOS Safari.
+      canvas.addEventListener(
+        "touchstart",
+        function (event) {
+          event.preventDefault();
+        },
+        false
+      );
     }
 
     canvasRect = canvas.getBoundingClientRect();
@@ -443,6 +453,22 @@ async function boot(
 
     input.click();
   }
+
+  // Tries to toggle fullscreen. Must be called within a user interaction.
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.body.requestFullscreen().catch((e) => console.error(e));
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  // TODO: Get fullscreen to work via a keyboard shortcut in addition
+  // to a button click within an api.
+  // toggleFullscreen();
+  window.addEventListener("touchstart", (e) => {
+    toggleFullscreen();
+  });
 }
 
 export { boot };
