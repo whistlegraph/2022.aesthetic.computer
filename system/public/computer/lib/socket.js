@@ -36,6 +36,7 @@ export class Socket {
   }
 
   // Send a formatted message to the connected WebSocket server.
+  // Passes silently on no connection.
   send(type, content) {
     if (this.#ws.readyState === WebSocket.OPEN)
       this.#ws.send(JSON.stringify({ type, content }));

@@ -43,6 +43,7 @@ const $commonApi = {
   geo: {
     Box: geo.Box,
     Grid: geo.Grid,
+    Circle: geo.Circle,
   },
   ui: {
     Button: ui.Button,
@@ -131,7 +132,7 @@ const $paintApi = {
 };
 
 const $paintApiUnwrapped = {
-  setPixels: graph.setBuffer,
+  page: graph.setBuffer,
   ink, // Color
   // 2D
   wipe: function () {
@@ -240,7 +241,6 @@ const { load, send } = (() => {
     $commonApi.net.host = host;
 
     $commonApi.net.socket = function () {
-      console.log(arguments, arguments.length);
       // TODO: Flesh out the rest of reload functionality here (and extract it from
       //       Socket). 21.1.5
       return new Socket(...arguments, $commonApi.reload);

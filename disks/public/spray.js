@@ -1,6 +1,11 @@
 // Spray, 22.12.31
 // A stylus based painting tool for flower pictures.
 
+// TODO: - Create a grid for `painting` so it can be displayed
+//         and transformed independently of the display.
+//       - Reconsider multiplayer / how to store data on the server.
+//       - Consider how to enable developer mode using .env.
+
 let painting; // A bitmap to draw on.
 const sprays = []; // Points to draw.
 let dot = false; // Show preview dot while moving cursor.
@@ -29,62 +34,53 @@ function boot({ paste, cursor, painting: p, screen, net: { socket } }) {
 function paint({
   pen,
   ink,
-  setPixels: page,
+  page,
   screen,
   paste,
+  geo: { Circle },
   num: { randIntRange: rnd, dist },
   help: { repeat: rep },
 }) {
   paste(painting);
   if (sprays.length > 0) {
-    // Spray on the painting within a circle.
     page(painting);
 
+    // Spray on the painting within a circle.
     sprays.forEach((s) => {
-      const radius = 4;
-      const sq = [-radius, radius];
-      const cx = s.x;
-      const cy = s.y;
+      const c = new Circle(s.x, s.y, 4);
+      const alpha = 255 * s.pressure * s.pressure;
 
-      function randomInCircle() {
-        const nx = cx + rnd(...sq);
-        const ny = cy + rnd(...sq);
-
-        if (dist(cx, cy, nx, ny) < radius) {
-          return { x: nx, y: ny };
-        } else {
-          return randomInCircle();
-        }
-      }
-
-      let alpha = 255 * s.pressure * s.pressure;
-
-      rep(8 + 32 * s.pressure, (i) => {
-        const point = randomInCircle();
+      rep(8 + 32 * s.pressure, () => {
+        const point = c.random();
         ink(
           60 + rnd(-40, 80), // R
           255 - rnd(0, 100), // G
           80 + rnd(-40, 80), // B
           alpha + rnd(-20, 20) // A
-        ).plot(point.x, point.y);
+        ).plot(point);
       });
     });
     sprays.length = 0;
     page(screen);
     paste(painting);
-    ink(255, 0, 0).plot(pen.x, pen.y); // Draw cursor.
+    ink(255, 0, 0).plot(pen); // 🔴 Draw cursor.
   } else if (dot) {
-    ink(255, 255, 0).plot(pen.x, pen.y); // Hover cursor.
+    ink(255, 255, 0).plot(pen); // 🟡 Move (hover) cursor.
     dot = false;
   }
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event, plot }) {
-  if (event.is("move")) dot = true;
-  if (event.is("draw") || event.is("touch")) {
-    sprays.push(event);
-    server.send("point", { x: event.x, y: event.y, pressure: event.pressure });
+function act({ event: e }) {
+  if (e.is("move")) dot = true;
+  if (e.is("draw") || e.is("touch")) {
+    // Extract the necessary fields from the event object.
+    // https://stackoverflow.com/a/39333479
+    // TODO: I could reduce the data into an array here for faster parsing
+    //       and a smaller footprint over the network. 22.1.5
+    const point = (({ x, y, pressure }) => ({ x, y, pressure }))(e);
+    sprays.push(point);
+    server.send("point", point);
   }
 }
 
