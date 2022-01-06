@@ -1,0 +1,66 @@
+Jeffrey's in-Project Notes
+See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
+
+*Current*
+💡 Should I consolidate all the disks into system?
+
+ // Just move all disk content into system/disks
+ // Then... manually copy out from there when building...
+
+ // And make sure that remote loading still works... using a shell command?
+
+ A. What would a build script for releasing a single disk or
+    stack of disks look like?
+
+   1. Make a new directory D for the build.
+   2. Copy a subset of /disks/public to D/disks
+   3. Copy index.html, style.css, boot.js and /computer to D.
+   4. Modify boot.js to start loading from the first listed disk.
+   5. Generate metadata.json for the work.
+   6. Zip and upload to fxHash or put whole directory into Pinata.
+   7. Test to make sure everything works.
+   8. Mint on a contract (or Cancel and remove files from IPFS).
+
+ B. What would a full system / suite release look like?
+
+   1. Using the build script with a set of chosen disks where the main
+      disk is a shell interface.
+
+TODO: [Socket] Reload system (browser) when any system files change.
+
+TODO: Make my first generative disk / piece and mint it.
+
+TODO: Add system font / main shell / terminal? (Working in "plot / prompt").
+
+TODO: Make a quick fullscreen button (make a new keyboard input module).
+
+TODO: Finish Oliver + Mija's tracker / player interface.
+
+TODO: Add a new deployment scheme that actually allows my websocket server to
+      function... this might mean leaving behind Vercel or configuring it
+      for different directories in my repository, running separate server code
+      for sockets.
+
+TODO: Add syntax notification of some kind for disk files, using a comment at
+      the top. This would eventually allow me to completely
+      change from JavaScript.
+
+TODO: Add stochastic syntax / DSL for basic drawing?
+      Example: wipe.ink.line.line.line.ink("red").box;
+
+TODO: What cryptocurrency / web3.js lib would I hook an editor up to
+      for minting, uploading edition data, etc?
+
+TODO: Make a video-recording app that generates 3 letter codes? - to augment
+      my hand-written notes and pages.
+
+TODO: Add ability to define the logical / simulation framerate.
+
+TODO: Give myself the ability to automate testing of system using "robot".
+
+TODO: Write a simple note taking program with saving and loading of drawings
+ and also recording and playback?
+
+TODO: Ink types? ... can they be procedural using a buffer?
+TODO: Fix Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
+

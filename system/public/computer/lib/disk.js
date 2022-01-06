@@ -30,6 +30,7 @@ let upload;
 const $commonApi = {
   num: {
     randInt: num.randInt,
+    randIntArr: num.randIntArr,
     randIntRange: num.randIntRange,
     dist: num.dist,
     radians: num.radians,
@@ -225,11 +226,11 @@ const { load, send } = (() => {
       return;
     }
 
-    console.log("💾 Loading:", path, "🌐 from:", host);
-
     // The `time` query parameter busts the cache so changes can be seen
     // if the disk code changes. This is especially important for Safari.
     const fullUrl = "https://" + host + "/" + path + ".js?time=" + Date.now();
+
+    console.log("💾 Loading:", path, "🌐 from:", host, "URL:", fullUrl);
 
     const module = await import(fullUrl);
     loadHost = host;
