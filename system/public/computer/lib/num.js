@@ -1,5 +1,6 @@
 // 🧮 Numbers
 import { vec4, mat4 } from "../dep/gl-matrix/index.js";
+import { repeat } from "./help.js";
 
 export { vec4, mat4 };
 
@@ -17,6 +18,12 @@ export function byteInterval17(i16) {
 // Generates an integer from 0-n (inclusive)
 export function randInt(n) {
   return Math.floor(Math.random() * (n + 1));
+}
+
+// Generates an array of random integers from 0-n (inclusive)
+// TODO: How could this be made more generic? 22.1.5
+export function randIntArr(n, count) {
+  return Array(count).fill(n).map(randInt);
 }
 
 // Generates an integer from low-high (inclusive)

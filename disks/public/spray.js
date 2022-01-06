@@ -11,15 +11,12 @@ const sprays = []; // Points to draw.
 let dot = false; // Show preview dot while moving cursor.
 
 let server; // Networking
-const servers = {
-  me: "localhost:8082",
-  julias: "192.168.1.120:8082",
-  lucias: "192.168.1.245:8082",
-};
+import { servers } from "./common/servers.js"; // Import server list.
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, net: { socket } }) {
   cursor("none");
+
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(40, 50, 20));
   paste(painting);
