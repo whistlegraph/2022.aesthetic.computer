@@ -1,6 +1,37 @@
 // 🧮 Geometry
 
 const { floor } = Math;
+import { dist, randIntRange } from "./num.js";
+
+// A generic circle model for algorithmic use.
+export class Circle {
+  x;
+  y;
+  radius;
+
+  constructor(x, y, radius = 8) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius;
+  }
+
+  // Returns a random (x, y) point within the circle by recursively generating
+  // random points within a bounding box and checking to see if they are within
+  // the radius.
+  random() {
+    const sq = [-this.radius, this.radius];
+    const np = {
+      x: this.x + randIntRange(...sq),
+      y: this.y + randIntRange(...sq),
+    };
+
+    if (dist(this.x, this.y, np.x, np.y) < this.radius) {
+      return np;
+    } else {
+      return this.random(this.radius);
+    }
+  }
+}
 
 // A dynamic box defined by x, y, w, h with methods that mutate the state.
 export class Box {
