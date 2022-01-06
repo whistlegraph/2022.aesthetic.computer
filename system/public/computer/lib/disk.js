@@ -5,6 +5,7 @@ import * as num from "./num.js";
 import * as geo from "./geo.js";
 import * as ui from "./ui.js";
 import * as help from "./help.js";
+import { Socket } from "./socket.js"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.js";
 
 let boot = () => false;
@@ -53,6 +54,7 @@ const $commonApi = {
     any: help.any,
     each: help.each,
   },
+  net: {},
 };
 
 // Just for "update".
@@ -231,8 +233,18 @@ const { load, send } = (() => {
     const module = await import(fullUrl);
     loadHost = host;
 
+    // Add reload to the common api.
+    $commonApi.reload = () => load(path, host, search);
+
     // Add host to the networking api.
-    $commonApi.net = { host };
+    $commonApi.net.host = host;
+
+    $commonApi.net.socket = function () {
+      console.log(arguments, arguments.length);
+      // TODO: Flesh out the rest of reload functionality here (and extract it from
+      //       Socket). 21.1.5
+      return new Socket(...arguments, $commonApi.reload);
+    };
 
     // Artificially imposed loading by at least 1/4 sec.
     setTimeout(() => {
@@ -244,7 +256,7 @@ const { load, send } = (() => {
       beat = module.beat || beat;
       act = module.act || act;
       $commonApi.query = search;
-      $updateApi.load = load;
+      $updateApi.load = load; // Why should this be stuck in update API?
       loading = false;
     }, 100);
   }

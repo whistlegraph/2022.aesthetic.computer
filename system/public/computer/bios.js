@@ -65,10 +65,10 @@ async function boot(
     canvas.style.height = projectedHeight + "px";
 
     console.info(
-      "Viewport:",
+      "🔭 Viewport:",
       width,
       height,
-      "Window:",
+      "🖥 Window:",
       window.innerWidth,
       window.innerHeight
     );
@@ -178,7 +178,9 @@ async function boot(
 
   // Try to load the disk boilerplate as a worker first.
   // Safari and FF support is coming for worker module imports: https://bugs.webkit.org/show_bug.cgi?id=164860
-  const worker = new Worker("./computer/lib/disk.js", { type: "module" });
+  const worker = new Worker(`./computer/lib/disk.js?time=${Date.now()}`, {
+    type: "module",
+  });
 
   let send = (e) => worker.postMessage(e);
   let onMessage = loaded;
@@ -187,7 +189,9 @@ async function boot(
   // Rewire things a bit if workers with modules are not supported (Safari & FF).
   worker.onerror = async () => {
     console.error("Disk worker failure.");
-    const module = await import("./lib/disk.js");
+    // Add timestamp to this disk.js so that it doesn't get cached by the browser.
+    // This shows up as a bug in Safari. 22.1.3
+    const module = await import(`./lib/disk.js?time=${Date.now()}`);
     module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
     send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
     send({ path, host, search });
@@ -212,13 +216,13 @@ async function boot(
       frame(resolution?.width, resolution?.height);
 
       // Sound
-      startSound(); // This runs disk.beat
-
-      // TODO: Stop using polling.
+      // TODO: Only start this after a user-interaction 22.1.3.
+      startSound();
 
       // ➰ Core Loops for User Input, Music, Object Updates, and Rendering
       Loop.start(
         () => {
+          // TODO: What is this now?
           // pen.poll();
           // TODO: Key.input();
           // TODO: Voice.input();
@@ -454,6 +458,8 @@ async function boot(
     input.click();
   }
 
+  // TODO: Add fullscreen support.
+  /*
   // Tries to toggle fullscreen. Must be called within a user interaction.
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
@@ -469,6 +475,7 @@ async function boot(
   window.addEventListener("touchstart", (e) => {
     toggleFullscreen();
   });
+  */
 }
 
 export { boot };

@@ -3,9 +3,22 @@
   "version": "1.0.0",
   "description": "A node server for multi-user rooms and local development.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "dev": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jeffrey Alan Scudder",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "ip": "^1.1.5",
+    "ws": "^8.4.0"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.6",
+    "utf-8-validate": "^5.0.8"
+  },
+  "devDependencies": {
+    "chokidar": "^3.5.2"
+  }
 }
