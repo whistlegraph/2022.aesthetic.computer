@@ -88,14 +88,15 @@ function boot({
     "8 - 2021.12.16.18.03.31",
     "9 - 2021.12.16.18.04.15",
   ].forEach((number, i) => {
-    preload(`drawings/numbers/${number}.json`).then((r) => {
+    preload(`disks/drawings/numbers/${number}.json`).then((r) => {
       numbers[i] = r;
     });
   });
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, ink, layer, screen }) {
+function paint({ wipe, ink, layer, screen, resize }) {
+  resize(140, 80);
   wipe(0); // Make the background black.
 
   // 0. *TEST* Write a test row of numbers.
@@ -103,8 +104,8 @@ function paint({ wipe, ink, layer, screen }) {
   {
     const startX = 3;
     const width = 6;
-    const startY = screen.height - 11;
-    const scale = 1;
+    const scale = 2;
+    const startY = screen.height - 11 * scale;
 
     numbers.forEach((number, i) => {
       ink(255).draw(number, startX + width * scale * i, startY, scale);

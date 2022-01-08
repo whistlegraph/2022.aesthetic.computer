@@ -13,6 +13,18 @@ async function boot(
   resolution,
   debug
 ) {
+  console.log(
+    "%caesthetic.computer",
+    `background: rgb(10, 20, 40);
+     color: rgb(120, 120, 170);
+     font-size: 120%;
+     padding: 0 0.25em;
+     border-radius: 0.15em;
+     border-bottom: 0.75px solid rgb(120, 120, 170);
+     border-right: 0.75px solid rgb(120, 120, 170);
+   `
+  ); // Print a pretty title in the console.
+
   let pen;
 
   // Define a blank starter disk that just renders noise and plays a tone.
@@ -65,7 +77,7 @@ async function boot(
     canvas.style.height = projectedHeight + "px";
 
     console.info(
-      "🔭 Viewport:",
+      "🔭 View:",
       width,
       height,
       "🖥 Window:",
@@ -178,29 +190,36 @@ async function boot(
 
   // Try to load the disk boilerplate as a worker first.
   // Safari and FF support is coming for worker module imports: https://bugs.webkit.org/show_bug.cgi?id=164860
-  const worker = new Worker(`./computer/lib/disk.js?time=${Date.now()}`, {
-    type: "module",
-  });
+  const worker = new Worker("./computer/lib/disk.js", { type: "module" });
+  const firstMessage = { path, host, search, debug };
+
+  // Rewire things a bit if workers with modules are not supported (Firefox).
+  worker.onerror = async (err) => {
+    if (
+      err.message ===
+      "SyntaxError: import declarations may only appear at top level of a module"
+    ) {
+      console.error(
+        "🟡 Disk module workers unsupported. Continuing with dynamic import..."
+      );
+      const module = await import(`./lib/disk.js`);
+      module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
+      send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
+      send(firstMessage);
+    } else {
+      console.error("🛑 Disk error:", err);
+    }
+  };
 
   let send = (e) => worker.postMessage(e);
   let onMessage = loaded;
-  worker.onmessage = (e) => onMessage(e);
 
-  // Rewire things a bit if workers with modules are not supported (Safari & FF).
-  worker.onerror = async () => {
-    console.error("Disk worker failure.");
-    // Add timestamp to this disk.js so that it doesn't get cached by the browser.
-    // This shows up as a bug in Safari. 22.1.3
-    const module = await import(`./lib/disk.js?time=${Date.now()}`);
-    module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
-    send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
-    send({ path, host, search });
-  };
+  worker.onmessage = (e) => onMessage(e);
 
   // Start everything once the disk is loaded.
   function loaded(e) {
     if (e.data.loaded === true) {
-      console.log("💾 Loaded:", path, "🌐 from:", host);
+      console.log("💾", path, "🌐", host);
       onMessage = receivedChange;
       disk = { requestBeat, requestFrame };
 
@@ -236,7 +255,7 @@ async function boot(
   }
 
   // The initial message sends the path and host to load the disk.
-  send({ path, host, search });
+  send(firstMessage);
 
   // Beat
 
@@ -319,6 +338,11 @@ async function boot(
   // TODO: Organize e into e.data.type and e.data.content.
   function receivedChange({ data: { type, content } }) {
     // Route to different functions if this change is not a full frame update.
+    if (type === "refresh") {
+      window.location.reload();
+      return;
+    }
+
     if (type === "beat") {
       receivedBeat(content);
       return;

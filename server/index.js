@@ -36,7 +36,7 @@ wss.on("connection", (ws, req) => {
 
   // Relay all incoming messages from this client to everyone else.
   // TODO: 🔐 Validate the messages.
-  ws.on("message", async (data) => {
+  ws.on("message", (data) => {
     others(data.toString());
   });
 
@@ -75,12 +75,15 @@ function everyone(string) {
 }
 
 // 1. Watch for local file changes in disk or system directories.
-chokidar.watch("../disks/public").on("all", (event, path) => {
+chokidar.watch("../system/public/disks").on("all", (event, path) => {
   console.log("Disk:", event, path);
   if (event === "change") everyone(pack("reload", "disk"));
 });
 
-chokidar.watch("../system/public").on("all", (event, path) => {
-  console.log("System:", event, path);
-  if (event === "change") everyone(pack("reload", "system"));
-});
+// TODO: Finish implementing this on the client.
+chokidar
+  .watch(["../system/public/computer", "../system/public/boot.js"])
+  .on("all", (event, path) => {
+    console.log("System:", event, path);
+    if (event === "change") everyone(pack("reload", "system"));
+  });

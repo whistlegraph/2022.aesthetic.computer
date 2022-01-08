@@ -48,22 +48,22 @@ export class Socket {
     this.#ws.close();
   }
 
-  // Before passing messages to disk code, handle some system messages here,
-  // such as automatic reload for development:
+  // Before passing messages to disk code, handle some system messages here.
+  // Note: "reload" should only be defined when developing.
   #preReceive({ type, content }, receive, reload) {
     if (type === "message") {
       console.log(`📡 ${content}`);
-    } else if (type === "reload") {
+    } else if (type === "reload" && reload) {
       if (content === "disk") {
         console.log("💾️ Reloading disk...");
         this.kill();
         reload(); // TODO: Should reload be passed all the way in here?
-      } else if (content === "system") {
+      } else if (content === "system" && reload) {
         console.log("💥️ Restarting system...");
-        // TODO: Reload the whole page.
+        reload("refresh"); // Reload the whole page.
       }
     } else {
-      receive(type, content);
+      receive?.(type, content);
     }
   }
 }
