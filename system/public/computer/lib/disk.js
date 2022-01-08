@@ -6,7 +6,10 @@ import * as geo from "./geo.js";
 import * as ui from "./ui.js";
 import * as help from "./help.js";
 import { Socket } from "./socket.js"; // TODO: Eventually expand to `net.Socket`
+import { servers } from "../../disks/common/servers.js"; // Default server list.
 import { notArray } from "./helpers.js";
+
+let debug = false;
 
 let boot = () => false;
 let sim = () => false;
@@ -214,10 +217,16 @@ class Painting {
 const painting = new Painting();
 
 // 2. ✔ Loading the disk.
-const { load, send } = (() => {
+const { send, noWorker } = (() => {
   let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
 
   async function load(path, host = loadHost, search) {
+    if (debug) {
+      console.log("🟡 Developing");
+    } else {
+      console.log("🟢 Starting");
+    }
+
     if (loading === false) {
       loading = true;
     } else {
@@ -227,25 +236,48 @@ const { load, send } = (() => {
     }
 
     // The `time` query parameter busts the cache so changes can be seen
-    // if the disk code changes. This is especially important for Safari.
+    // if disk code is reloaded while the system is running.
     const fullUrl = "https://" + host + "/" + path + ".js?time=" + Date.now();
 
-    console.log("💾 Loading:", path, "🌐 from:", host, "URL:", fullUrl);
+    console.log("🕸", fullUrl);
 
     const module = await import(fullUrl);
     loadHost = host;
 
     // Add reload to the common api.
-    $commonApi.reload = () => load(path, host, search);
+    $commonApi.reload = (type) => {
+      if (type === "refresh") {
+        send({ type: "refresh" }); // Refresh the browser.
+      } else {
+        console.clear();
+        load(path, host, search); // Reload the disk.
+      }
+    };
 
     // Add host to the networking api.
     $commonApi.net.host = host;
 
-    $commonApi.net.socket = function () {
-      // TODO: Flesh out the rest of reload functionality here (and extract it from
-      //       Socket). 21.1.5
-      return new Socket(...arguments, $commonApi.reload);
-    };
+    // Automatically connect a socket server if we are in debug mode.
+    if (debug) {
+      let receiver;
+      const socket = new Socket(
+        servers.me,
+        (type, content) => receiver?.(type, content),
+        $commonApi.reload
+      );
+
+      $commonApi.net.socket = function (host, receive) {
+        console.log("📡 Mapping receiver.");
+        receiver = receive;
+        return socket;
+      };
+    } else {
+      $commonApi.net.socket = function (host, receive) {
+        // TODO: Flesh out the rest of reload functionality here to extract it from
+        //       Socket. 21.1.5
+        return new Socket(host, receive);
+      };
+    }
 
     // Artificially imposed loading by at least 1/4 sec.
     setTimeout(() => {
@@ -265,17 +297,22 @@ const { load, send } = (() => {
   const isWorker = typeof importScripts === "function";
   const noWorker = { onMessage: undefined, postMessage: undefined };
 
+  // TODO: ** How can I pass a debug/dev parameter in through the whole program? **
+
   // Start by responding to a load message, then change
   // the message response to makeFrame.
   if (isWorker) {
     onmessage = async function (e) {
+      debug = e.data.debug;
       await load(e.data.path, e.data.host, e.data.search);
-      send({ loaded: true });
       onmessage = makeFrame;
+      send({ loaded: true });
     };
   } else {
+    // TODO: Get firefox working again.
     noWorker.onMessage = async (e) => {
       e = { data: e };
+      debug = e.data.debug;
       await load(e.data.path, e.data.host, e.data.search);
       noWorker.onMessage = (d) => makeFrame({ data: d });
       send({ loaded: true });
@@ -290,8 +327,10 @@ const { load, send } = (() => {
     }
   }
 
-  return { load, send };
+  return { load, send, noWorker };
 })();
+
+export { noWorker };
 
 // 3. ✔ Produce a frame.
 // Boot procedure:

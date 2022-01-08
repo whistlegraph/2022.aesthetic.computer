@@ -18,6 +18,7 @@ import Square from "./sound/square.js";
 // TODO: Use parameters to change properties of square over time and eventually add more nodes.
 
 class SoundProcessor extends AudioWorkletProcessor {
+  // TODO: Fix current Firefox bug with private fields: https://bugzilla.mozilla.org/show_bug.cgi?id=1435826
   #ticks;
   #lastTime;
 

@@ -1,5 +1,4 @@
 // ✍️ Pen
-
 // TODO: Clean up this whole class and its connections to the system.
 
 export class Pen {
@@ -42,13 +41,17 @@ export class Pen {
     // Add pointer events.
     const pen = this;
 
+    let forceTouchPressure = 0;
+    let forceTouchEnabled = false;
+
     // Touch
     window.addEventListener("pointerdown", (e) => {
       if (!e.isPrimary) return;
       pen.pointerType = e.pointerType;
 
       Object.assign(pen, point(e.x, e.y));
-      pen.pressure = e.pressure;
+
+      pen.pressure = reportPressure(e);
 
       pen.down = true;
       pen.#dragging = true;
@@ -66,7 +69,8 @@ export class Pen {
       pen.pointerType = e.pointerType;
 
       Object.assign(pen, point(e.x, e.y));
-      pen.pressure = e.pressure;
+
+      pen.pressure = reportPressure(e);
 
       if (pen.#dragging) {
         // draw
@@ -109,6 +113,43 @@ export class Pen {
       if (e.pointerType !== "mouse") pen.penCursor = false;
     });
 
+    // MacBook Trackpad Pressure (in Safari)
+    // TODO: When shipping natively for macOS:
+    //       - Report or re-report actual pen events for:
+    //         https://developer.mozilla.org/en-US/docs/Web/API/Force_Touch_events
+    // When webkitForce > 2 the button is held down quickly,
+    // so we don't report anything. (It's a separate gesture)
+    // Otherwise, normalize the pressure from 0-1.
+    // Note: e.webkitForce reports from 1-3 by default.
+    window.addEventListener("webkitmouseforcechanged", (e) => {
+      forceTouchEnabled = true;
+      if (e.webkitForce >= 2) {
+        forceTouchPressure = 0;
+      } else {
+        forceTouchPressure = Math.max(0, e.webkitForce - 1);
+      }
+      console.log(forceTouchPressure);
+    });
+
+    function reportPressure(e) {
+      let pressure;
+      // If the device is a trackpad (probably on a MacBook and in Safari)
+      if (forceTouchEnabled) {
+        pressure = forceTouchPressure;
+      } else {
+        // If pressure sensitivity doesn't exist then force it to be 1.
+        pressure = e.pressure || 1;
+        // Unless the device type is a pen, then make it 0. This assumes all pens
+        // have pressure sensitivity.
+        if (pen.pointerType === "pen" && pressure === 1) {
+          pressure = 0;
+        }
+        // If the device is a mouse, then set it to 1.
+        if (pen.pointerType === "mouse") pressure = 1;
+      }
+      return pressure;
+    }
+
     return pen;
   }
 
@@ -123,14 +164,6 @@ export class Pen {
     };
 
     this.delta = delta;
-
-    // If pressure doesn't exist then force it to be 1.
-    this.pressure = this.pressure || 1;
-    // Unless the device type is a pen, then make it 0. This assumes all pens
-    // have pressure sensitivity.
-    if (this.pointerType === "pen" && this.pressure === 1) {
-      this.pressure = 0;
-    }
 
     this.events.push({
       name: this.event,

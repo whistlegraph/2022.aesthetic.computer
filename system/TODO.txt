@@ -2,12 +2,11 @@ Jeffrey's in-Project Notes
 See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
 
 *Current*
-💡 Should I consolidate all the disks into system?
+// TODO: Make the prompt / shell program?
+    - What if glyphs must be drawn to open or close disks...
+    - First command should be load?
 
- // Just move all disk content into system/disks
- // Then... manually copy out from there when building...
-
- // And make sure that remote loading still works... using a shell command?
+[X] Consolidate all the disks into system?
 
  A. What would a build script for releasing a single disk or
     stack of disks look like?

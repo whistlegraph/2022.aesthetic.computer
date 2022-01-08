@@ -1,8 +1,6 @@
 // Export, 2022.1.5
 // A test disk for exporting to IPFS.
 
-// System TODO: Get "system" restart working.
-
 // Export TODO: Generate a statically runnable zip package of this disk that
 //       successfully runs on IPFS (with boot and paint).
 //       See also: https://www.fxhash.xyz/articles/guide-mint-generative-token
@@ -13,7 +11,7 @@ import { servers } from "./common/servers.js";
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ cursor, wipe, net: { socket } }) {
   cursor("none");
-  wipe(0, 30, 10);
+  wipe(0, 30, 80);
 
   // Connect to the server for live updates.
   // TODO: Somehow make this connection automatic in development mode?
