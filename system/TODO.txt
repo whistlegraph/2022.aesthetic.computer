@@ -6,8 +6,6 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
     - What if glyphs must be drawn to open or close disks...
     - First command should be load?
 
-[X] Consolidate all the disks into system?
-
  A. What would a build script for releasing a single disk or
     stack of disks look like?
 

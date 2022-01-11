@@ -28,16 +28,9 @@ export class Pen {
   #lastPenDown;
   #penDragStartPos;
 
+  // `point` is a transform function for projecting coordinates from screen
+  // space to virtual screen space.
   constructor(point) {
-    // Prevent touch events from scrolling the page.
-    function absorbEvent(e) {
-      e.stopPropagation();
-      e.preventDefault();
-      e.returnValue = false;
-    }
-
-    // TODO: Test for Apple Pencil touch down event?
-
     // Add pointer events.
     const pen = this;
 

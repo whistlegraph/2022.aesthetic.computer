@@ -1,6 +1,7 @@
 // 📦 All Imports
 import * as Loop from "./lib/loop.js";
 import { Pen } from "./lib/pen.js";
+import { Keyboard } from "./lib/keyboard.js";
 import * as Graph from "./lib/graph.js";
 import * as UI from "./lib/ui.js";
 import { apiObject, extension } from "./lib/helpers.js";
@@ -25,7 +26,7 @@ async function boot(
    `
   ); // Print a pretty title in the console.
 
-  let pen;
+  let pen, keyboard;
 
   // Define a blank starter disk that just renders noise and plays a tone.
   let disk;
@@ -231,6 +232,9 @@ async function boot(
         };
       });
 
+      // Keyboard
+      keyboard = new Keyboard();
+
       // Display
       frame(resolution?.width, resolution?.height);
 
@@ -312,6 +316,7 @@ async function boot(
           width: canvas.width,
           height: canvas.height,
           pen: pen.events, // TODO: Should store an array of states that get ingested by the worker.
+          keyboard: keyboard.events, // TODO: Should store an array of states that get ingested by the worker.
           //updateMetronome,
         },
       },
@@ -330,6 +335,9 @@ async function boot(
 
     // Clear pen events.
     pen.events.length = 0;
+
+    // Clear keyboard events.
+    keyboard.events.length = 0;
   }
 
   let frameCached = false;
