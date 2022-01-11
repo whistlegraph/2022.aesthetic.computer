@@ -1,27 +1,35 @@
 Jeffrey's in-Project Notes
 See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
 
-*Current*
-// TODO: Make the prompt / shell program?
-    - What if glyphs must be drawn to open or close disks...
-    - First command should be load?
+🌟 Current
 
- A. What would a build script for releasing a single disk or
-    stack of disks look like?
+Make the prompt / shell program.
+  - What if glyphs must be drawn to open or close disks...
+  - First command should be load?
 
-   1. Make a new directory D for the build.
-   2. Copy a subset of /disks/public to D/disks
-   3. Copy index.html, style.css, boot.js and /computer to D.
-   4. Modify boot.js to start loading from the first listed disk.
-   5. Generate metadata.json for the work.
-   6. Zip and upload to fxHash or put whole directory into Pinata.
-   7. Test to make sure everything works.
-   8. Mint on a contract (or Cancel and remove files from IPFS).
+⏳ Next
 
- B. What would a full system / suite release look like?
+Adjust pixel scaling / `frame` algorithm so that pixels are always the same size
+at different scale levels.
 
-   1. Using the build script with a set of chosen disks where the main
-      disk is a shell interface.
+📩 Future
+
+What would a build script for releasing a single disk or
+stack of disks look like?
+
+  1. Make a new directory D for the build.
+  2. Copy a subset of /disks/public to D/disks
+  3. Copy index.html, style.css, boot.js and /computer to D.
+  4. Modify boot.js to start loading from the first listed disk.
+  5. Generate metadata.json for the work.
+  6. Zip and upload to fxHash or put whole directory into Pinata.
+  7. Test to make sure everything works.
+  8. Mint on a contract (or Cancel and remove files from IPFS).
+
+What would a full system / suite release look like?
+
+1. Using the build script with a set of chosen disks where the main
+  disk is a shell interface.
 
 TODO: [Socket] Reload system (browser) when any system files change.
 

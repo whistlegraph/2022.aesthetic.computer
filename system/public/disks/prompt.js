@@ -35,7 +35,6 @@ function boot({ net: { preload } }) {
   ].forEach((number, i) => {
     preload(`disks/drawings/numbers/${number}.json`).then((r) => {
       numbers[i] = r;
-      console.log(r);
     });
   });
 }
@@ -63,7 +62,7 @@ function paint({ wipe, screen, ink }) {
     });
   }
 
-  // return false; // TODO: Why does this leave a red `X` when auto-refreshing?
+  return false; // TODO: Why does this leave a red `X` when auto-refreshing?
 }
 
 // ✒ Act (Runs once per user interaction)
