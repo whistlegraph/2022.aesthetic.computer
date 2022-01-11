@@ -436,6 +436,13 @@ function makeFrame({ data: { type, content } }) {
         });
       };
 
+      // *Device Event Handling*
+
+      // TODO: Shouldn't all these events come in as part of one array to
+      //       keep their order of execution across devices?
+      // TODO: Could "device" be removed in favor of "device:event" strings and
+      //       if needed, a device method?
+
       // Ingest all pen input events by running act for each event.
       content.pen.forEach((data) => {
         Object.assign(data, { device: "pen", is: (e) => e === data.name });
@@ -445,7 +452,12 @@ function makeFrame({ data: { type, content } }) {
         act($api);
       });
 
-      // TODO: Also process keyboard events. 2021.11.27.16.48
+      // Ingest all keyboard input events by running act for each event.
+      content.keyboard.forEach((data) => {
+        Object.assign(data, { device: "keyboard", is: (e) => e === data.name });
+        $api.event = data;
+        act($api);
+      });
 
       // Remove $api elements that are not needed for `sim`.
       delete $api.event;
