@@ -14,4 +14,4 @@ if (window.location.hostname === "aesthetic.computer") {
 const bpm = 120;
 const debug = true;
 
-boot("disks/prompt", bpm, host, undefined, debug);
+boot("disks/microphone", bpm, host, undefined, debug);

@@ -9,8 +9,12 @@ Make the prompt / shell program.
 
 ⏳ Next
 
+Add pixels via: https://codepen.io/oceangermanique/pen/LqaPgO.
+
 Adjust pixel scaling / `frame` algorithm so that pixels are always the same size
 at different scale levels.
+
+Add $api.sound.beatCount counter to `beat`.
 
 📩 Future
 
@@ -31,9 +35,8 @@ What would a full system / suite release look like?
 1. Using the build script with a set of chosen disks where the main
   disk is a shell interface.
 
-TODO: [Socket] Reload system (browser) when any system files change.
-
 TODO: Make my first generative disk / piece and mint it.
+      - Test it in Chrome / Safari / and Firefox.
 
 TODO: Add system font / main shell / terminal? (Working in "plot / prompt").
 

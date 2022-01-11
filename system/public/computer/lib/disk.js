@@ -347,13 +347,17 @@ function makeFrame({ data: { type, content } }) {
 
     $api.sound = {
       time: content.time,
-      bp: content.beatProgress,
       bpm: function (newBPM) {
         if (newBPM) {
           content.bpm[0] = newBPM;
         }
         return content.bpm[0];
       },
+    };
+
+    // Attach the microphone.
+    $api.sound.microphone = function (options) {
+      send({ type: "microphone", content: options });
     };
 
     // TODO: Generalize this for other instruments.
@@ -402,6 +406,11 @@ function makeFrame({ data: { type, content } }) {
     }
     upload = undefined;
     return;
+  }
+
+  // 1b. Video frames.
+  if (type === "video-frame") {
+    console.log("Video frame update received:", content);
   }
 
   // 2. Frame
@@ -504,7 +513,14 @@ function makeFrame({ data: { type, content } }) {
       };
 
       $api.cursor = (code) => (cursorCode = code);
+
       $api.pen = { x: penX, y: penY };
+
+      $api.video = function (options) {
+        // Options could eventually be { src, width, height }
+        send({ type: "video", content: options });
+        // return new Video();
+      };
 
       graph.setBuffer(screen);
 

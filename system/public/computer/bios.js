@@ -131,18 +131,52 @@ async function boot(
   const sound = {
     bpm: new Float32Array(1),
   };
-  let updateMetronome, updateSquare, audioContext;
+
+  let updateMetronome, updateSquare, attachMicrophone, audioContext;
 
   function startSound() {
     audioContext = new AudioContext({
-      latencyHint: "interactive",
-      sampleRate: 44100,
+      latencyHint: 0,
+      // TODO: Eventually choose a good sample rate and/or make it settable via
+      //       the current disk.
+      // sampleRate: 44100,
+      // sampleRate: 48000,
+      // sampleRate: 96000,
+      sampleRate: 192000,
     });
 
     if (audioContext.state === "running") {
       audioContext.suspend();
     }
 
+    // Microphone Input Processor
+    // (Gets attached via a message from the running disk.)
+    attachMicrophone = async (data) => {
+      console.log("Attaching microphone:", data);
+
+      const micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          latency: 0,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
+
+      const micNode = new MediaStreamAudioSourceNode(audioContext, {
+        mediaStream: micStream,
+      });
+
+      await audioContext.audioWorklet.addModule("computer/lib/microphone.js");
+      const playerNode = new AudioWorkletNode(audioContext, "microphone", {
+        outputChannelCount: [2],
+      });
+
+      micNode.connect(playerNode);
+      playerNode.connect(audioContext.destination);
+    };
+
+    // Sound Synthesis Processor
     (async () => {
       await audioContext.audioWorklet.addModule("computer/lib/speaker.js");
       const soundProcessor = new AudioWorkletNode(
@@ -272,7 +306,6 @@ async function boot(
         type: "beat",
         content: {
           time,
-          beatProgress: 100,
           bpm: sound.bpm,
         },
       },
@@ -363,6 +396,16 @@ async function boot(
 
     if (type === "upload") {
       receivedUpload(content);
+      return;
+    }
+
+    if (type === "microphone") {
+      receivedMicrophone(content);
+      return;
+    }
+
+    if (type === "video") {
+      receivedVideo(content);
       return;
     }
 
@@ -488,6 +531,26 @@ async function boot(
     };
 
     input.click();
+  }
+
+  // Connects the Microphone to the current audioContext.
+  function receivedMicrophone(data) {
+    attachMicrophone?.(data);
+  }
+
+  // Takes a request for a video and then either uses a media query (for a camera)
+  // or loads a video file from a given url.
+
+  // Then it puts that into a new video tag and starts playing it,
+  // sending the disk the thread frames as they update.
+  function receivedVideo(query) {
+    if (query === "camera") {
+      // TODO: Make video tag and give it a unique identifier that
+      //       will create a link in the worker so that frame updates
+      //       for multiple videos can be routed simultaneously.
+      //       - Follow: https://codepen.io/oceangermanique/pen/LqaPgO
+      send({ type: "video-frame", content: query });
+    }
   }
 
   // TODO: Add fullscreen support.
