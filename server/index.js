@@ -40,6 +40,7 @@ wss.on("connection", (ws, req) => {
     others(data.toString());
   });
 
+  /*
   ws.isAlive = true; // For checking persistence between ping-pong messages.
 
   // Send a ping message to all clients every 30 seconds, and kill
@@ -56,6 +57,8 @@ wss.on("connection", (ws, req) => {
 
   // Stop pinging once the socket closes.
   wss.on("close", () => clearInterval(interval));
+  */
+
 });
 
 // Start the server.

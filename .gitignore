@@ -1,4 +1,4 @@
-# Dependency directories
+# NPM
 node_modules/
 
 # IntelliJ
@@ -7,3 +7,7 @@ node_modules/
 
 # macOS
 .DS_Store
+
+# development certificates
+/ssl-dev/localhost.pem
+/ssl-dev/localhost-key.pem
