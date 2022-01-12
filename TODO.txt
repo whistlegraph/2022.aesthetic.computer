@@ -12,6 +12,8 @@ Make the prompt / shell program.
 Stop tracks in all mediaStreams: https://stackoverflow.com/a/12436772
 (Video and Microphone)
 
+Add recording: https://stackoverflow.com/questions/19235286/convert-html5-canvas-sequence-to-a-video-file
+
 Add pixels via: https://codepen.io/oceangermanique/pen/LqaPgO.
 
 Adjust pixel scaling / `frame` algorithm so that pixels are always the same size
