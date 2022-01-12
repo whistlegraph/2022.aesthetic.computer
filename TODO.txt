@@ -18,6 +18,11 @@ Add $api.sound.beatCount counter to `beat`.
 
 📩 Future
 
+📅 End of January
+  - Shader situation. `const fragmentEffect = video('webgl', screen.width, screen.height)`
+  - Research software shaders.
+  -
+
 What would a build script for releasing a single disk or
 stack of disks look like?
 

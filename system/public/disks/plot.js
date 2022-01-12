@@ -35,10 +35,10 @@ let needsPaint = false; // Only render after a user interaction.
 // TODO: Can eventually be shifted around somehow with the javascript console or
 // a mouse and then reprinted for pasting back in. 2021.12.10.23.02
 const colors = {
-  background: [0, 20, 0],
-  grid: [0, 100, 0],
+  background: [0, 30, 0],
+  grid: [0, 70, 0],
   gridOutline: [255, 255, 0, 32],
-  lines: [0, 220, 220, 50],
+  lines: [0, 120, 220, 50],
   innerLine: [128, 128, 0, 200],
   inlinePreview: [128, 128, 0, 64],
   activeSquareInline: [255, 128],
@@ -54,7 +54,7 @@ let width = 6; // Starting size.
 let height = 10;
 let scale = 5;
 const abc123Baseline = 8;
-const typography = false;
+const typography = true;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
@@ -80,7 +80,7 @@ function boot({
   needsPaint = true;
   // preload("drawings/default.json").then(decode); // Preload drawing.
   // Preload save button icon.
-  preload("drawings/save_open_icon.json").then((r) => {
+  preload("disks/drawings/save_open_icon.json").then((r) => {
     plots.icon = r;
     needsPaint = true;
   });

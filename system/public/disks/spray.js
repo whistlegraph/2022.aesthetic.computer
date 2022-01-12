@@ -18,7 +18,7 @@ function boot({ paste, cursor, painting: p, screen, net: { socket } }) {
   cursor("none");
 
   // Make & display the canvas.
-  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(40, 50, 20));
+  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(140, 50, 20));
   paste(painting);
 
   // Connect to the server.

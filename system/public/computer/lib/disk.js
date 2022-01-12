@@ -26,6 +26,7 @@ let paintCount = 0n;
 
 let penX, penY;
 let upload;
+let activeVideo; // TODO: Eventually this can be a bank to store video textures.
 
 // 1. ✔ API
 
@@ -250,6 +251,8 @@ const { send, noWorker } = (() => {
         send({ type: "refresh" }); // Refresh the browser.
       } else {
         console.clear();
+        activeVideo = null; // reset activeVideo
+        send({ type: "disk-reload" }); // In case we need to remove any video references.
         load(path, host, search); // Reload the disk.
       }
     };
@@ -410,7 +413,7 @@ function makeFrame({ data: { type, content } }) {
 
   // 1b. Video frames.
   if (type === "video-frame") {
-    console.log("Video frame update received:", content);
+    activeVideo = content;
   }
 
   // 2. Frame
@@ -516,10 +519,15 @@ function makeFrame({ data: { type, content } }) {
 
       $api.pen = { x: penX, y: penY };
 
-      $api.video = function (options) {
+      $api.video = function (type, options) {
         // Options could eventually be { src, width, height }
-        send({ type: "video", content: options });
-        // return new Video();
+        send({ type: "video", content: { type, options } });
+
+        // Return an object that can grab whatever the most recent frame of
+        // video was.
+        return function videoFrame() {
+          return activeVideo;
+        };
       };
 
       graph.setBuffer(screen);
