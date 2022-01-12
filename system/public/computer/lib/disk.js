@@ -552,6 +552,8 @@ function makeFrame({ data: { type, content } }) {
       //       such as `.png` -> `buffer` or `.wav`. -> `sample`
       //       2021.12.12.22.26
       $api.net.preload = function (path) {
+        path = encodeURIComponent(path);
+
         try {
           const url = new URL(path);
 
