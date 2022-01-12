@@ -8,38 +8,35 @@
 //       3. Add a global ability to quit any disk with the ESC key...?
 //          or maybe add a prompt overlay or ":ex" commands a la vim?
 
-import { font1 } from "./common/fonts.js"
+import { font1 } from "./common/fonts.js";
+const { entries } = Object;
 
 let glyphs = {};
-
+let writeLetter;
 let text = "aesthetic.computer";
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ net: { preload } }) {
-  // TODO: $api.type.write("Hello", {x: 0, y: 0, scale: {x: 1, y: 1}});
-
   // Preload all glyphs.
-  Object.entries(font1).forEach(([glyph, location]) => {
+  entries(font1).forEach(([glyph, location]) => {
     preload(`disks/drawings/font-1/${location}.json`).then((res) => {
       glyphs[glyph] = res;
     });
   });
 }
 
-let writeLetter;
-let textChanged = false;
-
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ wipe, screen, ink }) {
-  wipe(70, 50, 100);
-
   const cursor = { x: 0, y: 0 };
   const blockWidth = 6;
   const blockHeight = 10;
-
   const colWidth = 24;
 
-  ink(0, 0, 255, 64).line(colWidth * blockWidth, 0, colWidth * blockWidth, screen.height);
+  const gutterLine = (colWidth + 1) * blockWidth;
+
+  wipe(70, 50, 100)
+    .ink(0, 0, 255, 64)
+    .line(gutterLine, 0, gutterLine, screen.height);
 
   writeLetter = (letter) => {
     // Silently pass through if letter is not present.
@@ -55,11 +52,11 @@ function paint({ wipe, screen, ink }) {
     const y = left + cursor.y * letterHeight;
 
     ink(255, 255, 0, 20).box(x, y, ...letter.resolution.map((n) => n * scale));
-    ink(255).draw(letter, x, y, scale);
+    ink(255, 100).draw(letter, x, y, scale);
 
     cursor.x = (cursor.x + 1) % colWidth;
     if (cursor.x === 0) cursor.y += 1;
-  }
+  };
 
   for (const char of text) writeLetter(glyphs[char]);
 
@@ -71,7 +68,7 @@ function paint({ wipe, screen, ink }) {
   //       in order for paint to be run again.
 
   // console.log("paint")
-  // return !(Object.keys(glyphs).length === Object.keys(font1).length);
+  return !(Object.keys(glyphs).length === Object.keys(font1).length);
 }
 
 // ✒ Act (Runs once per user interaction)
