@@ -31,6 +31,9 @@ async function boot(
   // Define a blank starter disk that just renders noise and plays a tone.
   let disk;
 
+  // 0. Video storage
+  const videos = [];
+
   // 1. Rendering
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -409,6 +412,19 @@ async function boot(
       return;
     }
 
+    if (type === "disk-reload") {
+      // Remove existing video tags.
+      videos.forEach(({ video, buffer, getAnimationRequest }) => {
+        console.log("🎥 Removing:", video, buffer, getAnimationRequest());
+        video.remove();
+        buffer.remove();
+        cancelAnimationFrame(getAnimationRequest());
+      });
+      // Note: Any other disk state cleanup that needs to take place on reload
+      //       should happen here.
+      return;
+    }
+
     // Assume that type is "render" or "update" from now on.
 
     // Check for a change in resolution.
@@ -543,13 +559,84 @@ async function boot(
 
   // Then it puts that into a new video tag and starts playing it,
   // sending the disk the thread frames as they update.
-  function receivedVideo(query) {
-    if (query === "camera") {
-      // TODO: Make video tag and give it a unique identifier that
+  function receivedVideo({ type, options }) {
+    console.log("🎥", type, options);
+
+    if (type === "camera") {
+      // TODO: Give video and canvas a unique identifier that
       //       will create a link in the worker so that frame updates
       //       for multiple videos can be routed simultaneously.
-      //       - Follow: https://codepen.io/oceangermanique/pen/LqaPgO
-      send({ type: "video-frame", content: query });
+      const video = document.createElement("video");
+      const buffer = document.createElement("canvas");
+      let animationRequest;
+
+      function getAnimationRequest() {
+        return animationRequest;
+      }
+
+      videos.push({ video, buffer, getAnimationRequest });
+
+      buffer.width = options.width || 1280;
+      buffer.height = options.height || 720;
+
+      const bufferCtx = buffer.getContext("2d");
+
+      document.body.appendChild(video);
+      document.body.appendChild(buffer);
+
+      video.style = `position: absolute;
+                     top: 0;
+                     left: 0;
+                     width: 300px;
+                     opacity: 0;`;
+
+      buffer.style = `position: absolute;
+                      opacity: 0;`;
+
+      navigator.mediaDevices
+        .getUserMedia({
+          video: { width: { min: 1280 }, height: { min: 720 } },
+          audio: false,
+        })
+        .then((stream) => {
+          video.srcObject = stream;
+          video.play();
+          process();
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+
+      function process() {
+        bufferCtx.drawImage(
+          video,
+          0,
+          0,
+          bufferCtx.canvas.width,
+          bufferCtx.canvas.height
+        );
+
+        const pixels = bufferCtx.getImageData(
+          0,
+          0,
+          buffer.clientWidth,
+          buffer.clientHeight
+        );
+
+        send(
+          {
+            type: "video-frame",
+            content: {
+              width: pixels.width,
+              height: pixels.height,
+              pixels: pixels.data,
+            },
+          },
+          [pixels.data]
+        );
+
+        animationRequest = requestAnimationFrame(process);
+      }
     }
   }
 
