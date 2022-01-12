@@ -9,7 +9,7 @@ import { Socket } from "./socket.js"; // TODO: Eventually expand to `net.Socket`
 import { servers } from "../../disks/common/servers.js"; // Default server list.
 import { notArray } from "./helpers.js";
 
-let debug = false;
+let debug = false; // This can be overwritten on boot.
 
 let boot = () => false;
 let sim = () => false;
@@ -21,8 +21,6 @@ let loading = false;
 let reframe;
 let cursorCode;
 let paintCount = 0n;
-// const paintLayers = [];
-// let paintLayer = 0;
 
 let penX, penY;
 let upload;
@@ -300,8 +298,6 @@ const { send, noWorker } = (() => {
   const isWorker = typeof importScripts === "function";
   const noWorker = { onMessage: undefined, postMessage: undefined };
 
-  // TODO: ** How can I pass a debug/dev parameter in through the whole program? **
-
   // Start by responding to a load message, then change
   // the message response to makeFrame.
   if (isWorker) {
@@ -538,12 +534,15 @@ function makeFrame({ data: { type, content } }) {
         graph.depthBuffer[i] = Number.MAX_VALUE;
       }
 
+      // * Preload *
       // Add preload to the boot api.
       // Accepts paths local to the original disk server, full urls, and demos.
       // Usage:   preload("demo:drawings/2021.12.12.17.28.16.json") // pre-included
       //          preload("https://myserver.com/test.json") // remote
       //          preload("drawings/default.json") // hosted with disk
       // Results: preload().then((r) => ...).catch((e) => ...) // via promise
+
+      // TODO: How to know when every preload finishes? 2021.12.16.18.55
 
       // TODO: Preload multiple files and load them into an assets folder with
       //       a complete handler. 2021.12.12.22.24
@@ -587,19 +586,20 @@ function makeFrame({ data: { type, content } }) {
       // We no longer need the preload api for painting.
       delete $api.net.preload;
 
-      // Paint a frame, which can return false to enable caching via paintChained and by
-      // default returns undefined. -- Is this really what I want? 2021.11.27.16.20
-      const paintChanged = paint($api) === false ? false : true;
+      // Paint a frame, which can return false to enable caching via noPaint and by
+      // default returns undefined (assume a repaint).
+      // Note: Always marked false on a disk's first frame.
+      // TODO: Is this *still* really what I want? 2022.01.12.00.21
+      const noPaint = (paint($api) === false && paintCount !== 0n);
 
-      // Run everything that was specified to be painted then
-      // devour paintLayers.
+      // Run everything that was queued to be painted, then devour paintLayers.
       painting.paint();
 
       // Return frame data back to the main thread.
       const sendData = { pixels: screen.pixels };
 
       // Optional messages to send.
-      if (paintChanged === true) sendData.paintChanged = true;
+      if (noPaint === false) sendData.paintChanged = true;
       if (loading === true) sendData.loading = true;
 
       // These fields are one time `signals`.

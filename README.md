@@ -1,4 +1,7 @@
 # aesthetic.computer
-My own virtual computer system, designed for creative exploration.
 
-These files were originally located in two separate repositories `whistlegraph/system` and `whistlegraph/disks`.
+A virtual computer system designed for creative exploration.
+
+Check `ssl-dev/readme.txt` to generate SSL certificates before running locally. 
+
+This project originally began as two separate repositories: `whistlegraph/system` and `whistlegraph/disks`.
