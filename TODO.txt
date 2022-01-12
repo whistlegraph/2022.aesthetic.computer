@@ -9,6 +9,9 @@ Make the prompt / shell program.
 
 ⏳ Next
 
+Stop tracks in all mediaStreams: https://stackoverflow.com/a/12436772
+(Video and Microphone)
+
 Add pixels via: https://codepen.io/oceangermanique/pen/LqaPgO.
 
 Adjust pixel scaling / `frame` algorithm so that pixels are always the same size
