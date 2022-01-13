@@ -5,6 +5,9 @@
 //
 //       💡 It's preconfigured for a Focusrite with 1/2 active channels.
 
+// TODO: Add effects that can be toggled or controlled live from a disk.
+//       Bitcrusher: https://github.com/jaz303/bitcrusher
+
 class Microphone extends AudioWorkletProcessor {
   process(inputs, outputs, parameters) {
     if (inputs[0].length === 2) {
