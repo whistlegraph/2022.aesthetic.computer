@@ -21,6 +21,7 @@ let loading = false;
 let reframe;
 let cursorCode;
 let paintCount = 0n;
+let noPaint = false;
 
 let penX, penY;
 let upload;
@@ -59,6 +60,7 @@ const $commonApi = {
     each: help.each,
   },
   net: {},
+  needsPaint: () => noPaint = false
 };
 
 // Just for "update".
@@ -588,18 +590,23 @@ function makeFrame({ data: { type, content } }) {
 
       // Paint a frame, which can return false to enable caching via noPaint and by
       // default returns undefined (assume a repaint).
+      // Once paint returns false and noPaint is marked true, `needsPaint` must be called.
       // Note: Always marked false on a disk's first frame.
-      // TODO: Is this *still* really what I want? 2022.01.12.00.21
-      const noPaint = (paint($api) === false && paintCount !== 0n);
+      let painted = false;
+      if (noPaint === false) {
+        noPaint = (paint($api) === false && paintCount !== 0n);
 
-      // Run everything that was queued to be painted, then devour paintLayers.
-      painting.paint();
+        // Run everything that was queued to be painted, then devour paintLayers.
+        painting.paint();
+
+	painted = true;
+      }
 
       // Return frame data back to the main thread.
       const sendData = { pixels: screen.pixels };
 
       // Optional messages to send.
-      if (noPaint === false) sendData.paintChanged = true;
+      if (painted === true) sendData.paintChanged = true;
       if (loading === true) sendData.loading = true;
 
       // These fields are one time `signals`.
