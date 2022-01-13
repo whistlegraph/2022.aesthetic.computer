@@ -60,21 +60,21 @@ function paint({ wipe, screen, ink }) {
 
   for (const char of text) writeLetter(glyphs[char]);
 
-  // Return false if we are yet to load every glyph.
 
   // *Special*
   // TODO: Why is this even here?
   // TODO: If return false happens once... then needsPaint() must be called
   //       in order for paint to be run again.
 
-  // console.log("paint")
+  // Return false if we are yet to load every glyph.
   return !(Object.keys(glyphs).length === Object.keys(font1).length);
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event: e }) {
+function act({ event: e, needsPaint }) {
   if (e.is("keyboard:down") && e.key.length === 1) {
     text += e.key;
+    needsPaint();
   }
 }
 

@@ -6,6 +6,8 @@ import * as Graph from "./lib/graph.js";
 import * as UI from "./lib/ui.js";
 import { apiObject, extension } from "./lib/helpers.js";
 
+const { assign } = Object;
+
 // 💾 Boot the system and load a disk.
 async function boot(
   path = "index",
@@ -38,14 +40,17 @@ async function boot(
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
+    
   let imageData;
+  let compositeImageData;
   let fixedWidth, fixedHeight;
   let projectedWidth, projectedHeight;
   let canvasRect;
   let needsReframe = false;
 
   const screen = apiObject("pixels", "width", "height");
-
+  const composite = apiObject("pixels", "width", "height");
+   
   function frame(width, height) {
     width = width || fixedWidth;
     height = height || fixedHeight;
@@ -95,12 +100,17 @@ async function boot(
     // Paste stored imageData back.
     ctx.putImageData(storedImageData, 0, 0);
     imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    Object.assign(screen, { pixels: imageData.data, width, height });
+    compositeImageData = ctx.createImageData(imageData); // Allocate composite data.
 
+    assign(screen, { pixels: imageData.data, width, height });
+    assign(composite, { pixels: compositeImageData.data, width, height });
+
+    // TODO: How does this play with the pasting of stored imageData above?
+    //       Can it be removed? 22.1.13.15.08
     if (fixedWidth === undefined && fixedHeight === undefined) {
+      console.log("Hi");
       Graph.setBuffer(screen);
-      Graph.color(25, 25, 100);
-      Graph.clear(25, 25, 100);
+      Graph.clear(25, 25, 200);
       ctx.putImageData(imageData, 0, 0);
     }
 
@@ -449,31 +459,34 @@ async function boot(
 
     if (content.didntRender === true) return;
 
-    Graph.setBuffer(screen); // Why does screen exist here?
+    // Copy all rendered pixels to a composite buffer that will have system-wide
+    // UI elements like loading spinners and cursors tacked on before displaying.
+    composite.pixels.set(imageData.data);
+
+    Graph.setBuffer(composite);
 
     pixelsDidChange = content.paintChanged || false;
 
+    // TODO: This can all be rewritten: 22.1.13.15.26
     if (pixelsDidChange || pen.changed) {
       frameCached = false;
-
       pen.render(Graph);
       if (content.loading === true && debug === true) UI.spinner(Graph);
-
-      ctx.putImageData(imageData, 0, 0);
+      ctx.putImageData(compositeImageData, 0, 0);
     } else if (frameCached === false) {
       frameCached = true;
       pen.render(Graph);
       if (debug) {
-        // Draw the pause icon in the top left.
         // TODO: How to I use my actual API in here? 2021.11.28.04.00
+        // Draw the pause icon in the top left.
         Graph.color(0, 255, 255);
         Graph.line(1, 1, 1, 4);
         Graph.line(3, 1, 3, 4);
       }
-      ctx.putImageData(imageData, 0, 0);
+      ctx.putImageData(compositeImageData, 0, 0);
     } else if (content.loading === true && debug === true) {
       UI.spinner(Graph);
-      ctx.putImageData(imageData, 0, 0);
+      ctx.putImageData(compositeImageData, 0, 0);
     }
 
     // TODO: Put this in a budget related to the current refresh rate.
