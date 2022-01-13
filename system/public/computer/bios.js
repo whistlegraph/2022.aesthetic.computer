@@ -152,6 +152,8 @@ async function boot(
       audioContext.suspend();
     }
 
+    console.log(audioContext);
+
     // Microphone Input Processor
     // (Gets attached via a message from the running disk.)
     attachMicrophone = async (data) => {
