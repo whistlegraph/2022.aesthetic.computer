@@ -422,7 +422,7 @@ async function boot(
       return;
     }
 
-    if (type === "disk-reload") {
+    if (type === "disk-unload") {
       // Remove existing video tags.
       videos.forEach(({ video, buffer, getAnimationRequest }) => {
         console.log("🎥 Removing:", video, buffer, getAnimationRequest());
@@ -430,7 +430,7 @@ async function boot(
         buffer.remove();
         cancelAnimationFrame(getAnimationRequest());
       });
-      // Note: Any other disk state cleanup that needs to take place on reload
+      // Note: Any other disk state cleanup that needs to take place on unload
       //       should happen here.
       return;
     }
@@ -468,6 +468,7 @@ async function boot(
     pixelsDidChange = content.paintChanged || false;
 
     // TODO: This can all be rewritten: 22.1.13.15.26
+    // TODO: Can pen.changed just be a cursor change?
     if (pixelsDidChange || pen.changed) {
       frameCached = false;
       pen.render(Graph);

@@ -28,10 +28,6 @@ let currentLine;
 const points = [],
   commands = [];
 
-let needsPaint = false; // Only render after a user interaction.
-// TODO: Do I need the equivalent of noLoop and then calling repaint
-// or needsPaint() ? 2021.12.11.01.12
-
 // TODO: Can eventually be shifted around somehow with the javascript console or
 // a mouse and then reprinted for pasting back in. 2021.12.10.23.02
 const colors = {
@@ -64,6 +60,7 @@ function boot({
   ui: { Button },
   net: { host, preload },
   query,
+  needsPaint,
 }) {
   resize(64, 64);
   cursor("tiny");
@@ -77,12 +74,12 @@ function boot({
   g = new Grid(8, 4, width, height, scale);
   save = new Button(41, 64 - 8, 15, 6);
   open = new Button(8, 64 - 8, 15, 6);
-  needsPaint = true;
+  needsPaint();
   // preload("drawings/default.json").then(decode); // Preload drawing.
   // Preload save button icon.
   preload("disks/drawings/save_open_icon.json").then((r) => {
     plots.icon = r;
-    needsPaint = true;
+    needsPaint();
   });
 }
 
@@ -99,8 +96,6 @@ function paint({
   point,
   screen,
 }) {
-  if (!needsPaint) return false;
-
   // A. 🌟 Grid
   // Clear the background and draw a grid with an outline.
   wipe(colors.background)
@@ -174,11 +169,11 @@ function paint({
   ink(colors.save).box(save.box, save.down ? "inline" : "outline"); // Border
   ink(colors.save).draw(plots.icon, save.box.x + 1, save.box.y, 3); // Icon
 
-  needsPaint = false;
+  return false;
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event: e, download, upload, num: { timestamp } }) {
+function act({ event: e, download, upload, num: { timestamp }, needsPaint }) {
   // Add first point if we touch in the grid.
   if (e.is("touch")) {
     g.under(e, (sq) => {
@@ -213,6 +208,7 @@ function act({ event: e, download, upload, num: { timestamp } }) {
       upload(".json")
         .then((data) => {
           decode(JSON.parse(data));
+          needsPaint();
           opening = false;
         })
         .catch((err) => {
@@ -222,7 +218,7 @@ function act({ event: e, download, upload, num: { timestamp } }) {
     });
   }
 
-  needsPaint = true;
+  needsPaint();
 }
 
 // 📚 Library (Useful functions used throughout the program)
@@ -304,7 +300,6 @@ function decode(drawing) {
     if (name === "line") commands.push(args);
     else if (name === "point") commands.push(args);
   });
-  needsPaint = true;
 }
 
 export { boot, paint, act };
