@@ -9,6 +9,8 @@ Make the prompt / shell program.
 
 ⏳ Next
 
+Add scriptProcessorNode fallback so audio can run within insecure contexts. (FigJam)
+
 Stop tracks in all mediaStreams: https://stackoverflow.com/a/12436772
 (Video and Microphone)
 

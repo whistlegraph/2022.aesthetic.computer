@@ -86,7 +86,7 @@ function Widget() {
               );
 
               const bytes = await img.getBytesAsync();
-              figma.ui.postMessage({ type: "imageInput", bytes });
+              figma.ui.postMessage({ type: "figma-image-input", bytes });
             });
           })
         }

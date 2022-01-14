@@ -18,10 +18,11 @@ const debug = true;
 // See also: https://www.figma.com/plugin-docs/working-with-images/
 // iframe document code
 function receive(event) {
-  console.log("Received Figma Input:", event);
-
-  // TODO: Build image with width and height.
-  console.log("Bytes:", event.data.bytes.length);
+  // console.log("🌟 Event:", event); // Uncomment to log all events.
+  if (event.data.type === "figma-image-input") {
+    // TODO: Build image with width and height.
+    console.log("Bytes:", event.data.bytes.length);
+  }
 }
 window.addEventListener("message", receive);
 
@@ -41,7 +42,5 @@ async function decode(canvas, ctx, bytes) {
   const imageData = ctx.getImageData(0, 0, image.width, image.height);
   return imageData;
 }
-
-console.log("Secure:", window.isSecureContext, "Location:", window.location);
 
 boot("disks/prompt", bpm, host, undefined, debug);

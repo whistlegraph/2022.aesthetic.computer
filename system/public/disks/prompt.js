@@ -3,9 +3,8 @@
 
 // TODO: Make a basic prompt.
 //       *CURRENT*
-//       1. (Detour) fix frame-caching.
-//       2. Add the ability to load any disk by name.
-//       3. Add a global ability to quit any disk with the ESC key...?
+//       1. Add the ability to load any disk by name.
+//       2. Add a global ability to quit any disk with the ESC key...?
 //          or maybe add a prompt overlay or ":ex" commands a la vim?
 
 import { font1 } from "./common/fonts.js";
@@ -13,7 +12,8 @@ const { entries } = Object;
 
 let glyphs = {};
 let writeLetter;
-let text = "aesthetic.computer";
+// let text = "aesthetic.computer";
+let text = "";
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ net: { preload } }) {
@@ -26,19 +26,19 @@ function boot({ net: { preload } }) {
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, screen, ink }) {
+function paint({ wipe, screen, ink, num: { multiply } }) {
   const cursor = { x: 0, y: 0 };
   const blockWidth = 6;
   const blockHeight = 10;
   const colWidth = 24;
 
-  const gutterLine = (colWidth + 1) * blockWidth;
+  const gutter = (colWidth + 1) * blockWidth;
 
-  wipe(70, 50, 100)
-    .ink(0, 0, 255, 64)
-    .line(gutterLine, 0, gutterLine, screen.height);
+  wipe(70, 50, 100).ink(0, 0, 255, 64).line(gutter, 0, gutter, screen.height);
 
   writeLetter = (letter) => {
+    // TODO: Write an X character if letter is not present rather than returning.
+
     // Silently pass through if letter is not present.
     // TODO: Should this still print a section or not?
     if (letter === undefined) return;
@@ -51,20 +51,16 @@ function paint({ wipe, screen, ink }) {
     const x = top + cursor.x * letterWidth;
     const y = left + cursor.y * letterHeight;
 
-    ink(255, 255, 0, 20).box(x, y, ...letter.resolution.map((n) => n * scale));
+    //ink(255, 255, 0, 20).box(x, y, ...letter.resolution.map((n) => n * scale));
+    // TODO: How to write...
+    ink(255, 255, 0, 20).box(x, y, ...multiply(letter.resolution, scale));
     ink(255, 100).draw(letter, x, y, scale);
 
     cursor.x = (cursor.x + 1) % colWidth;
     if (cursor.x === 0) cursor.y += 1;
   };
 
-  for (const char of text) writeLetter(glyphs[char]);
-
-
-  // *Special*
-  // TODO: Why is this even here?
-  // TODO: If return false happens once... then needsPaint() must be called
-  //       in order for paint to be run again.
+  for (const char of text) writeLetter(glyphs[char]); // Add space to glyphs?
 
   // Return false if we are yet to load every glyph.
   return !(Object.keys(glyphs).length === Object.keys(font1).length);
@@ -72,8 +68,12 @@ function paint({ wipe, screen, ink }) {
 
 // ✒ Act (Runs once per user interaction)
 function act({ event: e, needsPaint }) {
-  if (e.is("keyboard:down") && e.key.length === 1) {
-    text += e.key;
+  if (e.is("keyboard:down")) {
+    if (e.key.length === 1) text += e.key;
+    // Print a key.
+    else {
+      console.log("Key:", e.key);
+    }
     needsPaint();
   }
 }
