@@ -60,7 +60,7 @@ const $commonApi = {
     each: help.each,
   },
   net: {},
-  needsPaint: () => noPaint = false
+  needsPaint: () => (noPaint = false),
 };
 
 // Just for "update".
@@ -414,6 +414,8 @@ function makeFrame({ data: { type, content } }) {
     activeVideo = content;
   }
 
+  // Request a repaint (runs when the window is resized.)
+  if (type === "needs-paint") noPaint = false;
   // 2. Frame
   else if (type === "frame") {
     // Act & Sim (Occurs after first boot and paint.)
@@ -594,12 +596,11 @@ function makeFrame({ data: { type, content } }) {
       // Note: Always marked false on a disk's first frame.
       let painted = false;
       if (noPaint === false) {
-        noPaint = (paint($api) === false && paintCount !== 0n);
+        noPaint = paint($api) === false && paintCount !== 0n;
 
         // Run everything that was queued to be painted, then devour paintLayers.
         painting.paint();
-
-	painted = true;
+        painted = true;
       }
 
       // Return frame data back to the main thread.

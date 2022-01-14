@@ -40,7 +40,6 @@ async function boot(
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-    
   let imageData;
   let compositeImageData;
   let fixedWidth, fixedHeight;
@@ -50,7 +49,7 @@ async function boot(
 
   const screen = apiObject("pixels", "width", "height");
   const composite = apiObject("pixels", "width", "height");
-   
+
   function frame(width, height) {
     width = width || fixedWidth;
     height = height || fixedHeight;
@@ -79,9 +78,6 @@ async function boot(
       projectedHeight = Math.floor(height * scale - gapSize);
     }
 
-    // Store any pre-written imageData, in case of reframing.
-    const storedImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
     canvas.style.width = projectedWidth + "px";
     canvas.style.height = projectedHeight + "px";
 
@@ -97,22 +93,14 @@ async function boot(
     canvas.width = width;
     canvas.height = height;
 
-    // Paste stored imageData back.
-    ctx.putImageData(storedImageData, 0, 0);
+    // Paste stored imageData back if it exists.
+    if (imageData) ctx.putImageData(imageData, 0, 0);
     imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    compositeImageData = ctx.createImageData(imageData); // Allocate composite data.
+
+    compositeImageData = ctx.getImageData(0, 0, canvas.width, canvas.height); // Allocate composite data.
 
     assign(screen, { pixels: imageData.data, width, height });
     assign(composite, { pixels: compositeImageData.data, width, height });
-
-    // TODO: How does this play with the pasting of stored imageData above?
-    //       Can it be removed? 22.1.13.15.08
-    if (fixedWidth === undefined && fixedHeight === undefined) {
-      console.log("Hi");
-      Graph.setBuffer(screen);
-      Graph.clear(25, 25, 200);
-      ctx.putImageData(imageData, 0, 0);
-    }
 
     if (!document.body.contains(canvas)) {
       document.body.append(canvas);
@@ -138,6 +126,7 @@ async function boot(
 
     canvasRect = canvas.getBoundingClientRect();
     needsReframe = false;
+    send({ type: "needs-paint" });
   }
 
   // 2. Audio
