@@ -21,11 +21,13 @@ let loading = false;
 let reframe;
 let cursorCode;
 let paintCount = 0n;
+let simCount = 0n;
 let noPaint = false;
 
 let penX, penY;
 let upload;
 let activeVideo; // TODO: Eventually this can be a bank to store video textures.
+let inFocus;
 
 // 1. ✔ API
 
@@ -61,7 +63,7 @@ const $commonApi = {
     each: help.each,
   },
   net: {},
-  needsPaint: () => (noPaint = false),
+  needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
 };
 
 // Just for "update".
@@ -251,7 +253,7 @@ const { send, noWorker } = (() => {
       if (type === "refresh") {
         send({ type: "refresh" }); // Refresh the browser.
       } else {
-        send({ type: "disk-reload" }); // In case we need to remove any video references.
+        send({ type: "disk-unload" }); // In case we need to remove any video references.
         load(path, host, search); // Reload the disk.
       }
     };
@@ -285,6 +287,7 @@ const { send, noWorker } = (() => {
     setTimeout(() => {
       //console.clear();
       paintCount = 0n;
+      simCount = 0n;
       activeVideo = null; // reset activeVideo
       noPaint = false;
       // Redefine the default event functions if they exist in the module.
@@ -294,7 +297,10 @@ const { send, noWorker } = (() => {
       beat = module.beat || beat;
       act = module.act || act;
       $commonApi.query = search;
-      $updateApi.load = load; // Why should this be stuck in update API?
+      $commonApi.load = function () {
+        send({ type: "disk-unload" }); // Send a message to the bios to unload this disk.
+        load(...arguments);
+      };
       loading = false;
     }, 100);
   }
@@ -460,6 +466,20 @@ function makeFrame({ data: { type, content } }) {
       // TODO: Could "device" be removed in favor of "device:event" strings and
       //       if needed, a device method?
 
+      // TODO: Add a focus event.
+
+      // Window Events
+      if (content.inFocus !== inFocus) {
+        inFocus = content.inFocus;
+        const data = {};
+        Object.assign(data, {
+          device: "none",
+          is: (e) => e === (inFocus === true ? "focus" : "defocus"),
+        });
+        $api.event = data;
+        act($api);
+      }
+
       // Ingest all pen input events by running act for each event.
       content.pen.forEach((data) => {
         Object.assign(data, { device: "pen", is: (e) => e === data.name });
@@ -481,9 +501,17 @@ function makeFrame({ data: { type, content } }) {
       delete $api.download;
 
       // 🤖 Sim // no send
+      $api.seconds = function (s) {
+        return s * 120; // TODO: Get 120 dynamically from the Loop setting. 2022.01.13.23.28
+      };
+
       if (content.updateCount > 0 && paintCount > 0n) {
         // Update the number of times that are needed.
-        for (let i = content.updateCount; i--; ) sim($api);
+        for (let i = content.updateCount; i--; ) {
+          simCount += 1n;
+          $api.simCount = simCount;
+          sim($api);
+        }
       }
     }
 
@@ -493,6 +521,8 @@ function makeFrame({ data: { type, content } }) {
       Object.assign($api, $commonApi);
       Object.assign($api, painting.api);
       $api.paintCount = Number(paintCount);
+
+      $api.inFocus = content.inFocus;
 
       const screen = {
         pixels: new Uint8ClampedArray(content.pixels),
@@ -583,7 +613,10 @@ function makeFrame({ data: { type, content } }) {
       };
 
       // Run boot only once before painting for the first time.
-      if (paintCount === 0n) boot($api);
+      if (paintCount === 0n) {
+        inFocus = content.inFocus; // Inherit our starting focus from host window.
+        boot($api);
+      }
 
       // We no longer need the preload api for painting.
       delete $api.net.preload;

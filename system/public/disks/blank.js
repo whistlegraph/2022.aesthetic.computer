@@ -6,7 +6,7 @@ function boot({ resize }) {
   // resize(50, 20);
 }
 
-// 🧮 Simulate (Runs once per logic frame (120fps)).
+// 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim($api) {
   // TODO: Move a ball here!
 }

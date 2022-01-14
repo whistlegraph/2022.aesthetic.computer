@@ -4,8 +4,8 @@
 // The updates will repeat multiple times per frame, but rendering will only
 // ever happen once per display refresh.
 
-const updateFps = 120;
-const renderFps = 120; // This is a maximum.
+const updateFps = 120; // This is constant and should be used for interpolation.
+const renderFps = 120; // This is a maximum and will vary across environments.
 const updateRate = 1000 / updateFps;
 const renderRate = 1000 / renderFps;
 let updateTime = 0;
@@ -14,9 +14,9 @@ let lastNow;
 let input;
 let updateAndRender;
 
-// input runs once per loop, update runs
-// multiple times and render only ever runs once
-// if enough time has passed.
+// Input runs once per loop.
+// Update runs multiple times.
+// Render runs once if enough time has passed.
 function loop(now) {
   input();
 
@@ -25,7 +25,7 @@ function loop(now) {
   updateTime += delta;
   renderTime += delta;
   lastNow = now;
-  
+
   let updateTimes = 0;
 
   while (updateTime >= updateRate) {
@@ -34,14 +34,13 @@ function loop(now) {
   }
 
   let needsRender = false;
-  
+
   if (renderTime >= renderRate) {
     needsRender = true;
     renderTime -= renderRate;
   }
-  
+
   updateAndRender(needsRender, updateTimes);
-  
   window.requestAnimationFrame(loop);
 }
 
