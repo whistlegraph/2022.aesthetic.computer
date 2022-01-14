@@ -35,6 +35,7 @@ const $commonApi = {
     randInt: num.randInt,
     randIntArr: num.randIntArr,
     randIntRange: num.randIntRange,
+    multiply: num.multiply,
     dist: num.dist,
     radians: num.radians,
     lerp: num.lerp,
@@ -250,8 +251,6 @@ const { send, noWorker } = (() => {
       if (type === "refresh") {
         send({ type: "refresh" }); // Refresh the browser.
       } else {
-        console.clear();
-        activeVideo = null; // reset activeVideo
         send({ type: "disk-reload" }); // In case we need to remove any video references.
         load(path, host, search); // Reload the disk.
       }
@@ -284,7 +283,10 @@ const { send, noWorker } = (() => {
 
     // Artificially imposed loading by at least 1/4 sec.
     setTimeout(() => {
+      //console.clear();
       paintCount = 0n;
+      activeVideo = null; // reset activeVideo
+      noPaint = false;
       // Redefine the default event functions if they exist in the module.
       boot = module.boot || boot;
       sim = module.sim || sim;
@@ -336,9 +338,9 @@ export { noWorker };
 // 3. ✔ Produce a frame.
 // Boot procedure:
 // First `paint` happens after `boot`, then any `act` and `sim`s each frame
-// before `paint`ing occurs. (which is tied to display refresh right now but it
-// could be manually triggered via `needsPaint();`). 2021.12.11.01.25
-// TODO: Finish organizing e into e.data.type and e.data.content.
+// before `paint`ing occurs. (which is tied to display refresh right now...
+// but it could be manually triggered via `needsPaint();`). 2021.12.11.01.25
+// TODO: Make simple needsPaint example.
 function makeFrame({ data: { type, content } }) {
   // 1. Beat // One send (returns afterwards)
   if (type === "beat") {
@@ -417,12 +419,15 @@ function makeFrame({ data: { type, content } }) {
   // Request a repaint (runs when the window is resized.)
   if (type === "needs-paint") noPaint = false;
   // 2. Frame
+  // This is where each
   else if (type === "frame") {
     // Act & Sim (Occurs after first boot and paint.)
     if (paintCount > 0n) {
       const $api = {};
       Object.assign($api, $commonApi);
       Object.assign($api, $updateApi);
+
+      $api.inFocus = content.inFocus;
 
       $api.sound = { time: content.audioTime, bpm: content.audioBpm };
 
@@ -489,15 +494,8 @@ function makeFrame({ data: { type, content } }) {
       Object.assign($api, painting.api);
       $api.paintCount = Number(paintCount);
 
-      let pixels = new ImageData(
-        // TODO: Is this the only necessary part?
-        new Uint8ClampedArray(content.pixels),
-        content.width,
-        content.height
-      );
-
       const screen = {
-        pixels: pixels.data,
+        pixels: new Uint8ClampedArray(content.pixels),
         width: content.width,
         height: content.height,
       };

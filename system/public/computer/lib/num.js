@@ -31,6 +31,15 @@ export function randIntRange(low, high) {
   return low + randInt(high - low);
 }
 
+// Multiplies one or more [] operands by n and returns a Number or Array.
+export function multiply(operands, n) {
+  if (Array.isArray(operands)) {
+    return operands.map((o) => o * n);
+  } else {
+    return operands * n;
+  }
+}
+
 // Gets the distance between two points.
 export function dist(x1, y1, x2, y2) {
   const dx = x2 - x1;

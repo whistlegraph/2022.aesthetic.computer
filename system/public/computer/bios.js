@@ -28,6 +28,13 @@ async function boot(
    `
   ); // Print a pretty title in the console.
 
+  console.log(
+    "🔒 Secure Context:",
+    window.isSecureContext,
+    "Host:",
+    window.location.host
+  );
+
   let pen, keyboard;
 
   // Define a blank starter disk that just renders noise and plays a tone.
@@ -151,7 +158,8 @@ async function boot(
       audioContext.suspend();
     }
 
-    console.log(audioContext);
+    // TODO: Check to see if there is support for AudioWorklet or not...
+    //       and and use ScriptProcessorNode as a fallback. 2022.01.13.21.00
 
     // Microphone Input Processor
     // (Gets attached via a message from the running disk.)
@@ -347,6 +355,7 @@ async function boot(
         content: {
           needsRender,
           updateCount,
+          inFocus: document.hasFocus(),
           audioTime: audioContext?.currentTime,
           audioBpm: sound.bpm[0],
           pixels: screen.pixels.buffer,
@@ -475,9 +484,12 @@ async function boot(
         Graph.line(3, 1, 3, 4);
       }
       ctx.putImageData(compositeImageData, 0, 0);
+      // console.log("Caching frame...");
     } else if (content.loading === true && debug === true) {
       UI.spinner(Graph);
       ctx.putImageData(compositeImageData, 0, 0);
+    } else if (frameCached === true) {
+      // console.log("Cached...");
     }
 
     // TODO: Put this in a budget related to the current refresh rate.
