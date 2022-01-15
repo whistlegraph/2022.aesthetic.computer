@@ -4,23 +4,20 @@
 
 // https://github.com/uNetworking/uWebSockets
 
-// *Current*
 // TODO: Make drawings for the toolbar and button symbols and set them.
-//       +-
-//       ABCDEFGHIJKL, 0-9
-//       * Toolbar Contents*
+//       *Current* ABCDEFGHIJKL, 0-9
+//       ____________________
+//       * Toolbar Contents *
 //       - Small Square (quiet)
 //       - Big Square (loud)
-//       - % - Add / toggle separator (single bpm notes into held notes)
-//       - -- Line: background color change / all together.
-//       - BPM - Adds a thick line to the grid and puts a new number on the right.
+//       - %: Add / toggle separator (single bpm notes into held notes)
+//       - -(line)-: Background color change / all together.
+//       - BPM: Adds a thick line to the grid and puts a new number on the right.
 
 // TODO: Code up a modal tool system for switching tools, then start implementing
 //       them.
 
 // TODO: Make a data structure and interaction to plot squares in the grid.
-
-// TODO: Preload and add all these symbols.
 
 const { max, min } = Math;
 
@@ -52,6 +49,10 @@ let toolbar;
 // Typography
 let numbers = [];
 
+const { entries } = Object;
+import { font1 } from "./common/fonts.js";
+let glyphs = {};
+
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
   resize,
@@ -73,25 +74,15 @@ function boot({
 
   toolbar = new Grid(3, 3, 1, 6, scale);
 
-  // Preload 0-9 symbols.
-  // TODO: How to know when every preload finishes? 2021.12.16.18.55
-  // TODO: Move these drawings into a system folder?
-  [
-    "0 - 2021.12.16.18.28.06",
-    "1 - 2021.12.16.17.56.44",
-    "2 - 2021.12.16.17.59.01",
-    "3 - 2021.12.16.17.59.52",
-    "4 - 2021.12.16.18.00.56",
-    "5 - 2021.12.16.18.01.27",
-    "6 - 2021.12.16.18.02.26",
-    "7 - 2021.12.16.18.02.50",
-    "8 - 2021.12.16.18.03.31",
-    "9 - 2021.12.16.18.04.15",
-  ].forEach((number, i) => {
-    preload(`disks/drawings/numbers/${number}.json`).then((r) => {
-      numbers[i] = r;
+  // Preload all glyphs.
+  entries(font1).forEach(([glyph, location]) => {
+    preload(`disks/drawings/font-1/${location}.json`).then((res) => {
+      glyphs[glyph] = res;
     });
   });
+}
+
+function printLine(startX, startY, characterWidth(height?), scale, direction) {
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
@@ -107,9 +98,14 @@ function paint({ wipe, ink, layer, screen, resize }) {
     const scale = 2;
     const startY = screen.height - 11 * scale;
 
-    numbers.forEach((number, i) => {
-      ink(255).draw(number, startX + width * scale * i, startY, scale);
-    });
+    for (const char of "0123456789") {
+      ink(255).draw(
+        glyphs[char],
+        startX + width * scale * parseInt(char),
+        startY,
+        scale
+      );
+    }
   }
 
   // ✔ 1. Top Row: for knowing what notes each column represents, and

@@ -118,6 +118,9 @@ function act({ event: e, needsPaint, load }) {
 }
 
 // 📚 Library (Useful classes & functions used throughout the piece)
+
+// TODO: Refactor this into "Text" so it can be used in Tracker
+
 class Prompt {
   top = 0;
   left = 0;
