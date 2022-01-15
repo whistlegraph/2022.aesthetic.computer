@@ -22,4 +22,5 @@ canvas {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   margin: auto;
+  pointer-events: none;
 }

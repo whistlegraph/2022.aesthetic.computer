@@ -232,11 +232,19 @@ function box() {
     mode = "fill";
 
   if (arguments.length === 1) {
-    // box
-    x = arguments[0].x;
-    y = arguments[0].y;
-    w = arguments[0].w;
-    h = arguments[0].h;
+    // Array(4)
+    if (Array.isArray(arguments[0])) {
+      x = arguments[0][0];
+      y = arguments[0][1];
+      w = arguments[0][2];
+      h = arguments[0][3];
+    } else {
+      // Object {x, y, w, h}
+      x = arguments[0].x;
+      y = arguments[0].y;
+      w = arguments[0].w;
+      h = arguments[0].h;
+    }
   } else if (arguments.length === 2) {
     // box, mode
     x = arguments[0].x;

@@ -1,3 +1,5 @@
+// 💻 BIOS
+
 // 📦 All Imports
 import * as Loop from "./lib/loop.js";
 import { Pen } from "./lib/pen.js";
@@ -44,8 +46,15 @@ async function boot(
   const videos = [];
 
   // 1. Rendering
+  // Our main display surface.
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
+
+  // A buffer for nicer resolution switches, nice when moving from
+  // low resolution back to high resolution. Could eventually be used
+  // for transition effects.
+  const freezeFrameCan = document.createElement("canvas");
+  const ffCtx = freezeFrameCan.getContext("2d");
 
   let imageData;
   let compositeImageData;
@@ -53,11 +62,26 @@ async function boot(
   let projectedWidth, projectedHeight;
   let canvasRect;
   let needsReframe = false;
+  let freezeFrame = false;
 
   const screen = apiObject("pixels", "width", "height");
   const composite = apiObject("pixels", "width", "height");
 
   function frame(width, height) {
+    // Cache the current canvas.
+
+    if (freezeFrame && imageData) {
+      freezeFrameCan.width = imageData.width;
+      freezeFrameCan.height = imageData.height;
+      freezeFrameCan.style.width = canvas.style.width;
+      freezeFrameCan.style.height = canvas.style.height;
+      ffCtx.putImageData(imageData, 0, 0);
+      if (!document.body.contains(freezeFrameCan))
+        document.body.append(freezeFrameCan);
+      else freezeFrameCan.style.removeProperty("display");
+      canvas.style.display = "none";
+    }
+
     width = width || fixedWidth;
     height = height || fixedHeight;
     const gapSize = 8 * window.devicePixelRatio;
@@ -73,8 +97,6 @@ async function boot(
       // Or do it manually if both width and height are defined.
       fixedWidth = width;
       fixedHeight = height;
-
-      const pixelGap = 1;
 
       const scale = Math.min(
         window.innerWidth / width,
@@ -100,8 +122,8 @@ async function boot(
     canvas.width = width;
     canvas.height = height;
 
-    // Paste stored imageData back if it exists.
     if (imageData) ctx.putImageData(imageData, 0, 0);
+
     imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
     compositeImageData = ctx.getImageData(0, 0, canvas.width, canvas.height); // Allocate composite data.
@@ -341,7 +363,10 @@ async function boot(
   let startTime;
 
   function requestFrame(needsRender, updateCount) {
-    if (needsReframe) frame();
+    if (needsReframe) {
+      frame();
+      pen.retransformPosition();
+    }
 
     if (frameAlreadyRequested) return;
     frameAlreadyRequested = true;
@@ -432,6 +457,22 @@ async function boot(
       });
       // Note: Any other disk state cleanup that needs to take place on unload
       //       should happen here.
+
+      // Reset the framing to system default when unloading a disk.
+      // Blank the frame if we are changing the resolution.
+      if (fixedWidth && fixedHeight) {
+        freezeFrame = true;
+        fixedWidth = undefined;
+        fixedHeight = undefined;
+        needsReframe = true;
+      }
+
+      // Clear pen events.
+      pen.events.length = 0;
+
+      // Clear keyboard events.
+      keyboard.events.length = 0;
+
       return;
     }
 
@@ -441,6 +482,7 @@ async function boot(
     if (content.reframe) {
       // Reframe the captured pixels.
       frame(content.reframe.width, content.reframe.height);
+      pen.retransformPosition();
     }
 
     // Grab the pixels.
@@ -491,6 +533,12 @@ async function boot(
       ctx.putImageData(compositeImageData, 0, 0);
     } else if (frameCached === true) {
       // console.log("Cached...");
+    }
+
+    if (freezeFrame) {
+      canvas.style.removeProperty("display");
+      freezeFrameCan.style.display = "none";
+      freezeFrame = false;
     }
 
     // TODO: Put this in a budget related to the current refresh rate.

@@ -27,7 +27,7 @@ function beat($api) {
   // TODO: Play a sound here!
 }
 
-// 📚 Library (Useful functions used throughout the program)
+// 📚 Library (Useful classes & functions used throughout the piece)
 // ...
 
 export { boot, sim, paint, act, beat };

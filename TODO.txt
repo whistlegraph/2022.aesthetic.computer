@@ -3,11 +3,21 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 🌟 Current
 
-Make the prompt / shell program.
-  - What if glyphs must be drawn to open or close disks...
-  - First command should be load?
+Tracker: Oliver + Mija (Jan. 17)
+
 
 ⏳ Next
+
+Make a camera-based chalk drawing pad tool.
+
+Make Shrub.
+
+Add "load URL" command to the prompt so any disk can be loaded from any URL.
+Then disk development can begin. (Once prompt actually generates docs.)
+
+Implement drawing / gesture based disk launchers from the prompt.
+
+Take over right click so no context menu shows up.
 
 Pass 'diskTime' global into the api.
 
@@ -33,7 +43,6 @@ Refactor (screen.width -> screen.w & screen.height -> screen.h) across the board
 📅 End of January
   - Shader situation. `const fragmentEffect = video('webgl', screen.width, screen.height)`
   - Research software shaders.
-  -
 
 What would a build script for releasing a single disk or
 stack of disks look like?

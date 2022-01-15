@@ -3,6 +3,7 @@
 import * as graph from "./graph.js";
 import * as num from "./num.js";
 import * as geo from "./geo.js";
+import * as gizmo from "./gizmo.js";
 import * as ui from "./ui.js";
 import * as help from "./help.js";
 import { Socket } from "./socket.js"; // TODO: Eventually expand to `net.Socket`
@@ -11,12 +12,21 @@ import { notArray } from "./helpers.js";
 
 let debug = false; // This can be overwritten on boot.
 
-let boot = () => false;
-let sim = () => false;
-let paint = ($) => $.noise16();
-let beat = () => false;
-let act = ($) => false;
+const defaults = {
+  boot: () => false,
+  sim: () => false,
+  paint: ($) => $.noise16(),
+  beat: () => false,
+  act: () => false,
+};
 
+let boot = defaults.boot;
+let sim = defaults.sim;
+let paint = defaults.paint;
+let beat = defaults.beat;
+let act = defaults.act;
+
+let currentPath;
 let loading = false;
 let reframe;
 let cursorCode;
@@ -28,6 +38,7 @@ let penX, penY;
 let upload;
 let activeVideo; // TODO: Eventually this can be a bank to store video textures.
 let inFocus;
+let loadFailure;
 
 // 1. ✔ API
 
@@ -62,6 +73,7 @@ const $commonApi = {
     any: help.any,
     each: help.each,
   },
+  gizmo: { Hourglass: gizmo.Hourglass },
   net: {},
   needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
 };
@@ -223,8 +235,11 @@ const painting = new Painting();
 // 2. ✔ Loading the disk.
 const { send, noWorker } = (() => {
   let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
+  let firstLoad = true;
 
   async function load(path, host = loadHost, search) {
+    loadFailure = undefined;
+
     if (debug) {
       console.log("🟡 Developing");
     } else {
@@ -245,7 +260,14 @@ const { send, noWorker } = (() => {
 
     console.log("🕸", fullUrl);
 
-    const module = await import(fullUrl);
+    const module = await import(fullUrl).catch((err) => {
+      loading = false;
+      console.error("😡 Load failure:", err);
+      loadFailure = err;
+    });
+
+    if (module === undefined) return;
+
     loadHost = host;
 
     // Add reload to the common api.
@@ -290,18 +312,23 @@ const { send, noWorker } = (() => {
       simCount = 0n;
       activeVideo = null; // reset activeVideo
       noPaint = false;
+      currentPath = path;
+
       // Redefine the default event functions if they exist in the module.
-      boot = module.boot || boot;
-      sim = module.sim || sim;
-      paint = module.paint || paint;
-      beat = module.beat || beat;
-      act = module.act || act;
+      boot = module.boot || defaults.boot;
+      sim = module.sim || defaults.sim;
+      paint = module.paint || defaults.paint;
+      beat = module.beat || defaults.beat;
+      act = module.act || defaults.act;
       $commonApi.query = search;
-      $commonApi.load = function () {
-        send({ type: "disk-unload" }); // Send a message to the bios to unload this disk.
-        load(...arguments);
-      };
+      $commonApi.load = load;
+      cursorCode = "precise";
       loading = false;
+      penX = undefined;
+      penY = undefined;
+      if (firstLoad === false) {
+        send({ type: "disk-unload" }); // Send a message to the bios to unload this disk if it is not the first disk.
+      } else firstLoad = false;
     }, 100);
   }
 
@@ -418,9 +445,7 @@ function makeFrame({ data: { type, content } }) {
   }
 
   // 1b. Video frames.
-  if (type === "video-frame") {
-    activeVideo = content;
-  }
+  if (type === "video-frame") activeVideo = content;
 
   // Request a repaint (runs when the window is resized.)
   if (type === "needs-paint") noPaint = false;
@@ -468,6 +493,17 @@ function makeFrame({ data: { type, content } }) {
 
       // TODO: Add a focus event.
 
+      // If a disk failed to load, then notify the disk that loaded it
+      // by checking to see if loadFailure has anything set.
+      if (loadFailure) {
+        $api.event = {
+          error: loadFailure,
+          is: (e) => e === "load-error",
+        };
+        act($api);
+        loadFailure = undefined;
+      }
+
       // Window Events
       if (content.inFocus !== inFocus) {
         inFocus = content.inFocus;
@@ -494,6 +530,16 @@ function makeFrame({ data: { type, content } }) {
         Object.assign(data, { device: "keyboard", is: (e) => e === data.name });
         $api.event = data;
         act($api);
+
+        // Check to see if the escape key was pressed and jump to `disks/prompt`
+        if (
+          data.name === "keyboard:down" &&
+          data.key === "Escape" &&
+          currentPath !== "disks/prompt"
+        ) {
+          console.log("Go to prompt!");
+          $api.load("disks/prompt");
+        }
       });
 
       // Remove $api elements that are not needed for `sim`.
