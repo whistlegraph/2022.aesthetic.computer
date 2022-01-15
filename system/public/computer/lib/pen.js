@@ -7,6 +7,8 @@ export class Pen {
   delta;
   pressure;
   pointerType;
+  untransformedPosition;
+  point;
 
   down = false;
   changed = false;
@@ -31,6 +33,8 @@ export class Pen {
   // `point` is a transform function for projecting coordinates from screen
   // space to virtual screen space.
   constructor(point) {
+    this.point = point;
+
     // Add pointer events.
     const pen = this;
 
@@ -43,6 +47,7 @@ export class Pen {
       pen.pointerType = e.pointerType;
 
       Object.assign(pen, point(e.x, e.y));
+      this.untransformedPosition = { x: e.x, y: e.y };
 
       pen.pressure = reportPressure(e);
 
@@ -62,6 +67,7 @@ export class Pen {
       pen.pointerType = e.pointerType;
 
       Object.assign(pen, point(e.x, e.y));
+      this.untransformedPosition = { x: e.x, y: e.y };
 
       pen.pressure = reportPressure(e);
 
@@ -144,6 +150,14 @@ export class Pen {
     }
 
     return pen;
+  }
+
+  retransformPosition() {
+    //console.log(this.point);
+    Object.assign(
+      this,
+      this.point(this.untransformedPosition.x, this.untransformedPosition.y)
+    );
   }
 
   // TODO: Merge this logic into the above events & consolidate class properties.
