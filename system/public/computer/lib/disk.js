@@ -56,8 +56,8 @@ const $commonApi = {
     lerp: num.lerp,
     Track: num.Track,
     timestamp: num.timestamp,
+    vec2: num.vec2,
     vec4: num.vec4,
-    vec3: num.vec3,
     mat4: num.mat4,
   },
   geo: {
@@ -175,6 +175,7 @@ const $paintApiUnwrapped = {
   box: graph.box,
   grid: graph.grid,
   draw: graph.draw,
+  printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
   form: function (f, cam) {
     f.graph(cam);
   },
@@ -195,7 +196,7 @@ class Painting {
     const p = this;
 
     // Filter for and then wrap every rendering behavior of $paintApi into a
-    // system so they can be deferred in groups, using layer.
+    // system to be deferred in groups, using layer.
     for (const k in $paintApiUnwrapped) {
       if (typeof $paintApiUnwrapped[k] === "function") {
         // Wrap and then transfer to #api.

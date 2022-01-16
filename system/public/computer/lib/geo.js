@@ -40,7 +40,7 @@ export class Box {
   w = 1;
   h = 1;
 
-  constructor(x, y, w, h) {
+  constructor(x, y, w, h = w) {
     this.x = x;
     this.y = y;
     this.w = w;
@@ -173,11 +173,19 @@ export class Grid {
     );
   }
 
+  center(x, y) {
+    const scaled = this.get(x, y);
+    // TODO: This can be replaced with a vec2.add
+    scaled[0] += Math.floor(this.#halfScale);
+    scaled[1] += Math.floor(this.#halfScale);
+    return scaled;
+  }
+
   // Yields an array of offset points that can be plotted to mark the center of
   // each grid square. (Useful for editors, development and debugging.)
   // Tries to find the exact center point, but if that doesn't exist then
   // this function produces 4 points in the center.
-  get center() {
+  get centers() {
     const o = this.centerOffset;
 
     let points = [];

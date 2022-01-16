@@ -4,50 +4,56 @@
 
 // https://github.com/uNetworking/uWebSockets
 
-// TODO: Make drawings for the toolbar and button symbols and set them.
-//       *Current* ABCDEFGHIJKL, 0-9
-//       ____________________
-//       * Toolbar Contents *
+// Add play button.
+
+// TODO: Implement small and big square tools.
 //       - Small Square (quiet)
 //       - Big Square (loud)
-//       - %: Add / toggle separator (single bpm notes into held notes)
-//       - -(line)-: Background color change / all together.
-//       - BPM: Adds a thick line to the grid and puts a new number on the right.
 
 // TODO: Code up a modal tool system for switching tools, then start implementing
 //       them.
 
 // TODO: Make a data structure and interaction to plot squares in the grid.
 
+// TODO: Implement older tools:
+//       - %: Add / toggle separator (single bpm notes into held notes)
+//       - -(line)-: Background color change / all together.
+//       - BPM: Adds a thick line to the grid and puts a new number on the right.
+
 const { max, min } = Math;
+
+// Data
+const noteList = "abcdefghijkl";
+const scoreData = []; // A 2 dimensional array for storing note info.
 
 // Design
 const colors = {
   notes: {
-    a: [10], // [255, 0, 0] // Red
-    b: [30],
-    c: [50],
-    d: [70],
-    e: [90],
-    f: [110],
-    g: [130],
-    h: [150],
-    i: [170],
-    j: [200],
-    k: [230],
-    l: [255],
+    a: [10, 115, 0], // [255, 0, 0] // Red
+    b: [136, 255, 0],
+    c: [115, 155, 0],
+    d: [255, 163, 10],
+    e: [115, 5, 0],
+    f: [255, 0, 230],
+    g: [100, 0, 115],
+    h: [0, 5, 120],
+    i: [0, 5, 250],
+    j: [5, 120, 255],
+    k: [10, 115, 115],
+    l: [10, 250, 190],
   },
 };
 const style = {};
 
 // Layout
 let notes;
+
 let score;
+let scrolling = false;
+
 const buttons = {};
 let toolbar;
-
-// Typography
-let numbers = [];
+let currentTool = 0;
 
 const { entries } = Object;
 import { font1 } from "./common/fonts.js";
@@ -72,7 +78,13 @@ function boot({
 
   addMinusLayout();
 
-  toolbar = new Grid(3, 3, 1, 6, scale);
+  const toolCount = 2;
+  toolbar = new Grid(3, 3, 1, toolCount, scale);
+
+  // Add toolbar buttons.
+  buttons.tools = {};
+  buttons.tools.small = new Button(...toolbar.get(0, 0), toolbar.scale);
+  buttons.tools.big = new Button(...toolbar.get(0, 1), toolbar.scale);
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
@@ -83,36 +95,49 @@ function boot({
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, ink, layer }) {
+function paint({ wipe, ink, layer, printLine, screen, num: { vec2 } }) {
   wipe(10); // Make the background black.
 
-  function printLine(text, startX, startY, width, scale, direction) {
-    for (const char of "0123456789") {
-      ink(255, 64, 256).draw(
-        glyphs[char],
-        startX + width * scale * parseInt(char),
-        startY,
-        scale
-      );
-    }
-  }
-
-  printLine("0123456789", 3, 0, 6, 1, "forwards");
-
   // ✔ 1. Top Row: for knowing what notes each column represents, and
-  //             being able to toggle columns.
+  //               being able to toggle columns.
 
-  // Draw colored boxes according to notes grid, with letters overlayed.
+  // Draw colored boxes according to notes grid, with overlaying letters.
   layer(1);
-  [..."abcdefghijkl"].forEach((note, i) => {
+
+  [...noteList].forEach((note, i) => {
     ink(colors.notes[note]).box(...notes.get(i, 0), notes.scale);
   });
+
+  ink(50, 120, 200, 128).printLine(
+    noteList.toUpperCase(),
+    glyphs,
+    notes.box.x,
+    notes.box.y,
+    notes.scale,
+    1,
+    2
+  );
 
   // ✔ 2. Composition: for placing and removing notes. Scrollable.
   layer(0);
 
   ink(255).grid(score);
   // wipe(r(255), r(255), r(255)).ink(0).line(0, 0, screen.width, screen.height);
+
+  // Render scoreData
+
+  layer(1);
+
+  scoreData.forEach((row, x) => {
+    const color = colors.notes[noteList[x]];
+    row.forEach((column, y) => {
+      if (column === "small") {
+        ink(color).box(...score.center(x, y), score.scale / 3, "fill*center");
+      } else if (column === "big") {
+        ink(color).box(...score.center(x, y), score.scale / 2, "fill*center");
+      }
+    });
+  });
 
   // ✔ 2a. Scrolling UI
   // TODO: Maybe the mouse cursor should default to a scrolling one when
@@ -125,21 +150,56 @@ function paint({ wipe, ink, layer }) {
   // ✔ 3. Toolbar
   ink(255, 255, 0).grid(toolbar);
 
-  // Toolbar Contents:
-  // - Small Square (quiet)
-  // - Big Square (loud)
-  // - % - Add / toggle separator (single bpm notes into held notes)
-  // - -- Line: background color change / all together.
-  // - BPM - Adds a thick line to the grid and puts a new number on the right.
-}
+  // Small square tool (Quiet)
+  ink(0, 180, 0, 100).box(
+    ...toolbar.center(0, 0),
+    toolbar.scale / 3,
+    "fill*center"
+  );
 
-let scrolling = false;
+  // Big square (Loud)
+  ink(0, 180, 0, 100).box(
+    ...toolbar.center(0, 1),
+    toolbar.scale / 2,
+    "fill*center"
+  );
+
+  // Current Tool Highlight
+  ink(255, 255, 0, 80).box(
+    ...toolbar.get(0, currentTool),
+    toolbar.scale,
+    "inline"
+  );
+
+  /*
+  // % - Add / toggle separator (single bpm notes into held notes)
+  ink(0, 180, 0, 100).draw(
+    glyphs["%"],
+    ...vec2.add([], toolbar.get(0, 2), [1, -1])
+  );
+
+  // - Line: background color change / all together.
+  ink(0, 180, 0, 100).line(
+    ...vec2.add([], toolbar.get(0, 3), [1, toolbar.scale / 2 - 1]),
+    ...vec2.add([], toolbar.get(0, 3), [
+      toolbar.scale - 2,
+      toolbar.scale / 2 - 1,
+    ])
+  );
+
+  // - BPM - Adds a thick line to the grid and puts a new number on the right.
+  ink(0, 180, 0, 100).draw(
+    glyphs["B"],
+    ...vec2.add([], toolbar.get(0, 4), [2, 0])
+  );
+  */
+}
 
 // ✒ Act (Runs once per user interaction)
 function act({ event: e }) {
   // Scrolling the score.
   if (e.is("touch")) {
-    // Hit-test every `Box` to make sure we are dragging on the background.
+    // Hit-test every region to make sure we are dragging on the background.
     scrolling =
       notes.scaled.misses(e) &&
       score.scaled.misses(e) &&
@@ -149,6 +209,37 @@ function act({ event: e }) {
   }
   if (e.is("draw") && scrolling) scrollY(e.delta.y);
   if (e.is("lift")) scrolling = false;
+
+  // Switching tools.
+  buttons.tools.small.act(e, () => (currentTool = 0));
+  buttons.tools.big.act(e, () => (currentTool = 1));
+
+  // Automatically grows a 2 dimensional array to represent the score..
+  function affectScore(x, y, entry) {
+    if (scoreData[x]?.[y] === entry) {
+      scoreData[x][y] = undefined; // Clear an entry.
+      // And the whole row if it is empty.
+      if (scoreData[x].length === 0) scoreData[x] = undefined;
+    } else {
+      // Make this row if it doesn't exist.
+      if (scoreData[x] === undefined) {
+        scoreData[x] = [];
+      }
+      scoreData[x][y] = entry;
+    }
+  }
+
+  // Affecting the score.
+  if (e.is("touch")) {
+    score.under(e, (sq) => {
+      if (currentTool === 0) {
+        affectScore(sq.gx, sq.gy, "small");
+      } else if (currentTool === 1) {
+        affectScore(sq.gx, sq.gy, "big");
+      }
+      console.log("Touched within score:", scoreData);
+    });
+  }
 
   // Adding and removing rows from the score.
   buttons.add.act(e, () => {
