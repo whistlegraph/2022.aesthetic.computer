@@ -537,7 +537,6 @@ async function boot(
     }
 
     if (freezeFrame) {
-      console.log("Thawing...", freezeFrameCan.width, freezeFrameCan.height);
       canvas.style.removeProperty("display");
       freezeFrameCan.style.display = "none";
       freezeFrame = false;

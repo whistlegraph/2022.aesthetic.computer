@@ -1,8 +1,8 @@
 // 🧮 Numbers
-import { vec4, mat4 } from "../dep/gl-matrix/index.js";
+import { vec2, vec4, mat4 } from "../dep/gl-matrix/index.js";
 import { repeat } from "./help.js";
 
-export { vec4, mat4 };
+export { vec2, vec4, mat4 };
 
 // Returns true if the number is even, and false otherwise.
 export function even(n) {

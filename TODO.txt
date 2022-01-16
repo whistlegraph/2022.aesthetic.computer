@@ -5,10 +5,11 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 Tracker: Oliver + Mija (Jan. 17)
 
-
 ⏳ Next
 
 Make a camera-based chalk drawing pad tool.
+  - Use a naive approach similar to my old software from the Oberlin lecture.
+  - Also research ML based object tracking with latency.
 
 Make Shrub.
 

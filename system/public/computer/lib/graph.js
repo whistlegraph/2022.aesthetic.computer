@@ -218,12 +218,13 @@ function line(x0, y0, x1, y1) {
 // outline, inline (1px) or filled rectangle, optionally
 // from the center by inputting eg: "inline*center" in mode.
 const BOX_CENTER = "*center";
-// box [...or any object with x, y, w, h properties] (1)
-// box, mode (2)
-// x, y, size (3)
-// x, y, w, h (4)
-// x, y, size, mode (4)
-// x, y, w, h, mode (5)
+// Parameters
+// (1) box (any object with {x, y, w, h} properties) (1)
+// (2) box, mode (2)
+// (3) x, y, size (3)
+// (4) x, y, w, h (4)
+// (4) x, y, size, mode:string (4)
+// (5) x, y, w, h, mode (5)
 function box() {
   let x,
     y,
@@ -318,7 +319,7 @@ function box() {
 // Renders a square grid at x, y given cols, rows, and scale.
 // Buffer is optional, and if present will render the pixels at scale starting
 // from the top left corner of the buffer, repeating if needed to fill the grid.
-function grid({ box: { x, y, w: cols, h: rows }, scale, center }, buffer) {
+function grid({ box: { x, y, w: cols, h: rows }, scale, centers }, buffer) {
   const rc = c.slice(); // Remember color.
 
   const w = cols * scale;
@@ -376,7 +377,7 @@ function grid({ box: { x, y, w: cols, h: rows }, scale, center }, buffer) {
         box(plotX, plotY, scale);
 
         // Color in the centers of each grid square.
-        center.forEach((p) => {
+        centers.forEach((p) => {
           color(c[0], c[1], c[2], 100);
           plot(plotX + p.x, plotY + p.y);
         });
@@ -421,6 +422,19 @@ function draw(drawing, x, y, scale = 1, angle = 0) {
   unpan();
 }
 
+// Write out a line of text.
+// TODO: Add directionality using a bresenham algorithm.
+//       - Must know about height.
+// TODO: Abstract this to another level, similar to 'draw' above.
+//       - I would need to get the final drawing API and pass that to
+//         a module that builds on it, then also has functions that
+//         get added back to it. This would be *graph: layer 2*.
+function printLine(text, font, startX, startY, width, scale, xOffset) {
+  [...text].forEach((char, i) => {
+    draw(font[char], startX + width * scale * i + xOffset, startY, scale);
+  });
+}
+
 function noise16() {
   for (let i = 0; i < pixels.length; i += 4) {
     pixels[i] = byteInterval17(randInt(16)); // r
@@ -443,6 +457,7 @@ export {
   grid,
   draw,
   noise16,
+  printLine,
 };
 
 // 3. 3D Drawing (Kinda mixed with some 2D)
