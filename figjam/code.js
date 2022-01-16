@@ -54,7 +54,7 @@ function Widget() {
                     const img = figma.getImageByHash(figma.getNodeById(cn.connectorEnd.endpointNodeId).fills[0]
                         .imageHash);
                     const bytes = yield img.getBytesAsync();
-                    figma.ui.postMessage({ type: "imageInput", bytes });
+                    figma.ui.postMessage({ type: "figma-image-input", bytes });
                 }));
             }) }, "\u25B6"),
         figma.widget.h(Text, { fontSize: 32, fill: { r: 0.7, g: 0, b: 0, a: 1 }, onClick: () => new Promise((resolve) => figma.closePlugin()) }, "\u25A0")));

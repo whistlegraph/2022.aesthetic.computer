@@ -26,13 +26,15 @@ let paint = defaults.paint;
 let beat = defaults.beat;
 let act = defaults.act;
 
-let currentPath;
+let currentPath, currentHost, currentSearch;
 let loading = false;
 let reframe;
 let cursorCode;
 let paintCount = 0n;
 let simCount = 0n;
 let noPaint = false;
+
+let socket;
 
 let penX, penY;
 let upload;
@@ -240,6 +242,11 @@ const { send, noWorker } = (() => {
   async function load(path, host = loadHost, search) {
     loadFailure = undefined;
 
+    // Kill any existing socket that has remained open from a previous disk.
+    socket?.kill();
+
+    console.log("💾", path, "🌐", host);
+
     if (debug) {
       console.log("🟡 Developing");
     } else {
@@ -262,11 +269,14 @@ const { send, noWorker } = (() => {
 
     const module = await import(fullUrl).catch((err) => {
       loading = false;
-      console.error("😡 Load failure:", err);
+      console.error(`😡 "${path}" load failure:`, err);
       loadFailure = err;
     });
 
-    if (module === undefined) return;
+    if (module === undefined) {
+      loading = false;
+      return;
+    }
 
     loadHost = host;
 
@@ -275,8 +285,7 @@ const { send, noWorker } = (() => {
       if (type === "refresh") {
         send({ type: "refresh" }); // Refresh the browser.
       } else {
-        send({ type: "disk-unload" }); // In case we need to remove any video references.
-        load(path, host, search); // Reload the disk.
+        load(currentPath, currentHost, currentSearch); // Reload the disk.
       }
     };
 
@@ -286,7 +295,7 @@ const { send, noWorker } = (() => {
     // Automatically connect a socket server if we are in debug mode.
     if (debug) {
       let receiver;
-      const socket = new Socket(
+      socket = new Socket(
         servers.me,
         (type, content) => receiver?.(type, content),
         $commonApi.reload
@@ -301,7 +310,8 @@ const { send, noWorker } = (() => {
       $commonApi.net.socket = function (host, receive) {
         // TODO: Flesh out the rest of reload functionality here to extract it from
         //       Socket. 21.1.5
-        return new Socket(host, receive);
+        socket = new Socket(host, receive);
+        return socket;
       };
     }
 
@@ -313,6 +323,8 @@ const { send, noWorker } = (() => {
       activeVideo = null; // reset activeVideo
       noPaint = false;
       currentPath = path;
+      currentHost = host;
+      currentSearch = search;
 
       // Redefine the default event functions if they exist in the module.
       boot = module.boot || defaults.boot;
@@ -327,7 +339,10 @@ const { send, noWorker } = (() => {
       penX = undefined;
       penY = undefined;
       if (firstLoad === false) {
-        send({ type: "disk-unload" }); // Send a message to the bios to unload this disk if it is not the first disk.
+        // Send a message to the bios to unload this disk if it is not the first disk.
+        // This cleans up any bios state that is related to the disk and also
+        // takes care of nice transitions between disks of different resolutions.
+        send({ type: "disk-unload" });
       } else firstLoad = false;
     }, 100);
   }
@@ -580,6 +595,16 @@ function makeFrame({ data: { type, content } }) {
 
       $api.resize = function (width, height) {
         // Don't do anything if there is no change.
+
+        console.log(
+          "🔭 Resize to:",
+          width,
+          height,
+          "from",
+          screen.width,
+          screen.height
+        );
+
         if (screen.width === width && screen.height === height) return;
 
         screen.width = width;

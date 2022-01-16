@@ -1,4 +1,4 @@
-// Tracker,  ...
+// Tracker, ...
 // A tool for composing, playing, and following along with 12 tones.
 // Designed in collaboration w/ Oliver Laumann + Mija Milovic
 
@@ -82,24 +82,13 @@ function boot({
   });
 }
 
-function printLine(startX, startY, characterWidth(height?), scale, direction) {
-}
-
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, ink, layer, screen, resize }) {
-  resize(140, 80);
-  wipe(0); // Make the background black.
+function paint({ wipe, ink, layer }) {
+  wipe(10); // Make the background black.
 
-  // 0. *TEST* Write a test row of numbers.
-  // TODO: Extract this into a "write" or "print" method for graph. 2021.12.16.18.55
-  {
-    const startX = 3;
-    const width = 6;
-    const scale = 2;
-    const startY = screen.height - 11 * scale;
-
+  function printLine(text, startX, startY, width, scale, direction) {
     for (const char of "0123456789") {
-      ink(255).draw(
+      ink(255, 64, 256).draw(
         glyphs[char],
         startX + width * scale * parseInt(char),
         startY,
@@ -107,6 +96,8 @@ function paint({ wipe, ink, layer, screen, resize }) {
       );
     }
   }
+
+  printLine("0123456789", 3, 0, 6, 1, "forwards");
 
   // ✔ 1. Top Row: for knowing what notes each column represents, and
   //             being able to toggle columns.
