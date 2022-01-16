@@ -156,7 +156,7 @@ export class Pen {
     //console.log(this.point);
     Object.assign(
       this,
-      this.point(this.untransformedPosition.x, this.untransformedPosition.y)
+      this.point(this.untransformedPosition?.x, this.untransformedPosition?.y)
     );
   }
 

@@ -30,12 +30,11 @@ async function boot(
    `
   ); // Print a pretty title in the console.
 
-  console.log(
-    "🔒 Secure Context:",
-    window.isSecureContext,
-    "Host:",
-    window.location.host
-  );
+  if (window.isSecureContext) {
+    console.log("🔒 Secure");
+  } else {
+    console.warn("🔓 Insecure");
+  }
 
   let pen, keyboard;
 
@@ -69,8 +68,8 @@ async function boot(
 
   function frame(width, height) {
     // Cache the current canvas.
-
     if (freezeFrame && imageData) {
+      console.log("Freezing:", freezeFrame, imageData.width, imageData.height);
       freezeFrameCan.width = imageData.width;
       freezeFrameCan.height = imageData.height;
       freezeFrameCan.style.width = canvas.style.width;
@@ -288,7 +287,7 @@ async function boot(
   // Start everything once the disk is loaded.
   function loaded(e) {
     if (e.data.loaded === true) {
-      console.log("💾", path, "🌐", host);
+      //console.log("💾", path, "🌐", host);
       onMessage = receivedChange;
       disk = { requestBeat, requestFrame };
 
@@ -458,8 +457,10 @@ async function boot(
       // Note: Any other disk state cleanup that needs to take place on unload
       //       should happen here.
 
-      // Reset the framing to system default when unloading a disk.
-      // Blank the frame if we are changing the resolution.
+      // Reset the framing to system when unloading a disk if it is using
+      // a customized resolution.
+      // TODO: Do disks with custom resolutions need to be reset
+      //       if they are being reloaded?
       if (fixedWidth && fixedHeight) {
         freezeFrame = true;
         fixedWidth = undefined;
@@ -536,6 +537,7 @@ async function boot(
     }
 
     if (freezeFrame) {
+      console.log("Thawing...", freezeFrameCan.width, freezeFrameCan.height);
       canvas.style.removeProperty("display");
       freezeFrameCan.style.display = "none";
       freezeFrame = false;
