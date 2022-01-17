@@ -1,44 +1,29 @@
 let width, height;
 
-// 💗 Beat
-export function beat($api) {
-  const { num, help, sound } = $api;
-}
-
-// 🧮 Update
-export function update($api) {
-  const { screen, load } = $api;
+// 🧮 Sim(ulate)
+export function sim({ screen }) {
   ({ width, height } = screen);
 
   starfield.update();
 }
 
-// 🎨 Render
-export function render($api) {
-  const { color, clear } = $api;
-
-  color(0, 0, 0);
-  clear();
-
-  starfield.render($api);
+// 🎨 Paint
+export function paint($) {
+  $.wipe(0);
+  starfield.paint($);
 }
 
 // 📚 Library
 
-// Triangle and Scanline Stuff
-
-// TODO: Put all of "num" in a more global API since it's stateless?
+// TODO: Use radians from num. 2022.01.17.02.37
 function radians(deg) {
   return deg * (Math.PI / 180);
 }
 
-const num = { radians };
-
-// Starfield Renderer
 class Starfield {
-  numStars = 512;
-  spread = 8;
-  speed = 1;
+  numStars = 128;
+  spread = 40;
+  speed = 2.1;
 
   stars = {
     x: Array(this.numStars),
@@ -70,11 +55,9 @@ class Starfield {
     }
   }
 
-  render($api) {
-    const { color, num, plot } = $api;
+  paint({ ink, num: { randInt: r }, plot }) {
     for (let i = 0; i < this.numStars; i += 1) {
-      color(num.randInt(255), num.randInt(255), num.randInt(255));
-      plot(...this.projection(i));
+      ink(r(255), r(255), r(255)).plot(...this.projection(i));
     }
   }
 
@@ -85,7 +68,7 @@ class Starfield {
   }
 
   projection(i) {
-    const fov = 175;
+    const fov = 105;
     const tanHalfFov = Math.tan(radians(fov / 2));
 
     const halfWidth = width / 2;
@@ -104,3 +87,7 @@ class Starfield {
 }
 
 const starfield = new Starfield();
+// 💗 Beat
+//export function beat($api) {
+//  const { num, help, sound } = $api;
+//}

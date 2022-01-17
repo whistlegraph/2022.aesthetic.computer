@@ -1,4 +1,6 @@
-// Sketchy Square, 2021
+// Pull, 2022.01.17.02.44
+// A simple painting tool that records rectangular selections and plays them
+// back.
 
 // TODO
 // * Encode turns on the bottom.
@@ -26,7 +28,7 @@ let history,
   plottedTurns = 0;
 
 // 🥾 Boot (Runs once before first paint and sim)
-export function boot({ resize, pixels, screen, wipe, ink }) {
+export function boot({ resize, painting, screen, wipe, ink }) {
   resize(64, 64 + 1);
 
   const palette = {
@@ -41,14 +43,17 @@ export function boot({ resize, pixels, screen, wipe, ink }) {
   };
 
   // Make starting image a dark background with a light square in the center.
-  sketch = pixels(screen.width, screen.height - 1, (w, h) => {
+  const w = screen.width;
+  const h = screen.height - 1;
+
+  sketch = painting(w, h, ({ wipe }) => {
     const hw = ceil(w / 2);
     wipe(palette.dark)
       .ink(palette.light)
       .box(hw, ceil(h / 2), hw, "fill*center");
   });
 
-  history = pixels(screen.width, 1, () => wipe(0));
+  history = painting(screen.width, 1, () => wipe(0));
 }
 
 // 🧮 Simulate (Runs once per logic frame (120fps)).
@@ -66,9 +71,9 @@ export function paint({
   clear,
   line,
   box,
-  pixels,
+  painting,
   screen,
-  setBuffer,
+  page,
   pen,
   paintCount,
 }) {
@@ -106,10 +111,10 @@ export function paint({
     selection.w > 0 &&
     selection.h > 0
   ) {
-    selectionBuffer = pixels(selection.w, selection.h, (w, h) => {
+    selectionBuffer = painting(selection.w, selection.h, ({ copy }) => {
       // Copy the screen rectangle into our selection buffer.
-      for (let x = 0; x < w; x += 1) {
-        for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < selection.w; x += 1) {
+        for (let y = 0; y < selection.h; y += 1) {
           copy(x, y, selection.x + x, selection.y + y, sketch);
         }
       }
@@ -123,14 +128,14 @@ export function paint({
   // 5. Paste selection buffer.
   if (state === "rest" && selectionBuffer) {
     // Switch to surfaceBuffer.
-    setBuffer(sketch);
+    page(sketch);
     paste(selectionBuffer, selection.x, selection.y);
     // Copy selectionBuffer to surfaceBuffer.
     selectionBuffer = undefined;
     selection = undefined;
 
     // Switch back to screen buffer.
-    setBuffer(screen);
+    page(screen);
 
     // Repaint screen with surfaceBuffer.
     paste(sketch);
@@ -138,7 +143,7 @@ export function paint({
 
   // 6. Draw every turn, and plot the last if needed.
   if (plottedTurns < turns.length) {
-    setBuffer(history);
+    page(history);
     const turnToPlot = turns[plottedTurns];
 
     ink(turnToPlot[0], turnToPlot[1], turnToPlot[2]);
@@ -151,7 +156,7 @@ export function paint({
     ink(turnToPlot[3], turnToPlot[4] + 127, turnToPlot[5] + 127);
     plot(plottedTurns * 2 + 1, 0);
 
-    setBuffer(screen);
+    page(screen);
 
     plottedTurns += 1;
   }

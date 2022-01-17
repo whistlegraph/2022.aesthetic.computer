@@ -1,21 +1,12 @@
-// Tracker, ...
+// Tracker, 2022.01.16.16.02
 // A tool for composing, playing, and following along with 12 tones.
 // Designed in collaboration w/ Oliver Laumann + Mija Milovic
 
-// https://github.com/uNetworking/uWebSockets
+// Add play button. (Triangle)
 
-// Add play button.
+// Make `player` disk.
 
-// TODO: Implement small and big square tools.
-//       - Small Square (quiet)
-//       - Big Square (loud)
-
-// TODO: Code up a modal tool system for switching tools, then start implementing
-//       them.
-
-// TODO: Make a data structure and interaction to plot squares in the grid.
-
-// TODO: Implement older tools:
+// TODO: Explore & implement these other tools:
 //       - %: Add / toggle separator (single bpm notes into held notes)
 //       - -(line)-: Background color change / all together.
 //       - BPM: Adds a thick line to the grid and puts a new number on the right.
@@ -23,26 +14,9 @@
 const { max, min } = Math;
 
 // Data
-const noteList = "abcdefghijkl";
-const scoreData = []; // A 2 dimensional array for storing note info.
+import { noteList, colors } from "./common/music.js";
 
-// Design
-const colors = {
-  notes: {
-    a: [10, 115, 0], // [255, 0, 0] // Red
-    b: [136, 255, 0],
-    c: [115, 155, 0],
-    d: [255, 163, 10],
-    e: [115, 5, 0],
-    f: [255, 0, 230],
-    g: [100, 0, 115],
-    h: [0, 5, 120],
-    i: [0, 5, 250],
-    j: [5, 120, 255],
-    k: [10, 115, 115],
-    l: [10, 250, 190],
-  },
-};
+let scoreData = []; // A 2 dimensional array for storing note info.
 const style = {};
 
 // Layout
@@ -52,8 +26,10 @@ let score;
 let scrolling = false;
 
 const buttons = {};
-let toolbar;
+let bar;
 let currentTool = 0;
+let playButtonPos;
+let playIconOffset = [1, 1];
 
 const { entries } = Object;
 import { font1 } from "./common/fonts.js";
@@ -62,29 +38,43 @@ let glyphs = {};
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
   resize,
+  screen,
+  store,
   geo: { Box, Grid },
   ui: { Button },
   net: { preload },
 }) {
+  // TODO: Reload `scoreData` and `stopRow` from store["tracker:score"] if it exists.
+
+  let scoreHeight = 1;
+
+  if (store["tracker:score"]) {
+    ({ data: scoreData, stopRow: scoreHeight } = store["tracker:score"]);
+  }
+
   resize(160, 90); // 16x9
+  // resize(screen.width, screen.height); // 16x9 // TODO: Double resize doesn't work... why is that?
+
   const scale = 9;
   style.addMinusHeight = scale;
 
   notes = new Grid(scale * 3, 0, 12, 1, scale);
-  score = new Grid(scale * 3, scale, 12, 1, scale);
+  score = new Grid(scale * 3, scale, 12, scoreHeight, scale);
 
   buttons.minus = new Button(0, 0, score.scaled.w / 2, style.addMinusHeight);
   buttons.add = new Button(buttons.minus.box);
 
-  addMinusLayout();
-
   const toolCount = 2;
-  toolbar = new Grid(3, 3, 1, toolCount, scale);
+  bar = new Grid(3, 3, 1, toolCount, scale);
 
   // Add toolbar buttons.
   buttons.tools = {};
-  buttons.tools.small = new Button(...toolbar.get(0, 0), toolbar.scale);
-  buttons.tools.big = new Button(...toolbar.get(0, 1), toolbar.scale);
+  buttons.tools.small = new Button(...bar.get(0, 0), bar.scale);
+  buttons.tools.big = new Button(...bar.get(0, 1), bar.scale);
+
+  // Add play button.
+  playButtonPos = [screen.width - 14, screen.height - 16];
+  buttons.play = new Button(...playButtonPos, 11, 13);
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
@@ -95,20 +85,20 @@ function boot({
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, ink, layer, printLine, screen, num: { vec2 } }) {
-  wipe(10); // Make the background black.
+function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
+  wipe(10).layer(1); // Make the background black.
 
   // ✔ 1. Top Row: for knowing what notes each column represents, and
   //               being able to toggle columns.
 
   // Draw colored boxes according to notes grid, with overlaying letters.
-  layer(1);
-
+  // TODO: Make this in common with melody.js via common/music.js
   [...noteList].forEach((note, i) => {
     ink(colors.notes[note]).box(...notes.get(i, 0), notes.scale);
   });
 
-  ink(50, 120, 200, 128).printLine(
+  // TODO: `printLine` can be more elegantly implemented.
+  ink(20, 40, 60, 225).printLine(
     noteList.toUpperCase(),
     glyphs,
     notes.box.x,
@@ -119,18 +109,14 @@ function paint({ wipe, ink, layer, printLine, screen, num: { vec2 } }) {
   );
 
   // ✔ 2. Composition: for placing and removing notes. Scrollable.
-  layer(0);
+  layer(0).ink(255).grid(score); // Paint a grid to hold the score.
 
-  ink(255).grid(score);
-  // wipe(r(255), r(255), r(255)).ink(0).line(0, 0, screen.width, screen.height);
-
-  // Render scoreData
-
-  layer(1);
-
+  // Paint the score data itself.
   scoreData.forEach((row, x) => {
     const color = colors.notes[noteList[x]];
     row.forEach((column, y) => {
+      // Render rows in sync with score's visibility.
+      if (score.box.h - 1 < y) return;
       if (column === "small") {
         ink(color).box(...score.center(x, y), score.scale / 3, "fill*center");
       } else if (column === "big") {
@@ -144,32 +130,28 @@ function paint({ wipe, ink, layer, printLine, screen, num: { vec2 } }) {
   //       it is over the background?
 
   // ✔ 2b. Plus / Minus Rows
+  addMinusLayout();
   ink(255, 0, 0, 50).box(buttons.minus.box);
   ink(0, 255, 0, 50).box(buttons.add.box);
 
   // ✔ 3. Toolbar
-  ink(255, 255, 0).grid(toolbar);
+  ink(255, 255, 0).grid(bar);
 
   // Small square tool (Quiet)
-  ink(0, 180, 0, 100).box(
-    ...toolbar.center(0, 0),
-    toolbar.scale / 3,
-    "fill*center"
-  );
+  ink(0, 180, 0, 100).box(...bar.center(0, 0), bar.scale / 3, "fill*center");
 
   // Big square (Loud)
-  ink(0, 180, 0, 100).box(
-    ...toolbar.center(0, 1),
-    toolbar.scale / 2,
-    "fill*center"
-  );
+  ink(0, 180, 0, 100).box(...bar.center(0, 1), bar.scale / 2, "fill*center");
 
   // Current Tool Highlight
-  ink(255, 255, 0, 80).box(
-    ...toolbar.get(0, currentTool),
-    toolbar.scale,
-    "inline"
-  );
+  ink(255, 255, 0, 80).box(...bar.get(0, currentTool), bar.scale, "inline");
+
+  // ✔️ 4. Play button (Button w/ a triangle)
+  ink(255, 0, 0, 100).box(buttons.play.box);
+
+  pan(...vec2.add([], playButtonPos, playIconOffset))
+    .shape(0, 0, 0, 10, 8, 5)
+    .unpan();
 
   /*
   // % - Add / toggle separator (single bpm notes into held notes)
@@ -196,16 +178,17 @@ function paint({ wipe, ink, layer, printLine, screen, num: { vec2 } }) {
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event: e }) {
+function act({ event: e, store, load }) {
   // Scrolling the score.
   if (e.is("touch")) {
     // Hit-test every region to make sure we are dragging on the background.
     scrolling =
       notes.scaled.misses(e) &&
       score.scaled.misses(e) &&
-      toolbar.scaled.misses(e) &&
+      bar.scaled.misses(e) &&
       buttons.minus.box.misses(e) &&
-      buttons.add.box.misses(e);
+      buttons.add.box.misses(e) &&
+      buttons.play.box.misses(e);
   }
   if (e.is("draw") && scrolling) scrollY(e.delta.y);
   if (e.is("lift")) scrolling = false;
@@ -214,37 +197,24 @@ function act({ event: e }) {
   buttons.tools.small.act(e, () => (currentTool = 0));
   buttons.tools.big.act(e, () => (currentTool = 1));
 
-  // Automatically grows a 2 dimensional array to represent the score..
-  function affectScore(x, y, entry) {
-    if (scoreData[x]?.[y] === entry) {
-      scoreData[x][y] = undefined; // Clear an entry.
-      // And the whole row if it is empty.
-      if (scoreData[x].length === 0) scoreData[x] = undefined;
-    } else {
-      // Make this row if it doesn't exist.
-      if (scoreData[x] === undefined) {
-        scoreData[x] = [];
-      }
-      scoreData[x][y] = entry;
-    }
-  }
-
-  // Affecting the score.
+  // Alter the score based on the selected tool.
   if (e.is("touch")) {
     score.under(e, (sq) => {
-      if (currentTool === 0) {
-        affectScore(sq.gx, sq.gy, "small");
-      } else if (currentTool === 1) {
-        affectScore(sq.gx, sq.gy, "big");
+      affectScore(sq.gx, sq.gy, currentTool === 0 ? "small" : "big");
+      // TODO: Put this in a method.
+      if (scoreData.flat().filter(Boolean).length > 0) {
+        // TODO: Cut out any bottom rows from exported scoreData depending
+        //       on the height of the rows so end points can be easily adjusted
+        //       during playback. 2022.01.16.16.31
+        //       (Rather than just sending stopRow here.)
+        store["tracker:score"] = { data: scoreData, stopRow: score.box.h };
       }
-      console.log("Touched within score:", scoreData);
     });
   }
 
   // Adding and removing rows from the score.
   buttons.add.act(e, () => {
     score.box.h += 1;
-    addMinusLayout();
   });
 
   buttons.minus.act(e, () => {
@@ -252,7 +222,21 @@ function act({ event: e }) {
     if (score.scaled.bottom - style.addMinusHeight <= notes.scaled.bottom) {
       score.box.y = notes.scaled.bottom - (score.scaled.h - score.scale);
     }
-    addMinusLayout();
+  });
+
+  // Playing the score.
+  buttons.play.act(e, () => {
+    // 1. Store scoreData in disk RAM if scoreData contains playable entries.
+    // TODO: Put this in a method.
+    if (scoreData.flat().filter(Boolean).length > 0) {
+      // TODO: Cut out any bottom rows from exported scoreData depending
+      //       on the height of the rows so end points can be easily adjusted
+      //       during playback. 2022.01.16.16.31
+      //       (Rather than just sending stopRow here.)
+      store["tracker:score"] = { data: scoreData, stopRow: score.box.h };
+      load("disks/melody");
+    }
+    // 3. Check for scoreData in system RAM and play it immediately if present.
   });
 }
 
@@ -262,16 +246,13 @@ function act({ event: e }) {
 // }
 
 // 💗 Beat (Runs once per bpm)
-function beat($api) {
-  // TODO: Play a sound here!
-}
+// function beat($api) { }
 
 // 📚 Library (Useful functions used throughout the program)
 function scrollY(y) {
   score.box.y = min(notes.scale, score.box.y + y);
   const scrollHeight = score.scaled.h - score.scale - style.addMinusHeight;
   if (score.box.y < -scrollHeight) score.box.y = -scrollHeight;
-  addMinusLayout();
 }
 
 // Positions the `add` and `minus` buttons in relationship to the score.
@@ -282,4 +263,19 @@ function addMinusLayout() {
   buttons.add.box.y = score.scaled.bottom;
 }
 
-export { boot, paint, act, beat };
+// Automatically populates 2 dimensional array [x][y] to represent the score.
+function affectScore(x, y, entry) {
+  if (scoreData[x]?.[y] === entry) {
+    scoreData[x][y] = undefined; // Clear an entry.
+    // And the whole row if it is empty.
+    if (scoreData[x].length === 0) scoreData[x] = undefined;
+  } else {
+    // Make this row if it doesn't exist.
+    if (scoreData[x] === undefined) {
+      scoreData[x] = [];
+    }
+    scoreData[x][y] = entry;
+  }
+}
+
+export { boot, paint, act };

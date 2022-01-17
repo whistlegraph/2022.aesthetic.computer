@@ -34,7 +34,7 @@ function makeBuffer(width, height, fillProcess, painting) {
     setBuffer(buffer);
     const api = { width, height, pixels };
     Object.assign(api, painting.api);
-    fillProcess(api); // Every fill process gets a destructurable painting API.
+    fillProcess(api); // Every fill process gets a painting API.
     painting.paint();
     // Restore old buffer and color.
     setBuffer(savedBuffer);
@@ -244,7 +244,13 @@ function box() {
       x = arguments[0].x;
       y = arguments[0].y;
       w = arguments[0].w;
-      h = arguments[0].h;
+      h = arguments[0].h || arguments[0].w;
+      if (x === undefined || y === undefined || w === undefined) {
+        return console.error(
+          "Could not make a box {x,y,w,h} from:",
+          arguments[0]
+        );
+      }
     }
   } else if (arguments.length === 2) {
     // box, mode
@@ -316,11 +322,36 @@ function box() {
   }
 }
 
+// TODO: The most efficient algorithm I could find for filling:
+//       https://gist.github.com/ideasman42/983738130f754ef58ffa66bcdbbab892
+function shape() {
+  if (arguments % 2 !== 0) {
+    // Split arguments into points.
+    let points = [];
+
+    for (let p = 0; p < arguments.length; p += 2) {
+      points.push([arguments[p], arguments[p + 1]]);
+    }
+
+    // Make lines from 1->2->3->...->1
+    // Draw white points for each.
+    points.forEach((p, i) => {
+      color(0, 255, 0, 100);
+      const lastPoint = i < points.length - 1 ? points[i + 1] : points[0];
+      line(...p, ...lastPoint);
+      color(255, 255, 255);
+      point(...p);
+    });
+  } else {
+    console.error("Shape requires an even number of arguments: x,y,x,y...");
+  }
+}
+
 // Renders a square grid at x, y given cols, rows, and scale.
 // Buffer is optional, and if present will render the pixels at scale starting
 // from the top left corner of the buffer, repeating if needed to fill the grid.
 function grid({ box: { x, y, w: cols, h: rows }, scale, centers }, buffer) {
-  const rc = c.slice(); // Remember color.
+  const oc = c.slice(); // Remember the original color.
 
   const w = cols * scale;
   const h = rows * scale;
@@ -364,7 +395,7 @@ function grid({ box: { x, y, w: cols, h: rows }, scale, centers }, buffer) {
     plot(right, y);
     plot(x, bottom);
     plot(right, bottom);
-    color(...rc);
+    color(...oc);
 
     // Draw each grid square, with optional center points.
     for (let i = 0; i < cols; i += 1) {
@@ -373,18 +404,19 @@ function grid({ box: { x, y, w: cols, h: rows }, scale, centers }, buffer) {
         const plotY = y + rowPix * j;
 
         // Lightly shade this grid square, alternating tint on evens and odds.
-        color(c[0], c[1], c[2], even(i + j) ? 50 : 75);
+        const alphaMod = oc[3] / 255;
+        color(oc[0], oc[1], oc[2], even(i + j) ? 50 * alphaMod : 75 * alphaMod);
         box(plotX, plotY, scale);
 
         // Color in the centers of each grid square.
         centers.forEach((p) => {
-          color(c[0], c[1], c[2], 100);
+          color(oc[0], oc[1], oc[2], 100);
           plot(plotX + p.x, plotY + p.y);
         });
       }
     }
 
-    color(...rc); // Restore color.
+    color(...oc); // Restore color.
   }
 }
 
@@ -429,8 +461,16 @@ function draw(drawing, x, y, scale = 1, angle = 0) {
 //       - I would need to get the final drawing API and pass that to
 //         a module that builds on it, then also has functions that
 //         get added back to it. This would be *graph: layer 2*.
-function printLine(text, font, startX, startY, width, scale, xOffset) {
-  [...text].forEach((char, i) => {
+function printLine(
+  text,
+  font,
+  startX,
+  startY,
+  width = 6,
+  scale = 1,
+  xOffset = 0
+) {
+  [...text.toString()].forEach((char, i) => {
     draw(font[char], startX + width * scale * i + xOffset, startY, scale);
   });
 }
@@ -454,6 +494,7 @@ export {
   paste,
   line,
   box,
+  shape,
   grid,
   draw,
   noise16,
@@ -942,7 +983,7 @@ class Gradients {
 
     // Note that the W component is the perspective Z value;
     // The Z component is the occlusion Z value
-    this.texCoordXXStep = this.#calcXStep(
+    this.texCoordXXStep = Gradients.calcXStep(
       this.texCoordX,
       minYVert,
       midYVert,
@@ -950,7 +991,7 @@ class Gradients {
       oneOverdX
     );
 
-    this.texCoordXYStep = this.#calcYStep(
+    this.texCoordXYStep = Gradients.calcYStep(
       this.texCoordX,
       minYVert,
       midYVert,
@@ -958,7 +999,7 @@ class Gradients {
       oneOverdY
     );
 
-    this.texCoordYXStep = this.#calcXStep(
+    this.texCoordYXStep = Gradients.calcXStep(
       this.texCoordY,
       minYVert,
       midYVert,
@@ -966,7 +1007,7 @@ class Gradients {
       oneOverdX
     );
 
-    this.texCoordYYStep = this.#calcYStep(
+    this.texCoordYYStep = Gradients.calcYStep(
       this.texCoordY,
       minYVert,
       midYVert,
@@ -974,7 +1015,7 @@ class Gradients {
       oneOverdY
     );
 
-    this.oneOverZXStep = this.#calcXStep(
+    this.oneOverZXStep = Gradients.calcXStep(
       this.oneOverZ,
       minYVert,
       midYVert,
@@ -982,7 +1023,7 @@ class Gradients {
       oneOverdX
     );
 
-    this.oneOverZYStep = this.#calcYStep(
+    this.oneOverZYStep = Gradients.calcYStep(
       this.oneOverZ,
       minYVert,
       midYVert,
@@ -990,7 +1031,7 @@ class Gradients {
       oneOverdY
     );
 
-    this.depthXStep = this.#calcXStep(
+    this.depthXStep = Gradients.calcXStep(
       this.depth,
       minYVert,
       midYVert,
@@ -998,7 +1039,7 @@ class Gradients {
       oneOverdX
     );
 
-    this.depthYStep = this.#calcYStep(
+    this.depthYStep = Gradients.calcYStep(
       this.depth,
       minYVert,
       midYVert,
@@ -1043,7 +1084,7 @@ class Gradients {
     }
   }
 
-  #calcXStep(values, minYVert, midYVert, maxYVert, oneOverdX) {
+  static calcXStep(values, minYVert, midYVert, maxYVert, oneOverdX) {
     return (
       ((values[1] - values[2]) * (minYVert.y - maxYVert.y) -
         (values[0] - values[2]) * (midYVert.y - maxYVert.y)) *
@@ -1051,7 +1092,7 @@ class Gradients {
     );
   }
 
-  #calcYStep(values, minYVert, midYVert, maxYVert, oneOverdY) {
+  static calcYStep(values, minYVert, midYVert, maxYVert, oneOverdY) {
     return (
       ((values[1] - values[2]) * (minYVert.x - maxYVert.x) -
         (values[0] - values[2]) * (midYVert.x - maxYVert.x)) *
@@ -1075,6 +1116,7 @@ function drawTriangle(v1, v2, v3, texture, alpha) {
   // TODO: Fix clipping.
   return;
 
+  /*
   const vertices = [v1, v2, v3];
   const auxillaryList = [];
 
@@ -1088,6 +1130,7 @@ function drawTriangle(v1, v2, v3, texture, alpha) {
       fillTriangle(initialVertex, vertices[i], vertices[i + 1], texture, alpha);
     }
   }
+   */
 }
 
 function fillTriangle(minYVert, midYVert, maxYVert, texture, alpha) {
@@ -1172,11 +1215,9 @@ function scanTriangle(
   alpha
 ) {
   const gradients = new Gradients(minYVert, midYVert, maxYVert);
-
   const topToBottom = new Edge(gradients, minYVert, maxYVert, 0);
   const topToMiddle = new Edge(gradients, minYVert, midYVert, 0);
   const middleToBottom = new Edge(gradients, midYVert, maxYVert, 1);
-
   scanEdges(gradients, topToBottom, topToMiddle, handedness, texture, alpha);
   scanEdges(gradients, topToBottom, middleToBottom, handedness, texture, alpha);
 }

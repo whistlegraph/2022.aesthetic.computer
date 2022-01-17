@@ -11,3 +11,5 @@ node_modules/
 # development certificates
 /ssl-dev/localhost.pem
 /ssl-dev/localhost-key.pem
+
+.vercel

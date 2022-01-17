@@ -123,7 +123,11 @@ export function boot({
   for (const l of "ABCDEFG") // Add each colored block.
     blocks[l] = new Form(
       SQUARE,
-      { texture: painting(32, 32, (p) => p.wipe(...blocksColors[l])) },
+      {
+        texture: painting(32, 32, (p) => {
+          p.wipe(...blocksColors[l]);
+        }),
+      },
       [blocksX[l], 0, 4] // Position
     );
 
@@ -141,11 +145,7 @@ export function boot({
 
 let wiggleStartTime;
 
-export function sim({
-  num: { lerp },
-  sound: { time, bpm, bp },
-  help: { each },
-}) {
+export function sim({ num: { lerp }, sound: { time, bpm }, help: { each } }) {
   //arrowSpin += 3;
   //arrow.rotation[1] = arrowSpin;
 
@@ -555,6 +555,10 @@ export function beat({
     noteI += 1;
     melodyBeatsPlayed += 1;
   }
+}
+
+export function act({ event: e, net: { web } }) {
+  if (e.is("keyboard:down") && e.key === "e") web("/disks");
 }
 
 // ⚙️ Utilities

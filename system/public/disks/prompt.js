@@ -92,16 +92,29 @@ function paint({ wipe, screen, ink, inFocus }) {
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event: e, needsPaint, load }) {
+function act({ event: e, needsPaint, load, help: { empty } }) {
   if (e.is("keyboard:down")) {
     // Printable keys.
     if (e.key.length === 1) text += e.key;
     // Other keys.
     else {
       if (e.key === "Backspace") text = text.slice(0, -1);
-      if (e.key === "Enter") load("disks/" + text);
 
-      console.log("Key down:", e.key);
+      if (e.key === "Enter") {
+        // Tokenize text.
+        const tokens = text.split(" ");
+        const params = tokens.slice(1);
+        load(
+          "disks/" + tokens[0],
+          undefined,
+          params.length ? params : undefined
+        );
+      }
+
+      if (e.key === "Escape") {
+        text = "";
+      }
+      // console.log("Key down:", e.key);
     }
 
     blink.flip(true);

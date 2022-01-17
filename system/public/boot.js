@@ -3,7 +3,7 @@ import { boot } from "./computer/bios.js";
 let host;
 
 if (window.location.hostname === "aesthetic.computer") {
-  host = "disks.aesthetic.computer"; // Production
+  host = "aesthetic.computer"; // Production
 } else {
   // Build a hostname (with a path if one exists) from the current location.
   // Hosts can also be remote domains. (HTTPS is assumed)
@@ -12,7 +12,7 @@ if (window.location.hostname === "aesthetic.computer") {
 }
 
 const bpm = 120;
-const debug = true;
+const debug = false;
 
 // TODO: Finish FigJam Widget with iframe message based input & output.
 // See also: https://www.figma.com/plugin-docs/working-with-images/
@@ -28,6 +28,7 @@ window.addEventListener("message", receive);
 
 // Decoding an image can be done by sticking it in an HTML
 // canvas, as we can read individual pixels off the canvas.
+/*
 async function decode(canvas, ctx, bytes) {
   const url = URL.createObjectURL(new Blob([bytes]));
   const image = await new Promise((resolve, reject) => {
@@ -42,5 +43,10 @@ async function decode(canvas, ctx, bytes) {
   const imageData = ctx.getImageData(0, 0, image.width, image.height);
   return imageData;
 }
+ */
 
-boot("disks/prompt", bpm, host, undefined, debug);
+if (window.location.hash.length > 0) {
+  boot("disks/" + window.location.hash.slice(1), bpm, host, undefined, debug);
+} else {
+  boot("disks/prompt", bpm, host, undefined, debug);
+}

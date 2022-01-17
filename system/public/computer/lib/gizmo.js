@@ -11,7 +11,7 @@ export class Hourglass {
 
   constructor(
     max = 1,
-    { completed, flipped, autoFlip = false },
+    { completed, flipped, autoFlip = false } = {},
     startingTicks = 0
   ) {
     this.max = max;
@@ -30,6 +30,10 @@ export class Hourglass {
       this.#completedCb?.(this);
       if (this.#autoFlip) this.flip();
     }
+  }
+
+  get progress() {
+    return this.ticks / this.max;
   }
 
   flip() {

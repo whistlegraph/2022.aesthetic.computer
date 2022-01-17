@@ -171,22 +171,22 @@
     <span class="nav-label">Playlist</span>
     <ol>
         <li>
-            <a href="https://aesthetic.computer">O & M's Melody (80)</a>
+            <a href="/#stage">O & M's Melody (80)</a>
         </li>
         <li>
-            <a href="https://aesthetic.computer?bpm=140">O & M's Speedy (140)</a>
+            <a href="/?bpm=140#stage">O & M's Speedy (140)</a>
         </li>
         <li>
-            <a href="https://aesthetic.computer?bpm=120&melody=ABCDEFG&loop=true">Looped Increasing Scale (120)</a>
+            <a href="/?bpm=120&melody=ABCDEFG&loop=true#stage">Looped Increasing Scale (120)</a>
         </li>
         <li>
-            <a href="https://aesthetic.computer?bpm=80&melody=GFEDCBA&loop=true">Looped Decreasing Scale (80)</a>
+            <a href="/?bpm=80&melody=GFEDCBA&loop=true#stage">Looped Decreasing Scale (80)</a>
         </li>
         <li>
-            <a href="https://aesthetic.computer?bpm=180&melody=ADGDADGDABCEFBCEFA&loop=true">Scary Descent (Looped) (180)</a>
+            <a href="/?bpm=180&melody=ADGDADGDABCEFBCEFA&loop=true#stage">Scary Descent (Looped) (180)</a>
         </li>
         <li>
-            <a href="https://aesthetic.computer?bpm=90&melody=AAABAAACAAAEDDDEEEBBBFFFCC____CC____G________CBA&loop=false">Jeffrey's Melody (90)</a>
+            <a href="/?bpm=90&melody=AAABAAACAAAEDDDEEEBBBFFFCC____CC____G________CBA&loop=false#stage">Jeffrey's Melody (90)</a>
         </li>
     </ol>
 </nav>
@@ -215,8 +215,8 @@
             loop: loopEl.checked
         });
 
-        // window.location.href = "https://127.0.0.1:8080" + '?' + params.toString()
-        window.location.href = "https://aesthetic.computer" + '?' + params.toString()
+        window.location.href = '/?' + params.toString() + "#stage";
+        //window.location.href = "https://aesthetic.computer" + '?' + params.toString()
     });
 </script>
 
