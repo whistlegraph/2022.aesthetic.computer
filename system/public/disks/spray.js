@@ -44,7 +44,7 @@ function paint({
 
     // Spray on the painting within a circle.
     sprays.forEach((s) => {
-      const c = new Circle(s.x, s.y, 4);
+      const c = new Circle(s.x, s.y, 2);
       const alpha = 255 * s.pressure * s.pressure;
 
       rep(8 + 32 * s.pressure, () => {

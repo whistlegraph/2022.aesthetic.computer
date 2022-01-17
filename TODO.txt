@@ -3,9 +3,14 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 🌟 Current
 
-Tracker: Oliver + Mija (Jan. 17)
+- Add saving and loading to tracker... and melody?
 
 ⏳ Next
+
+- Enable audio on keyboard interaction in addition to pointer interaction.
+
+Fix the issue where sometimes frames are missed "Failed to construct ImageData"
+when refreshing. (Use tracker to test this.)
 
 Make a camera-based chalk drawing pad tool.
   - Use a naive approach similar to my old software from the Oberlin lecture.
@@ -14,7 +19,12 @@ Make a camera-based chalk drawing pad tool.
 Make Shrub.
 
 Add "load URL" command to the prompt so any disk can be loaded from any URL.
-Then disk development can begin. (Once prompt actually generates docs.)
+    Then disk development can begin. (Once prompt actually generates docs.)
+        - Would the best way to produce a scripting language be by making a fully
+          curry-able system or some domain specific languages using `` then
+          combining them?
+    Could an editing session or new disk be started from the prompt? Maybe it
+    could load a GitHub codespace?
 
 Implement drawing / gesture based disk launchers from the prompt.
 

@@ -123,10 +123,11 @@ class SoundProcessor extends AudioWorkletProcessor {
       for (const instrument of this.#queue) {
         // For now, all sounds are maxed out and mixing happens by dividing by the total length.
 
-        const amplitude = instrument.next / this.#queue.length;
+        // TODO: Actually add the sounds here instead of replacing them.
+        const amplitude = instrument.next; // / this.#queue.length;
 
-        output[0][frame] = instrument.pan(0, amplitude);
-        output[1][frame] = instrument.pan(1, amplitude);
+        output[0][frame] += instrument.pan(0, amplitude);
+        output[1][frame] += instrument.pan(1, amplitude);
       }
 
       // Mix all sound through global volume.

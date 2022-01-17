@@ -245,6 +245,12 @@ async function boot(
         audioContext.resume();
       }
     });
+
+    window.addEventListener("keydown", async () => {
+      if (["suspended", "interrupted"].includes(audioContext.state)) {
+        audioContext.resume();
+      }
+    });
   }
 
   // TODO: Add mute
@@ -276,6 +282,8 @@ async function boot(
       send(firstMessage);
     } else {
       console.error("🛑 Disk error:", err);
+      // TODO: Try and save the crash here by restarting the worker
+      //       without a full system reload?
     }
   };
 
@@ -381,7 +389,7 @@ async function boot(
           updateCount,
           inFocus: document.hasFocus(),
           audioTime: audioContext?.currentTime,
-          audioBpm: sound.bpm[0],
+          audioBpm: sound.bpm[0], // TODO: Turn this into a messaging thing.
           pixels: screen.pixels.buffer,
           width: canvas.width,
           height: canvas.height,
@@ -418,6 +426,11 @@ async function boot(
     // Route to different functions if this change is not a full frame update.
     if (type === "refresh") {
       window.location.reload();
+      return;
+    }
+
+    if (type === "web") {
+      window.location.href = content;
       return;
     }
 

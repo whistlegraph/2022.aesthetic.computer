@@ -35,8 +35,10 @@ let simCount = 0n;
 let noPaint = false;
 
 let socket;
-
 let penX, penY;
+const store = {}; // This object is used to store and retrieve data across disks
+//                 during individual sessions. It doesn't get cleared
+//                 automatically unless the whole system refreshes.
 let upload;
 let activeVideo; // TODO: Eventually this can be a bank to store video textures.
 let inFocus;
@@ -78,6 +80,7 @@ const $commonApi = {
   gizmo: { Hourglass: gizmo.Hourglass },
   net: {},
   needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
+  store,
 };
 
 // Just for "update".
@@ -173,6 +176,7 @@ const $paintApiUnwrapped = {
   point: graph.point,
   line: graph.line,
   box: graph.box,
+  shape: graph.shape,
   grid: graph.grid,
   draw: graph.draw,
   printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
@@ -293,6 +297,11 @@ const { send, noWorker } = (() => {
     // Add host to the networking api.
     $commonApi.net.host = host;
 
+    // Add web to the networking api.
+    $commonApi.net.web = (url) => {
+      send({ type: "web", content: url }); // Jump the browser to a new url.
+    };
+
     // Automatically connect a socket server if we are in debug mode.
     if (debug) {
       let receiver;
@@ -400,9 +409,7 @@ function makeFrame({ data: { type, content } }) {
     $api.sound = {
       time: content.time,
       bpm: function (newBPM) {
-        if (newBPM) {
-          content.bpm[0] = newBPM;
-        }
+        if (newBPM) content.bpm[0] = newBPM;
         return content.bpm[0];
       },
     };
@@ -683,6 +690,19 @@ function makeFrame({ data: { type, content } }) {
             .catch(reject);
         });
       };
+
+      // TODO: Set bpm from boot.
+      /*
+      $api.sound = {
+        time: content.time,
+        bpm: function (newBPM) {
+          if (newBPM) {
+            content.bpm[0] = newBPM;
+          }
+          return content.bpm[0];
+        },
+      };
+       */
 
       // Run boot only once before painting for the first time.
       if (paintCount === 0n) {
