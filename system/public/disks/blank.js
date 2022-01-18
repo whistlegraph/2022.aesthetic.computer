@@ -9,6 +9,7 @@ function boot({ resize }) {
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim($api) {
   // TODO: Move a ball here!
+  console.log($api);
 }
 
 // 🎨 Paint (Runs once per display refresh rate)

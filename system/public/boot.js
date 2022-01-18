@@ -12,7 +12,7 @@ if (window.location.hostname === "aesthetic.computer") {
 }
 
 const bpm = 120;
-const debug = false;
+const debug = true;
 
 // TODO: Finish FigJam Widget with iframe message based input & output.
 // See also: https://www.figma.com/plugin-docs/working-with-images/
