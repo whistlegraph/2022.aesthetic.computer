@@ -1,4 +1,4 @@
-// Export, 2022.1.5
+// Export, 2022.01.17.13.22
 // A test disk for exporting to IPFS.
 
 // Export TODO: Generate a statically runnable zip package of this disk that
@@ -6,19 +6,10 @@
 //       See also: https://www.fxhash.xyz/articles/guide-mint-generative-token
 //       Then test sound and other functionality!
 
-import { servers } from "./common/servers.js";
-
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ cursor, wipe, net: { socket } }) {
   cursor("none");
   wipe(0, 30, 80);
-
-  // Connect to the server for live updates.
-  // TODO: Somehow make this connection automatic in development mode?
-  //       (So that the system can reload also.)
-  socket(servers.me, (type, content) => {
-    console.log("🤖", type, content);
-  });
 }
 
 // 🎨 Paint (Runs once per display refresh rate)

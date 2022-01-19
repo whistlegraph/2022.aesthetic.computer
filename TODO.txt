@@ -3,11 +3,10 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 🌟 Current
 
+- Make a 1px drawing tool.
 - Add saving and loading to tracker... and melody?
 
 ⏳ Next
-
-- Enable audio on keyboard interaction in addition to pointer interaction.
 
 Fix the issue where sometimes frames are missed "Failed to construct ImageData"
 when refreshing. (Use tracker to test this.)
@@ -80,11 +79,9 @@ TODO: Document the API by generating the commands inside a disk and print
 TODO: Make my first generative disk / piece and mint it.
       - Test it in Chrome / Safari / and Firefox.
 
-TODO: Add system font / main shell / terminal? (Working in "plot / prompt").
-
 TODO: Make a quick fullscreen button (make a new keyboard input module).
 
-TODO: Finish Oliver + Mija's tracker / player interface.
+TODO: Fix Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
 
 TODO: Add a new deployment scheme that actually allows my websocket server to
       function... this might mean leaving behind Vercel or configuring it
@@ -112,5 +109,4 @@ TODO: Write a simple note taking program with saving and loading of drawings
  and also recording and playback?
 
 TODO: Ink types? ... can they be procedural using a buffer?
-TODO: Fix Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
 
