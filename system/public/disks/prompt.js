@@ -91,7 +91,7 @@ function paint({ wipe, screen, ink, inFocus }) {
   return !(Object.keys(glyphs).length === Object.keys(font1).length);
 }
 
-// ✒ Act (Runs once per user interaction)
+// ✒ Act (Runs once per user interaction, after boot.)
 function act({ event: e, needsPaint, load, help: { empty } }) {
   if (e.is("keyboard:down")) {
     // Printable keys.

@@ -32,6 +32,7 @@ let reframe;
 let cursorCode;
 let paintCount = 0n;
 let simCount = 0n;
+let initialSim = true;
 let noPaint = false;
 
 let socket;
@@ -330,6 +331,7 @@ const { send, noWorker } = (() => {
       //console.clear();
       paintCount = 0n;
       simCount = 0n;
+      initialSim = true;
       activeVideo = null; // reset activeVideo
       noPaint = false;
       currentPath = path;
@@ -396,8 +398,9 @@ export { noWorker };
 // 3. ✔ Produce a frame.
 // Boot procedure:
 // First `paint` happens after `boot`, then any `act` and `sim`s each frame
-// before `paint`ing occurs. (which is tied to display refresh right now...
-// but it could be manually triggered via `needsPaint();`). 2021.12.11.01.25
+// before `paint`ing occurs. One `sim` always happens after `boot` and before
+// any `act`. `paint` can return false to stop drawing every display frame,
+// then, it must be manually restarted via `needsPaint();`).  2022.01.19.01.08
 // TODO: Make simple needsPaint example.
 function makeFrame({ data: { type, content } }) {
   // 1. Beat // One send (returns afterwards)
@@ -493,6 +496,25 @@ function makeFrame({ data: { type, content } }) {
 
       $api.cursor = (code) => (cursorCode = code);
 
+      // 🤖 Sim // no send
+      $api.seconds = function (s) {
+        return s * 120; // TODO: Get 120 dynamically from the Loop setting. 2022.01.13.23.28
+      };
+
+      if (initialSim) {
+        simCount += 1n;
+        $api.simCount = simCount;
+        sim($api);
+        initialSim = false;
+      } else if (content.updateCount > 0 && paintCount > 0n) {
+        // Update the number of times that are needed.
+        for (let i = content.updateCount; i--; ) {
+          simCount += 1n;
+          $api.simCount = simCount;
+          sim($api);
+        }
+      }
+
       // 🌟 Act
       // Add download event to trigger a file download from the main thread.
       $api.download = (dl) => send({ type: "download", content: dl });
@@ -564,24 +586,6 @@ function makeFrame({ data: { type, content } }) {
           $api.load("disks/prompt");
         }
       });
-
-      // Remove $api elements that are not needed for `sim`.
-      delete $api.event;
-      delete $api.download;
-
-      // 🤖 Sim // no send
-      $api.seconds = function (s) {
-        return s * 120; // TODO: Get 120 dynamically from the Loop setting. 2022.01.13.23.28
-      };
-
-      if (content.updateCount > 0 && paintCount > 0n) {
-        // Update the number of times that are needed.
-        for (let i = content.updateCount; i--; ) {
-          simCount += 1n;
-          $api.simCount = simCount;
-          sim($api);
-        }
-      }
     }
 
     // 🖼 Render // Two sends (Move one send up eventually? -- 2021.11.27.17.20)

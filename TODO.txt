@@ -3,9 +3,6 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 🌟 Current
 
-- Fix the issue where sometimes frames are missed "Failed to construct ImageData"
-  when refreshing. (Use tracker to test this.)
-
 - Make a 1px drawing tool.
 
 ⏳ Next
