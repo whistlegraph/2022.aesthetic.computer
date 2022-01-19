@@ -8,7 +8,6 @@ import * as Graph from "./lib/graph.js";
 import * as UI from "./lib/ui.js";
 import { apiObject, extension } from "./lib/helpers.js";
 
-
 const { assign } = Object;
 
 // 💾 Boot the system and load a disk.
@@ -491,13 +490,40 @@ async function boot(
       return;
     }
 
-    // Assume that type is "render" or "update" from now on.
+    // 🌟 Assume that `type` is "render" or "update" from now on.
+
+    // Don't render if the buffer doesn't match the content.
+    /*
+    console.log(
+      content.pixels.length,
+      composite.pixels.length,
+      content.didntRender
+    );
+     */
+    // TODO: Just see if this works, then pass in width and height.
 
     // Check for a change in resolution.
     if (content.reframe) {
       // Reframe the captured pixels.
       frame(content.reframe.width, content.reframe.height);
       pen.retransformPosition();
+    }
+
+    if (
+      content.pixels.length !== undefined &&
+      content.pixels.length !== composite.pixels.length
+    ) {
+      console.warn("Aborted render. Pixel buffers did not match.");
+      console.log(
+        content.pixels.length,
+        composite.pixels.length,
+        content.didntRender,
+        content.reframe,
+        "Freeze:",
+        freezeFrame
+      );
+      frameAlreadyRequested = false;
+      return;
     }
 
     // Grab the pixels.
