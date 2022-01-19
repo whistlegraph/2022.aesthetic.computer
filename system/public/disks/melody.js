@@ -60,8 +60,8 @@ function beat({ sound: { bpm, square, time }, store, gizmo: { Hourglass } }) {
   if (globalBeatCount >= 0) {
     // TODO: Score data should be stored in [y][x] instead of [x][y].
     scoreData?.forEach((row, x) => {
-      row?.forEach((column, y) => {
-        if (y === beatCount && y < stopRow) {
+      row.forEach((column, y) => {
+        if (row[y] && y === beatCount && y < stopRow) {
           square({
             tone: noteFrequencies[noteList[x]],
             beats: 1,
