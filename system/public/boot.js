@@ -1,9 +1,11 @@
 import { boot } from "./computer/bios.js";
 
-let host;
+let host,
+  debug = true;
 
 if (window.location.hostname === "aesthetic.computer") {
   host = "aesthetic.computer"; // Production
+  debug = false;
 } else {
   // Build a hostname (with a path if one exists) from the current location.
   // Hosts can also be remote domains. (HTTPS is assumed)
@@ -12,13 +14,20 @@ if (window.location.hostname === "aesthetic.computer") {
 }
 
 const bpm = 120;
-const debug = true;
 
+if (window.location.hash.length > 0) {
+  boot("disks/" + window.location.hash.slice(1), bpm, host, undefined, debug);
+} else {
+  boot("disks/prompt", bpm, host, undefined, debug);
+}
+
+// Incoming Message Responder
+// -- At the moment it is just for a work-in-progress figma widget but any
+//    window messages to be received here.
 // TODO: Finish FigJam Widget with iframe message based input & output.
-// See also: https://www.figma.com/plugin-docs/working-with-images/
-// iframe document code
+//         See also: https://www.figma.com/plugin-docs/working-with-images/
 function receive(event) {
-  // console.log("🌟 Event:", event); // Uncomment to log all events.
+  // console.log("🌟 Event:", event);
   if (event.data.type === "figma-image-input") {
     // TODO: Build image with width and height.
     console.log("Bytes:", event.data.bytes.length);
@@ -26,6 +35,7 @@ function receive(event) {
 }
 window.addEventListener("message", receive);
 
+// TODO: Rewrite this snippet.
 // Decoding an image can be done by sticking it in an HTML
 // canvas, as we can read individual pixels off the canvas.
 /*
@@ -43,10 +53,4 @@ async function decode(canvas, ctx, bytes) {
   const imageData = ctx.getImageData(0, 0, image.width, image.height);
   return imageData;
 }
- */
-
-if (window.location.hash.length > 0) {
-  boot("disks/" + window.location.hash.slice(1), bpm, host, undefined, debug);
-} else {
-  boot("disks/prompt", bpm, host, undefined, debug);
-}
+*/

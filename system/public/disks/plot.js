@@ -48,9 +48,13 @@ const plots = {}; // Stored preloaded drawings.
 
 let width = 6; // Starting size.
 let height = 10;
+
+// TODO: Add query params to plot starting size.
+
 let scale = 5;
+
 const abc123Baseline = 8;
-const typography = true;
+const typography = false; // Enabled or disables the baseline.
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
@@ -66,10 +70,13 @@ function boot({
   cursor("tiny");
 
   // Read some basic query parameters for configuring the resolution.
-  const params = new URLSearchParams(query);
-  width = params.get("width") || width;
-  height = params.get("height") || height;
-  scale = params.get("scale") || scale;
+  //const params = new URLSearchParams(query);
+  //width = params.get("width") || width;
+  //height = params.get("height") || height;
+  //scale = params.get("scale") || scale;
+
+  width = query?.[0] || width;
+  height = query?.[1] || height;
 
   g = new Grid(8, 4, width, height, scale);
   save = new Button(41, 64 - 8, 15, 6);

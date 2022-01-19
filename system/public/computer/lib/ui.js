@@ -10,6 +10,7 @@ function spinner({ color, line }) {
 class Button {
   box;
   down = false;
+  icon;
 
   constructor() {
     if (arguments.length === 1) {
