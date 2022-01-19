@@ -60,7 +60,7 @@ function beat({ sound: { bpm, square, time }, store, gizmo: { Hourglass } }) {
   if (globalBeatCount >= 0) {
     // TODO: Score data should be stored in [y][x] instead of [x][y].
     scoreData?.forEach((row, x) => {
-      row.forEach((column, y) => {
+      row?.forEach((column, y) => {
         if (y === beatCount && y < stopRow) {
           square({
             tone: noteFrequencies[noteList[x]],
@@ -175,7 +175,7 @@ function paint({ wipe, ink, geo: { Grid }, screen, num: { randIntRange } }) {
   function paintScore(score, alpha = 1, crossing = false) {
     scoreData.forEach((row, x) => {
       const color = colors.notes[noteList[x]];
-      row.forEach((column, y) => {
+      row?.forEach((column, y) => {
         // Render rows in sync with score's visibility.
         if (score.box.h - 1 < y) return;
 

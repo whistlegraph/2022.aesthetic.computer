@@ -2,11 +2,7 @@
 // A tool for composing, playing, and following along with 12 tones.
 // Designed in collaboration w/ Oliver Laumann + Mija Milovic
 
-// Add play button. (Triangle)
-
-// Make `player` disk.
-
-// TODO: Explore & implement these other tools:
+// TODO: Rethink & implement these other tools:
 //       - %: Add / toggle separator (single bpm notes into held notes)
 //       - -(line)-: Background color change / all together.
 //       - BPM: Adds a thick line to the grid and puts a new number on the right.
@@ -64,6 +60,16 @@ function boot({
   buttons.minus = new Button(0, 0, score.scaled.w / 2, style.addMinusHeight);
   buttons.add = new Button(buttons.minus.box);
 
+  const w = 3 * 3,
+    h = 4 * 3;
+  buttons.load = new Button(3, screen.height - h - 3, w, h);
+  buttons.save = new Button(
+    buttons.load.box.x + buttons.load.box.w + 3,
+    buttons.load.box.y,
+    w,
+    h
+  );
+
   const toolCount = 2;
   bar = new Grid(3, 3, 1, toolCount, scale);
 
@@ -81,6 +87,11 @@ function boot({
     preload(`disks/drawings/font-1/${location}.json`).then((res) => {
       glyphs[glyph] = res;
     });
+  });
+
+  preload("disks/drawings/arrow-up-3x6 2022.1.18.21.59.35.json").then((r) => {
+    buttons.save.icon = r;
+    buttons.load.icon = r;
   });
 }
 
@@ -114,7 +125,7 @@ function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
   // Paint the score data itself.
   scoreData.forEach((row, x) => {
     const color = colors.notes[noteList[x]];
-    row.forEach((column, y) => {
+    row?.forEach((column, y) => {
       // Render rows in sync with score's visibility.
       if (score.box.h - 1 < y) return;
       if (column === "small") {
@@ -133,6 +144,28 @@ function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
   addMinusLayout();
   ink(255, 0, 0, 50).box(buttons.minus.box);
   ink(0, 255, 0, 50).box(buttons.add.box);
+
+  // 2c. Button
+
+  // Load Icon
+  ink(255, 128, 0, 50).box(buttons.load.box);
+  ink(255, 0, 0, 100).draw(
+    buttons.load.icon,
+    buttons.load.box.x + 1,
+    buttons.load.box.y + 1,
+    3,
+    0
+  );
+
+  // Save Icon
+  ink(128, 255, 0, 50).box(buttons.save.box);
+  ink(0, 255, 0, 100).draw(
+    buttons.save.icon,
+    buttons.save.box.x + 1 + 6,
+    buttons.save.box.y + 1 + 9,
+    3,
+    180
+  );
 
   // ✔ 3. Toolbar
   ink(255, 255, 0).grid(bar);
@@ -178,7 +211,7 @@ function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event: e, store, load }) {
+function act({ event: e, store, load, download, upload, num: { timestamp } }) {
   // Scrolling the score.
   if (e.is("touch")) {
     // Hit-test every region to make sure we are dragging on the background.
@@ -197,12 +230,14 @@ function act({ event: e, store, load }) {
   buttons.tools.small.act(e, () => (currentTool = 0));
   buttons.tools.big.act(e, () => (currentTool = 1));
 
+  const scoreHasData = scoreData.flat().filter(Boolean).length > 0;
+
   // Alter the score based on the selected tool.
   if (e.is("touch")) {
     score.under(e, (sq) => {
       affectScore(sq.gx, sq.gy, currentTool === 0 ? "small" : "big");
       // TODO: Put this in a method.
-      if (scoreData.flat().filter(Boolean).length > 0) {
+      if (scoreHasData) {
         // TODO: Cut out any bottom rows from exported scoreData depending
         //       on the height of the rows so end points can be easily adjusted
         //       during playback. 2022.01.16.16.31
@@ -211,6 +246,27 @@ function act({ event: e, store, load }) {
       }
     });
   }
+
+  // Saving & Loading
+  // Relay event info to the save button.
+  buttons.save.act(e, () => {
+    if (scoreHasData) {
+      download({
+        filename: `melody-${timestamp()}.json`,
+        data: JSON.stringify({ data: scoreData, stopRow: score.box.h }),
+      });
+    }
+  });
+
+  buttons.load.act(e, () => {
+    upload(".json")
+      .then((data) => {
+        ({ data: scoreData, stopRow: score.box.h } = JSON.parse(data));
+      })
+      .catch((err) => {
+        console.error("JSON load error:", err);
+      });
+  });
 
   // Adding and removing rows from the score.
   buttons.add.act(e, () => {
@@ -228,7 +284,7 @@ function act({ event: e, store, load }) {
   buttons.play.act(e, () => {
     // 1. Store scoreData in disk RAM if scoreData contains playable entries.
     // TODO: Put this in a method.
-    if (scoreData.flat().filter(Boolean).length > 0) {
+    if (scoreHasData) {
       // TODO: Cut out any bottom rows from exported scoreData depending
       //       on the height of the rows so end points can be easily adjusted
       //       during playback. 2022.01.16.16.31

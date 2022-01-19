@@ -101,6 +101,9 @@ function act({ event: e, needsPaint, load, help: { empty } }) {
       if (e.key === "Backspace") text = text.slice(0, -1);
 
       if (e.key === "Enter") {
+        // TODO: Should I allow named parameters when running disks?
+        //       What about switches?
+
         // Tokenize text.
         const tokens = text.split(" ");
         const params = tokens.slice(1);
