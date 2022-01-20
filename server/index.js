@@ -83,18 +83,18 @@ function everyone(string) {
 // File watching uses: https://github.com/paulmillr/chokidar
 // TODO: Use environment variables to disable this code in production?
 
-if (process.env.NODE_ENV === "development") return;
-
-// 1. Watch for local file changes in disk or system directories.
-chokidar.watch("../system/public/disks").on("all", (event, path) => {
-  console.log("Disk:", event, path);
-  if (event === "change") everyone(pack("reload", "disk"));
-});
-
-// TODO: Finish implementing this on the client.
-chokidar
-  .watch(["../system/public/computer", "../system/public/boot.js"])
-  .on("all", (event, path) => {
-    console.log("System:", event, path);
-    if (event === "change") everyone(pack("reload", "system"));
+if (process.env.NODE_ENV === "development") {
+  // 1. Watch for local file changes in disk or system directories.
+  chokidar.watch("../system/public/disks").on("all", (event, path) => {
+    console.log("Disk:", event, path);
+    if (event === "change") everyone(pack("reload", "disk"));
   });
+
+  // TODO: Finish implementing this on the client.
+  chokidar
+    .watch(["../system/public/computer", "../system/public/boot.js"])
+    .on("all", (event, path) => {
+      console.log("System:", event, path);
+      if (event === "change") everyone(pack("reload", "system"));
+    });
+}
