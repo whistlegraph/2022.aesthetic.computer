@@ -17,7 +17,7 @@ const { floor } = Math;
 import { font1 } from "./common/fonts.js";
 
 let glyphs = {};
-let text = ""; //"aesthetic.computer";
+let text = "aesthetic.computer";
 
 let blink; // block cursor blink timer
 let flash; // error flash timer
@@ -35,7 +35,10 @@ function boot({ size, screen, net: { preload }, pieceCount }) {
     });
   });
 
-  if (pieceCount > 0) canType = true;
+  if (pieceCount > 0) {
+    canType = true;
+    text = "";
+  }
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
@@ -102,9 +105,13 @@ function act({ event: e, needsPaint, load, help: { empty } }) {
   if (e.is("keyboard:down")) {
     // console.log("Key down:", e.key);
 
-    if (canType === false) canType = true;
+    if (canType === false) {
+      canType = true;
+      text = "";
+    }
+
     // Printable keys.
-    if (e.key.length === 1 && e.ctrl === false) text += e.key;
+    else if (e.key.length === 1 && e.ctrl === false) text += e.key;
     // Other keys.
     else {
       if (e.key === "Backspace") text = text.slice(0, -1);
@@ -127,15 +134,13 @@ function act({ event: e, needsPaint, load, help: { empty } }) {
         text = "";
       }
     }
-    blink.flip(true);
-  }
 
-  if (e.is("focus")) {
     blink.flip(true);
   }
 
   if (e.is("typing-input-ready")) {
     canType = true;
+    text = "";
     blink.flip(true);
   }
 
@@ -151,6 +156,7 @@ function act({ event: e, needsPaint, load, help: { empty } }) {
   if (e.is("load-error")) {
     errorPresent = true;
     showFlash = true;
+    text = "";
     needsPaint();
   }
 }
