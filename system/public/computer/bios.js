@@ -18,6 +18,7 @@ async function boot(
   resolution,
   debug
 ) {
+  // Title
   console.log(
     "%caesthetic.computer",
     `background: rgb(10, 20, 40);
@@ -30,6 +31,16 @@ async function boot(
    `
   ); // Print a pretty title in the console.
 
+  // Global Keyboard Shortcuts
+  console.log("Fullscreen:", "[ctrl+x]");
+  console.log("Back:", "[esc]");
+
+  // What words to type in?
+  console.log(
+    "Pieces:",
+    "plot w h, tracker, melody, spray, sprinkles, starfield, pull, stage, metronome"
+  );
+
   if (window.isSecureContext) {
     console.log("🔒 Secure");
   } else {
@@ -38,8 +49,8 @@ async function boot(
 
   let pen, keyboard;
 
-  // Define a blank starter disk that just renders noise and plays a tone.
-  let disk;
+  let diskSupervisor;
+  let currentPiece = null; // Gets set to a path after `loaded`.
 
   // 0. Video storage
   const videos = [];
@@ -65,6 +76,9 @@ async function boot(
 
   const screen = apiObject("pixels", "width", "height");
   const composite = apiObject("pixels", "width", "height");
+
+  const REFRAME_DELAY = 250;
+  let curReframeDelay = REFRAME_DELAY;
 
   function frame(width, height) {
     // Cache the current canvas.
@@ -138,7 +152,8 @@ async function boot(
         window.clearTimeout(timeout); // Small timer to save on performance.
         timeout = setTimeout(() => {
           needsReframe = true;
-        }, 500);
+          curReframeDelay = REFRAME_DELAY;
+        }, curReframeDelay); // Is this needed?
       });
 
       // Prevent canvas touchstart events from triggering magnifying glass on
@@ -234,7 +249,7 @@ async function boot(
 
       soundProcessor.port.onmessage = (e) => {
         const time = e.data;
-        disk.requestBeat?.(time);
+        diskSupervisor.requestBeat?.(time);
       };
 
       soundProcessor.connect(audioContext.destination);
@@ -297,7 +312,8 @@ async function boot(
     if (e.data.loaded === true) {
       //console.log("💾", path, "🌐", host);
       onMessage = receivedChange;
-      disk = { requestBeat, requestFrame };
+      diskSupervisor = { requestBeat, requestFrame };
+      // Set currentPiece to be the last segment of the path.
 
       // Pen (also handles touch & pointer events)
       pen = new Pen((x, y) => {
@@ -307,14 +323,66 @@ async function boot(
         };
       });
 
-      // Keyboard
+      // ⌨️ Keyboard
       keyboard = new Keyboard();
 
-      // Display
+      {
+        /**
+         * Insert a hidden input element that is used to toggle the software
+         * keyboard on touchscreen devices like iPhones and iPads.
+         * *Only works in "disks/prompt".
+         */
+        const input = document.createElement("input");
+        input.id = "software-keyboard-input";
+        input.type = "text";
+        input.style.opacity = 0;
+        //input.style.width = 0;
+        //input.style.height = 0;
+        input.style.position = "absolute";
+        document.body.append(input);
+
+        input.addEventListener("input", (e) => (e.target.value = null));
+
+        input.addEventListener("focus", (e) => {
+          keyboard.events.push({ name: "typing-input-ready" });
+        });
+
+        let touching = false;
+        let keyboardOpen = false;
+
+        // TODO: The input element could be created and added to the DOM here
+        //       if it didn't already exist?
+        window.addEventListener("touchstart", () => (touching = true));
+
+        document.addEventListener("focusout", (e) => {
+          if (keyboardOpen) {
+            keyboard.events.push({ name: "keyboard:close" });
+            keyboardOpen === false;
+          }
+        });
+
+        window.addEventListener("click", (e) => {
+          if (
+            currentPiece === "disks/prompt" &&
+            document.activeElement !== input
+          ) {
+            input.focus();
+            if (touching) {
+              touching = false;
+              keyboard.events.push({ name: "keyboard:open" });
+              keyboardOpen = true;
+            } else {
+              //keyboard.events.push({ name: "typing-input-ready" });
+            }
+          }
+        });
+      }
+
+      // 🖥️ Display
       frame(resolution?.width, resolution?.height);
 
-      // Sound
-      // TODO: Only start this after a user-interaction 22.1.3.
+      // 🔊 Sound
+      // TODO: Only start this after a user-interaction to prevent warnings. 2022.01.19.19.53
       startSound();
 
       // ➰ Core Loops for User Input, Music, Object Updates, and Rendering
@@ -327,7 +395,7 @@ async function boot(
         },
         function (needsRender, updateTimes) {
           // console.log(updateTimes); // Note: No updates happen yet before a render.
-          disk.requestFrame?.(needsRender, updateTimes);
+          diskSupervisor.requestFrame?.(needsRender, updateTimes);
         }
       );
     }
@@ -421,7 +489,6 @@ async function boot(
   let frameCached = false;
   let pixelsDidChange = false; // TODO: Can this whole thing be removed? 2021.11.28.03.50
 
-  // TODO: Organize e into e.data.type and e.data.content.
   function receivedChange({ data: { type, content } }) {
     // Route to different functions if this change is not a full frame update.
     if (type === "refresh") {
@@ -459,6 +526,34 @@ async function boot(
       return;
     }
 
+    if (type === "fullscreen-toggle") {
+      curReframeDelay = 0;
+      toggleFullscreen();
+      return;
+    }
+
+    if (type === "disk-loaded") {
+      // Emit a push state for the old disk if it was not the first. This is so
+      // a user can use browser history to switch between disks.
+      if (content.pieceCount > 0) {
+        const url =
+          content.path === content.firstPiece
+            ? ""
+            : // Set hash to be the last segment of the currentPiece path.
+              "#" + content.path.substring(content.path.lastIndexOf("/") + 1);
+        if (content.fromHistory === false) {
+          history.pushState("", document.title, url);
+        }
+      }
+      currentPiece = content.path;
+      return;
+    }
+
+    if (type === "back-to-piece") {
+      history.back();
+      return false;
+    }
+
     if (type === "disk-unload") {
       // Remove existing video tags.
       videos.forEach(({ video, buffer, getAnimationRequest }) => {
@@ -487,20 +582,15 @@ async function boot(
       // Clear keyboard events.
       keyboard.events.length = 0;
 
+      // Close (defocus) software keyboard if it exists.
+      document.querySelector("#software-keyboard-input")?.blur();
+
       return;
     }
 
     // 🌟 Assume that `type` is "render" or "update" from now on.
 
     // Don't render if the buffer doesn't match the content.
-    /*
-    console.log(
-      content.pixels.length,
-      composite.pixels.length,
-      content.didntRender
-    );
-     */
-    // TODO: Just see if this works, then pass in width and height.
 
     // Check for a change in resolution.
     if (content.reframe) {
@@ -746,8 +836,20 @@ async function boot(
     }
   }
 
+  // 📚 History
+  // TODO: Extract all the history features into a class of some kind?
+  // TODO: Eventually add an API so that a disk can list all the history of
+  //       a user's session. This could also be used for autocompletion of
+  //       pieces / up + down arrow prev-next etc.
+  window.onpopstate = function (e) {
+    console.log("Popping State!");
+    send({
+      type: "history-load",
+      content: document.location.hash.substring(1),
+    });
+  };
+
   // TODO: Add fullscreen support.
-  /*
   // Tries to toggle fullscreen. Must be called within a user interaction.
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
@@ -756,14 +858,6 @@ async function boot(
       document.exitFullscreen();
     }
   }
-
-  // TODO: Get fullscreen to work via a keyboard shortcut in addition
-  // to a button click within an api.
-  // toggleFullscreen();
-  window.addEventListener("touchstart", (e) => {
-    toggleFullscreen();
-  });
-  */
 }
 
 export { boot };
