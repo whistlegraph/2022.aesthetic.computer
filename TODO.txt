@@ -14,7 +14,7 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 - Improve documentation.
   - In console when the whole thing opens.
-  - Get jsDocs working.
+  - Get jsDocs working: https://jsdoc.app/about-configuring-jsdoc.html
 
 Make a camera-based chalk drawing pad tool.
   - Use a naive approach similar to my old software from the Oberlin lecture.

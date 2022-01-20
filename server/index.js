@@ -2,13 +2,19 @@ import { createServer } from "https";
 import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
+import "dotenv/config";
 
 import chokidar from "chokidar";
 
-const server = createServer({
-  cert: readFileSync("../ssl-dev/localhost.pem"),
-  key: readFileSync("../ssl-dev/localhost-key.pem"),
-});
+let serverOptions;
+if (process.env.NODE_ENV === "development") {
+  serverOptions = {
+    cert: readFileSync("../ssl-dev/localhost.pem"),
+    key: readFileSync("../ssl-dev/localhost-key.pem"),
+  };
+}
+const server = createServer(serverOptions);
+
 const wss = new WebSocketServer({ server });
 
 // Pack messages into a simple object protocol of `{type, content}`.
@@ -65,17 +71,19 @@ server.listen(8082, () => {
   console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8082`);
 });
 
-// 🚧 Development Mode
-// TODO: How to check if we are in development mode?
-// File watching uses: https://github.com/paulmillr/chokidar
-// TODO: Use environment variables to disable this code in production?
-
 // Sends a message to all connected clients.
 function everyone(string) {
   wss.clients.forEach((c) => {
     if (c.readyState === WebSocket.OPEN) c.send(string);
   });
 }
+
+// 🚧 Development Mode
+// TODO: How to check if we are in development mode?
+// File watching uses: https://github.com/paulmillr/chokidar
+// TODO: Use environment variables to disable this code in production?
+
+if (process.env.NODE_ENV === "development") return;
 
 // 1. Watch for local file changes in disk or system directories.
 chokidar.watch("../system/public/disks").on("all", (event, path) => {
