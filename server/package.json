@@ -11,6 +11,7 @@
   "author": "Jeffrey Alan Scudder",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^14.2.0",
     "ip": "^1.1.5",
     "ws": "^8.4.0"
   },
