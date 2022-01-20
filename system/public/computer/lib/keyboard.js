@@ -8,7 +8,13 @@ export class Keyboard {
 
   constructor() {
     window.addEventListener("keydown", (e) => {
-      this.events.push({ name: "keyboard:down", key: e.key });
+      this.events.push({
+        name: "keyboard:down",
+        key: e.key,
+        shift: e.shiftKey,
+        alt: e.altKey,
+        ctrl: e.ctrlKey,
+      });
     });
 
     window.addEventListener("keyup", (e) => {

@@ -12,11 +12,9 @@ body {
   -webkit-text-size-adjust: none;
 }
 
-/*
-html, body, canvas {
-  touch-action: none;
-}
-*/
+html, body, canvas { touch-action: none; }
+
+input { pointer-events: none; }
 
 canvas {
   image-rendering: pixelated;

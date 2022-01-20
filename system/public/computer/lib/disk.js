@@ -1,4 +1,4 @@
-// 👩‍💻 Disk
+// 👩‍💻 Disk (Jockey) aka the tape player?
 
 import * as graph from "./graph.js";
 import * as num from "./num.js";
@@ -30,6 +30,7 @@ let currentPath, currentHost, currentSearch;
 let loading = false;
 let reframe;
 let cursorCode;
+let pieceHistoryIndex = -1; // Gets incremented to 0 when first piece loads.
 let paintCount = 0n;
 let simCount = 0n;
 let initialSim = true;
@@ -82,6 +83,8 @@ const $commonApi = {
   net: {},
   needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
   store,
+  pieceCount: -1, // Incs to 0 when the first piece (usually the prompt) loads.
+  //                 Increments by 1 each time a new piece loads.
 };
 
 // Just for "update".
@@ -244,20 +247,31 @@ const painting = new Painting();
 const { send, noWorker } = (() => {
   let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
   let firstLoad = true;
+  let firstPiece;
 
-  async function load(path, host = loadHost, search) {
+  async function load(path, host = loadHost, search = "", fromHistory = false) {
     loadFailure = undefined;
+    loadHost = host; // Memoize the host.
+    pieceHistoryIndex += fromHistory === true ? -1 : 1;
 
     // Kill any existing socket that has remained open from a previous disk.
     socket?.kill();
 
+    // Set the empty path to prompt.
+    if (path === "") path = "prompt";
+    // TODO: In larger multi-disk IPFS exports, a new root path should be defined.
+
     console.log("💾", path, "🌐", host);
 
-    if (debug) {
-      console.log("🟡 Developing");
-    } else {
-      console.log("🟢 Starting");
-    }
+    // Set path to the first loaded disk if empty.
+    if (path.indexOf("/") === -1) path = "disks/" + path;
+
+    if (path)
+      if (debug) {
+        console.log("🟡 Developing");
+      } else {
+        console.log("🟢 Starting");
+      }
 
     if (loading === false) {
       loading = true;
@@ -283,8 +297,6 @@ const { send, noWorker } = (() => {
       loading = false;
       return;
     }
-
-    loadHost = host;
 
     // Add reload to the common api.
     $commonApi.reload = (type) => {
@@ -346,16 +358,29 @@ const { send, noWorker } = (() => {
       act = module.act || defaults.act;
       $commonApi.query = search;
       $commonApi.load = load;
+      $commonApi.pieceCount += 1;
       cursorCode = "precise";
       loading = false;
       penX = undefined;
       penY = undefined;
+      send({
+        type: "disk-loaded",
+        content: {
+          path,
+          pieceCount: $commonApi.pieceCount,
+          firstPiece,
+          fromHistory,
+        },
+      });
       if (firstLoad === false) {
         // Send a message to the bios to unload this disk if it is not the first disk.
         // This cleans up any bios state that is related to the disk and also
         // takes care of nice transitions between disks of different resolutions.
         send({ type: "disk-unload" });
-      } else firstLoad = false;
+      } else {
+        firstLoad = false;
+        firstPiece = path;
+      }
     }, 100);
   }
 
@@ -473,6 +498,10 @@ function makeFrame({ data: { type, content } }) {
   // 1b. Video frames.
   if (type === "video-frame") activeVideo = content;
 
+  // 1c. Loading from History
+  if (type === "history-load")
+    $commonApi.load(content, undefined, undefined, true);
+
   // Request a repaint (runs when the window is resized.)
   if (type === "needs-paint") noPaint = false;
   // 2. Frame
@@ -574,16 +603,28 @@ function makeFrame({ data: { type, content } }) {
       content.keyboard.forEach((data) => {
         Object.assign(data, { device: "keyboard", is: (e) => e === data.name });
         $api.event = data;
-        act($api);
+        act($api); // Execute piece shortcut.
 
-        // Check to see if the escape key was pressed and jump to `disks/prompt`
-        if (
-          data.name === "keyboard:down" &&
-          data.key === "Escape" &&
-          currentPath !== "disks/prompt"
-        ) {
-          console.log("Go to prompt!");
-          $api.load("disks/prompt");
+        // 🌟 Global Keyboard Shortcuts
+
+        if (data.name === "keyboard:down") {
+          // [Escape]
+          // If not on prompt, then move backwards through the history of
+          // previously loaded pieces in a session.
+          if (data.key === "Escape" && currentPath !== "disks/prompt") {
+            if (pieceHistoryIndex > 0) {
+              send({ type: "back-to-piece" });
+            } else {
+              $api.load("prompt");
+            }
+          }
+
+          // [Shift+F]
+          // Enter and exit fullscreen mode.
+          if (data.key === "x" && data.ctrl) {
+            console.log(data);
+            send({ type: "fullscreen-toggle" });
+          }
         }
       });
     }

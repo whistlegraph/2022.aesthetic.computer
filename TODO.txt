@@ -7,6 +7,13 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 ⏳ Next
 
+- Add loading spinner that works outside of debug mode.
+  - Make an arc / circle function and draw a pie spinner.
+
+- Improve documentation.
+  - In console when the whole thing opens.
+  - Get jsDocs working.
+
 Make a camera-based chalk drawing pad tool.
   - Use a naive approach similar to my old software from the Oberlin lecture.
   - Also research ML based object tracking with latency.
@@ -74,6 +81,8 @@ TODO: Document the API by generating the commands inside a disk and print
 
 TODO: Make my first generative disk / piece and mint it.
       - Test it in Chrome / Safari / and Firefox.
+      - In larger multi-disk IPFS exports, a new root path must be defined other
+        than `prompt`. See disk.js `load` function.
 
 TODO: Make a quick fullscreen button (make a new keyboard input module).
 
