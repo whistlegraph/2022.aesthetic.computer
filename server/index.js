@@ -58,7 +58,6 @@ wss.on("connection", (ws, req) => {
   // Stop pinging once the socket closes.
   wss.on("close", () => clearInterval(interval));
   */
-
 });
 
 // Start the server.
@@ -67,6 +66,7 @@ server.listen(8082, () => {
 });
 
 // 🚧 Development Mode
+// TODO: How to check if we are in development mode?
 // File watching uses: https://github.com/paulmillr/chokidar
 // TODO: Use environment variables to disable this code in production?
 

@@ -281,9 +281,10 @@ const { send, noWorker } = (() => {
       return;
     }
 
+    let fullUrl = "https://" + host + "/" + path + ".js";
     // The `time` query parameter busts the cache so changes can be seen
     // if disk code is reloaded while the system is running.
-    const fullUrl = "https://" + host + "/" + path + ".js?time=" + Date.now();
+    if (debug) fullUrl += "?time=" + Date.now();
 
     console.log("🕸", fullUrl);
 
