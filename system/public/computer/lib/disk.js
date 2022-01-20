@@ -85,6 +85,7 @@ const $commonApi = {
   store,
   pieceCount: -1, // Incs to 0 when the first piece (usually the prompt) loads.
   //                 Increments by 1 each time a new piece loads.
+  debug,
 };
 
 // Just for "update".
@@ -326,7 +327,7 @@ const { send, noWorker } = (() => {
       );
 
       $commonApi.net.socket = function (host, receive) {
-        console.log("📡 Mapping receiver.");
+        //console.log("📡 Mapping receiver.");
         receiver = receive;
         return socket;
       };
