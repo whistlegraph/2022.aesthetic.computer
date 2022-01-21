@@ -22,7 +22,7 @@ function boot({ paste, cursor, painting: p, screen, net: { socket }, debug }) {
   paste(painting);
 
   // Connect to the server.
-  server = socket(debug ? servers.me : servers.do, (type, content) => {
+  server = socket(debug ? servers.local : servers.main, (type, content) => {
     if (type === "point") sprays.push(content);
   });
 }

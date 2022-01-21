@@ -87,6 +87,7 @@ function everyone(string) {
 
 // 🚧 Development Mode
 // File watching uses: https://github.com/paulmillr/chokidar
+// TODO: Stop logging every file and instead count them up and report a number.
 if (process.env.NODE_ENV === "development") {
   // 1. Watch for local file changes in disk or system directories.
   chokidar.watch("../system/public/disks").on("all", (event, path) => {
