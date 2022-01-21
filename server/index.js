@@ -12,9 +12,15 @@ if (process.env.NODE_ENV === "development") {
     key: readFileSync("../ssl-dev/localhost-key.pem"),
   };
 }
-const server = createServer(serverOptions);
 
-const wss = new WebSocketServer({ server });
+//const server = createServer(serverOptions);
+
+// Start the server.
+let port = 8080;
+if (process.env.NODE_ENV === "development") port = 8082;
+console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8080`);
+
+const wss = new WebSocketServer({ port });
 
 // Pack messages into a simple object protocol of `{type, content}`.
 function pack(type, content) {
@@ -65,13 +71,9 @@ wss.on("connection", (ws, req) => {
   */
 });
 
-// Start the server.
-let port = 8080;
-if (process.env.NODE_ENV === "development") port = 8082;
-
-server.listen(port, () => {
-  console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8080`);
-});
+//server.listen(port, () => {
+//  console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8080`);
+//});
 
 // Sends a message to all connected clients.
 function everyone(string) {
