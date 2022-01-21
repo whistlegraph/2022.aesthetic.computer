@@ -14,7 +14,7 @@ let server; // Networking
 import { servers } from "./common/servers.js"; // Import server list.
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ paste, cursor, painting: p, screen, net: { socket } }) {
+function boot({ paste, cursor, painting: p, screen, net: { socket }, debug }) {
   cursor("none");
 
   // Make & display the canvas.
@@ -22,7 +22,7 @@ function boot({ paste, cursor, painting: p, screen, net: { socket } }) {
   paste(painting);
 
   // Connect to the server.
-  server = socket(servers.me, (type, content) => {
+  server = socket(debug ? servers.local : servers.main, (type, content) => {
     if (type === "point") sprays.push(content);
   });
 }
