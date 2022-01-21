@@ -5,22 +5,28 @@ import ip from "ip";
 import chokidar from "chokidar";
 import "dotenv/config";
 
-let serverOptions;
+let wss, port;
+
 if (process.env.NODE_ENV === "development") {
-  serverOptions = {
+  // Put the development environment behind a local https server.
+  const server = createServer({
     cert: readFileSync("../ssl-dev/localhost.pem"),
     key: readFileSync("../ssl-dev/localhost-key.pem"),
-  };
+  });
+  port = 8082;
+  server.listen(port, () => {
+    console.log(
+      `🤖 aesthetic.computer (Development) socket: wss://${ip.address()}:${port}`
+    );
+  });
+  wss = new WebSocketServer(server);
+} else {
+  // And assume that in production we are already behind an https proxy.
+  wss = new WebSocketServer({ port: 8080 });
+  console.log(
+    `🤖 aesthetic.computer (Production) socket: wss://${ip.address()}:${port}`
+  );
 }
-
-//const server = createServer(serverOptions);
-
-// Start the server.
-let port = 8080;
-if (process.env.NODE_ENV === "development") port = 8082;
-console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8080`);
-
-const wss = new WebSocketServer({ port });
 
 // Pack messages into a simple object protocol of `{type, content}`.
 function pack(type, content) {
@@ -47,11 +53,11 @@ wss.on("connection", (ws, req) => {
 
   // Relay all incoming messages from this client to everyone else.
   // TODO: 🔐 Validate the messages.
-  ws.on("message", (data) => {
-    others(data.toString());
-  });
+  ws.on("message", (data) => others(data.toString()));
 
-  /*
+  /* Note: for some reason pinging was disconnecting users over and over again...
+           TBD: Is pinging even necessary?
+
   ws.isAlive = true; // For checking persistence between ping-pong messages.
 
   // Send a ping message to all clients every 30 seconds, and kill
@@ -71,10 +77,6 @@ wss.on("connection", (ws, req) => {
   */
 });
 
-//server.listen(port, () => {
-//  console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8080`);
-//});
-
 // Sends a message to all connected clients.
 function everyone(string) {
   wss.clients.forEach((c) => {
@@ -83,10 +85,7 @@ function everyone(string) {
 }
 
 // 🚧 Development Mode
-// TODO: How to check if we are in development mode?
 // File watching uses: https://github.com/paulmillr/chokidar
-// TODO: Use environment variables to disable this code in production?
-
 if (process.env.NODE_ENV === "development") {
   // 1. Watch for local file changes in disk or system directories.
   chokidar.watch("../system/public/disks").on("all", (event, path) => {
