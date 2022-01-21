@@ -18,9 +18,7 @@
   "dependencies": {
     "gl-matrix": "^3.4.3"
   },
-  "types": {
-    "./dist/boot.d.ts"
-  },
+  "types": "./types/boot.d.ts",
   "devDependencies": {
     "http-server": "^14.0.0",
     "prettier": "^2.4.1",
