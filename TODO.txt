@@ -11,6 +11,7 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 ⏳ Next
 
+
 - Add loading spinner that works outside of debug mode.
   - Make an arc / circle function and draw a pie spinner.
 
@@ -33,6 +34,7 @@ Add "load URL" command to the prompt so any disk can be loaded from any URL.
           combining them?
     Could an editing session or new disk be started from the prompt? Maybe it
     could load a GitHub codespace?
+    - How to make use of xterm.js? Could it be used for this project or not...
 
 Implement drawing / gesture based disk launchers from the prompt.
 
