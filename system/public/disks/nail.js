@@ -83,13 +83,8 @@ function paint({
 // ✒ Act (Runs once per user interaction)
 function act({ event: e }) {
   if (e.is("move")) dot = true;
-  
-  if (e.is("lift")) {
-    lastMark = undefined;
-  }
 
-  lastMark = e;
-
+  // TODO: How to stream everyone's points?
 
   if (e.is("draw") || e.is("touch")) {
     // Extract the necessary fields from the event object.
@@ -99,6 +94,11 @@ function act({ event: e }) {
     const point = (({ x, y, pressure }) => ({ x, y, pressure }))(e);
     marks.push(point);
     server.send("point", point);
+    lastMark = point;
+  }
+  
+  if (e.is("lift")) {
+    lastMark = undefined;
   }
 }
 
