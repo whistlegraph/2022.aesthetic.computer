@@ -630,6 +630,12 @@ function makeFrame({ data: { type, content } }) {
 
       $api.pen = { x: penX, y: penY };
 
+      /** 
+       * @function video
+       * @descrption Make a live video feed. Returns an object that links to current frame.
+       * @param {string} type
+       * @param {object} options - *unimplemented* { src, width, height }
+       */
       $api.video = function (type, options) {
         // Options could eventually be { src, width, height }
         send({ type: "video", content: { type, options } });
