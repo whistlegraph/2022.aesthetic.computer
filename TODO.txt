@@ -5,6 +5,8 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 * Switch production build of aesthetic.computer to Digital Ocean.
 
+* Find and fix out of memory error.
+
 - Make a 1px drawing tool.
   - Adjust pixel density to be a bit better for iPhones / retina devices.
   - Cross reference on my thinkpad and also my laptop.

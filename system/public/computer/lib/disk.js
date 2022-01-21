@@ -321,7 +321,7 @@ const { send, noWorker } = (() => {
     if (debug) {
       let receiver;
       socket = new Socket(
-        servers.me,
+        servers.local,
         (type, content) => receiver?.(type, content),
         $commonApi.reload
       );
