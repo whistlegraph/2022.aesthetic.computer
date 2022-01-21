@@ -19,7 +19,7 @@ if (process.env.NODE_ENV === "development") {
       `🤖 aesthetic.computer (Development) socket: wss://${ip.address()}:${port}`
     );
   });
-  wss = new WebSocketServer(server);
+  wss = new WebSocketServer({ server });
 } else {
   // And assume that in production we are already behind an https proxy.
   port = 8080;
