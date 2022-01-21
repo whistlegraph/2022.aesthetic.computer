@@ -3,11 +3,13 @@
 
 // TODO: Make a basic prompt.
 //       1. Add mobile keyboard open and close and a version of the ESC key
-//          for mobile users.
-//          - Add input tag buffer with window.event that can get called via
-//            a message? Or track changes in input and message them to the prompt?
-//       2. Generate docs (made from the APIs) inside this disk.
-//          - This would allow people to have a reference while writing disks.
+//          for mobile users - make it also === the back button in all browsers?
+//       2. Prevent non-printable characters from causing an extra backspace.
+//       3. The iOS app would add a small ESC or arrow overlay button in Swift
+//          to make this work properly.
+
+// TODO: Generate or pretty print docs (made from the APIs) inside this disk.
+//       - This would allow people to have a reference while writing disks.
 
 const { entries } = Object;
 const { floor } = Math;
@@ -15,26 +17,32 @@ const { floor } = Math;
 import { font1 } from "./common/fonts.js";
 
 let glyphs = {};
-let text = ""; //"aesthetic.computer";
+let text = "aesthetic.computer";
 
 let blink; // block cursor blink timer
 let flash; // error flash timer
 let showBlink = true;
 let showFlash = false;
 let errorPresent = false;
+let canType = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ size, screen, net: { preload } }) {
+function boot({ size, screen, net: { preload }, pieceCount }) {
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
     preload(`disks/drawings/font-1/${location}.json`).then((res) => {
       glyphs[glyph] = res;
     });
   });
+
+  if (pieceCount > 0) {
+    canType = true;
+    text = "";
+  }
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim({ seconds, inFocus, needsPaint, gizmo: { Hourglass } }) {
+function sim({ seconds, needsPaint, gizmo: { Hourglass } }) {
   // Setup hourglasses for cursor blinking and a error flash.
   blink =
     blink ||
@@ -58,12 +66,12 @@ function sim({ seconds, inFocus, needsPaint, gizmo: { Hourglass } }) {
       autoFlip: true,
     });
 
-  if (inFocus) blink.step();
+  if (canType) blink.step();
   if (errorPresent) flash.step();
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, screen, ink, inFocus }) {
+function paint({ wipe, screen, ink }) {
   wipe(70, 50, 100); // Backdrop
 
   const prompt = new Prompt(6, 6);
@@ -78,7 +86,7 @@ function paint({ wipe, screen, ink, inFocus }) {
     if (pic || char === " ") prompt.forward();
   }
 
-  if (inFocus) {
+  if (canType) {
     ink(0, 0, 255, 64).line(prompt.gutter, 0, prompt.gutter, screen.height); // Ruler
     ink(127).box(0, 0, screen.width, screen.height, "inline"); // Focus
     if (showBlink) ink(200, 30, 100).box(prompt.pos); // Draw blinking cursor.
@@ -88,14 +96,22 @@ function paint({ wipe, screen, ink, inFocus }) {
   if (showFlash) ink(255, 0, 0).box(0, 0, screen.width, screen.height);
 
   // Return false if we are yet to load every glyph.
+  // TODO: This causes some extra paints on startup.
   return !(Object.keys(glyphs).length === Object.keys(font1).length);
 }
 
 // ✒ Act (Runs once per user interaction, after boot.)
 function act({ event: e, needsPaint, load, help: { empty } }) {
   if (e.is("keyboard:down")) {
+    // console.log("Key down:", e.key);
+
+    if (canType === false) {
+      canType = true;
+      text = "";
+    }
+
     // Printable keys.
-    if (e.key.length === 1) text += e.key;
+    else if (e.key.length === 1 && e.ctrl === false) text += e.key;
     // Other keys.
     else {
       if (e.key === "Backspace") text = text.slice(0, -1);
@@ -117,18 +133,34 @@ function act({ event: e, needsPaint, load, help: { empty } }) {
       if (e.key === "Escape") {
         text = "";
       }
-      // console.log("Key down:", e.key);
     }
 
     blink.flip(true);
   }
 
-  if (e.is("focus")) blink.flip(true);
-  if (e.is("defocus")) needsPaint();
+  if (e.is("typing-input-ready")) {
+    canType = true;
+    text = "";
+    blink.flip(true);
+  }
+
+  // TODO: Do I still need these events?
+  // if (e.is("keyboard:open")) blink.flip(true);
+
+  if (e.is("keyboard:close")) {
+    canType = false;
+    needsPaint();
+  }
+
+  if (e.is("defocus")) {
+    canType = false;
+    needsPaint();
+  }
 
   if (e.is("load-error")) {
     errorPresent = true;
     showFlash = true;
+    text = "";
     needsPaint();
   }
 }

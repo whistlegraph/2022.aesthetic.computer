@@ -16,9 +16,9 @@ if (window.location.hostname === "aesthetic.computer") {
 const bpm = 120;
 
 if (window.location.hash.length > 0) {
-  boot("disks/" + window.location.hash.slice(1), bpm, host, undefined, debug);
+  boot(window.location.hash.slice(1), bpm, host, undefined, debug);
 } else {
-  boot("disks/prompt", bpm, host, undefined, debug);
+  boot("prompt", bpm, host, undefined, debug);
 }
 
 // Incoming Message Responder

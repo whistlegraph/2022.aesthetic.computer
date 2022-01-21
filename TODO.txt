@@ -3,13 +3,31 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 🌟 Current
 
+* Switch production build of aesthetic.computer to Digital Ocean.
+
+* Find and fix out of memory error.
+
 - Make a 1px drawing tool.
+  - Adjust pixel density to be a bit better for iPhones / retina devices.
+  - Cross reference on my thinkpad and also my laptop.
 
 ⏳ Next
+
+
+- Add loading spinner that works outside of debug mode.
+  - Make an arc / circle function and draw a pie spinner.
+
+- Improve documentation.
+  - In console when the whole thing opens.
+  - Have a global keyboard shortcut to spit documentation to console... for each
+    function!
+  - Get jsDocs working: https://jsdoc.app/about-configuring-jsdoc.html
 
 Make a camera-based chalk drawing pad tool.
   - Use a naive approach similar to my old software from the Oberlin lecture.
   - Also research ML based object tracking with latency.
+
+Add tool for drawing on lucia's face during our dates.
 
 Make Shrub.
 
@@ -20,6 +38,7 @@ Add "load URL" command to the prompt so any disk can be loaded from any URL.
           combining them?
     Could an editing session or new disk be started from the prompt? Maybe it
     could load a GitHub codespace?
+    - How to make use of xterm.js? Could it be used for this project or not...
 
 Implement drawing / gesture based disk launchers from the prompt.
 
@@ -74,6 +93,8 @@ TODO: Document the API by generating the commands inside a disk and print
 
 TODO: Make my first generative disk / piece and mint it.
       - Test it in Chrome / Safari / and Firefox.
+      - In larger multi-disk IPFS exports, a new root path must be defined other
+        than `prompt`. See disk.js `load` function.
 
 TODO: Make a quick fullscreen button (make a new keyboard input module).
 

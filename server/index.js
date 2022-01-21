@@ -2,14 +2,32 @@ import { createServer } from "https";
 import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
-
 import chokidar from "chokidar";
+import "dotenv/config";
 
-const server = createServer({
-  cert: readFileSync("../ssl-dev/localhost.pem"),
-  key: readFileSync("../ssl-dev/localhost-key.pem"),
-});
-const wss = new WebSocketServer({ server });
+let wss, port;
+
+if (process.env.NODE_ENV === "development") {
+  // Put the development environment behind a local https server.
+  const server = createServer({
+    cert: readFileSync("../ssl-dev/localhost.pem"),
+    key: readFileSync("../ssl-dev/localhost-key.pem"),
+  });
+  port = 8082;
+  server.listen(port, () => {
+    console.log(
+      `🤖 aesthetic.computer (Development) socket: wss://${ip.address()}:${port}`
+    );
+  });
+  wss = new WebSocketServer({ server });
+} else {
+  // And assume that in production we are already behind an https proxy.
+  port = 8080;
+  wss = new WebSocketServer({ port });
+  console.log(
+    `🤖 aesthetic.computer (Production) socket: wss://${ip.address()}:${port}`
+  );
+}
 
 // Pack messages into a simple object protocol of `{type, content}`.
 function pack(type, content) {
@@ -36,11 +54,11 @@ wss.on("connection", (ws, req) => {
 
   // Relay all incoming messages from this client to everyone else.
   // TODO: 🔐 Validate the messages.
-  ws.on("message", (data) => {
-    others(data.toString());
-  });
+  ws.on("message", (data) => others(data.toString()));
 
-  /*
+  /* Note: for some reason pinging was disconnecting users over and over again...
+           TBD: Is pinging even necessary?
+
   ws.isAlive = true; // For checking persistence between ping-pong messages.
 
   // Send a ping message to all clients every 30 seconds, and kill
@@ -58,17 +76,7 @@ wss.on("connection", (ws, req) => {
   // Stop pinging once the socket closes.
   wss.on("close", () => clearInterval(interval));
   */
-
 });
-
-// Start the server.
-server.listen(8082, () => {
-  console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8082`);
-});
-
-// 🚧 Development Mode
-// File watching uses: https://github.com/paulmillr/chokidar
-// TODO: Use environment variables to disable this code in production?
 
 // Sends a message to all connected clients.
 function everyone(string) {
@@ -77,16 +85,21 @@ function everyone(string) {
   });
 }
 
-// 1. Watch for local file changes in disk or system directories.
-chokidar.watch("../system/public/disks").on("all", (event, path) => {
-  console.log("Disk:", event, path);
-  if (event === "change") everyone(pack("reload", "disk"));
-});
-
-// TODO: Finish implementing this on the client.
-chokidar
-  .watch(["../system/public/computer", "../system/public/boot.js"])
-  .on("all", (event, path) => {
-    console.log("System:", event, path);
-    if (event === "change") everyone(pack("reload", "system"));
+// 🚧 Development Mode
+// File watching uses: https://github.com/paulmillr/chokidar
+// TODO: Stop logging every file and instead count them up and report a number.
+if (process.env.NODE_ENV === "development") {
+  // 1. Watch for local file changes in disk or system directories.
+  chokidar.watch("../system/public/disks").on("all", (event, path) => {
+    console.log("Disk:", event, path);
+    if (event === "change") everyone(pack("reload", "disk"));
   });
+
+  // TODO: Finish implementing this on the client.
+  chokidar
+    .watch(["../system/public/computer", "../system/public/boot.js"])
+    .on("all", (event, path) => {
+      console.log("System:", event, path);
+      if (event === "change") everyone(pack("reload", "system"));
+    });
+}
