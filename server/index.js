@@ -2,9 +2,8 @@ import { createServer } from "https";
 import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
-import "dotenv/config";
-
 import chokidar from "chokidar";
+import "dotenv/config";
 
 let serverOptions;
 if (process.env.NODE_ENV === "development") {
@@ -67,8 +66,11 @@ wss.on("connection", (ws, req) => {
 });
 
 // Start the server.
-server.listen(8082, () => {
-  console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8082`);
+let port = 8080;
+if (process.env.NODE_ENV === "development") port = 8082;
+
+server.listen(port, () => {
+  console.log(`🤖 aesthetic.computer Socket URL: wss://${ip.address()}:8080`);
 });
 
 // Sends a message to all connected clients.

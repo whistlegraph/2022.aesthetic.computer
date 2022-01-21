@@ -3,6 +3,8 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 🌟 Current
 
+- Get socket server online in production.
+
 - Make a 1px drawing tool.
   - Adjust pixel density to be a bit better for iPhones / retina devices.
   - Cross reference on my thinkpad and also my laptop.
@@ -14,6 +16,8 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 - Improve documentation.
   - In console when the whole thing opens.
+  - Have a global keyboard shortcut to spit documentation to console... for each
+    function!
   - Get jsDocs working: https://jsdoc.app/about-configuring-jsdoc.html
 
 Make a camera-based chalk drawing pad tool.
