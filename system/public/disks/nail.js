@@ -1,11 +1,13 @@
-// Spray, 22.12.31
+// Nail, 22.12.31
 // A stylus based painting tool for flower pictures.
 
-// - Create a grid for `painting` so it can be displayed
-//   and transformed independently of the display.
+// TODO: - Make a 1px line algorithm.
+//       - Set the resolution to a 16x9 situation with a border.
+//       - Figure out a storage method on the server
+//         for reloading and keeping the board active.
 
 let painting; // A bitmap to draw on.
-const sprays = []; // Points to draw.
+const marks = []; // Points to draw.
 let dot = false; // Show preview dot while moving cursor.
 
 let server; // Networking
@@ -16,14 +18,16 @@ function boot({ paste, cursor, painting: p, screen, net: { socket }, debug }) {
   cursor("none");
 
   // Make & display the canvas.
-  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(140, 50, 20));
+  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
   paste(painting);
 
   // Connect to the server.
   server = socket(debug ? servers.local : servers.main, (type, content) => {
-    if (type === "point") sprays.push(content);
+    if (type === "point") marks.push(content);
   });
 }
+
+let lastMark;
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({
@@ -37,28 +41,39 @@ function paint({
   help: { repeat: rep },
 }) {
   paste(painting);
-  if (sprays.length > 0) {
+
+  if (marks.length > 0) {
     page(painting);
 
     // Spray on the painting within a circle.
-    sprays.forEach((s) => {
-      const c = new Circle(s.x, s.y, 2);
-      const alpha = 255 * s.pressure * s.pressure;
+    marks.forEach((m, i) => {
+      const c = new Circle(m.x, m.y, 2);
+      const alpha = 255 * m.pressure * m.pressure;
 
-      rep(8 + 32 * s.pressure, () => {
+      // Draw a line between this mark and the last one.
+      if(lastMark) {
+	      console.log(lastMark);
+        ink(255, 0, 0).line(lastMark.x, lastMark.y, m.x, m.y);
+      }
+
+      // Spray a little dot for each vertex. 
+      rep(8 + 32 * m.pressure, () => {
         const point = c.random();
         ink(
-          60 + rnd(-40, 80), // R
-          255 - rnd(0, 100), // G
-          80 + rnd(-40, 80), // B
+          30 + rnd(-30, 30), // R
+          30 - rnd(-30, 30), // G
+          30 + rnd(-30, 30), // B
           alpha + rnd(-20, 20) // A
         ).plot(point);
       });
+
     });
-    sprays.length = 0;
+
+    marks.length = 0;
+
     page(screen);
     paste(painting);
-    ink(255, 0, 0).plot(pen); // 🔴 Draw cursor.
+    ink(0, 0, 255).plot(pen); // 🔴 Draw cursor.
   } else if (dot) {
     ink(255, 255, 0).plot(pen); // 🟡 Move (hover) cursor.
     dot = false;
@@ -68,13 +83,21 @@ function paint({
 // ✒ Act (Runs once per user interaction)
 function act({ event: e }) {
   if (e.is("move")) dot = true;
+  
+  if (e.is("lift")) {
+    lastMark = undefined;
+  }
+
+  lastMark = e;
+
+
   if (e.is("draw") || e.is("touch")) {
     // Extract the necessary fields from the event object.
     // https://stackoverflow.com/a/39333479
     // TODO: I could reduce the data into an array here for faster parsing
     //       and a smaller footprint over the network. 22.1.5
     const point = (({ x, y, pressure }) => ({ x, y, pressure }))(e);
-    sprays.push(point);
+    marks.push(point);
     server.send("point", point);
   }
 }
