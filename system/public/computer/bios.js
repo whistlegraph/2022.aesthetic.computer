@@ -8,6 +8,8 @@ import * as Graph from "./lib/graph.js";
 import * as UI from "./lib/ui.js";
 import { apiObject, extension } from "./lib/helpers.js";
 
+import { dist } from "./lib/num.js";
+
 const { assign } = Object;
 
 // 💾 Boot the system and load a disk.
@@ -325,7 +327,6 @@ async function boot(
 
       // ⌨️ Keyboard
       keyboard = new Keyboard();
-
       {
         /**
          * Insert a hidden input element that is used to toggle the software
@@ -336,16 +337,12 @@ async function boot(
         input.id = "software-keyboard-input";
         input.type = "text";
         input.style.opacity = 0;
-        //input.style.width = 0;
-        //input.style.height = 0;
+        input.style.width = 0;
+        input.style.height = 0;
         input.style.position = "absolute";
         document.body.append(input);
 
         input.addEventListener("input", (e) => (e.target.value = null));
-
-        input.addEventListener("focus", (e) => {
-          keyboard.events.push({ name: "typing-input-ready" });
-        });
 
         let touching = false;
         let keyboardOpen = false;
@@ -354,15 +351,32 @@ async function boot(
         //       if it didn't already exist?
         window.addEventListener("touchstart", () => (touching = true));
 
-        document.addEventListener("focusout", (e) => {
+        window.addEventListener("focusout", (e) => {
           if (keyboardOpen) {
             keyboard.events.push({ name: "keyboard:close" });
-            keyboardOpen === false;
+            keyboardOpen = false;
           }
         });
 
-        window.addEventListener("click", (e) => {
+        // Make a pointer "tap" gesture with an `inTime` window of 250ms to
+        // trigger the keyboard on all browsers.
+        let down = false;
+        let downPos;
+        let inTime = false;
+
+        window.addEventListener("pointerdown", (e) => {
+          down = true;
+          downPos = { x: e.x, y: e.y };
+          inTime = true;
+          setTimeout(() => (inTime = false), 250);
+          e.preventDefault();
+        });
+
+        window.addEventListener("pointerup", (e) => {
           if (
+            down &&
+            dist(downPos.x, downPos.y, e.x, e.y) < 8 &&
+            inTime &&
             currentPiece === "disks/prompt" &&
             document.activeElement !== input
           ) {
@@ -371,10 +385,14 @@ async function boot(
               touching = false;
               keyboard.events.push({ name: "keyboard:open" });
               keyboardOpen = true;
-            } else {
-              //keyboard.events.push({ name: "typing-input-ready" });
             }
           }
+          down = false;
+          e.preventDefault();
+        });
+
+        input.addEventListener("focus", (e) => {
+          keyboard.events.push({ name: "typing-input-ready" });
         });
       }
 

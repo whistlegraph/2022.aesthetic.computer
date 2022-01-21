@@ -3,8 +3,7 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 🌟 Current
 
-* Get socket server online in production.
-*
+* Switch production build of aesthetic.computer to Digital Ocean.
 
 - Make a 1px drawing tool.
   - Adjust pixel density to be a bit better for iPhones / retina devices.
@@ -25,6 +24,8 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 Make a camera-based chalk drawing pad tool.
   - Use a naive approach similar to my old software from the Oberlin lecture.
   - Also research ML based object tracking with latency.
+
+Add tool for drawing on lucia's face during our dates.
 
 Make Shrub.
 

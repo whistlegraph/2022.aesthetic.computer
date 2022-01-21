@@ -146,7 +146,11 @@ function act({ event: e, needsPaint, load, help: { empty } }) {
 
   // TODO: Do I still need these events?
   // if (e.is("keyboard:open")) blink.flip(true);
-  // if (e.is("keyboard:close")) blink.flip(true);
+
+  if (e.is("keyboard:close")) {
+    canType = false;
+    needsPaint();
+  }
 
   if (e.is("defocus")) {
     canType = false;
