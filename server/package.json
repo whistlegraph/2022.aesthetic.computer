@@ -2,10 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "description": "A node server for multi-user rooms and local development.",
-  "main": "index.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "node index.js",
+    "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jeffrey Alan Scudder",

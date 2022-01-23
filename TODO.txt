@@ -2,17 +2,27 @@ Jeffrey's in-Project Notes
 See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
 
 🌟 Current
+- Make a 1px, multiplayer drawing tool.
+  - [] Pixel line algorithm.
+  - [] Board reset.
 
-* Switch production build of aesthetic.computer to Digital Ocean.
-
-* Find and fix out of memory error.
-
-- Make a 1px drawing tool.
-  - Adjust pixel density to be a bit better for iPhones / retina devices.
+- Adjust pixel density to be a bit better for iPhones / retina devices.
   - Cross reference on my thinkpad and also my laptop.
 
 ⏳ Next
 
+- Find and fix out of memory error.
+  - bios.js:307 Uncaught DOMException: Failed to execute 'postMessage' on 'Worker': Data cannot be cloned, out of memory.
+        at Worker.postMessage (<anonymous>)
+        at send (https://192.168.1.3/computer/bios.js:307:28)
+        at Object.requestFrame (https://192.168.1.3/computer/bios.js:470:5)
+        at https://192.168.1.3/computer/bios.js:416:40
+        at loop (https://192.168.1.3/computer/lib/loop.js:43:3)
+
+- Rewrite my old Python `Diary` program.
+  - Mint diary entries.
+
+- Add blockchain integration for identity: https://docs.moralis.io/introduction/readme
 
 - Add loading spinner that works outside of debug mode.
   - Make an arc / circle function and draw a pie spinner.

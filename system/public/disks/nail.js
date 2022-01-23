@@ -1,5 +1,5 @@
-// Nail, 22.12.31
-// A stylus based painting tool for flower pictures.
+// 💅 Nail, 22.12.31
+// A multiplayer drawing tool for thumbnailing.
 
 // TODO: - Make a 1px line algorithm.
 //       - Set the resolution to a 16x9 situation with a border.
@@ -8,6 +8,10 @@
 
 let painting; // A bitmap to draw on.
 const marks = []; // Points to draw.
+
+const rmarks = []; // Remote (server sent) marks sorted in order of arrival.
+let lastRMarks = {}; // Maintain a tail of recent rMarks, sorted by connetion id.
+
 let dot = false; // Show preview dot while moving cursor.
 
 let server; // Networking
@@ -22,12 +26,13 @@ function boot({ paste, cursor, painting: p, screen, net: { socket }, debug }) {
   paste(painting);
 
   // Connect to the server.
-  server = socket(debug ? servers.local : servers.main, (type, content) => {
-    if (type === "point") marks.push(content);
+  server = socket(debug ? servers.local : servers.main, (id, type, content) => {
+    if (type === "point") rmarks.push({ id, type, content });
+    else if (type === "stop") rmarks.push({ id, type });
   });
 }
 
-let lastMark;
+// let lastMarks;
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({
@@ -42,34 +47,46 @@ function paint({
 }) {
   paste(painting);
 
-  if (marks.length > 0) {
+  if (rmarks.length > 0) {
     page(painting);
 
     // Spray on the painting within a circle.
-    marks.forEach((m, i) => {
+    rmarks.forEach(({ id, type, content: m }, i) => {
+      // ✒️ Mark Rendering
+      // If we are ending a mark.
+
+      console.log(type);
+
+      if (type === "stop") {
+        delete lastRMarks[id];
+        return;
+      }
+
+      // If we are drawing a point.
       const c = new Circle(m.x, m.y, 2);
       const alpha = 255 * m.pressure * m.pressure;
 
-      // Draw a line between this mark and the last one.
-      if(lastMark) {
-	      console.log(lastMark);
-        ink(255, 0, 0).line(lastMark.x, lastMark.y, m.x, m.y);
+      if (lastRMarks[id]) {
+        ink(255, 0, 0, 100).line(lastRMarks[id].x, lastRMarks[id].y, m.x, m.y);
       }
 
-      // Spray a little dot for each vertex. 
-      rep(8 + 32 * m.pressure, () => {
-        const point = c.random();
-        ink(
-          30 + rnd(-30, 30), // R
-          30 - rnd(-30, 30), // G
-          30 + rnd(-30, 30), // B
-          alpha + rnd(-20, 20) // A
-        ).plot(point);
-      });
+      lastRMarks[id] = m;
 
+      ink(255, 255, 25).plot(m.x, m.y);
+
+      // Spray a little dot for each vertex.
+      // rep(8 + 32 * m.pressure, () => {
+      //   const point = c.random();
+      //   ink(
+      //     30 + rnd(-30, 30),
+      //     30 + rnd(-30, 30),
+      //     30 + rnd(-30, 30),
+      //     alpha + rnd(-20, 20) // A
+      //   ).plot(point);
+      // });
     });
 
-    marks.length = 0;
+    rmarks.length = 0;
 
     page(screen);
     paste(painting);
@@ -86,19 +103,19 @@ function act({ event: e }) {
 
   // TODO: How to stream everyone's points?
 
+  // TODO: I could reduce the data into an array here for faster parsing
+  //       and a smaller footprint over the network. 22.1.5
   if (e.is("draw") || e.is("touch")) {
     // Extract the necessary fields from the event object.
-    // https://stackoverflow.com/a/39333479
-    // TODO: I could reduce the data into an array here for faster parsing
-    //       and a smaller footprint over the network. 22.1.5
     const point = (({ x, y, pressure }) => ({ x, y, pressure }))(e);
-    marks.push(point);
+    // marks.push(point); // TODO: Bring back local cursor.
     server.send("point", point);
-    lastMark = point;
+    //lastMark = point;
   }
-  
+
   if (e.is("lift")) {
-    lastMark = undefined;
+    server.send("stop");
+    //lastMark = undefined;
   }
 }
 
