@@ -1,3 +1,8 @@
+// 🐕‍ Server
+// Handles online multiplayer and realtime interaction @ server.aesthetic.computer.
+// TODO: 🔐 Setup client<->server identity validation for both anonymous users and
+//          authenticated ones.
+
 import { createServer } from "https";
 import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
@@ -6,6 +11,10 @@ import chokidar from "chokidar";
 import "dotenv/config";
 
 let wss, port;
+const connections = {};
+
+let connectionId = 0; // TODO: Eventually replace with a username arrived at through
+//                             a client <-> server authentication function.
 
 if (process.env.NODE_ENV === "development") {
   // Put the development environment behind a local https server.
@@ -16,7 +25,7 @@ if (process.env.NODE_ENV === "development") {
   port = 8082;
   server.listen(port, () => {
     console.log(
-      `🤖 aesthetic.computer (Development) socket: wss://${ip.address()}:${port}`
+      `🤖 server.aesthetic.computer (Development) socket: wss://${ip.address()}:${port}`
     );
   });
   wss = new WebSocketServer({ server });
@@ -25,7 +34,7 @@ if (process.env.NODE_ENV === "development") {
   port = 8080;
   wss = new WebSocketServer({ port });
   console.log(
-    `🤖 aesthetic.computer (Production) socket: wss://${ip.address()}:${port}`
+    `🤖 server.aesthetic.computer (Production) socket: wss://${ip.address()}:${port}`
   );
 }
 
@@ -38,9 +47,13 @@ function pack(type, content) {
 wss.on("connection", (ws, req) => {
   const ip = req.socket.remoteAddress.slice(7) || "localhost"; // beautify ip
 
+  // Assign the conection a unique id.
+  connections[connectionId] = ws;
+  const id = connectionId;
+
   // Send a single welcome message for every new client connection.
-  const content = `${ip} → 🤹${wss.clients.size}`;
-  console.log(content);
+  const content = `${ip} → 🤹${wss.clients.size} : ${connectionId}`;
+
   ws.send(pack("message", content));
 
   // Send a message to all other clients except this one.
@@ -50,11 +63,18 @@ wss.on("connection", (ws, req) => {
     });
   }
 
-  others(pack("message", `🤖 ${ip} has joined.`));
+  others(pack("message", `🤖 ${ip} : ${connectionId} has joined.`));
+
+  connectionId += 1;
 
   // Relay all incoming messages from this client to everyone else.
-  // TODO: 🔐 Validate the messages.
-  ws.on("message", (data) => others(data.toString()));
+  ws.on("message", (data) => {
+    // Parse incoming message and attach client identifier.
+    const msg = JSON.parse(data.toString());
+    msg.id = id;
+    console.log(msg);
+    everyone(JSON.stringify(msg));
+  });
 
   /* Note: for some reason pinging was disconnecting users over and over again...
            TBD: Is pinging even necessary?

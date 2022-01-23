@@ -322,7 +322,7 @@ const { send, noWorker } = (() => {
       let receiver;
       socket = new Socket(
         servers.local,
-        (type, content) => receiver?.(type, content),
+        (id, type, content) => receiver?.(id, type, content),
         $commonApi.reload
       );
 
@@ -673,7 +673,7 @@ function makeFrame({ data: { type, content } }) {
 
       $api.pen = { x: penX, y: penY };
 
-      /** 
+      /**
        * @function video
        * @descrption Make a live video feed. Returns an object that links to current frame.
        * @param {string} type

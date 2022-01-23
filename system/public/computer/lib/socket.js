@@ -50,7 +50,7 @@ export class Socket {
 
   // Before passing messages to disk code, handle some system messages here.
   // Note: "reload" should only be defined when developing.
-  #preReceive({ type, content }, receive, reload) {
+  #preReceive({ id, type, content }, receive, reload) {
     if (type === "message") {
       console.log(`📡 ${content}`);
     } else if (type === "reload" && reload) {
@@ -63,7 +63,7 @@ export class Socket {
         reload("refresh"); // Reload the whole page.
       }
     } else {
-      receive?.(type, content);
+      receive?.(id, type, content);
     }
   }
 }
