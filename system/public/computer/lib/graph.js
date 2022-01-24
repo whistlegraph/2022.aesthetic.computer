@@ -175,7 +175,15 @@ function paste(from, destX = 0, destY = 0) {
   return from;
 }
 
-function line(x0, y0, x1, y1) {
+/**
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param set - Optional function to send {x, y} points to instead of `plot`.
+ */
+function line(x0, y0, x1, y1, set = plot) {
   // Add any panTranslations.
   x0 += panTranslation.x;
   y0 += panTranslation.y;
@@ -183,7 +191,7 @@ function line(x0, y0, x1, y1) {
   y1 += panTranslation.y;
 
   // TODO: Check if line is perfectly horizontal and then skip bresenham and
-  // optimize by filling the whole buffer with the current color.
+  //       optimize by filling the whole buffer with the current color.
 
   // Make sure everything is ceil'd.
   x0 = Math.ceil(x0);
@@ -199,7 +207,7 @@ function line(x0, y0, x1, y1) {
   let err = dx - dy;
 
   while (true) {
-    plot(x0, y0);
+    set(x0, y0);
 
     if (x0 === x1 && y0 === y1) break;
     const e2 = 2 * err;

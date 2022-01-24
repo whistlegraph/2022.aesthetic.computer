@@ -326,13 +326,16 @@ const { send, noWorker } = (() => {
         $commonApi.reload
       );
 
-      $commonApi.net.socket = function (host, receive) {
+      $commonApi.net.socket = function (receive) {
         //console.log("📡 Mapping receiver.");
         receiver = receive;
         return socket;
       };
     } else {
-      $commonApi.net.socket = function (host, receive) {
+      $commonApi.net.socket = function (
+        receive,
+        host = debug ? servers.local : servers.main
+      ) {
         // TODO: Flesh out the rest of reload functionality here to extract it from
         //       Socket. 21.1.5
         socket = new Socket(host, receive);

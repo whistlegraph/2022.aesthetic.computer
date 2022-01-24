@@ -11,6 +11,9 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 ⏳ Next
 
+Stop sending duplicate event data for "draw" and "touch" in `pen`.
+  - e.is("draw") && e.is("touch") should not send duplicate event {x, y} data
+
 - Find and fix out of memory error.
   - bios.js:307 Uncaught DOMException: Failed to execute 'postMessage' on 'Worker': Data cannot be cloned, out of memory.
         at Worker.postMessage (<anonymous>)
