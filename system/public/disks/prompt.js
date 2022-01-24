@@ -101,7 +101,7 @@ function paint({ wipe, screen, ink }) {
 }
 
 // ✒ Act (Runs once per user interaction, after boot.)
-function act({ event: e, needsPaint, load, help: { empty } }) {
+function act({ event: e, needsPaint, load }) {
   if (e.is("keyboard:down")) {
     // console.log("Key down:", e.key);
 
