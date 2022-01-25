@@ -2,9 +2,9 @@ Jeffrey's in-Project Notes
 See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
 
 🌟 Current
-- Make a 1px, multiplayer drawing tool.
-  - [] Pixel line algorithm.
-  - [] Board reset.
+  - Abstract pixel line algorithm and put back in `nail.`
+  - [] Multiplayer Board reset
+  - [] Recording
 
 - Adjust pixel density to be a bit better for iPhones / retina devices.
   - Cross reference on my thinkpad and also my laptop.
