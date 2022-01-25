@@ -230,6 +230,11 @@ class Painting {
       p.#layer = n;
       return p.api;
     };
+
+    // This links to abstract, solitary graph functions that do not need
+    // to be wrapped or deferred for rendering.
+    // TODO: Maybe these functions should be under a graphics algorithms label?
+    this.api.abstract = { bresenham: graph.bresenham };
   }
 
   // Paints every layer.
@@ -517,6 +522,7 @@ function makeFrame({ data: { type, content } }) {
       const $api = {};
       Object.assign($api, $commonApi);
       Object.assign($api, $updateApi);
+      Object.assign($api, painting.api);
 
       $api.inFocus = content.inFocus;
 

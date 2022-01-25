@@ -1,11 +1,16 @@
 // 💅 Line, 2022.01.24.02.41
 // A 1px line drawing algorithm.
 
+// TODO: Better colors. Abstract everything so it can be used
+//       in multiple instances. (See: `Painters` in `nail`)
+
 const { values } = Object;
 
 let painting; // A bitmap to draw on.
 let dot = false; // Show preview dot while moving cursor.
-const points = [];
+let points = []; // This stored every point in a mark.
+let pointsToPaint = [];
+let lastPoint, lastBres; // TODO: Are both of these necessary?
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, resize }) {
@@ -17,35 +22,36 @@ function boot({ paste, cursor, painting: p, screen, resize }) {
   paste(painting);
 }
 
-const bresenPoints = [];
-
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ pen, ink, line, page, screen, paste, num }) {
+function paint({ pen, ink, wipe, line, page, screen, paste, num }) {
+  // TODO: Add ability to change paint fps in here.
   paste(painting); // TODO: This could be optimized with a dirty rectangle.
 
-  // console.log(points.length, pixelPerfect(points).length);
-
-  if (points.length) {
+  // A. Paint anything that needs to be permanent.
+  if (pointsToPaint.length) {
     page(painting);
+    pointsToPaint.forEach((p) => ink(50, 50, 50, 255).plot(p.x, p.y)); // TODO: Eventually add effects here.
+    pointsToPaint.length = 0;
+    page(screen).paste(painting);
+  }
 
-    // Add to painting here.
-    console.log(points.length);
-
-    // TODO: Sample original points at longer distances.
-    // TODO: Paint bresenham line for every original point, and remove duplicates?
-    // TODO: Filter bresenham points.
-
+  // B. Paint any preview pixels that are still being calculated.
+  if (points.length) {
     const filteredPoints = pixelPerfect(points);
     filteredPoints.forEach((p, i) => {
-      ink(0, 0, 0, 25).plot(p.x, p.y);
+      ink(25, 255).plot(p.x, p.y); // Plot the filtered points.
+      // Mark all but first and last to be painted.
+      if (i > 0 && i < filteredPoints.length - 1) pointsToPaint.push(p);
     });
 
-    //points.length = 0; // TODO: This breaks it.
+    // TODO: Dump these into a recording... or, how do I record points for playback?
+    const tail = 2; // TODO: I could use other tail lengths to add effects.
+    points = filteredPoints.slice(-tail);
 
-    page(screen).paste(painting);
-    ink(0, 0, 255, 100).plot(pen); // 🔴 Draw cursor.
+    ink(0, 255).plot(pen); // 🔴 Painting cursor.
   } else {
-    ink(255, 255, 0, 100).plot(pen); // 🟡 Move (hover) cursor.
+    paste(painting);
+    ink(255, 255, 0, 100).plot(pen); // 🟡 Navigation cursor.
     dot = false;
   }
 
@@ -53,10 +59,7 @@ function paint({ pen, ink, line, page, screen, paste, num }) {
 }
 
 // ✒ Act (Runs once per user interaction)
-
-let lastPoint;
-
-function act({ event: e, num: { dist } }) {
+function act({ event: e, num: { dist }, abstract: { bresenham } }) {
   if (e.is("move")) dot = true;
 
   if (e.is("draw") || e.is("touch")) {
@@ -64,21 +67,26 @@ function act({ event: e, num: { dist } }) {
     const point = (({ x, y, pressure }) => ({ x, y, pressure }))(e);
 
     if (!lastPoint) {
-      points.push(point);
+      //points.push(point);
       lastPoint = point;
-    } else if (dist(point.x, point.y, lastPoint.x, lastPoint.y) >= 0.0) {
+    } else if (dist(point.x, point.y, lastPoint.x, lastPoint.y) >= 0) {
       // Make sure the points are not equal.
       if (lastPoint.x !== point.x || lastPoint.y !== point.y) {
-        points.push(point);
+        // Add bresen points.
+        bresenham(lastPoint.x, lastPoint.y, point.x, point.y).forEach((np) => {
+          if (np.x !== lastBres?.x || np.y !== lastBres?.y) points.push(np);
+          lastBres = np;
+        });
         lastPoint = point;
       }
     }
   }
 
   if (e.is("lift")) {
-    points.length = 0;
-    bresenPoints.length = 0;
     lastPoint = null;
+    lastBres = null;
+    pointsToPaint.push(pixelPerfect(points));
+    points.length = 0;
   }
 }
 
@@ -92,6 +100,10 @@ function act({ event: e, num: { dist } }) {
 
 /**
  *  Takes an array of pixel coordinates {x, y} and filters out L shapes.
+ *
+ *  Note: It checks the previous, current, and next pixel and requires a minimum
+ *        set of 3 before it removes anything.
+ *
  *  Transcribed from: https://rickyhan.com/jekyll/update/2018/11/22/pixel-art-algorithm-pixel-perfect.html
  */
 function pixelPerfect(pixels) {
@@ -103,18 +115,6 @@ function pixelPerfect(pixels) {
   let c = 0;
 
   while (c < pixels.length) {
-    /*
-    if (c > 0 && c + 1 < pixels.length) {
-      //console.log(pixels[c - 1].x, pixels[c].x);
-      console.log(
-        pixels[c - 1].x === pixels[c].x || pixels[c - 1].y === pixels[c].y,
-        pixels[c + 1].x === pixels[c].x || pixels[c + 1].y === pixels[c].y, // check right and down
-        pixels[c - 1].x !== pixels[c + 1].x, // check left and right of prev and next
-        pixels[c - 1].y !== pixels[c + 1].y
-      );
-    }
-     */
-
     if (
       c > 0 &&
       c + 1 < pixels.length &&
@@ -133,37 +133,3 @@ function pixelPerfect(pixels) {
 }
 
 export { boot, paint, act };
-
-/*
-points.forEach((p, i) => {
-  //ink(150, 150, 150, 25).plot(p.x, p.y);
-
-  if (i < points.length - 1) {
-    const np = points[i + 1];
-    line(p.x, p.y, np.x, np.y, (x, y) => {
-      if (i > 0) {
-        const lp = points[i - 1];
-        if (p.x !== lp.x || p.y !== lp.y) bresenPoints.push({ x, y });
-      } else {
-        bresenPoints.push({ x, y });
-      }
-    });
-  } else {
-    bresenPoints.push({ x: p.x, y: p.y });
-  }
-});
- */
-
-// bresenPoints.forEach((p, i) => {
-//  ink(150, 150, 150, 255).plot(p.x, p.y);
-
-// TODO: If distance is greater than 1px to i+1, then draw a line to i+1.
-/*
-  if (i < points.length - 1) {
-    const np = points[i + 1];
-    if (num.dist(p.x, p.y, np.x, np.y) >= 2) {
-      ink(0, 0, 255).line(p.x, p.y, np.x, np.y);
-    }
-  }
-   */
-// });

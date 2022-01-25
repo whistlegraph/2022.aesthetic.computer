@@ -183,7 +183,7 @@ function paste(from, destX = 0, destY = 0) {
  * @param y1
  * @param set - Optional function to send {x, y} points to instead of `plot`.
  */
-function line(x0, y0, x1, y1, set = plot) {
+function line(x0, y0, x1, y1) {
   // Add any panTranslations.
   x0 += panTranslation.x;
   y0 += panTranslation.y;
@@ -192,6 +192,21 @@ function line(x0, y0, x1, y1, set = plot) {
 
   // TODO: Check if line is perfectly horizontal and then skip bresenham and
   //       optimize by filling the whole buffer with the current color.
+  bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
+}
+
+/**
+ * Bresenham's Line Algorithm
+ * @description - Returns an array of integer points that make up an aliased line from {x0, y0} to {x1, y1}.
+ * - This function is "abstract" and does not render anything... but outputs points.
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @returns {*[]}
+ */
+function bresenham(x0, y0, x1, y1) {
+  const points = [];
 
   // Make sure everything is ceil'd.
   x0 = Math.ceil(x0);
@@ -207,7 +222,7 @@ function line(x0, y0, x1, y1, set = plot) {
   let err = dx - dy;
 
   while (true) {
-    set(x0, y0);
+    points.push({ x: x0, y: y0 });
 
     if (x0 === x1 && y0 === y1) break;
     const e2 = 2 * err;
@@ -220,6 +235,8 @@ function line(x0, y0, x1, y1, set = plot) {
       y0 += sy;
     }
   }
+
+  return points;
 }
 
 // Takes in x, y, width and height and draws an
@@ -501,6 +518,7 @@ export {
   copy,
   paste,
   line,
+  bresenham, // This function is under "abstract" because it doesn't render.
   box,
   shape,
   grid,
