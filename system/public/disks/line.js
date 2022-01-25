@@ -14,7 +14,7 @@ let lastPoint, lastBres; // TODO: Are both of these necessary?
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, resize }) {
-  resize(96, 96);
+  // resize(96, 96);
   cursor("none");
 
   // Make & display the canvas.
