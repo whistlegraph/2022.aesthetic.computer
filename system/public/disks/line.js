@@ -23,15 +23,13 @@ let lastPoint, lastBres; // TODO: Are both of these necessary?
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, resize, fps }) {
+  // fps(30);
   //resize(96, 96);
   //resize(2048, 2048); // TODO: See how fast I can get it to run at this resolution.
   cursor("none");
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
   paste(painting);
-
-  // TODO: Add ability to change paint fps in here (well....
-  fps(30);
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
