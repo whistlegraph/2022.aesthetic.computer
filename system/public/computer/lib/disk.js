@@ -660,6 +660,10 @@ function makeFrame({ data: { type, content } }) {
 
       $api.screen = screen;
 
+      $api.fps = function (newFps) {
+        send({ type: "fps-change", content: newFps });
+      };
+
       $api.resize = function (width, height) {
         // Don't do anything if there is no change.
 

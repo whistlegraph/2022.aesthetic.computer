@@ -5,9 +5,9 @@
 // ever happen once per display refresh.
 
 const updateFps = 120; // This is constant and should be used for interpolation.
-const renderFps = 120; // This is a maximum and will vary across environments.
+let renderFps = 120; // This is a maximum and will vary across environments.
 const updateRate = 1000 / updateFps;
-const renderRate = 1000 / renderFps;
+let renderRate = 1000 / renderFps;
 let updateTime = 0;
 let renderTime = 0;
 let lastNow;
@@ -51,4 +51,10 @@ function start(inputFun, updateAndRenderFun) {
   window.requestAnimationFrame(loop);
 }
 
-export { start };
+function frameRate(n) {
+  renderFps = n;
+  renderRate = 1000 / renderFps;
+  renderTime = 0;
+}
+
+export { start, frameRate };

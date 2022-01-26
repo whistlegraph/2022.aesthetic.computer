@@ -550,6 +550,12 @@ async function boot(
       return;
     }
 
+    if (type === "fps-change") {
+      console.log("🎞️ FPS:", content);
+      Loop.frameRate(content);
+      return;
+    }
+
     if (type === "disk-loaded") {
       // Emit a push state for the old disk if it was not the first. This is so
       // a user can use browser history to switch between disks.
