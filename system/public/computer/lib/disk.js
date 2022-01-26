@@ -603,7 +603,10 @@ function makeFrame({ data: { type, content } }) {
 
       // Ingest all pen input events by running act for each event.
       content.pen.forEach((data) => {
-        Object.assign(data, { device: "pen", is: (e) => e === data.name });
+        Object.assign(data, {
+          device: data.device,
+          is: (e) => e === data.name,
+        });
         penX = data.x;
         penY = data.y;
         $api.event = data;

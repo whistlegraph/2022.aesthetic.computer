@@ -174,6 +174,7 @@ export class Pen {
 
     this.events.push({
       name: this.event,
+      device: this.pointerType,
       x: this.x,
       y: this.y,
       delta,

@@ -1,10 +1,14 @@
 // 💅 Line, 2022.01.24.02.41
 // A 1px line drawing algorithm.
 
-// TODO: Make clicking (plotting a single point) work.
+// TODO: Analyze and clean up existing algorithm.
+
+// TODO: Fix Safari magnifying glass finger hold bug... again?
 
 // TODO: Better colors. Abstract everything so it can be used
 //       in multiple instances. (See: `Painters` in `nail`)
+
+// TODO: Fix skippy scale rendering of pixels on non-retina displays.
 
 const { values } = Object;
 
@@ -14,14 +18,16 @@ let points = []; // This stored every point in a mark.
 let allPoints = [];
 let pointsToPaint = [];
 let pointsToPreview = [];
+let usingMouse = true;
 let lastPoint, lastBres; // TODO: Are both of these necessary?
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, resize }) {
   //resize(96, 96);
+  //resize(2048, 2048); // TODO: See how fast I can get it to run at this resolution.
   cursor("none");
   // Make & display the canvas.
-  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(0, 0, 0));
+  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
   paste(painting);
 }
 
@@ -36,14 +42,7 @@ function paint({ pen, ink, wipe, line, page, screen, paste, num }) {
   // TODO: Fix alpha blending here.
   if (pointsToPaint.length) {
     page(painting);
-    pointsToPaint.forEach((p) =>
-      ink(
-        num.randIntRange(100, 200),
-        num.randIntRange(100, 200),
-        num.randIntRange(100, 200),
-        90
-      ).plot(p.x, p.y)
-    );
+    pointsToPaint.forEach((p) => ink(50, 50, 50, 255).plot(p.x, p.y));
     pointsToPaint.length = 0;
     page(screen).paste(painting);
   } else {
@@ -53,16 +52,20 @@ function paint({ pen, ink, wipe, line, page, screen, paste, num }) {
   // B. Paint any preview pixels that are still being calculated if we are
   //    currently drawing.
   if (pointsToPreview.length) {
-    //pointsToPreview.forEach((p) => ink(100, 0, 0).plot(p.x, p.y));
+    pointsToPreview.forEach((p) => ink(100, 0, 0).plot(p.x, p.y));
     ink(200, 0, 0).plot(pen); // 🔴 Painting cursor.
   } else {
     // Or just paste the existing painting and paint a navigation cursor.
     paste(painting);
-    ink(255, 255, 0, 100).plot(pen); // 🟡 Navigation cursor.
+
+    if (usingMouse) ink(255, 255, 0, 100).plot(pen); // 🟡 Navigation cursor.
+
     dot = false;
   }
   // TODO: This could be optimized to return false sometimes.
 }
+
+let pointPreviewIndex = 0;
 
 // ✒ Act (Runs once per user interaction)
 function act({ event: e, num: { dist }, abstract: { bresenham } }) {
@@ -72,10 +75,10 @@ function act({ event: e, num: { dist }, abstract: { bresenham } }) {
     const p = point(e);
     const minDist = 0;
 
-    const startLen = points.length;
-
+    // TODO: How can I simplify this algorithm?
     if (!lastPoint) {
-      points.push(p);
+      points.push(p); // TODO: Should this buffer be called something else?
+      pointsToPaint.push(p);
       lastPoint = p;
     } else if (dist(p.x, p.y, lastPoint.x, lastPoint.y) >= minDist) {
       // Make sure the points are not equal.
@@ -86,22 +89,21 @@ function act({ event: e, num: { dist }, abstract: { bresenham } }) {
           lastBres = np;
         });
         lastPoint = p;
-      }
-    }
 
-    if (points.length > startLen) {
-      // Filter points for preview.
-      const filteredPoints = pixelPerfect(points);
-      filteredPoints.forEach((p, i) => {
-        pointsToPreview.push(p); // Preview the filtered points.
-        if (i > 0 && i < filteredPoints.length - 1) {
-          allPoints.push(p); // Record points for playback.
-          pointsToPaint.push(p);
-        }
-      });
-      const tail = 2; // TODO: I could use other tail lengths to add effects.
-      points = filteredPoints.slice(-tail);
-      pointsToPreview = pointsToPreview.slice(-tail);
+        // Filter out "L" shapes from interpolated points.
+        const filteredPoints = pixelPerfect(points);
+        filteredPoints.forEach((p, i) => {
+          pointsToPreview.push(p); // Preview the filtered points.
+          if (i >= pointPreviewIndex && i < filteredPoints.length - 1) {
+            allPoints.push(p); // Record points for playback. TODO: Should I add timestamps here?
+            pointsToPaint.push(p);
+          }
+        });
+        const tail = 3; // TODO: I could use other tail lengths to add effects.
+        points = filteredPoints.slice(-tail); // Consume all of points, save for a few samples.
+        pointPreviewIndex = points.length - 1; // Remember how many samples we saved to prevent redundancies above.
+        pointsToPreview = pointsToPreview.slice(-tail); // TODO: Why not just cut this off at the above?
+      }
     }
   }
 
@@ -112,12 +114,14 @@ function act({ event: e, num: { dist }, abstract: { bresenham } }) {
 
     points.length = 0;
     pointsToPreview.length = 0;
-
-    console.log("Points in painting: ", allPoints.length, allPoints);
+    pointPreviewIndex = 0;
 
     // TODO: Are both of these fields necessary?
     lastPoint = null;
     lastBres = null;
+
+    usingMouse = e.device === "mouse";
+    // console.log("Points in painting: ", allPoints.length, allPoints);
   }
 }
 
