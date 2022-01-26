@@ -1,7 +1,7 @@
 // 💅 Line, 2022.01.24.02.41
 // A 1px line drawing algorithm.
 
-// TODO: Analyze and clean up existing algorithm.
+// TODO: Analyze and clean up existing algorithm. (Finish all TODOS)
 
 // TODO: Fix Safari magnifying glass finger hold bug... again?
 
@@ -22,22 +22,20 @@ let usingMouse = true;
 let lastPoint, lastBres; // TODO: Are both of these necessary?
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ paste, cursor, painting: p, screen, resize }) {
+function boot({ paste, cursor, painting: p, screen, resize, fps }) {
   //resize(96, 96);
   //resize(2048, 2048); // TODO: See how fast I can get it to run at this resolution.
   cursor("none");
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
   paste(painting);
+
+  // TODO: Add ability to change paint fps in here (well....
+  fps(30);
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ pen, ink, wipe, line, page, screen, paste, num }) {
-  // TODO: Add ability to change paint fps in here.
-
-  // TODO: Separate this point logic out of paint, so that it does not loop
-  //       indefinitely... because it's not re-entrant.
-
   // A. Paint anything that needs to be permanent.
   // TODO: Fix alpha blending here.
   if (pointsToPaint.length) {
