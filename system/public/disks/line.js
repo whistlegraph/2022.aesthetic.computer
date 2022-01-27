@@ -1,7 +1,9 @@
 // 💅 Line, 2022.01.24.02.41
 // A 1px line drawing algorithm.
 
-// TODO: Analyze and clean up existing algorithm. (Finish all TODOS)
+// TODO: Optimize for higher resolution.
+
+// TODO: VCR would catch the action layer.
 
 // TODO: Fix Safari magnifying glass finger hold bug... again?
 
@@ -13,111 +15,152 @@
 const { values } = Object;
 
 let painting; // A bitmap to draw on.
-let dot = false; // Show preview dot while moving cursor.
 let points = []; // This stored every point in a mark.
 let allPoints = [];
 let pointsToPaint = [];
-let pointsToPreview = [];
+let pointsToHighlight = [];
 let usingMouse = true;
-let lastPoint, lastBres; // TODO: Are both of these necessary?
+let lastPoint;
+let priorPointsIndex = 0;
+let tapped;
+const tail = 2; // A red visual tail that follows the 1px line.
+let db;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ paste, cursor, painting: p, screen, resize, fps }) {
+function boot({ wipe, paste, cursor, painting: p, screen, resize, fps }) {
   // fps(30);
   //resize(96, 96);
-  //resize(2048, 2048); // TODO: See how fast I can get it to run at this resolution.
+  //resize(2048, 2048);
   cursor("none");
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
-  paste(painting);
+  wipe(100, 100, 100);
+  //paste(painting);
 }
 
+let lastPen;
+
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ pen, ink, wipe, line, page, screen, paste, num }) {
+function paint({ pen, ink, wipe, line, page, screen, paste, num, geo }) {
   // A. Paint anything that needs to be permanent.
   // TODO: Fix alpha blending here.
   if (pointsToPaint.length) {
     page(painting);
-    pointsToPaint.forEach((p) => ink(50, 50, 50, 255).plot(p.x, p.y));
+
+    db = new geo.DirtyBox();
+
+    // TODO: What is the actual process here?
+
+    pointsToPaint.forEach((p) => {
+      ink(50, 50, 50, 100).plot(p.x, p.y);
+      db.soil(p);
+    });
+
+    // TODO: Why would width be 0 of dirtyBox?
+
     pointsToPaint.length = 0;
-    page(screen).paste(painting);
+    page(screen).paste({ painting, crop: db.box }, db.box.x, db.box.y);
+    //page(screen).paste(painting);
   } else {
-    paste(painting);
+    //paste(painting);
   }
 
   // B. Paint any preview pixels that are still being calculated if we are
   //    currently drawing.
-  if (pointsToPreview.length) {
-    pointsToPreview.forEach((p) => ink(100, 0, 0).plot(p.x, p.y));
-    ink(200, 0, 0).plot(pen); // 🔴 Painting cursor.
+  if (pointsToHighlight.length) {
+    //pointsToHighlight.forEach((p) => ink(100, 0, 0).plot(p.x, p.y));
+    //ink(200, 0, 0).plot(pen); // 🔴 Painting cursor.
   } else {
     // Or just paste the existing painting and paint a navigation cursor.
-    paste(painting);
 
-    if (usingMouse) ink(255, 255, 0, 100).plot(pen); // 🟡 Navigation cursor.
+    if (!lastPen) {
+      lastPen = pen;
+    }
 
-    dot = false;
+    if (lastPen.x !== pen.x || lastPen.y !== pen.y) {
+      let cursorDirty = new geo.DirtyBox();
+      cursorDirty.soil(lastPen);
+      paste({ painting, crop: cursorDirty.box }, lastPen.x, lastPen.y);
+      lastPen = { x: pen.x, y: pen.y }; // TODO: pen should be copied on each api request?
+      if (usingMouse) ink(255, 255, 0, 100).plot(pen); // 🟡 Navigation cursor.
+    }
   }
+
+  if (db) {
+    //paste(painting);
+    //ink(255, 0, 255, 32).box(db.box.x, db.box.y, db.box.w, db.box.h); // Preview the dirty rectangle.
+  }
+
+  return false;
+
   // TODO: This could be optimized to return false sometimes.
 }
 
-let pointPreviewIndex = 0;
-
 // ✒ Act (Runs once per user interaction)
-function act({ event: e, num: { dist }, abstract: { bresenham } }) {
-  if (e.is("move")) dot = true;
+function act({
+  event: e,
+  num: { dist },
+  abstract: { bresenham },
+  geo,
+  needsPaint,
+}) {
+  if (e.is("touch") || e.is("draw") || e.is("move")) needsPaint();
 
-  if (e.is("draw") || e.is("touch")) {
+  if (e.is("touch")) {
+    const p = point(e);
+    db = new geo.DirtyBox();
+    allPoints.push(p); // Record points for playback.
+    pointsToPaint.push(p);
+    lastPoint = p;
+    tapped = true;
+  }
+
+  if (e.is("draw")) {
+    tapped = false;
     const p = point(e);
     const minDist = 0;
 
-    // TODO: How can I simplify this algorithm?
-    if (!lastPoint) {
-      points.push(p); // TODO: Should this buffer be called something else?
-      pointsToPaint.push(p);
-      lastPoint = p;
-    } else if (dist(p.x, p.y, lastPoint.x, lastPoint.y) >= minDist) {
+    if (dist(p.x, p.y, lastPoint.x, lastPoint.y) >= minDist) {
       // Make sure the points are not equal.
       if (lastPoint.x !== p.x || lastPoint.y !== p.y) {
-        // Add bresen points.
-        bresenham(lastPoint.x, lastPoint.y, p.x, p.y).forEach((np) => {
-          if (np.x !== lastBres?.x || np.y !== lastBres?.y) points.push(np);
-          lastBres = np;
-        });
-        lastPoint = p;
+        // console.log("☑️Points:", points.slice());
 
+        // Add bresen points, filtering out repeats.
+        bresenham(lastPoint.x, lastPoint.y, p.x, p.y).forEach((np, i) => {
+          if (i > 0 || points.length < 2) points.push(np);
+        });
+        // console.log("☑️Bresen:", points.slice());
+
+        lastPoint = p;
         // Filter out "L" shapes from interpolated points.
         const filteredPoints = pixelPerfect(points);
+        // console.log("☑️Filtered:", filteredPoints.slice());
+
         filteredPoints.forEach((p, i) => {
-          pointsToPreview.push(p); // Preview the filtered points.
-          if (i >= pointPreviewIndex && i < filteredPoints.length - 1) {
-            allPoints.push(p); // Record points for playback. TODO: Should I add timestamps here?
-            pointsToPaint.push(p);
+          if (i >= priorPointsIndex && i < filteredPoints.length - 1) {
+            pointsToHighlight.push(p); // Preview the filtered points.
+            // Then immediately paint and record them.
+            if (i > 0) pointsToPaint.push(p); // Queue points for painting.
+            allPoints.push(p); // Record points for playback.
           }
         });
-        const tail = 3; // TODO: I could use other tail lengths to add effects.
-        points = filteredPoints.slice(-tail); // Consume all of points, save for a few samples.
-        pointPreviewIndex = points.length - 1; // Remember how many samples we saved to prevent redundancies above.
-        pointsToPreview = pointsToPreview.slice(-tail); // TODO: Why not just cut this off at the above?
+
+        points = filteredPoints.slice(-2); // Consume all but up to two points to leave for `pixelPerfect`.
+        priorPointsIndex = 1; // Remember how many we have left over so we skip them on the next pass.
+        pointsToHighlight = pointsToHighlight.slice(-tail); // Trim highlight points if we go over the tail.
       }
     }
   }
 
   if (e.is("lift")) {
-    const filteredPoints = pixelPerfect(points);
-    //allPoints.push(...filteredPoints); // Record points for playback.
-    pointsToPaint.push(...filteredPoints);
-
+    if (tapped === false) pointsToPaint.push(points[points.length - 1]); // Paint last point.
     points.length = 0;
-    pointsToPreview.length = 0;
-    pointPreviewIndex = 0;
-
-    // TODO: Are both of these fields necessary?
+    pointsToHighlight.length = 0;
+    priorPointsIndex = 0;
     lastPoint = null;
-    lastBres = null;
-
+    db = new geo.DirtyBox();
     usingMouse = e.device === "mouse";
-    // console.log("Points in painting: ", allPoints.length, allPoints);
+    console.log("➕ Pixels:", allPoints.length);
   }
 }
 
