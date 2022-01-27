@@ -80,7 +80,15 @@ function clear() {
   }
 }
 
-function plot(x, y) {
+/**
+ * Plot a single pixel using (x, y) or {x, y} if only x is given.
+ * (1) {x, y}
+ * (2) (x, y)
+ */
+function plot() {
+  let x, y;
+  arguments.length === 1 ? ([x, y] = arguments[0]) : ([x, y] = arguments);
+
   x = round(x);
   y = round(y);
 
@@ -166,13 +174,49 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
 
 // Copies pixels from a source buffer to the active buffer and returns
 // the source buffer.
+
+// TODO: Add dirty rectangle support here...
+//       - What would the best parameter set be?
+
 function paste(from, destX = 0, destY = 0) {
-  for (let x = 0; x < from.width; x += 1) {
-    for (let y = 0; y < from.height; y += 1) {
-      copy(destX + x, destY + y, x, y, from);
+  // TODO: See if from has a dirtyBox attribute.
+  if (from.crop) {
+    //console.log(from.crop);
+
+    // A cropped copy.
+    for (let x = 0; x < from.crop.w; x += 1) {
+      for (let y = 0; y < from.crop.h; y += 1) {
+        //console.log(x, y, destX, destY, from.crop);
+
+        /*
+        console.log(
+          "x:",
+          x,
+          "y:",
+          y,
+          from.crop.x,
+          from.crop.y,
+          destX + x,
+          destY + y
+        );
+         */
+        copy(
+          destX + x,
+          destY + y,
+          from.crop.x + x,
+          from.crop.y + y,
+          from.painting
+        );
+      }
+    }
+  } else {
+    // A regular copy.
+    for (let x = 0; x < from.width; x += 1) {
+      for (let y = 0; y < from.height; y += 1) {
+        copy(destX + x, destY + y, x, y, from);
+      }
     }
   }
-  return from;
 }
 
 /**

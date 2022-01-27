@@ -66,6 +66,7 @@ const $commonApi = {
   },
   geo: {
     Box: geo.Box,
+    DirtyBox: geo.DirtyBox,
     Grid: geo.Grid,
     Circle: geo.Circle,
   },
@@ -681,13 +682,18 @@ function makeFrame({ data: { type, content } }) {
         screen.width = width;
         screen.height = height;
         screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
+
+        // Reset the depth buffer.
+        graph.depthBuffer.length = screen.width * screen.height;
+        graph.depthBuffer.fill(Number.MAX_VALUE);
+
         graph.setBuffer(screen);
         reframe = { width, height };
       };
 
       $api.cursor = (code) => (cursorCode = code);
 
-      $api.pen = { x: penX, y: penY };
+      $api.pen = { x: penX, y: penY }; // TODO: This object should not be persistent.
 
       /**
        * @function video
@@ -708,11 +714,9 @@ function makeFrame({ data: { type, content } }) {
 
       graph.setBuffer(screen);
 
-      // Clear depthBuffer. TODO: This should only be for 3D?
-      graph.depthBuffer.length = screen.width * screen.height;
-      for (let i = 0; i < graph.depthBuffer.length; i += 1) {
-        graph.depthBuffer[i] = Number.MAX_VALUE;
-      }
+      // TODO: Disable the depth buffer for now... it doesn't need to be
+      //       regenerated on every frame.
+      // graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
 
       // * Preload *
       // Add preload to the boot api.

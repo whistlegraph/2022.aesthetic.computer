@@ -105,12 +105,14 @@ export class Box {
     this.y += y;
   }
 
+  // Returns true if this box contains the point {x, y}.
   contains({ x, y }) {
     return (
       this.x <= x && x < this.x + this.w && this.y <= y && y < this.y + this.h
     );
   }
 
+  // The opposite of contains.
   misses(o) {
     return !this.contains(o);
   }
@@ -205,5 +207,46 @@ export class Grid {
       );
     }
     return points;
+  }
+}
+
+// This box model uses `soil` to build a dirty rectangle out of points
+// in order to optimize rendering.
+export class DirtyBox {
+  #box;
+  #left;
+  #top;
+  #right;
+  #bottom;
+
+  constructor() {
+    this.#box = new Box(0, 0, 0); // Note: I probably don't need all the features of `box` here.
+  }
+
+  soil({ x, y }) {
+    if (this.#left === undefined) {
+      this.#left = x;
+      this.#right = this.#left;
+    }
+    if (this.#top === undefined) {
+      this.#top = y;
+      this.#bottom = this.#top;
+    }
+
+    if (x < this.#left) this.#left = x;
+    if (y < this.#top) this.#top = y;
+
+    if (x > this.#right) this.#right = x;
+    if (y > this.#bottom) this.#bottom = y;
+  }
+
+  get box() {
+    //console.log(this.#right, this.#left);
+
+    this.#box.x = this.#left;
+    this.#box.y = this.#top;
+    this.#box.w = this.#right - this.#left + 1;
+    this.#box.h = this.#bottom - this.#top + 1;
+    return this.#box;
   }
 }

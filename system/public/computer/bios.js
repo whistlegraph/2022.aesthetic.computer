@@ -11,6 +11,7 @@ import { apiObject, extension } from "./lib/helpers.js";
 import { dist } from "./lib/num.js";
 
 const { assign } = Object;
+const { round } = Math;
 
 // 💾 Boot the system and load a disk.
 async function boot(
@@ -464,6 +465,7 @@ async function boot(
     if (frameAlreadyRequested) return;
     frameAlreadyRequested = true;
 
+    // TODO: 📏 Measure performance of frame: test with different resolutions.
     startTime = performance.now();
 
     // Build the data to send back to the disk thread.
@@ -641,7 +643,7 @@ async function boot(
     }
 
     // Grab the pixels.
-    // TODO: Use BitmapData objects to make this faster once it lands in Safari.
+    // TODO: Use ImageBitmap objects to make this faster once it lands in Safari.
     imageData = new ImageData(
       new Uint8ClampedArray(content.pixels), // Is this the only necessary part?
       canvas.width,
@@ -670,6 +672,8 @@ async function boot(
       frameCached = false;
       pen.render(Graph);
       if (content.loading === true && debug === true) UI.spinner(Graph);
+      // TODO: Add dirty rectangle information here. ⬇️
+      //ctx.putImageData(compositeImageData, 0, 0, pen.x, pen.y, 1, 1);
       ctx.putImageData(compositeImageData, 0, 0);
     } else if (frameCached === false) {
       frameCached = true;
@@ -681,10 +685,12 @@ async function boot(
         Graph.line(1, 1, 1, 4);
         Graph.line(3, 1, 3, 4);
       }
+      //ctx.putImageData(compositeImageData, 0, 0, 1, 1, 3, 3);
       ctx.putImageData(compositeImageData, 0, 0);
       // console.log("Caching frame...");
     } else if (content.loading === true && debug === true) {
       UI.spinner(Graph);
+      // TODO: Add dirty rectangle information here. ⬇️
       ctx.putImageData(compositeImageData, 0, 0);
     } else if (frameCached === true) {
       // console.log("Cached...");
@@ -699,6 +705,7 @@ async function boot(
     // TODO: Put this in a budget related to the current refresh rate.
     // TODO: Do renders always need to be requested?
     //console.log("🎨 MS:", (performance.now() - startTime).toFixed(1));
+    console.log("⌚ Render time: ", round(performance.now() - startTime), "ms");
   }
 
   // Reads the extension off of filename to determine the mimetype and then
