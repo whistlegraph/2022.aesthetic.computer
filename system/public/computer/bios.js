@@ -63,6 +63,10 @@ async function boot(
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
+  // A composite canvas for optimizing speed of drawing.
+  const compositeCanvas = document.createElement("canvas");
+  const compCtx = compositeCanvas.getContext("2d");
+
   // A buffer for nicer resolution switches, nice when moving from
   // low resolution back to high resolution. Could eventually be used
   // for transition effects.
@@ -137,6 +141,9 @@ async function boot(
 
     canvas.width = width;
     canvas.height = height;
+
+    compositeCanvas.width = canvas.width;
+    compositeCanvas.height = canvas.height;
 
     if (imageData) ctx.putImageData(imageData, 0, 0);
 
@@ -478,15 +485,15 @@ async function boot(
           inFocus: document.hasFocus(),
           audioTime: audioContext?.currentTime,
           audioBpm: sound.bpm[0], // TODO: Turn this into a messaging thing.
-          pixels: screen.pixels.buffer,
+          //pixels: screen.pixels.buffer,
           width: canvas.width,
           height: canvas.height,
           pen: pen.events, // TODO: Should store an array of states that get ingested by the worker.
           keyboard: keyboard.events, // TODO: Should store an array of states that get ingested by the worker.
           //updateMetronome,
         },
-      },
-      [screen.pixels.buffer]
+      }
+      //[screen.pixels.buffer]
     );
 
     // Time budgeting stuff...
@@ -509,7 +516,7 @@ async function boot(
   let frameCached = false;
   let pixelsDidChange = false; // TODO: Can this whole thing be removed? 2021.11.28.03.50
 
-  function receivedChange({ data: { type, content } }) {
+  async function receivedChange({ data: { type, content } }) {
     // Route to different functions if this change is not a full frame update.
     if (type === "refresh") {
       window.location.reload();
@@ -625,7 +632,17 @@ async function boot(
       pen.retransformPosition();
     }
 
+    if (content.cursorCode) pen.setCursorCode(content.cursorCode);
+
+    if (content.pixels === undefined) {
+      // console.log("⌚ NO Render: ", round(performance.now() - startTime), "ms");
+      frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
+      return;
+    }
+
+    // TODO: Fix reframing bug.
     if (
+      content.dirtyBox === undefined &&
       content.pixels.length !== undefined &&
       content.pixels.length !== composite.pixels.length
     ) {
@@ -638,60 +655,124 @@ async function boot(
         "Freeze:",
         freezeFrame
       );
-      frameAlreadyRequested = false;
+      frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
       return;
     }
 
-    // Grab the pixels.
+    // Skip rendering if we didn't change anything.
+    if (content.didntRender === true) {
+      frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
+      return;
+    }
+
+    let dirtyBoxBitmap; // Note: Not all browsers will support this optimization.
+    let dirtyBoxBitmapCan;
+
+    // 👌 Otherwise, grab all the pixels, or some, if `dirtyBox` is present.
     // TODO: Use ImageBitmap objects to make this faster once it lands in Safari.
-    imageData = new ImageData(
-      new Uint8ClampedArray(content.pixels), // Is this the only necessary part?
-      canvas.width,
-      canvas.height
-    );
+    if (content.dirtyBox) {
+      // A. Cropped update.
+      const imageData = new ImageData(
+        content.pixels, // Is this the only necessary part?
+        content.dirtyBox.w,
+        content.dirtyBox.h
+      );
 
-    screen.pixels = imageData.data;
+      // Try to make an ImageBitmap (which is *supposedly* faster, but not
+      // supported in all browsers.) 2022.01.29.00.33
 
-    frameAlreadyRequested = false;
+      // This seems to make things faster, even though the Bitmap is not being
+      // used. It is because of async / await? 2022.01.29.02.45
+      //if (createImageBitmap)
+      //  dirtyBoxBitmap = await createImageBitmap(imageData);
 
-    if (content.cursorCode) pen.setCursorCode(content.cursorCode);
+      // Note: Paint everything to a secondary canvas buffer.
+      //       This seems to be the fastest and best supported method
+      //       as of 2022.01.29.02.18
+      dirtyBoxBitmapCan = document.createElement("canvas");
+      dirtyBoxBitmapCan.width = imageData.width;
+      dirtyBoxBitmapCan.height = imageData.height;
 
-    if (content.didntRender === true) return;
+      const dbCtx = dirtyBoxBitmapCan.getContext("2d");
+      dbCtx.putImageData(imageData, 0, 0);
 
-    // Copy all rendered pixels to a composite buffer that will have system-wide
-    // UI elements like loading spinners and cursors tacked on before displaying.
-    composite.pixels.set(imageData.data);
+      // Use this alternative once it's faster. 2022.01.29.02.46
+      // const dbCtx = dirtyBoxBitmapCan.getContext("bitmaprenderer");
+      // dbCtx.transferFromImageBitmap(dirtyBoxBitmap);
+
+      // 🐢 Slowest method uses TypedArrays directly.
+      /*
+      if (!dirtyBoxBitmap) {
+        // Copy all rendered pixels to a composite buffer that will have system-wide
+        // UI elements like loading spinners and cursors tacked on before displaying.
+        const { x, y, w, h } = content.dirtyBox;
+        const rowStart = y;
+        const rowEnd = y + h;
+
+        // Copy rows from `imageData.data` -> `composite.pixels` using the
+        // information from `content.dirtyBox`.
+        for (let row = rowStart; row < rowEnd; row += 1) {
+          const destIndex = (x + row * composite.width) * 4;
+          // console.log( "row", row, "srcRow:", row - rowStart, "destIndex", destIndex);
+          const srcIndex = (row - rowStart) * w * 4;
+          composite.pixels.set(
+            imageData.data.subarray(srcIndex, srcIndex + w * 4),
+            destIndex
+          );
+        }
+      }
+      */
+    } else if (content.paintChanged) {
+      // B. Normal full-screen update.
+      imageData = new ImageData(content.pixels, canvas.width, canvas.height);
+
+      // Copy all rendered pixels to a composite buffer that will have system-wide
+      // UI elements like loading spinners and cursors tacked on before displaying.
+      compositeImageData = imageData;
+      composite.pixels = imageData.data;
+      compCtx.putImageData(compositeImageData, 0, 0);
+
+      // screen.pixels = imageData.data; // TODO: Is this still necessary? 2022.01.29.03.03
+    }
 
     Graph.setBuffer(composite);
 
     pixelsDidChange = content.paintChanged || false;
 
+    function draw() {
+      const db = content.dirtyBox;
+      if (db) {
+        ctx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
+        // ctx.putImageData(compositeImageData, 0, 0, db.x, db.y, db.w, db.h); // This is for the 🐢 slowest method.
+      } else {
+        // Note: Uncomment this for a `dirtyBox` visualization.
+        ctx.drawImage(compositeCanvas, 0, 0);
+      }
+    }
+
     // TODO: This can all be rewritten: 22.1.13.15.26
     // TODO: Can pen.changed just be a cursor change?
-    if (pixelsDidChange || pen.changed) {
+    if (pixelsDidChange || pen.changedInPiece) {
       frameCached = false;
       pen.render(Graph);
       if (content.loading === true && debug === true) UI.spinner(Graph);
-      // TODO: Add dirty rectangle information here. ⬇️
-      //ctx.putImageData(compositeImageData, 0, 0, pen.x, pen.y, 1, 1);
-      ctx.putImageData(compositeImageData, 0, 0);
+      draw();
     } else if (frameCached === false) {
       frameCached = true;
       pen.render(Graph);
       if (debug) {
+        // TODO: Make this work better with dirtyBox. 2022.01.28.23.04
         // TODO: How to I use my actual API in here? 2021.11.28.04.00
         // Draw the pause icon in the top left.
         Graph.color(0, 255, 255);
         Graph.line(1, 1, 1, 4);
         Graph.line(3, 1, 3, 4);
       }
-      //ctx.putImageData(compositeImageData, 0, 0, 1, 1, 3, 3);
-      ctx.putImageData(compositeImageData, 0, 0);
+      draw();
       // console.log("Caching frame...");
     } else if (content.loading === true && debug === true) {
       UI.spinner(Graph);
-      // TODO: Add dirty rectangle information here. ⬇️
-      ctx.putImageData(compositeImageData, 0, 0);
+      draw();
     } else if (frameCached === true) {
       // console.log("Cached...");
     }
@@ -702,10 +783,9 @@ async function boot(
       freezeFrame = false;
     }
 
-    // TODO: Put this in a budget related to the current refresh rate.
-    // TODO: Do renders always need to be requested?
-    //console.log("🎨 MS:", (performance.now() - startTime).toFixed(1));
-    console.log("⌚ Render time: ", round(performance.now() - startTime), "ms");
+    frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
+    // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
+    console.log("🎨", (performance.now() - startTime).toFixed(2), "ms");
   }
 
   // Reads the extension off of filename to determine the mimetype and then

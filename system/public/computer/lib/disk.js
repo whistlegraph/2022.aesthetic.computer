@@ -15,7 +15,9 @@ let debug = false; // This can be overwritten on boot.
 const defaults = {
   boot: () => false,
   sim: () => false,
-  paint: ($) => $.noise16(),
+  paint: ($) => {
+    $.noise16();
+  },
   beat: () => false,
   act: () => false,
 };
@@ -29,6 +31,7 @@ let act = defaults.act;
 let currentPath, currentHost, currentSearch;
 let loading = false;
 let reframe;
+let screen;
 let cursorCode;
 let pieceHistoryIndex = -1; // Gets incremented to 0 when first piece loads.
 let paintCount = 0n;
@@ -603,6 +606,10 @@ function makeFrame({ data: { type, content } }) {
       }
 
       // Ingest all pen input events by running act for each event.
+      // TODO: I could also be transforming pen coordinates here...
+
+      // TODO: Keep track of lastPen to see if it changed.
+
       content.pen.forEach((data) => {
         Object.assign(data, {
           device: data.device,
@@ -634,7 +641,7 @@ function makeFrame({ data: { type, content } }) {
             }
           }
 
-          // [Shift+F]
+          // [Ctrl + X]
           // Enter and exit fullscreen mode.
           if (data.key === "x" && data.ctrl) {
             console.log(data);
@@ -653,11 +660,22 @@ function makeFrame({ data: { type, content } }) {
 
       $api.inFocus = content.inFocus;
 
+      // TODO: This should get created when a disk gets created?
+      if (!screen) {
+        screen = {
+          pixels: new Uint8ClampedArray(content.width * content.height * 4),
+          width: content.width,
+          height: content.height,
+        };
+      }
+
+      /*
       const screen = {
         pixels: new Uint8ClampedArray(content.pixels),
         width: content.width,
         height: content.height,
       };
+       */
 
       $api.screen = screen;
 
@@ -791,16 +809,40 @@ function makeFrame({ data: { type, content } }) {
       // Once paint returns false and noPaint is marked true, `needsPaint` must be called.
       // Note: Always marked false on a disk's first frame.
       let painted = false;
+      let dirtyBox;
+
       if (noPaint === false) {
-        noPaint = paint($api) === false && paintCount !== 0n;
+        const paintOut = paint($api); // Returns `undefined`, `false`, or `DirtyBox`.
+        // `DirtyBox` and `undefined` always set `noPaint` to `true`.
+        noPaint =
+          (paintOut === false ||
+            (paintOut !== undefined && paintOut !== true)) &&
+          paintCount !== 0n;
 
         // Run everything that was queued to be painted, then devour paintLayers.
         painting.paint();
         painted = true;
+
+        if (paintOut) dirtyBox = paintOut;
       }
 
       // Return frame data back to the main thread.
-      const sendData = { pixels: screen.pixels };
+      let sendData = {};
+      let transferredPixels;
+
+      // Check to see if we have a dirtyBox to render from.
+      const croppedBox = dirtyBox?.croppedBox?.(screen);
+      if (croppedBox?.w > 0 && croppedBox?.h > 0) {
+        transferredPixels = dirtyBox.crop(screen);
+        sendData = {
+          pixels: transferredPixels,
+          dirtyBox: croppedBox,
+        };
+      } else if (noPaint === false) {
+        // Otherwise render everything if we drew anything!
+        transferredPixels = screen.pixels;
+        sendData = { pixels: transferredPixels };
+      }
 
       // Optional messages to send.
       if (painted === true) sendData.paintChanged = true;
@@ -810,7 +852,8 @@ function makeFrame({ data: { type, content } }) {
       if (reframe) sendData.reframe = reframe;
       if (cursorCode) sendData.cursorCode = cursorCode;
 
-      send({ type: "render", content: sendData }, [screen.pixels]);
+      // Note: transferredPixels will be undefined when sendData === {}.
+      send({ type: "render", content: sendData }, [transferredPixels]);
 
       paintCount = paintCount + 1n;
 
@@ -819,13 +862,10 @@ function makeFrame({ data: { type, content } }) {
       if (cursorCode) cursorCode = undefined;
     } else {
       // Send update (sim).
-      send(
-        {
-          type: "update",
-          content: { pixels: content.pixels, didntRender: true, loading },
-        },
-        [content.pixels]
-      );
+      send({
+        type: "update",
+        content: { didntRender: true, loading },
+      });
     }
   }
 }

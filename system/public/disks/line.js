@@ -1,7 +1,10 @@
 // 💅 Line, 2022.01.24.02.41
 // A 1px line drawing algorithm.
 
+// TODO: *Hide yellow dot.*
+
 // TODO: Optimize for higher resolution.
+//       - Fix disk swapping and reloading bugs, etc.
 
 // TODO: VCR would catch the action layer.
 
@@ -24,76 +27,85 @@ let lastPoint;
 let priorPointsIndex = 0;
 let tapped;
 const tail = 2; // A red visual tail that follows the 1px line.
-let db;
+let db1;
+let lastPen;
+let boxCopy;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ wipe, paste, cursor, painting: p, screen, resize, fps }) {
+function boot({ wipe, paste, cursor, painting: p, screen, resize, fps, geo }) {
   // fps(30);
   //resize(96, 96);
-  //resize(2048, 2048);
+  //resize(32, 32);
+  //resize(512, 768);
+  resize(2048, 2048);
   cursor("none");
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
   wipe(100, 100, 100);
   //paste(painting);
+  db1 = new geo.DirtyBox();
 }
-
-let lastPen;
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ pen, ink, wipe, line, page, screen, paste, num, geo }) {
-  // A. Paint anything that needs to be permanent.
-  // TODO: Fix alpha blending here.
+  // A. Replace any content painted last frame with the contents of `painting`.
+  let continuedBoxCopy;
+  if (boxCopy) {
+    paste({ painting, crop: geo.Box.copy(boxCopy) }, boxCopy.x, boxCopy.y);
+    continuedBoxCopy = geo.Box.copy(boxCopy);
+    boxCopy = undefined;
+  } else {
+    paste(painting);
+  }
+
+  // B. Paint anything that needs to be permanent.
   if (pointsToPaint.length) {
     page(painting);
-
-    db = new geo.DirtyBox();
-
-    // TODO: What is the actual process here?
-
     pointsToPaint.forEach((p) => {
       ink(50, 50, 50, 100).plot(p.x, p.y);
-      db.soil(p);
+      db1.soil(p);
     });
-
-    // TODO: Why would width be 0 of dirtyBox?
-
     pointsToPaint.length = 0;
-    page(screen).paste({ painting, crop: db.box }, db.box.x, db.box.y);
-    //page(screen).paste(painting);
-  } else {
-    //paste(painting);
+
+    // Paste what was painted, cropped to the box.
+    page(screen).paste(
+      { painting, crop: geo.Box.copy(db1.box) },
+      db1.box.x,
+      db1.box.y
+    );
   }
 
-  // B. Paint any preview pixels that are still being calculated if we are
+  // C. Paint any preview pixels that are still being calculated if we are
   //    currently drawing.
   if (pointsToHighlight.length) {
-    //pointsToHighlight.forEach((p) => ink(100, 0, 0).plot(p.x, p.y));
-    //ink(200, 0, 0).plot(pen); // 🔴 Painting cursor.
+    pointsToHighlight.forEach((p) => {
+      ink(100, 0, 0).plot(p.x, p.y);
+      db1.soil(p);
+    });
+    ink(200, 0, 0).plot(pen); // 🔴 Painting cursor.
+    db1.soil(pen);
   } else {
     // Or just paste the existing painting and paint a navigation cursor.
-
-    if (!lastPen) {
-      lastPen = pen;
-    }
-
+    if (!lastPen) lastPen = pen;
     if (lastPen.x !== pen.x || lastPen.y !== pen.y) {
-      let cursorDirty = new geo.DirtyBox();
-      cursorDirty.soil(lastPen);
-      paste({ painting, crop: cursorDirty.box }, lastPen.x, lastPen.y);
-      lastPen = { x: pen.x, y: pen.y }; // TODO: pen should be copied on each api request?
       if (usingMouse) ink(255, 255, 0, 100).plot(pen); // 🟡 Navigation cursor.
+      db1.soil(pen);
+      lastPen = { x: pen.x, y: pen.y }; // TODO: pen should be copied on each api request.
     }
   }
 
-  if (db) {
-    //paste(painting);
-    //ink(255, 0, 255, 32).box(db.box.x, db.box.y, db.box.w, db.box.h); // Preview the dirty rectangle.
+  if (db1.soiled) {
+    boxCopy = geo.Box.copy(db1.box);
+    const db = db1;
+    if (continuedBoxCopy) {
+      db.soil(continuedBoxCopy);
+      db.soil({ x: continuedBoxCopy.right, y: continuedBoxCopy.bottom });
+    }
+    db1 = new geo.DirtyBox();
+    return db;
   }
 
   return false;
-
-  // TODO: This could be optimized to return false sometimes.
 }
 
 // ✒ Act (Runs once per user interaction)
@@ -104,11 +116,11 @@ function act({
   geo,
   needsPaint,
 }) {
-  if (e.is("touch") || e.is("draw") || e.is("move")) needsPaint();
+  if (e.penChanged && (e.is("touch") || e.is("draw") || e.is("move")))
+    needsPaint();
 
   if (e.is("touch")) {
     const p = point(e);
-    db = new geo.DirtyBox();
     allPoints.push(p); // Record points for playback.
     pointsToPaint.push(p);
     lastPoint = p;
@@ -153,12 +165,12 @@ function act({
   }
 
   if (e.is("lift")) {
-    if (tapped === false) pointsToPaint.push(points[points.length - 1]); // Paint last point.
+    if (points.length && tapped === false)
+      pointsToPaint.push(points[points.length - 1]); // Paint last point.
     points.length = 0;
     pointsToHighlight.length = 0;
     priorPointsIndex = 0;
     lastPoint = null;
-    db = new geo.DirtyBox();
     usingMouse = e.device === "mouse";
     console.log("➕ Pixels:", allPoints.length);
   }

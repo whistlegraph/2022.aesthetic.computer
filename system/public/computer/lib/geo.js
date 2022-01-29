@@ -77,9 +77,16 @@ export class Box {
     return this.y + this.h;
   }
 
-  // Crops a box to another box.
+  // Calculates an x value, representing the right of the box.
+  get right() {
+    return this.x + this.w;
+  }
+
+  // Crops one box to another.
   crop(toX, toY, toW, toH) {
     let { x, y, w, h } = this;
+
+    if (x >= toW || y >= toH) return; // Return `undefined` if x or y is out of bounds.
 
     // Crop left side.
     if (x < toX) {
@@ -213,14 +220,15 @@ export class Grid {
 // This box model uses `soil` to build a dirty rectangle out of points
 // in order to optimize rendering.
 export class DirtyBox {
-  #box;
+  box;
   #left;
   #top;
   #right;
   #bottom;
+  soiled = false;
 
   constructor() {
-    this.#box = new Box(0, 0, 0); // Note: I probably don't need all the features of `box` here.
+    this.box = new Box(0, 0, 0); // Note: I probably don't need all the features of `box` here.
   }
 
   soil({ x, y }) {
@@ -238,15 +246,32 @@ export class DirtyBox {
 
     if (x > this.#right) this.#right = x;
     if (y > this.#bottom) this.#bottom = y;
+
+    this.box.x = this.#left;
+    this.box.y = this.#top;
+    this.box.w = this.#right - this.#left + 1;
+    this.box.h = this.#bottom - this.#top + 1;
+
+    this.soiled = true;
   }
 
-  get box() {
-    //console.log(this.#right, this.#left);
+  // Crops pixels from an image and returns the new one.
+  // - `image` has { width, height, pixels }
+  crop(image) {
+    const b = this.croppedBox(image);
+    const p = image.pixels;
+    const newP = new Uint8ClampedArray(b.w * b.h * 4);
 
-    this.#box.x = this.#left;
-    this.#box.y = this.#top;
-    this.#box.w = this.#right - this.#left + 1;
-    this.#box.h = this.#bottom - this.#top + 1;
-    return this.#box;
+    // Copy rows from `p` -> `newP`
+    for (let row = 0; row < b.h; row += 1) {
+      const index = (b.x + (b.y + row) * image.width) * 4;
+      newP.set(p.subarray(index, index + b.w * 4), row * b.w * 4);
+    }
+
+    return newP;
+  }
+
+  croppedBox(image) {
+    return this.box.crop(0, 0, image.width, image.height);
   }
 }

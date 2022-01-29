@@ -181,25 +181,10 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
 function paste(from, destX = 0, destY = 0) {
   // TODO: See if from has a dirtyBox attribute.
   if (from.crop) {
-    //console.log(from.crop);
-
     // A cropped copy.
+    // TODO: This could be sped up quite a bit by going row by row.
     for (let x = 0; x < from.crop.w; x += 1) {
       for (let y = 0; y < from.crop.h; y += 1) {
-        //console.log(x, y, destX, destY, from.crop);
-
-        /*
-        console.log(
-          "x:",
-          x,
-          "y:",
-          y,
-          from.crop.x,
-          from.crop.y,
-          destX + x,
-          destY + y
-        );
-         */
         copy(
           destX + x,
           destY + y,
