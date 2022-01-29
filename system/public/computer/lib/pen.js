@@ -9,6 +9,7 @@ export class Pen {
   pointerType;
   untransformedPosition;
   point;
+  penChangedInPiece = false;
 
   down = false;
   changed = false;
@@ -172,12 +173,18 @@ export class Pen {
 
     this.delta = delta;
 
+    // This field detects whether the pen projection to the current resolution has changed or not.
+    // Note: Original data is not sent at the moment. It could be calculated and sent
+    //       similar to `Pen`s `untransformedPosition`
+    this.penChangedInPiece = delta.x !== 0 || delta.y !== 0;
+
     this.events.push({
       name: this.event,
       device: this.pointerType,
       x: this.x,
       y: this.y,
       delta,
+      penChanged: this.penChangedInPiece,
       pressure: this.pressure,
       drag: this.dragBox,
     });
