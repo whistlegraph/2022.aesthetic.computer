@@ -1,9 +1,11 @@
 Jeffrey's in-Project Notes
 See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
 
+☁️ Try AceJump!
+
 🌟 Current
-  - [] Fix resizing bug. (Maybe this is the most important.)
-  - [] 'Fix reframing bug.' bios:643
+   - [] Fix mouse movement not working in prompt / other pieces. (due to DirtyBox)
+
   - [] DirtyBox system / graphics refactor.
     - [] Clean up and abstract the code in line.
     - [] Make the pause sign & system mouse cursors update properly when DirtyBox is used.
@@ -37,8 +39,10 @@ Stop sending duplicate event data for "draw" and "touch" in `pen`.
 - Add loading spinner that works outside of debug mode.
   - Make an arc / circle function and draw a pie spinner.
 
-- Put this in a budget / progress bar system, related to the current refresh rate.
-  via `bios.js`
+Put this in a budget / progress bar system, related to the current refresh rate.
+  - via `bios.js`
+
+Re-work the depth buffer before making a simple 3D environment.
 
 - Improve documentation.
   - In console when the whole thing opens.

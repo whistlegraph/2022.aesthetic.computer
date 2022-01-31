@@ -1,11 +1,11 @@
 // Prompt, 2021.11.28.03.13
 // This is for working on font rendering and making a global disk chooser.
 
+// TODO: Fix mouse movement not working in prompt / other pieces. (due to DirtyBox)
+
 // TODO: Make a basic prompt.
-//       1. Add mobile keyboard open and close and a version of the ESC key
-//          for mobile users - make it also === the back button in all browsers?
-//       2. Prevent non-printable characters from causing an extra backspace.
-//       3. The iOS app would add a small ESC or arrow overlay button in Swift
+//       1. Prevent non-printable characters from causing an extra backspace.
+//       2. The iOS app would add a small ESC or arrow overlay button in Swift
 //          to make this work properly.
 
 // TODO: Generate or pretty print docs (made from the APIs) inside this disk.
@@ -102,9 +102,9 @@ function paint({ wipe, screen, ink }) {
 
 // ✒ Act (Runs once per user interaction, after boot.)
 function act({ event: e, needsPaint, load }) {
-  if (e.is("keyboard:down")) {
-    // console.log("Key down:", e.key);
+  //needsPaint();
 
+  if (e.is("keyboard:down")) {
     if (canType === false) {
       canType = true;
       text = "";

@@ -621,7 +621,13 @@ async function boot(
       return;
     }
 
-    // 🌟 Assume that `type` is "render" or "update" from now on.
+    // Filter out update from bottom of `disk.js` 2022.01.30.13.01
+    if (type === "update") {
+      frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
+      return;
+    }
+
+    // 🌟 Assume that `type` is "render" from now on.
 
     // Don't render if the buffer doesn't match the content.
 
@@ -634,21 +640,34 @@ async function boot(
 
     if (content.cursorCode) pen.setCursorCode(content.cursorCode);
 
-    if (content.pixels === undefined) {
-      // console.log("⌚ NO Render: ", round(performance.now() - startTime), "ms");
-      frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
-      return;
-    }
+    // TODO: This should not be stopping here...!
+    // TODO: The key to fixing *prompt*!
+    //if (content.pixels === undefined) {
+    /*
+      console.log(
+        "⌚ NO Render: ",
+        round(performance.now() - startTime),
+        "ms",
+        content
+      );
 
-    // TODO: Fix reframing bug.
+     */
+    //frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
+    //return;
+    //console.log(content, type);
+    //}
+
+    // About the render if pixels don't match.
     if (
       content.dirtyBox === undefined &&
-      content.pixels.length !== undefined &&
-      content.pixels.length !== composite.pixels.length
+      content.pixels?.length !== undefined &&
+      content.pixels?.length !== composite.pixels.length
     ) {
       console.warn("Aborted render. Pixel buffers did not match.");
       console.log(
+        "Content pixels:",
         content.pixels.length,
+        "Composite:",
         composite.pixels.length,
         content.didntRender,
         content.reframe,
@@ -660,10 +679,10 @@ async function boot(
     }
 
     // Skip rendering if we didn't change anything.
-    if (content.didntRender === true) {
-      frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
-      return;
-    }
+    //if (content.didntRender === true) {
+    //  frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
+    //  return;
+    //}
 
     let dirtyBoxBitmap; // Note: Not all browsers will support this optimization.
     let dirtyBoxBitmapCan;
@@ -677,6 +696,8 @@ async function boot(
         content.dirtyBox.w,
         content.dirtyBox.h
       );
+
+      //console.log(content.pixels);
 
       // Try to make an ImageBitmap (which is *supposedly* faster, but not
       // supported in all browsers.) 2022.01.29.00.33
@@ -742,34 +763,82 @@ async function boot(
     function draw() {
       const db = content.dirtyBox;
       if (db) {
+        //console.log(dirtyBoxBitmapCan, db.x, db.y);
         ctx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
         // ctx.putImageData(compositeImageData, 0, 0, db.x, db.y, db.w, db.h); // This is for the 🐢 slowest method.
       } else {
         // Note: Uncomment this for a `dirtyBox` visualization.
+        // TODO: Add a global shortcut for testing this when in debug mode? 2022.01.30.01.13
         ctx.drawImage(compositeCanvas, 0, 0);
       }
     }
 
     // TODO: This can all be rewritten: 22.1.13.15.26
     // TODO: Can pen.changed just be a cursor change?
+
     if (pixelsDidChange || pen.changedInPiece) {
       frameCached = false;
-      pen.render(Graph);
-      if (content.loading === true && debug === true) UI.spinner(Graph);
+
       draw();
+
+      // TODO: Refactor this along with the `else` below.
+      {
+        const imgData = ctx.getImageData(
+          0,
+          0,
+          ctx.canvas.width,
+          ctx.canvas.height
+        );
+
+        Graph.setBuffer({
+          pixels: imgData.data,
+          width: imgData.width,
+          height: imgData.height,
+        });
+
+        // Draw...
+        pen.render(Graph);
+        if (content.loading === true && debug === true) UI.spinner(Graph);
+        // ...
+
+        ctx.putImageData(imgData, 0, 0); // TODO: Add dirty rect here.
+      }
+
+      // ctx.drawImage(compositeCanvas, 0, 0); // TODO: Redraw cursors here!
     } else if (frameCached === false) {
       frameCached = true;
-      pen.render(Graph);
-      if (debug) {
-        // TODO: Make this work better with dirtyBox. 2022.01.28.23.04
-        // TODO: How to I use my actual API in here? 2021.11.28.04.00
-        // Draw the pause icon in the top left.
-        Graph.color(0, 255, 255);
-        Graph.line(1, 1, 1, 4);
-        Graph.line(3, 1, 3, 4);
-      }
       draw();
-      // console.log("Caching frame...");
+
+      {
+        const imgData = ctx.getImageData(
+          0,
+          0,
+          ctx.canvas.width,
+          ctx.canvas.height
+        );
+
+        Graph.setBuffer({
+          pixels: imgData.data,
+          width: imgData.width,
+          height: imgData.height,
+        });
+
+        // Draw
+        pen.render(Graph);
+        if (debug) {
+          // TODO: Make this work better with dirtyBox. 2022.01.28.23.04
+          // TODO: How to I use my actual API in here? 2021.11.28.04.00
+          // Draw the pause icon in the top left.
+          Graph.color(0, 255, 255);
+          Graph.line(1, 1, 1, 4);
+          Graph.line(3, 1, 3, 4);
+        }
+        // ...
+
+        ctx.putImageData(imgData, 0, 0); // TODO: Add dirty rect here.
+      }
+
+      //console.log("Caching frame...");
     } else if (content.loading === true && debug === true) {
       UI.spinner(Graph);
       draw();
@@ -785,7 +854,7 @@ async function boot(
 
     frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
-    console.log("🎨", (performance.now() - startTime).toFixed(2), "ms");
+    // console.log("🎨", (performance.now() - startTime).toFixed(2), "ms");
   }
 
   // Reads the extension off of filename to determine the mimetype and then

@@ -185,6 +185,7 @@ function paste(from, destX = 0, destY = 0) {
     // TODO: This could be sped up quite a bit by going row by row.
     for (let x = 0; x < from.crop.w; x += 1) {
       for (let y = 0; y < from.crop.h; y += 1) {
+        // console.log(destX, destY, from.crop.x, from.crop.y);
         copy(
           destX + x,
           destY + y,
