@@ -4,9 +4,9 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 ☁️ Try AceJump!
 
 🌟 Current
-   - [] Fix mouse movement not working in prompt / other pieces. (due to DirtyBox)
 
   - [] DirtyBox system / graphics refactor.
+    TODO: Refactor & optimize this along with the `else` below.
     - [] Clean up and abstract the code in line.
     - [] Make the pause sign & system mouse cursors update properly when DirtyBox is used.
   - [] Fully clean up, then abstract the pixel line algorithm before putting it back in `nail.`
@@ -14,12 +14,15 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
   - [] Recording
 
 - Adjust pixel density to be a bit better for iPhones / retina devices.
-  - Cross reference on my thinkpad and also my laptop.
+  - Cross-reference on my Thinkpad and also my laptop.
 
 ⏳ Next
 
 Stop sending duplicate event data for "draw" and "touch" in `pen`.
   - e.is("draw") && e.is("touch") should not send duplicate event {x, y} data
+
+Explore: removing: send({ type: "update", content: { didntRender: true, loading } });
+From the bottom of `disk.js`.
 
 - Find and fix out of memory error.
   - bios.js:307 Uncaught DOMException: Failed to execute 'postMessage' on 'Worker': Data cannot be cloned, out of memory.
