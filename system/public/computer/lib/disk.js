@@ -660,22 +660,27 @@ function makeFrame({ data: { type, content } }) {
 
       $api.inFocus = content.inFocus;
 
-      // TODO: This should get created when a disk gets created?
-      if (!screen) {
+      // Make a screen buffer or resize it automatically if it doesn't exist.
+      if (
+        !screen ||
+        screen.width !== content.width ||
+        screen.height !== content.height
+      ) {
         screen = {
           pixels: new Uint8ClampedArray(content.width * content.height * 4),
           width: content.width,
           height: content.height,
         };
+
+        // TODO: Add the depth buffer back here.
+        // Reset the depth buffer.
+        // graph.depthBuffer.length = screen.width * screen.height;
+        // graph.depthBuffer.fill(Number.MAX_VALUE);
       }
 
-      /*
-      const screen = {
-        pixels: new Uint8ClampedArray(content.pixels),
-        width: content.width,
-        height: content.height,
-      };
-       */
+      // TODO: Disable the depth buffer for now... it doesn't need to be
+      //       regenerated on every frame.
+      // graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
 
       $api.screen = screen;
 
@@ -702,8 +707,8 @@ function makeFrame({ data: { type, content } }) {
         screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
 
         // Reset the depth buffer.
-        graph.depthBuffer.length = screen.width * screen.height;
-        graph.depthBuffer.fill(Number.MAX_VALUE);
+        // graph.depthBuffer.length = screen.width * screen.height;
+        // graph.depthBuffer.fill(Number.MAX_VALUE);
 
         graph.setBuffer(screen);
         reframe = { width, height };
@@ -731,10 +736,6 @@ function makeFrame({ data: { type, content } }) {
       };
 
       graph.setBuffer(screen);
-
-      // TODO: Disable the depth buffer for now... it doesn't need to be
-      //       regenerated on every frame.
-      // graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
 
       // * Preload *
       // Add preload to the boot api.
@@ -813,6 +814,7 @@ function makeFrame({ data: { type, content } }) {
 
       if (noPaint === false) {
         const paintOut = paint($api); // Returns `undefined`, `false`, or `DirtyBox`.
+
         // `DirtyBox` and `undefined` always set `noPaint` to `true`.
         noPaint =
           (paintOut === false ||
@@ -832,13 +834,15 @@ function makeFrame({ data: { type, content } }) {
 
       // Check to see if we have a dirtyBox to render from.
       const croppedBox = dirtyBox?.croppedBox?.(screen);
+
       if (croppedBox?.w > 0 && croppedBox?.h > 0) {
         transferredPixels = dirtyBox.crop(screen);
         sendData = {
           pixels: transferredPixels,
           dirtyBox: croppedBox,
         };
-      } else if (noPaint === false) {
+      } else if (painted === true) {
+        // TODO: Toggling this causes a flicker in `line`... but helps prompt. 2022.01.29.13.21
         // Otherwise render everything if we drew anything!
         transferredPixels = screen.pixels;
         sendData = { pixels: transferredPixels };
@@ -862,6 +866,8 @@ function makeFrame({ data: { type, content } }) {
       if (cursorCode) cursorCode = undefined;
     } else {
       // Send update (sim).
+      // TODO: How necessary is this - does any info ever need to actually
+      //       get sent?
       send({
         type: "update",
         content: { didntRender: true, loading },

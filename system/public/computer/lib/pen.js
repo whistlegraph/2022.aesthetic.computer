@@ -9,7 +9,7 @@ export class Pen {
   pointerType;
   untransformedPosition;
   point;
-  penChangedInPiece = false;
+  changedInPiece = false;
 
   down = false;
   changed = false;
@@ -176,7 +176,7 @@ export class Pen {
     // This field detects whether the pen projection to the current resolution has changed or not.
     // Note: Original data is not sent at the moment. It could be calculated and sent
     //       similar to `Pen`s `untransformedPosition`
-    this.penChangedInPiece = delta.x !== 0 || delta.y !== 0;
+    this.changedInPiece = delta.x !== 0 || delta.y !== 0;
 
     this.events.push({
       name: this.event,
@@ -184,7 +184,7 @@ export class Pen {
       x: this.x,
       y: this.y,
       delta,
-      penChanged: this.penChangedInPiece,
+      penChanged: this.changedInPiece,
       pressure: this.pressure,
       drag: this.dragBox,
     });
