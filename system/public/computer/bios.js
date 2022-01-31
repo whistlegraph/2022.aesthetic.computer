@@ -476,25 +476,20 @@ async function boot(
     startTime = performance.now();
 
     // Build the data to send back to the disk thread.
-    send(
-      {
-        type: "frame",
-        content: {
-          needsRender,
-          updateCount,
-          inFocus: document.hasFocus(),
-          audioTime: audioContext?.currentTime,
-          audioBpm: sound.bpm[0], // TODO: Turn this into a messaging thing.
-          //pixels: screen.pixels.buffer,
-          width: canvas.width,
-          height: canvas.height,
-          pen: pen.events, // TODO: Should store an array of states that get ingested by the worker.
-          keyboard: keyboard.events, // TODO: Should store an array of states that get ingested by the worker.
-          //updateMetronome,
-        },
-      }
-      //[screen.pixels.buffer]
-    );
+    send({
+      type: "frame",
+      content: {
+        needsRender,
+        updateCount,
+        inFocus: document.hasFocus(),
+        audioTime: audioContext?.currentTime,
+        audioBpm: sound.bpm[0], // TODO: Turn this into a messaging thing.
+        width: canvas.width,
+        height: canvas.height,
+        pen: pen.events, // TODO: Should store an array of states that get ingested by the worker.
+        keyboard: keyboard.events, // TODO: Should store an array of states that get ingested by the worker.
+      },
+    });
 
     // Time budgeting stuff...
     //const updateDelta = performance.now() - updateNow;
@@ -621,15 +616,14 @@ async function boot(
       return;
     }
 
-    // Filter out update from bottom of `disk.js` 2022.01.30.13.01
+    // TODO: Filter out update from bottom of `disk.js` because I may not need to be
+    //       sending them at all? 2022.01.30.13.01
     if (type === "update") {
       frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
       return;
     }
 
     // 🌟 Assume that `type` is "render" from now on.
-
-    // Don't render if the buffer doesn't match the content.
 
     // Check for a change in resolution.
     if (content.reframe) {
@@ -639,23 +633,6 @@ async function boot(
     }
 
     if (content.cursorCode) pen.setCursorCode(content.cursorCode);
-
-    // TODO: This should not be stopping here...!
-    // TODO: The key to fixing *prompt*!
-    //if (content.pixels === undefined) {
-    /*
-      console.log(
-        "⌚ NO Render: ",
-        round(performance.now() - startTime),
-        "ms",
-        content
-      );
-
-     */
-    //frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
-    //return;
-    //console.log(content, type);
-    //}
 
     // About the render if pixels don't match.
     if (
@@ -678,17 +655,9 @@ async function boot(
       return;
     }
 
-    // Skip rendering if we didn't change anything.
-    //if (content.didntRender === true) {
-    //  frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
-    //  return;
-    //}
-
-    let dirtyBoxBitmap; // Note: Not all browsers will support this optimization.
     let dirtyBoxBitmapCan;
 
     // 👌 Otherwise, grab all the pixels, or some, if `dirtyBox` is present.
-    // TODO: Use ImageBitmap objects to make this faster once it lands in Safari.
     if (content.dirtyBox) {
       // A. Cropped update.
       const imageData = new ImageData(
@@ -697,19 +666,10 @@ async function boot(
         content.dirtyBox.h
       );
 
-      //console.log(content.pixels);
-
-      // Try to make an ImageBitmap (which is *supposedly* faster, but not
-      // supported in all browsers.) 2022.01.29.00.33
-
-      // This seems to make things faster, even though the Bitmap is not being
-      // used. It is because of async / await? 2022.01.29.02.45
-      //if (createImageBitmap)
-      //  dirtyBoxBitmap = await createImageBitmap(imageData);
-
-      // Note: Paint everything to a secondary canvas buffer.
-      //       This seems to be the fastest and best supported method
-      //       as of 2022.01.29.02.18
+      // Paint everything to a secondary canvas buffer.
+      // TODO: Maybe this can should be made when the system starts to better
+      //       optimize things? (Only if it's ever slow...)
+      // TODO: Use ImageBitmap objects to make this faster once it lands in Safari.
       dirtyBoxBitmapCan = document.createElement("canvas");
       dirtyBoxBitmapCan.width = imageData.width;
       dirtyBoxBitmapCan.height = imageData.height;
@@ -720,29 +680,6 @@ async function boot(
       // Use this alternative once it's faster. 2022.01.29.02.46
       // const dbCtx = dirtyBoxBitmapCan.getContext("bitmaprenderer");
       // dbCtx.transferFromImageBitmap(dirtyBoxBitmap);
-
-      // 🐢 Slowest method uses TypedArrays directly.
-      /*
-      if (!dirtyBoxBitmap) {
-        // Copy all rendered pixels to a composite buffer that will have system-wide
-        // UI elements like loading spinners and cursors tacked on before displaying.
-        const { x, y, w, h } = content.dirtyBox;
-        const rowStart = y;
-        const rowEnd = y + h;
-
-        // Copy rows from `imageData.data` -> `composite.pixels` using the
-        // information from `content.dirtyBox`.
-        for (let row = rowStart; row < rowEnd; row += 1) {
-          const destIndex = (x + row * composite.width) * 4;
-          // console.log( "row", row, "srcRow:", row - rowStart, "destIndex", destIndex);
-          const srcIndex = (row - rowStart) * w * 4;
-          composite.pixels.set(
-            imageData.data.subarray(srcIndex, srcIndex + w * 4),
-            destIndex
-          );
-        }
-      }
-      */
     } else if (content.paintChanged) {
       // B. Normal full-screen update.
       imageData = new ImageData(content.pixels, canvas.width, canvas.height);
@@ -752,95 +689,62 @@ async function boot(
       compositeImageData = imageData;
       composite.pixels = imageData.data;
       compCtx.putImageData(compositeImageData, 0, 0);
-
-      // screen.pixels = imageData.data; // TODO: Is this still necessary? 2022.01.29.03.03
     }
-
-    Graph.setBuffer(composite);
 
     pixelsDidChange = content.paintChanged || false;
 
     function draw() {
+      // A. Draw updated content from the piece.
       const db = content.dirtyBox;
       if (db) {
-        //console.log(dirtyBoxBitmapCan, db.x, db.y);
+        compCtx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
         ctx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
-        // ctx.putImageData(compositeImageData, 0, 0, db.x, db.y, db.w, db.h); // This is for the 🐢 slowest method.
       } else {
         // Note: Uncomment this for a `dirtyBox` visualization.
         // TODO: Add a global shortcut for testing this when in debug mode? 2022.01.30.01.13
         ctx.drawImage(compositeCanvas, 0, 0);
       }
-    }
 
-    // TODO: This can all be rewritten: 22.1.13.15.26
-    // TODO: Can pen.changed just be a cursor change?
+      // B. Draw anything from the system UI layer on top.
+      // TODO: Why do I have to be pulling ***all*** the imageData here?
+      const iD = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+      Graph.setBuffer({
+        pixels: iD.data,
+        width: iD.width,
+        height: iD.height,
+      });
+
+      // TODO: Make a dirtyRect to add to here...
+
+      // Upper
+      pen.render(Graph);
+      if (content.loading === true && debug === true) UI.spinner(Graph);
+
+      // Lower
+      if (debug && frameCached) {
+        // TODO: How to I use my actual API in here? 2021.11.28.04.00
+        // Draw the pause icon in the top left.
+        Graph.color(0, 255, 255);
+        Graph.line(1, 1, 1, 4);
+        Graph.line(3, 1, 3, 4);
+      }
+
+      // TODO: Abide by the dirtyRect.
+      if (pen.x && pen.y) {
+        ctx.putImageData(iD, 0, 0, pen.x - 1, pen.y - 1, 4, 4); // TODO: Add dirty rect here.
+      }
+    }
 
     if (pixelsDidChange || pen.changedInPiece) {
       frameCached = false;
-
       draw();
-
-      // TODO: Refactor this along with the `else` below.
-      {
-        const imgData = ctx.getImageData(
-          0,
-          0,
-          ctx.canvas.width,
-          ctx.canvas.height
-        );
-
-        Graph.setBuffer({
-          pixels: imgData.data,
-          width: imgData.width,
-          height: imgData.height,
-        });
-
-        // Draw...
-        pen.render(Graph);
-        if (content.loading === true && debug === true) UI.spinner(Graph);
-        // ...
-
-        ctx.putImageData(imgData, 0, 0); // TODO: Add dirty rect here.
-      }
-
       // ctx.drawImage(compositeCanvas, 0, 0); // TODO: Redraw cursors here!
     } else if (frameCached === false) {
       frameCached = true;
       draw();
-
-      {
-        const imgData = ctx.getImageData(
-          0,
-          0,
-          ctx.canvas.width,
-          ctx.canvas.height
-        );
-
-        Graph.setBuffer({
-          pixels: imgData.data,
-          width: imgData.width,
-          height: imgData.height,
-        });
-
-        // Draw
-        pen.render(Graph);
-        if (debug) {
-          // TODO: Make this work better with dirtyBox. 2022.01.28.23.04
-          // TODO: How to I use my actual API in here? 2021.11.28.04.00
-          // Draw the pause icon in the top left.
-          Graph.color(0, 255, 255);
-          Graph.line(1, 1, 1, 4);
-          Graph.line(3, 1, 3, 4);
-        }
-        // ...
-
-        ctx.putImageData(imgData, 0, 0); // TODO: Add dirty rect here.
-      }
-
       //console.log("Caching frame...");
     } else if (content.loading === true && debug === true) {
-      UI.spinner(Graph);
       draw();
     } else if (frameCached === true) {
       // console.log("Cached...");
@@ -852,9 +756,10 @@ async function boot(
       freezeFrame = false;
     }
 
-    frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
     // console.log("🎨", (performance.now() - startTime).toFixed(2), "ms");
+
+    frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
   }
 
   // Reads the extension off of filename to determine the mimetype and then

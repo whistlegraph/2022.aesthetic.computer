@@ -73,13 +73,16 @@ export class Box {
   }
 
   // Calculates a y value, representing the bottom of the box.
+  // Note: Returns y if the height is 1.
   get bottom() {
-    return this.y + this.h;
+    return this.h === 1 ? this.y : this.y + this.h;
+    //return this.y + this.h;
   }
 
   // Calculates an x value, representing the right of the box.
+  // Note: Returns x if the width is 1.
   get right() {
-    return this.x + this.w;
+    return this.w === 1 ? this.x : this.x + this.w;
   }
 
   // Crops one box to another.
@@ -249,6 +252,7 @@ export class DirtyBox {
 
     this.box.x = this.#left;
     this.box.y = this.#top;
+
     this.box.w = this.#right - this.#left + 1;
     this.box.h = this.#bottom - this.#top + 1;
 

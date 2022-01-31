@@ -1,12 +1,11 @@
 // 💅 Line, 2022.01.24.02.41
 // A 1px line drawing algorithm.
 
-// TODO: Optimize for higher resolution.
-//       - Fix disk swapping and reloading bugs, etc.
-
 // TODO: VCR would catch the action layer.
 
 // TODO: Fix Safari magnifying glass finger hold bug... again?
+
+// Make hotkey & thumb button to clear the page?
 
 // TODO: Better colors. Abstract everything so it can be used
 //       in multiple instances. (See: `Painters` in `nail`)
@@ -26,16 +25,12 @@ let priorPointsIndex = 0;
 let tapped;
 const tail = 2; // A red visual tail that follows the 1px line.
 let db1;
-let lastPen;
 let boxCopy;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ wipe, paste, cursor, painting: p, screen, resize, fps, geo }) {
-  //fps(30);
+  //fps(15);
   //resize(32, 32);
-  //resize(32, 32);
-  //resize(512, 768);
-  //resize(2048, 2048);
   cursor("none");
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
@@ -49,9 +44,7 @@ let continuedBoxCopy;
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ pen, ink, wipe, line, page, screen, paste, num, geo }) {
   // A. Replace any content painted last frame with the contents of `painting`.
-
   if (boxCopy) {
-    //console.log("Using copy:", boxCopy);
     paste({ painting, crop: geo.Box.copy(boxCopy) }, boxCopy.x, boxCopy.y);
     continuedBoxCopy = geo.Box.copy(boxCopy);
     boxCopy = undefined;
@@ -87,18 +80,10 @@ function paint({ pen, ink, wipe, line, page, screen, paste, num, geo }) {
     db1.soil(pen);
   }
 
-  // TODO: Remove pen from box copy.
-  if (!lastPen) lastPen = pen;
-
   if (pointsToHighlight.length === 0 && usingMouse) {
-    // TODO: Add penChanged here.
-    //console.log(pen);
     // Or just paste the existing painting and paint a navigation cursor.
     ink(255, 255, 0, 100).plot({ x: pen.x, y: pen.y }); // 🟡 Navigation cursor.
     db1.soil(pen);
-    //db1.soil(lastPen); // Why does this need to be soiled?
-    //lastPen = { x: pen.x, y: pen.y }; // TODO: pen should be copied on each api request.
-    //  }
   }
 
   if (db1.soiled) boxCopy = geo.Box.copy(db1.box); // Store what pixels were updated this frame.
@@ -118,9 +103,6 @@ function paint({ pen, ink, wipe, line, page, screen, paste, num, geo }) {
   return false;
 }
 
-let penChanged;
-let penDrew;
-
 // ✒ Act (Runs once per user interaction)
 function act({
   event: e,
@@ -129,18 +111,18 @@ function act({
   geo,
   needsPaint,
 }) {
-  if (e.penChanged) {
-    penChanged = e.penChanged;
+  // TODO: Fix defocusing of window extending the dirtyBox.
+  if (e.is("defocus")) {
+    //console.log("defocus");
+    // db1 = new geo.DirtyBox();
+    // continuedBoxCopy = undefined;
+    // boxCopy = undefined;
   }
 
-  if (
-    e.penChanged ||
-    e.is("touch") ||
-    e.is("draw") ||
-    e.is("move") ||
-    e.is("lift")
-  )
-    needsPaint();
+  if (e.penChanged === true) {
+    if (e.is("touch") || e.is("draw") || e.is("move") || e.is("lift"))
+      needsPaint();
+  }
 
   if (e.is("touch")) {
     const p = point(e);

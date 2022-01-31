@@ -77,7 +77,9 @@ function sim({ sound: { time } }) {
 }
 
 // 🎨 Paint
-const paint = ($) => $.wipe(flash ? flashColor : 0);
+const paint = ($) => {
+  $.wipe(flash ? flashColor : 0);
+};
 
 export { beat, sim, paint };
 
