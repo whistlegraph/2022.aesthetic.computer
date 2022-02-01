@@ -700,28 +700,32 @@ async function boot(
         compCtx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
         ctx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
       } else {
+        //console.log("draw");
         // Note: Uncomment this for a `dirtyBox` visualization.
         // TODO: Add a global shortcut for testing this when in debug mode? 2022.01.30.01.13
         ctx.drawImage(compositeCanvas, 0, 0);
+        //ctx.putImageData(compositeImageData, 0, 0);
+        //ctx.fillStyle = "blue";
+        //ctx.fillRect(0, 0, 100, 100);
       }
 
-      // B. Draw anything from the system UI layer on top.
+      // TODO: *Pre-generate pause icon and crosshair, then just drawImage here.*
+      // TODO: Do I want a "native" / vector resolution layer on top of the whole system?
+      //       This could be useful for a system button...
+
+      // B. Draw anything from the system UI layer on top?
+      // *** I just gotta have another buffer for the UI?
+      // Maybe I need a full resolution or equal resolution canvas for this layer?
       // TODO: Why do I have to be pulling ***all*** the imageData here?
       const iD = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-      Graph.setBuffer({
-        pixels: iD.data,
-        width: iD.width,
-        height: iD.height,
-      });
+      Graph.setBuffer({ pixels: iD.data, width: iD.width, height: iD.height });
 
       // TODO: Make a dirtyRect to add to here...
 
-      // Upper
       pen.render(Graph);
       if (content.loading === true && debug === true) UI.spinner(Graph);
 
-      // Lower
       if (debug && frameCached) {
         // TODO: How to I use my actual API in here? 2021.11.28.04.00
         // Draw the pause icon in the top left.
@@ -732,14 +736,18 @@ async function boot(
 
       // TODO: Abide by the dirtyRect.
       if (pen.x && pen.y) {
-        ctx.putImageData(iD, 0, 0, pen.x - 1, pen.y - 1, 4, 4); // TODO: Add dirty rect here.
+        //ctx.putImageData(iD, 0, 0, pen.x - 1, pen.y - 1, 4, 4); // TODO: Add dirty rect here.
       }
+
+      ctx.putImageData(iD, 0, 0); // TODO: Add dirty rect here.
     }
+
+    //console.log(pixelsDidChange);
 
     if (pixelsDidChange || pen.changedInPiece) {
       frameCached = false;
+      pen.changedInPiece = false;
       draw();
-      // ctx.drawImage(compositeCanvas, 0, 0); // TODO: Redraw cursors here!
     } else if (frameCached === false) {
       frameCached = true;
       draw();
@@ -747,7 +755,8 @@ async function boot(
     } else if (content.loading === true && debug === true) {
       draw();
     } else if (frameCached === true) {
-      // console.log("Cached...");
+      //draw(); // TODO: This is causing stuttering.
+      //console.log("Cached...");
     }
 
     if (freezeFrame) {
@@ -757,7 +766,7 @@ async function boot(
     }
 
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
-    // console.log("🎨", (performance.now() - startTime).toFixed(2), "ms");
+    //console.log("🎨", (performance.now() - startTime).toFixed(2), "ms");
 
     frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
   }

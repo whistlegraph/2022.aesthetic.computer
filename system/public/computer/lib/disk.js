@@ -13,13 +13,13 @@ import { notArray } from "./helpers.js";
 let debug = false; // This can be overwritten on boot.
 
 const defaults = {
-  boot: () => false,
-  sim: () => false,
+  boot: () => false, // aka Setup
+  sim: () => false, // A framerate independent of rendering.
   paint: ($) => {
     $.noise16();
   },
-  beat: () => false,
-  act: () => false,
+  beat: () => false, // Runs every bpm.
+  act: () => false, // All user interaction.
 };
 
 let boot = defaults.boot;
@@ -855,6 +855,8 @@ function makeFrame({ data: { type, content } }) {
       // These fields are one time `signals`.
       if (reframe) sendData.reframe = reframe;
       if (cursorCode) sendData.cursorCode = cursorCode;
+
+      //console.log(sendData);
 
       // Note: transferredPixels will be undefined when sendData === {}.
       send({ type: "render", content: sendData }, [transferredPixels]);

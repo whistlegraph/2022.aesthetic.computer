@@ -72,6 +72,8 @@ function sim({ seconds, needsPaint, gizmo: { Hourglass } }) {
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ wipe, screen, ink }) {
+  //console.log("paint");
+
   wipe(70, 50, 100); // Backdrop
 
   const prompt = new Prompt(6, 6);
@@ -102,7 +104,11 @@ function paint({ wipe, screen, ink }) {
 
 // ✒ Act (Runs once per user interaction, after boot.)
 function act({ event: e, needsPaint, load }) {
-  //needsPaint();
+  //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
+
+  if (e.is("move")) {
+    needsPaint();
+  }
 
   if (e.is("keyboard:down")) {
     if (canType === false) {

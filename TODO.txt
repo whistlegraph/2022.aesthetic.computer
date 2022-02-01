@@ -6,7 +6,6 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 🌟 Current
 
   - [] DirtyBox system / graphics refactor.
-    TODO: Refactor & optimize this along with the `else` below.
     - [] Clean up and abstract the code in line.
     - [] Make the pause sign & system mouse cursors update properly when DirtyBox is used.
   - [] Fully clean up, then abstract the pixel line algorithm before putting it back in `nail.`
@@ -17,6 +16,17 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
   - Cross-reference on my Thinkpad and also my laptop.
 
 ⏳ Next
+
+function act({ event: e }) { // Remove drawing api.
+
+  resize(64, 64); // Check if resizing to the same resolution just cancels it out silently.
+
+// Why does this run twice?
+function paint($api) {
+  console.log($api);
+  return false;
+  //wipe(255, 0, 0);
+}
 
 Stop sending duplicate event data for "draw" and "touch" in `pen`.
   - e.is("draw") && e.is("touch") should not send duplicate event {x, y} data
