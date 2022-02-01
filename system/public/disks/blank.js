@@ -9,13 +9,12 @@ function boot({ resize }) {
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim($api) {
   // TODO: Move a ball here!
-  console.log($api);
+  //console.log($api);
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ wipe, num: { randInt: r }, screen }) {
   wipe(0);
-  // wipe(r(255), r(255), r(255)).ink(0).line(0, 0, screen.width, screen.height);
 }
 
 // ✒ Act (Runs once per user interaction)
