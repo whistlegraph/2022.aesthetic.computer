@@ -7,11 +7,10 @@ import { Keyboard } from "./lib/keyboard.js";
 import * as Graph from "./lib/graph.js";
 import * as UI from "./lib/ui.js";
 import { apiObject, extension } from "./lib/helpers.js";
-
 import { dist } from "./lib/num.js";
 
 const { assign } = Object;
-const { round } = Math;
+const { round, floor, min } = Math;
 
 // 💾 Boot the system and load a disk.
 async function boot(
@@ -67,11 +66,17 @@ async function boot(
   const compositeCanvas = document.createElement("canvas");
   const compCtx = compositeCanvas.getContext("2d");
 
+  // A native resolution resolution canvas for drawing mouse cursor and system UI.
+  const nativeCanvas = document.createElement("canvas");
+  const natCtx = nativeCanvas.getContext("2d");
+  nativeCanvas.dataset.type = "ui";
+
   // A buffer for nicer resolution switches, nice when moving from
   // low resolution back to high resolution. Could eventually be used
   // for transition effects.
   const freezeFrameCan = document.createElement("canvas");
   const ffCtx = freezeFrameCan.getContext("2d");
+  freezeFrameCan.dataset.type = "freeze";
 
   let imageData;
   let compositeImageData;
@@ -88,20 +93,23 @@ async function boot(
   let curReframeDelay = REFRAME_DELAY;
 
   function frame(width, height) {
-    // Cache the current canvas.
+    // Cache the current canvas if needed.
     if (freezeFrame && imageData) {
       console.log("Freezing:", freezeFrame, imageData.width, imageData.height);
       freezeFrameCan.width = imageData.width;
       freezeFrameCan.height = imageData.height;
       freezeFrameCan.style.width = canvas.style.width;
       freezeFrameCan.style.height = canvas.style.height;
+      freezeFrameCan.style.left = canvasRect.x + "px";
+      freezeFrameCan.style.top = canvasRect.y + "px";
       ffCtx.putImageData(imageData, 0, 0);
       if (!document.body.contains(freezeFrameCan))
         document.body.append(freezeFrameCan);
-      else freezeFrameCan.style.removeProperty("display");
-      canvas.style.display = "none";
+      else freezeFrameCan.style.removeProperty("opacity");
+      canvas.style.opacity = 0;
     }
 
+    // Find the width and height of our default screen and native projection.
     width = width || fixedWidth;
     height = height || fixedHeight;
     const gapSize = 8 * window.devicePixelRatio;
@@ -109,8 +117,8 @@ async function boot(
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
       const subdivisions = 2 + window.devicePixelRatio;
-      width = Math.floor(window.innerWidth / subdivisions);
-      height = Math.floor(window.innerHeight / subdivisions);
+      width = floor(window.innerWidth / subdivisions);
+      height = floor(window.innerHeight / subdivisions);
       projectedWidth = width * subdivisions - gapSize;
       projectedHeight = height * subdivisions - gapSize;
     } else {
@@ -118,17 +126,11 @@ async function boot(
       fixedWidth = width;
       fixedHeight = height;
 
-      const scale = Math.min(
-        window.innerWidth / width,
-        window.innerHeight / height
-      );
+      const scale = min(window.innerWidth / width, window.innerHeight / height);
 
-      projectedWidth = Math.floor(width * scale - gapSize);
-      projectedHeight = Math.floor(height * scale - gapSize);
+      projectedWidth = floor(width * scale - gapSize);
+      projectedHeight = floor(height * scale - gapSize);
     }
-
-    canvas.style.width = projectedWidth + "px";
-    canvas.style.height = projectedHeight + "px";
 
     console.info(
       "🔭 View:",
@@ -138,6 +140,14 @@ async function boot(
       window.innerWidth,
       window.innerHeight
     );
+
+    canvas.style.width = projectedWidth + "px";
+    canvas.style.height = projectedHeight + "px";
+
+    // Set the native canvas to the projected width and height.
+    nativeCanvas.width = projectedWidth;
+    nativeCanvas.height = projectedHeight;
+    nativeCanvas.style.removeProperty("opacity");
 
     canvas.width = width;
     canvas.height = height;
@@ -154,11 +164,14 @@ async function boot(
     assign(screen, { pixels: imageData.data, width, height });
     assign(composite, { pixels: compositeImageData.data, width, height });
 
+    // Add the canvas and nativeCanvas when we first boot up.
     if (!document.body.contains(canvas)) {
       document.body.append(canvas);
+      document.body.append(nativeCanvas);
       // Trigger it to re-draw whenever the window resizes.
       let timeout;
       window.addEventListener("resize", () => {
+        nativeCanvas.style.opacity = 0;
         window.clearTimeout(timeout); // Small timer to save on performance.
         timeout = setTimeout(() => {
           needsReframe = true;
@@ -178,6 +191,10 @@ async function boot(
     }
 
     canvasRect = canvas.getBoundingClientRect();
+
+    nativeCanvas.style.left = canvasRect.x + "px";
+    nativeCanvas.style.top = canvasRect.y + "px";
+
     needsReframe = false;
     send({ type: "needs-paint" });
   }
@@ -328,8 +345,8 @@ async function boot(
       // Pen (also handles touch & pointer events)
       pen = new Pen((x, y) => {
         return {
-          x: Math.floor(((x - canvasRect.x) / projectedWidth) * screen.width),
-          y: Math.floor(((y - canvasRect.y) / projectedHeight) * screen.height),
+          x: floor(((x - canvasRect.x) / projectedWidth) * screen.width),
+          y: floor(((y - canvasRect.y) / projectedHeight) * screen.height),
         };
       });
 
@@ -493,12 +510,12 @@ async function boot(
 
     // Time budgeting stuff...
     //const updateDelta = performance.now() - updateNow;
-    //console.log("Update Budget: ", Math.round((updateDelta / updateRate) * 100));
+    //console.log("Update Budget: ", round((updateDelta / updateRate) * 100));
     // TODO: Output this number graphically.
 
     //const renderNow = performance.now();
     //const renderDelta = performance.now() - renderNow;
-    //console.log("Render Budget: ", Math.round((renderDelta / renderRate) * 100));
+    //console.log("Render Budget: ", round((renderDelta / renderRate) * 100));
     // TODO: Output this number graphically.
 
     // Clear pen events.
@@ -695,54 +712,29 @@ async function boot(
 
     function draw() {
       // A. Draw updated content from the piece.
+
       const db = content.dirtyBox;
       if (db) {
         compCtx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
         ctx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
       } else {
-        //console.log("draw");
-        // Note: Uncomment this for a `dirtyBox` visualization.
+        ctx.drawImage(compositeCanvas, 0, 0); // Comment out for a `dirtyBox` visualization.
         // TODO: Add a global shortcut for testing this when in debug mode? 2022.01.30.01.13
-        ctx.drawImage(compositeCanvas, 0, 0);
-        //ctx.putImageData(compositeImageData, 0, 0);
-        //ctx.fillStyle = "blue";
-        //ctx.fillRect(0, 0, 100, 100);
       }
 
-      // TODO: *Pre-generate pause icon and crosshair, then just drawImage here.*
-      // TODO: Do I want a "native" / vector resolution layer on top of the whole system?
-      //       This could be useful for a system button...
+      // B. Draw anything from the system UI layer on top. (using nativeCanvas)
 
-      // B. Draw anything from the system UI layer on top?
-      // *** I just gotta have another buffer for the UI?
-      // Maybe I need a full resolution or equal resolution canvas for this layer?
-      // TODO: Why do I have to be pulling ***all*** the imageData here?
-      const iD = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+      natCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
+      //                                 previously rendered icons.
 
-      Graph.setBuffer({ pixels: iD.data, width: iD.width, height: iD.height });
+      pen.render(natCtx, canvasRect); // ️ 🐭 Cursor
 
-      // TODO: Make a dirtyRect to add to here...
-
-      pen.render(Graph);
-      if (content.loading === true && debug === true) UI.spinner(Graph);
-
-      if (debug && frameCached) {
-        // TODO: How to I use my actual API in here? 2021.11.28.04.00
-        // Draw the pause icon in the top left.
-        Graph.color(0, 255, 255);
-        Graph.line(1, 1, 1, 4);
-        Graph.line(3, 1, 3, 4);
+      if (content.loading === true && debug === true) {
+        UI.spinner(natCtx); // TODO: Make this an actual spinner.
       }
 
-      // TODO: Abide by the dirtyRect.
-      if (pen.x && pen.y) {
-        //ctx.putImageData(iD, 0, 0, pen.x - 1, pen.y - 1, 4, 4); // TODO: Add dirty rect here.
-      }
-
-      ctx.putImageData(iD, 0, 0); // TODO: Add dirty rect here.
+      if (debug && frameCached && content.loading !== true) UI.cached(natCtx);
     }
-
-    //console.log(pixelsDidChange);
 
     if (pixelsDidChange || pen.changedInPiece) {
       frameCached = false;
@@ -760,7 +752,7 @@ async function boot(
     }
 
     if (freezeFrame) {
-      canvas.style.removeProperty("display");
+      canvas.style.removeProperty("opacity");
       freezeFrameCan.style.display = "none";
       freezeFrame = false;
     }

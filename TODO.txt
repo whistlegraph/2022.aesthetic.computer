@@ -4,18 +4,19 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 ☁️ Try AceJump!
 
 🌟 Current
-
-  - [] DirtyBox system / graphics refactor.
-    - [] Clean up and abstract the code in line.
-    - [] Make the pause sign & system mouse cursors update properly when DirtyBox is used.
+  - [] Chalkboard work.
+  - [] Recording of user actions.
+  - [] Add post-processing effect to UI layer.
+  - [] Clean up and abstract the code in line.
   - [] Fully clean up, then abstract the pixel line algorithm before putting it back in `nail.`
-  - [] Multiplayer Board reset
-  - [] Recording
+  - [] Multiplayer board reset in `spray` and `server`.
+
+⏳ Next
+
+UI - Make system UI icons resize along with the main screen... or hide them during a resize.
 
 - Adjust pixel density to be a bit better for iPhones / retina devices.
   - Cross-reference on my Thinkpad and also my laptop.
-
-⏳ Next
 
 function act({ event: e }) { // Remove drawing api.
 
