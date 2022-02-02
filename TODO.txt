@@ -6,6 +6,7 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 🌟 Current
   - [] Chalkboard work.
   - [] Recording of user actions.
+  - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
   - [] Add post-processing effect to UI layer.
   - [] Clean up and abstract the code in line.
   - [] Fully clean up, then abstract the pixel line algorithm before putting it back in `nail.`
