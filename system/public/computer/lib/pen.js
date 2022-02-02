@@ -1,5 +1,7 @@
 // ✍️ Pen
 // TODO: Clean up this whole class and its connections to the system.
+const { assign } = Object;
+const { floor, round } = Math;
 
 export class Pen {
   x;
@@ -10,6 +12,7 @@ export class Pen {
   untransformedPosition;
   point;
   changedInPiece = false;
+  #lastP;
 
   down = false;
   changed = false;
@@ -47,7 +50,7 @@ export class Pen {
       if (!e.isPrimary) return;
       pen.pointerType = e.pointerType;
 
-      Object.assign(pen, point(e.x, e.y));
+      assign(pen, point(e.x, e.y));
       this.untransformedPosition = { x: e.x, y: e.y };
 
       pen.pressure = reportPressure(e);
@@ -67,7 +70,7 @@ export class Pen {
       if (!e.isPrimary) return;
       pen.pointerType = e.pointerType;
 
-      Object.assign(pen, point(e.x, e.y));
+      assign(pen, point(e.x, e.y));
       this.untransformedPosition = { x: e.x, y: e.y };
 
       pen.pressure = reportPressure(e);
@@ -154,8 +157,7 @@ export class Pen {
   }
 
   retransformPosition() {
-    //console.log(this.point);
-    Object.assign(
+    assign(
       this,
       this.point(this.untransformedPosition?.x, this.untransformedPosition?.y)
     );
@@ -195,38 +197,84 @@ export class Pen {
     this.lastPenY = this.y;
   }
 
-  render({ plot, color }) {
-    const { x, y } = this;
-    if (!this.cursorCode || this.cursorCode === "precise") {
-      color(255, 255, 255);
-      // Center
-      plot(x, y);
-      // Crosshair
-      color(0, 255, 255);
+  render(ctx, bouRect) {
+    const p = this.untransformedPosition;
+    if (!p) return;
 
-      // Over
-      plot(x, y - 2);
-      plot(x, y - 3);
-      // Under
-      plot(x, y + 2);
-      plot(x, y + 3);
-      // Left
-      plot(x - 2, y);
-      plot(x - 3, y);
-      // Right
-      plot(x + 2, y);
-      plot(x + 3, y);
+    const s = 10 + 4,
+      r = bouRect;
+
+    // Erase the last cursor that was drawn.
+    if (!this.#lastP) this.#lastP = { x: p.x, y: p.y };
+    else
+      ctx.clearRect(
+        this.#lastP.x - r.x - s,
+        this.#lastP.y - r.y - s,
+        s * 2,
+        s * 2
+      );
+
+    assign(this.#lastP, p);
+    if (!this.cursorCode || this.cursorCode === "precise") {
+      // 🎯 Precise
+      ctx.lineCap = "round";
+
+      ctx.translate(round(p.x - r.x), round(p.y - r.y));
+
+      // A. Make circle in center.
+      ctx.beginPath();
+      ctx.lineTo(0, 0); // bottom right
+
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      const gap = 7.5,
+        to = 10;
+
+      ctx.beginPath();
+      ctx.moveTo(0, -gap); // Over
+      ctx.lineTo(0, -to);
+      ctx.moveTo(0, gap); // Under
+      ctx.lineTo(0, to);
+      ctx.moveTo(-gap, 0); // Left
+      ctx.lineTo(-to, 0);
+      ctx.moveTo(gap, 0); // Right
+      ctx.lineTo(to, 0);
+
+      ctx.strokeStyle = "rgb(0, 255, 255)";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.resetTransform();
     } else if (this.cursorCode === "tiny") {
-      color(255, 255, 0, 200);
-      plot(x - 1, y);
-      plot(x + 1, y);
-      // plot(pen.x, pen.y);
-      plot(x, y - 1);
-      plot(x, y + 1);
+      // 🦐 Tiny
+      const l = 4;
+
+      ctx.translate(round(p.x - r.x), round(p.y - r.y));
+
+      ctx.beginPath();
+      ctx.moveTo(0, -l); // Over
+      ctx.lineTo(0, -l);
+      ctx.moveTo(0, l); // Under
+      ctx.lineTo(0, l);
+      ctx.moveTo(-l, 0); // Left
+      ctx.lineTo(-l, 0);
+      ctx.moveTo(l, 0); // Right
+      ctx.lineTo(l, 0);
+
+      ctx.strokeStyle = "rgba(255, 255, 0, 0.75)";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.resetTransform();
     } else if (this.cursorCode === "dot") {
-      // ...
-      color(255, 0, 0, 128);
-      plot(x, y);
+      ctx.translate(round(p.x - r.x), round(p.y - r.y));
+      ctx.beginPath();
+      ctx.lineTo(0, 0); // bottom right
+
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.9)";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.resetTransform();
     } else if (this.cursorCode === "none") {
       // ...
     }

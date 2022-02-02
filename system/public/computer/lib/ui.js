@@ -1,10 +1,46 @@
 import { Box } from "./geo.js";
+const { round } = Math;
 
-function spinner({ color, line }) {
-  // TODO: Send the tickCount or time in here?
-  color(255, 0, 0);
-  line(0, 0, 10, 10);
-  line(0, 10, 10, 0);
+// TODO: Send the tickCount or time in here? 2022.02.02.03.06
+function spinner(ctx) {
+  const gap = 4,
+    s = 20;
+
+  ctx.translate(s + gap + 7, s + gap + 6);
+
+  ctx.beginPath();
+  ctx.moveTo(-s, -s); // top left
+  ctx.lineTo(s, s); // bottom right
+  ctx.moveTo(-s, s); // bottom left
+  ctx.lineTo(s, -s); // top right
+
+  ctx.strokeStyle = "rgb(200, 0, 50)";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.stroke();
+
+  ctx.resetTransform();
+}
+
+function cached(ctx) {
+  const gap = 4,
+    s = 20;
+
+  ctx.translate(round(gap / 2) + 5, round(gap / 2) + 4); // TODO: Translate before clearing to save some lines? 2022.02.02.03.30
+
+  ctx.beginPath();
+
+  ctx.moveTo(gap, gap); // left
+  ctx.lineTo(gap, s);
+  ctx.moveTo(gap * 3.5, gap); // right
+  ctx.lineTo(gap * 3.5, s);
+
+  ctx.strokeStyle = "rgb(0, 255, 255)";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.stroke();
+
+  ctx.resetTransform();
 }
 
 class Button {
@@ -34,4 +70,4 @@ class Button {
   }
 }
 
-export { spinner, Button };
+export { spinner, cached, Button };

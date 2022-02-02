@@ -16,10 +16,8 @@ const threshold = 100;
 function boot({ resize, fps, wipe, screen, cursor }) {
   // fps(30); // Slow things down if you need to.
   // resize(64, 64);
-
-  cursor("none");
+  // cursor("none");
   wipe(0, 0, 0);
-
   loc = { x: screen.width / 2, y: screen.height / 2 };
 }
 
