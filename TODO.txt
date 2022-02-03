@@ -3,10 +3,14 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 ☁️ Try AceJump!
 
+Today
+ Look at line and abstract it.
+
 🌟 Current
   - [] Chalkboard work.
   - [] Recording of user actions.
   - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
+  - [] in `tracker.js`: Recenter boxes on line 174.
   - [] Add post-processing effect to UI layer.
   - [] Clean up and abstract the code in line.
   - [] Fully clean up, then abstract the pixel line algorithm before putting it back in `nail.`
@@ -15,20 +19,17 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 ⏳ Next
 
 UI - Make system UI icons resize along with the main screen... or hide them during a resize.
+- (This is kinda ugly rn.)
 
 - Adjust pixel density to be a bit better for iPhones / retina devices.
   - Cross-reference on my Thinkpad and also my laptop.
 
 function act({ event: e }) { // Remove drawing api.
 
-  resize(64, 64); // Check if resizing to the same resolution just cancels it out silently.
+resize(64, 64); // Check if resizing to the same resolution just cancels it out silently.
 
-// Why does this run twice?
-function paint($api) {
-  console.log($api);
-  return false;
-  //wipe(255, 0, 0);
-}
+Natural window zooming no longer works with the high resolution canvas buffer...
+(Should I just implement / hijack and zoom on my own?)
 
 Stop sending duplicate event data for "draw" and "touch" in `pen`.
   - e.is("draw") && e.is("touch") should not send duplicate event {x, y} data

@@ -7,12 +7,13 @@ import {
   radians,
   lerp,
 } from "./num.js";
-const { floor, round, sin, cos } = Math;
+const { abs, sign, ceil, floor, round, sin, cos } = Math;
 
 let width, height, pixels;
 const depthBuffer = [];
 const c = [255, 255, 255, 255];
 const panTranslation = { x: 0, y: 0 }; // For 2d shifting using `pan` and `unpan`.
+const skips = [];
 
 // 1. Configuration & State
 
@@ -85,17 +86,17 @@ function clear() {
  * (1) {x, y}
  * (2) (x, y)
  */
+// Where a pixel is a region in which we draw from the upper left corner. (2D)
 function plot() {
   let x, y;
   arguments.length === 1 ? ([x, y] = arguments[0]) : ([x, y] = arguments);
 
-  x = round(x);
-  y = round(y);
+  x = floor(x);
+  y = floor(y);
 
-  // Skip pixels that are offscreen.
-  if (x < 0 || x >= width || y < 0 || y >= height) {
-    return;
-  }
+  // Skip pixels that are offscreen and/or found in the `skips` list.
+  if (x < 0 || x >= width || y < 0 || y >= height) return;
+  for (const s of skips) if (x === s.x && y === s.y) return;
 
   // Plot our pixel.
   const i = (x + y * width) * 4;
@@ -118,19 +119,48 @@ function plot() {
   }
 }
 
+// Adds a point to the skip list which ignores these points from being drawn
+// in `plot`. Passing `null` will clear the skip list.
+// TODO: Should the skip list clear automatically on every paint? 2022.02.03.01.16
+// TODO: Leaving skip blank will default to a random skipping algorithm?
+//       Writing a function will allow you to dynamically skip pixels.
+function skip(...args) {
+  if (args[0] === null) skips.length = 0;
+  else
+    args.forEach((p) => {
+      skips.push({
+        x: floor(p.x) + panTranslation.x,
+        y: floor(p.y) + panTranslation.y,
+      });
+    });
+}
+
 // Plots a single pixel within the panned coordinate space.
 // Basically a wrapper over plot, which should ultimately be renamed to set?
-function point(x, y) {
+// Accepts x, y or {x, y}
+function point(...args) {
+  let x, y;
+
+  if (args.length === 1) {
+    x = args[0].x;
+    y = args[0].y;
+  } else if (args.length === 2) {
+    x = args[0];
+    y = args[1];
+  }
+
+  // TODO: Add support for {x, y} single argument. 2022.02.02.20.39
   x += panTranslation.x;
   y += panTranslation.y;
+  // TODO: Eventually add rotation and scale etc.
   plot(x, y);
 }
 
 // TODO: Implement panTranslation for primitives other than line?
 function pan(x, y) {
   if (y === undefined) y = x;
-  panTranslation.x += x;
-  panTranslation.y += y;
+  panTranslation.x += floor(x);
+  panTranslation.y += floor(y);
 }
 
 function unpan() {
@@ -205,15 +235,33 @@ function paste(from, destX = 0, destY = 0) {
   }
 }
 
-/**
- *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param set - Optional function to send {x, y} points to instead of `plot`.
- */
-function line(x0, y0, x1, y1) {
+// Draws a line
+// (2) p1, p2 {x, y}
+// (4) x0, y0, x1, y1
+function line() {
+  let x0, y0, x1, y1;
+
+  if (arguments.length === 4) {
+    x0 = arguments[0];
+    y0 = arguments[1];
+    x1 = arguments[2];
+    y1 = arguments[3];
+  } else if (arguments.length === 2) {
+    x0 = arguments[0].x;
+    y0 = arguments[0].y;
+    x1 = arguments[1].x;
+    y1 = arguments[1].y;
+  } else {
+    console.warn(
+      "Line did not use the correct number of arguments:",
+      arguments
+    );
+  }
+
+  if (isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1)) {
+    return console.error(x0, y0, x1, y1);
+  }
+
   // Add any panTranslations.
   x0 += panTranslation.x;
   y0 += panTranslation.y;
@@ -223,6 +271,17 @@ function line(x0, y0, x1, y1) {
   // TODO: Check if line is perfectly horizontal and then skip bresenham and
   //       optimize by filling the whole buffer with the current color.
   bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
+}
+
+// Draws a series of lines without overlapping / overdrawing points.
+function poly(coords) {
+  let last = coords[0];
+  coords.forEach((current, i) => {
+    if (i < coords.length - 1) skip(current);
+    line(last, current);
+    skip(null);
+    last = current;
+  });
 }
 
 /**
@@ -238,15 +297,15 @@ function line(x0, y0, x1, y1) {
 function bresenham(x0, y0, x1, y1) {
   const points = [];
 
-  // Make sure everything is ceil'd.
-  x0 = Math.ceil(x0);
-  y0 = Math.ceil(y0);
-  x1 = Math.ceil(x1);
-  y1 = Math.ceil(y1);
+  // Make sure everything is floor'd.
+  x0 = floor(x0);
+  y0 = floor(y0);
+  x1 = floor(x1);
+  y1 = floor(y1);
 
   // Bresenham's Algorithm
-  const dx = Math.abs(x1 - x0);
-  const dy = Math.abs(y1 - y0);
+  const dx = abs(x1 - x0);
+  const dy = abs(y1 - y0);
   const sx = x0 < x1 ? 1 : -1;
   const sy = y0 < y1 ? 1 : -1;
   let err = dx - dy;
@@ -365,7 +424,7 @@ function box() {
     line(x + w - 1, y + 1, x + w - 1, y + h - 2); // Right
   } else if (mode === "fill") {
     w -= 1;
-    if (Math.sign(height) === 1) {
+    if (sign(height) === 1) {
       for (let row = 0; row < h; row += 1) {
         line(x, y + row, x + w, y + row);
       }
@@ -545,9 +604,11 @@ export {
   plot,
   pan,
   unpan,
+  skip,
   copy,
   paste,
   line,
+  poly,
   bresenham, // This function is under "abstract" because it doesn't render.
   box,
   shape,
@@ -805,7 +866,7 @@ class Vertex {
 
   get color24bit() {
     // 0-255
-    return this.color.map((c) => Math.floor(c * 255));
+    return this.color.map((c) => floor(c * 255));
   }
 
   constructor(
@@ -851,9 +912,9 @@ function initScreenSpaceTransformMatrix(halfWidth, halfHeight) {
 
 function isInsideViewFrustum(v4) {
   return (
-    Math.abs(v4[X]) <= Math.abs(v4[W]) &&
-    Math.abs(v4[Y]) <= Math.abs(v4[W]) &&
-    Math.abs(v4[Z]) <= Math.abs(v4[W])
+    abs(v4[X]) <= abs(v4[W]) &&
+    abs(v4[Y]) <= abs(v4[W]) &&
+    abs(v4[Z]) <= abs(v4[W])
   );
 }
 
@@ -893,8 +954,8 @@ class Edge {
   #xStep;
 
   constructor(gradients, minYVert, maxYVert, minYVertIndex) {
-    this.#yStart = Math.ceil(minYVert.y);
-    this.#yEnd = Math.ceil(maxYVert.y);
+    this.#yStart = ceil(minYVert.y);
+    this.#yEnd = ceil(maxYVert.y);
 
     const yDist = maxYVert.y - minYVert.y;
     const xDist = maxYVert.x - minYVert.x;
@@ -1298,8 +1359,8 @@ function scanEdges(gradients, a, b, handedness, texture, alpha) {
 }
 
 function drawScanLine(gradients, left, right, j, texture, alpha) {
-  const xMin = Math.ceil(left.x);
-  const xMax = Math.ceil(right.x);
+  const xMin = ceil(left.x);
+  const xMax = ceil(right.x);
 
   const xPrestep = xMin - left.x;
 

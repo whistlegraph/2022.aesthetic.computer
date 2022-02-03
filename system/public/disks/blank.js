@@ -12,7 +12,7 @@ function sim($api) {
   //console.log($api);
 }
 
-// 🎨 Paint (Runs once per display refresh rate)
+// 🎨 Paint (Executes ever display frame)
 function paint({ wipe, num: { randInt: r }, screen }) {
   wipe(0);
 }
