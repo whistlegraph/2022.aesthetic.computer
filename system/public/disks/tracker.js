@@ -2,6 +2,8 @@
 // A tool for composing, playing, and following along with 12 tones.
 // Designed in collaboration w/ Oliver Laumann + Mija Milovic
 
+// TODO: Recenter boxes on line 174.
+
 // TODO: Rethink & implement these other tools:
 //       - %: Add / toggle separator (single bpm notes into held notes)
 //       - -(line)-: Background color change / all together.

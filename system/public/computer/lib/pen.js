@@ -169,8 +169,8 @@ export class Pen {
     this.event = name;
 
     const delta = {
-      x: this.x - this.lastPenX,
-      y: this.y - this.lastPenY,
+      x: this.x - this.lastPenX || 0,
+      y: this.y - this.lastPenY || 0,
     };
 
     this.delta = delta;

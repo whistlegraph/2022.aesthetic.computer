@@ -2,17 +2,11 @@
 // A 1px line drawing algorithm.
 
 // TODO: VCR would catch the action layer.
-
 // TODO: Fix Safari magnifying glass finger hold bug... again?
-
 // Make hotkey & thumb button to clear the page?
-
 // TODO: Better colors. Abstract everything so it can be used
 //       in multiple instances. (See: `Painters` in `nail`)
-
 // TODO: Fix skippy scale rendering of pixels on non-retina displays.
-
-const { values } = Object;
 
 let painting; // A bitmap to draw on.
 let points = []; // This stored every point in a mark.
@@ -29,13 +23,12 @@ let boxCopy;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ wipe, paste, cursor, painting: p, screen, resize, fps, geo }) {
-  //fps(15);
-  //resize(32, 32);
+  // fps(15);
+  // resize(32, 32);
   cursor("none");
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
   wipe(100, 100, 100);
-  //paste(painting);
   db1 = new geo.DirtyBox();
 }
 
@@ -164,6 +157,7 @@ function act({
 
         points = filteredPoints.slice(-2); // Consume all but up to two points to leave for `pixelPerfect`.
         priorPointsIndex = 1; // Remember how many we have left over so we skip them on the next pass.
+        // TODO: Make sure tail of 0 does not clone all of the highlight.
         pointsToHighlight = pointsToHighlight.slice(-tail); // Trim highlight points if we go over the tail.
       }
     }

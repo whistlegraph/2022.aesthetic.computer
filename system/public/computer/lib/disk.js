@@ -184,6 +184,7 @@ const $paintApiUnwrapped = {
   }, // TODO: Should this be renamed to set?
   point: graph.point,
   line: graph.line,
+  poly: graph.poly,
   box: graph.box,
   shape: graph.shape,
   grid: graph.grid,
@@ -194,6 +195,7 @@ const $paintApiUnwrapped = {
   },
   pan: graph.pan,
   unpan: graph.unpan,
+  skip: graph.skip,
   noise16: graph.noise16,
 };
 
@@ -817,9 +819,7 @@ function makeFrame({ data: { type, content } }) {
 
         // `DirtyBox` and `undefined` always set `noPaint` to `true`.
         noPaint =
-          (paintOut === false ||
-            (paintOut !== undefined && paintOut !== true)) &&
-          paintCount !== 0n;
+          paintOut === false || (paintOut !== undefined && paintOut !== true);
 
         // Run everything that was queued to be painted, then devour paintLayers.
         painting.paint();
