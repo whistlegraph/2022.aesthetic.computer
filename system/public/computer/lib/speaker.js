@@ -3,6 +3,7 @@
 // import * as sine from "./sound/sine.js";
 import * as volume from "./sound/volume.js";
 import Square from "./sound/square.js";
+import Bubble from "./sound/bubble.js";
 
 // Helpful Info:
 
@@ -27,6 +28,8 @@ class SoundProcessor extends AudioWorkletProcessor {
 
   #queue = [];
 
+  #bubble;
+
   constructor(options) {
     super();
     this.#lastTime = currentTime;
@@ -49,6 +52,7 @@ class SoundProcessor extends AudioWorkletProcessor {
       }
 
       // Square
+      // Square fires just once and gets recreated on every call.
       if (msg.type === "square") {
         const durationInFrames = Math.round(
           sampleRate * (this.#bpmInSec * msg.data.beats)
@@ -86,6 +90,49 @@ class SoundProcessor extends AudioWorkletProcessor {
         */
       }
 
+      // Bubble is a singleton, only one can ever exist. They automatically
+      // layer or get destroyed / recreated.
+      if (msg.type === "bubble") {
+        this.#bubble = new Bubble(
+          msg.data.radius,
+          msg.data.rise,
+          msg.data.volume,
+          msg.data.pan
+        );
+        this.#queue.push(this.#bubble);
+      }
+
+      /*
+        if (!this.#queue.includes(this.#bubble)) {
+          this.#bubble = new Bubble(
+            msg.data.radius,
+            msg.data.rise,
+            msg.data.volume,
+            msg.data.pan
+          );
+          this.#queue.push(this.#bubble);
+        } else {
+          this.#bubble.start(
+            msg.data.radius,
+            msg.data.rise,
+            msg.data.volume,
+            msg.data.pan
+          );
+        }
+
+        console.log(
+          "🎼 Bubble Radius:",
+          msg.data.radius,
+          "Rise:",
+          msg.data.rise,
+          "Volume:",
+          msg.data.volume,
+          "Pan:",
+          msg.data.pan
+        );
+      }
+       */
+
       // Sample
 
       // Triangle
@@ -106,6 +153,7 @@ class SoundProcessor extends AudioWorkletProcessor {
     if (this.#ticks >= this.#bpmInSec) {
       this.#ticks = 0;
       this.port.postMessage(currentTime);
+      // TODO: Add in amplitude.
     }
 
     // 2️⃣ Sound generation
@@ -124,7 +172,7 @@ class SoundProcessor extends AudioWorkletProcessor {
         // For now, all sounds are maxed out and mixing happens by dividing by the total length.
 
         // TODO: Actually add the sounds here instead of replacing them.
-        const amplitude = instrument.next; // / this.#queue.length;
+        const amplitude = instrument.next(); // this.#queue.length;
 
         output[0][frame] += instrument.pan(0, amplitude);
         output[1][frame] += instrument.pan(1, amplitude);
@@ -137,6 +185,10 @@ class SoundProcessor extends AudioWorkletProcessor {
 
     return true;
   }
+
+  // #report() {
+  //this.port.postMessage()
+  // }
 }
 
 registerProcessor("sound-processor", SoundProcessor);

@@ -184,6 +184,7 @@ const $paintApiUnwrapped = {
   }, // TODO: Should this be renamed to set?
   point: graph.point,
   line: graph.line,
+  circle: graph.circle,
   poly: graph.poly,
   box: graph.box,
   shape: graph.shape,
@@ -463,9 +464,10 @@ function makeFrame({ data: { type, content } }) {
       send({ type: "microphone", content: options });
     };
 
-    // TODO: Generalize this for other instruments.
+    // TODO: Generalize square and bubble calls.
     // TODO: Move this stuff to a "sound" module.
     const squares = [];
+    const bubbles = [];
 
     $api.sound.square = function ({
       tone = 440, // TODO: Make random.
@@ -487,13 +489,29 @@ function makeFrame({ data: { type, content } }) {
       };
     };
 
+    $api.sound.bubble = function ({ radius, rise, volume = 1, pan = 0 } = {}) {
+      bubbles.push({ radius: radius, rise, volume, pan });
+
+      // Return a progress function so it can be used by rendering.
+      /*
+      const seconds = (60 / content.bpm) * beats;
+      const end = content.time + seconds;
+      return {
+        progress: function (time) {
+          return 1 - Math.max(0, end - time) / seconds;
+        },
+      };
+      */
+    };
+
     beat($api);
 
-    send({ type: "beat", content: { bpm: content.bpm, squares } }, [
+    send({ type: "beat", content: { bpm: content.bpm, squares, bubbles } }, [
       content.bpm,
     ]);
 
     squares.length = 0;
+    bubbles.length = 0;
   }
 
   // 1a. Upload // One send (returns afterwards)
