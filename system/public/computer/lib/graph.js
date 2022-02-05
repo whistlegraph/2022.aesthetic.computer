@@ -273,6 +273,43 @@ function line() {
   bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
 }
 
+// Draws a 1px aliased circle: http://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#C
+function circle(x0, y0, radius) {
+  x0 = floor(x0);
+  y0 = floor(y0);
+  radius = floor(radius);
+
+  let f = 1 - radius,
+    ddF_x = 0,
+    ddF_y = -2 * radius,
+    x = 0,
+    y = radius;
+
+  plot(x0, y0 + radius);
+  plot(x0, y0 - radius);
+  plot(x0 + radius, y0);
+  plot(x0 - radius, y0);
+
+  while (x < y) {
+    if (f >= 0) {
+      y -= 1;
+      ddF_y += 2;
+      f += ddF_y;
+    }
+    x += 1;
+    ddF_x += 2;
+    f += ddF_x + 1;
+    plot(x0 + x, y0 + y);
+    plot(x0 - x, y0 + y);
+    plot(x0 + x, y0 - y);
+    plot(x0 - x, y0 - y);
+    plot(x0 + y, y0 + x);
+    plot(x0 - y, y0 + x);
+    plot(x0 + y, y0 - x);
+    plot(x0 - y, y0 - x);
+  }
+}
+
 // Draws a series of lines without overlapping / overdrawing points.
 function poly(coords) {
   let last = coords[0];
@@ -608,6 +645,7 @@ export {
   copy,
   paste,
   line,
+  circle,
   poly,
   bresenham, // This function is under "abstract" because it doesn't render.
   box,

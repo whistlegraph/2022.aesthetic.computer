@@ -19,7 +19,7 @@ let priorPointsIndex = 0;
 let tapped;
 const tail = 2; // A red visual tail that follows the 1px line.
 let db1;
-let boxCopy;
+let lastDirtyBox;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ wipe, paste, cursor, painting: p, screen, resize, fps, geo }) {
@@ -35,12 +35,16 @@ function boot({ wipe, paste, cursor, painting: p, screen, resize, fps, geo }) {
 let continuedBoxCopy;
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ pen, ink, wipe, line, page, screen, paste, num, geo }) {
+function paint({ pen, ink, page, screen, paste, geo }) {
   // A. Replace any content painted last frame with the contents of `painting`.
-  if (boxCopy) {
-    paste({ painting, crop: geo.Box.copy(boxCopy) }, boxCopy.x, boxCopy.y);
-    continuedBoxCopy = geo.Box.copy(boxCopy);
-    boxCopy = undefined;
+  if (lastDirtyBox) {
+    paste(
+      { painting, crop: geo.Box.copy(lastDirtyBox) },
+      lastDirtyBox.x,
+      lastDirtyBox.y
+    );
+    continuedBoxCopy = geo.Box.copy(lastDirtyBox);
+    lastDirtyBox = undefined;
   } else {
     paste(painting);
   }
@@ -79,7 +83,7 @@ function paint({ pen, ink, wipe, line, page, screen, paste, num, geo }) {
     db1.soil(pen);
   }
 
-  if (db1.soiled) boxCopy = geo.Box.copy(db1.box); // Store what pixels were updated this frame.
+  if (db1.soiled) lastDirtyBox = geo.Box.copy(db1.box); // Store what pixels were updated this frame.
 
   if (continuedBoxCopy) {
     db1.soil(continuedBoxCopy);
@@ -109,7 +113,7 @@ function act({
     //console.log("defocus");
     // db1 = new geo.DirtyBox();
     // continuedBoxCopy = undefined;
-    // boxCopy = undefined;
+    // lastDirtyBox = undefined;
   }
 
   if (e.penChanged === true) {

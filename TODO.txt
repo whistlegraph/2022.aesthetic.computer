@@ -3,6 +3,12 @@ See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=
 
 ☁️ Try AceJump!
 
+// Bubble
+
+// Chalk
+Surface with simulated chalk that can have multiple users, sound synthesis,
+the ability to clear (slide up / down / left / right), record and playback.
+
 Today
  Look at line and abstract it.
 

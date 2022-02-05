@@ -66,7 +66,7 @@ export default class Square {
     return frame;
   }
 
-  get next() {
+  next() {
     // Channel is either 0 or 1
     // Generic for all instruments.
 

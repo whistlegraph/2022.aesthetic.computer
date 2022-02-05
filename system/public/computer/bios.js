@@ -204,7 +204,11 @@ async function boot(
     bpm: new Float32Array(1),
   };
 
-  let updateMetronome, updateSquare, attachMicrophone, audioContext;
+  let updateMetronome,
+    updateSquare,
+    updateBubble,
+    attachMicrophone,
+    audioContext;
 
   function startSound() {
     audioContext = new AudioContext({
@@ -271,6 +275,13 @@ async function boot(
         soundProcessor.port.postMessage({
           type: "square",
           data: square,
+        });
+      };
+
+      updateBubble = function (bubble) {
+        soundProcessor.port.postMessage({
+          type: "bubble",
+          data: bubble,
         });
       };
 
@@ -474,6 +485,7 @@ async function boot(
 
     // SQUARE
     for (const square of content.squares) updateSquare(square);
+    for (const bubble of content.bubbles) updateBubble(bubble);
   }
 
   // Update & Render
