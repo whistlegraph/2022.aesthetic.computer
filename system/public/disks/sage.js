@@ -1,4 +1,4 @@
-// Sage, 2022.01.31.19.14 [Sage + Jeffrey]
+// Sage, 2022.01.31.19.14 [Sage @mxsage + Jeffrey]
 // A basic demo of a little walker.
 
 // TODO: Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS)
