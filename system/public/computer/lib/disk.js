@@ -198,6 +198,7 @@ const $paintApiUnwrapped = {
   unpan: graph.unpan,
   skip: graph.skip,
   noise16: graph.noise16,
+  // glaze: ...
 };
 
 // TODO: Eventually restructure this a bit. 2021.12.16.16.0
@@ -679,6 +680,10 @@ function makeFrame({ data: { type, content } }) {
       $api.paintCount = Number(paintCount);
 
       $api.inFocus = content.inFocus;
+
+      $api.glaze = function (type, uniforms) {
+        send({ type: "glaze", content: { type, uniforms } });
+      };
 
       // Make a screen buffer or resize it automatically if it doesn't exist.
       if (

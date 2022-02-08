@@ -6,6 +6,7 @@ import { Pen } from "./lib/pen.js";
 import { Keyboard } from "./lib/keyboard.js";
 import * as Graph from "./lib/graph.js";
 import * as UI from "./lib/ui.js";
+import * as Glaze from "./lib/glaze.js";
 import { apiObject, extension } from "./lib/helpers.js";
 import { dist } from "./lib/num.js";
 
@@ -50,6 +51,7 @@ async function boot(
   }
 
   let pen, keyboard;
+  let frameCount = 0;
 
   let diskSupervisor;
   let currentPiece = null; // Gets set to a path after `loaded`.
@@ -66,10 +68,8 @@ async function boot(
   const compositeCanvas = document.createElement("canvas");
   const compCtx = compositeCanvas.getContext("2d");
 
-  // A native resolution resolution canvas for drawing mouse cursor and system UI.
-  const nativeCanvas = document.createElement("canvas");
-  const natCtx = nativeCanvas.getContext("2d");
-  nativeCanvas.dataset.type = "ui";
+  // A native resolution canvas for drawing cursors, system UI, and effects.
+  const nativeCanvas = Glaze.init();
 
   // A buffer for nicer resolution switches, nice when moving from
   // low resolution back to high resolution. Could eventually be used
@@ -144,16 +144,18 @@ async function boot(
     canvas.style.width = projectedWidth + "px";
     canvas.style.height = projectedHeight + "px";
 
-    // Set the native canvas to the projected width and height.
+    // Set the native canvas width and height.
     nativeCanvas.width = projectedWidth;
     nativeCanvas.height = projectedHeight;
-    nativeCanvas.style.removeProperty("opacity");
+    // nativeCanvas.style.removeProperty("opacity");
 
     canvas.width = width;
     canvas.height = height;
 
     compositeCanvas.width = canvas.width;
     compositeCanvas.height = canvas.height;
+
+    Glaze.frame(canvas.width, canvas.height);
 
     if (imageData) ctx.putImageData(imageData, 0, 0);
 
@@ -171,7 +173,7 @@ async function boot(
       // Trigger it to re-draw whenever the window resizes.
       let timeout;
       window.addEventListener("resize", () => {
-        nativeCanvas.style.opacity = 0;
+        //nativeCanvas.style.opacity = 0;
         window.clearTimeout(timeout); // Small timer to save on performance.
         timeout = setTimeout(() => {
           needsReframe = true;
@@ -589,6 +591,12 @@ async function boot(
       return;
     }
 
+    if (type === "glaze") {
+      // console.log("🪟 Glaze:", content);
+
+      return;
+    }
+
     if (type === "disk-loaded") {
       // Emit a push state for the old disk if it was not the first. This is so
       // a user can use browser history to switch between disks.
@@ -734,8 +742,33 @@ async function boot(
         // TODO: Add a global shortcut for testing this when in debug mode? 2022.01.30.01.13
       }
 
-      // B. Draw anything from the system UI layer on top. (using nativeCanvas)
+      let nativePen;
+      if (pen.untransformedPosition) {
+        nativePen = {
+          x: (pen.untransformedPosition.x - canvasRect.x) / canvasRect.width,
+          y: (pen.untransformedPosition.y - canvasRect.y) / canvasRect.height,
+        };
+      } else {
+        nativePen = { x: undefined, y: undefined };
+      }
 
+      Glaze.render(ctx.canvas, frameCount, nativePen);
+
+      /*
+      pen = new Pen((x, y) => {
+        return {
+          x: floor(((x - canvasRect.x) / projectedWidth) * screen.width),
+          y: floor(((y - canvasRect.y) / projectedHeight) * screen.height),
+        };
+      });
+      */
+
+      frameCount += 1;
+
+      // B. Draw anything from the system UI layer on top. (using nativeCanvas)
+      // TODO: Redraw all this UI in webgl2.
+
+      /*
       natCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
       //                                 previously rendered icons.
 
@@ -746,6 +779,7 @@ async function boot(
       }
 
       if (debug && frameCached && content.loading !== true) UI.cached(natCtx);
+      */
     }
 
     if (pixelsDidChange || pen.changedInPiece) {

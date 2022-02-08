@@ -29,7 +29,7 @@ let history,
 
 // 🥾 Boot (Runs once before first paint and sim)
 export function boot({ resize, painting, screen, wipe, ink }) {
-  resize(64, 64 + 1);
+  resize(32, 32 + 1);
 
   const palette = {
     light: {
@@ -70,6 +70,7 @@ export function paint({
   paste,
   clear,
   line,
+  glaze,
   box,
   painting,
   screen,
@@ -162,6 +163,8 @@ export function paint({
   }
 
   paste(history, 0, screen.height - 1);
+
+  glaze("cloud", { color: "red" });
 }
 
 // ✒ Act (Runs once per user interaction)

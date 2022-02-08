@@ -27,7 +27,7 @@ function boot({ wipe, paste, cursor, painting: p, screen, resize, fps, geo }) {
   // resize(32, 32);
   cursor("none");
   // Make & display the canvas.
-  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
+  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(10, 10, 20));
   wipe(100, 100, 100);
   db1 = new geo.DirtyBox();
 }
@@ -53,7 +53,7 @@ function paint({ pen, ink, page, screen, paste, geo }) {
   if (pointsToPaint.length) {
     page(painting);
     pointsToPaint.forEach((p) => {
-      ink(50, 50, 50, 100).plot(p.x, p.y);
+      ink(200, 255, 200, 100).plot(p.x, p.y);
       db1.soil(p);
     });
     pointsToPaint.length = 0;
