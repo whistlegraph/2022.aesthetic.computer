@@ -1,28 +1,40 @@
 Jeffrey's in-Project Notes
 See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
 
-☁️ Try AceJump!
+Development ideas: ☁️ Try AceJump!
 
-// Bubble
+🌟 In Progress 🌟
 
-// Chalk
+ ***Glaze***
+ (Jeffrey)
+ - [🟡] Tidy up shader code.
+ - [] Make cursor Replacements
+ - [] Set glaze parameters from software side.
+ - [] Optimize & tune disks for performance.
+ (Sage)
+ - [] Orthographic projection option
+
+🌟 Next Up 🌟
+  - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
+
+  ***Whistlegraph***
+  - [] Write and complete: `whistlegraph` / `thumb`.
+  - TBD
+  - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
+  - [] Make whistlegraph recorder disk / nail?
+  - [] Global recording of user actions (what about application actions) and audio+video into one file?
+  - [] Chalkboard / material simulation.
+
+❤️ Side Missions ❤️
+ - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
+ - [] in `tracker.js`: Recenter boxes on line 174.
+ - [] Multiplayer board reset in `spray` and `server`.
+
+
+⏳ Later On ⏳
+
 Surface with simulated chalk that can have multiple users, sound synthesis,
 the ability to clear (slide up / down / left / right), record and playback.
-
-Today
- Look at line and abstract it.
-
-🌟 Current
-  - [] Chalkboard work.
-  - [] Recording of user actions.
-  - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
-  - [] in `tracker.js`: Recenter boxes on line 174.
-  - [] Add post-processing effect to UI layer.
-  - [] Clean up and abstract the code in line.
-  - [] Fully clean up, then abstract the pixel line algorithm before putting it back in `nail.`
-  - [] Multiplayer board reset in `spray` and `server`.
-
-⏳ Next
 
 UI - Make system UI icons resize along with the main screen... or hide them during a resize.
 - (This is kinda ugly rn.)

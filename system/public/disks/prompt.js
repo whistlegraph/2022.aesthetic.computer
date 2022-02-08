@@ -185,7 +185,7 @@ class Prompt {
   letterWidth = this.blockWidth * this.scale;
   letterHeight = this.blockHeight * this.scale;
 
-  colWidth = 24; // Maximum width of each line before wrapping.
+  colWidth = 48; // Maximum width of each line before wrapping.
 
   cursor = { x: 0, y: 0 };
 
