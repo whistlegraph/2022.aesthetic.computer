@@ -163,6 +163,17 @@ export class Pen {
     );
   }
 
+  normalizedPosition(rect) {
+    if (this.untransformedPosition) {
+      return {
+        x: (this.untransformedPosition.x - rect.x) / rect.width,
+        y: (this.untransformedPosition.y - rect.y) / rect.height,
+      };
+    } else {
+      return { x: undefined, y: undefined };
+    }
+  }
+
   // TODO: Merge this logic into the above events & consolidate class properties.
   // Check the hardware for any changes.
   #event(name) {

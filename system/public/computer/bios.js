@@ -65,8 +65,12 @@ async function boot(
   const ctx = canvas.getContext("2d");
 
   // A composite canvas for optimizing speed of drawing.
-  const compositeCanvas = document.createElement("canvas");
-  const compCtx = compositeCanvas.getContext("2d");
+
+  // TODO: Replace composite canvas with a cursorCanvas that gets added
+  //       to the DOM and has it's own dirtyRect.
+
+  //const compositeCanvas = document.createElement("canvas");
+  //const compCtx = compositeCanvas.getContext("2d");
 
   // A native resolution canvas for drawing cursors, system UI, and effects.
   const nativeCanvas = Glaze.init();
@@ -152,8 +156,8 @@ async function boot(
     canvas.width = width;
     canvas.height = height;
 
-    compositeCanvas.width = canvas.width;
-    compositeCanvas.height = canvas.height;
+    //compositeCanvas.width = canvas.width;
+    //compositeCanvas.height = canvas.height;
 
     Glaze.frame(canvas.width, canvas.height);
 
@@ -593,7 +597,6 @@ async function boot(
 
     if (type === "glaze") {
       // console.log("🪟 Glaze:", content);
-
       return;
     }
 
@@ -696,7 +699,7 @@ async function boot(
 
     // 👌 Otherwise, grab all the pixels, or some, if `dirtyBox` is present.
     if (content.dirtyBox) {
-      // A. Cropped update.
+      // 🅰️ Cropped update.
       const imageData = new ImageData(
         content.pixels, // Is this the only necessary part?
         content.dirtyBox.w,
@@ -704,7 +707,7 @@ async function boot(
       );
 
       // Paint everything to a secondary canvas buffer.
-      // TODO: Maybe this can should be made when the system starts to better
+      // TODO: Maybe this should be instantiated when the system starts to better
       //       optimize things? (Only if it's ever slow...)
       // TODO: Use ImageBitmap objects to make this faster once it lands in Safari.
       dirtyBoxBitmapCan = document.createElement("canvas");
@@ -718,55 +721,48 @@ async function boot(
       // const dbCtx = dirtyBoxBitmapCan.getContext("bitmaprenderer");
       // dbCtx.transferFromImageBitmap(dirtyBoxBitmap);
     } else if (content.paintChanged) {
-      // B. Normal full-screen update.
+      // 🅱️ Normal full-screen update.
       imageData = new ImageData(content.pixels, canvas.width, canvas.height);
 
-      // Copy all rendered pixels to a composite buffer that will have system-wide
+      // Copy all rendered pixels to a composite buffer that can be combined with
+      // the dirtyBox.
+
       // UI elements like loading spinners and cursors tacked on before displaying.
-      compositeImageData = imageData;
-      composite.pixels = imageData.data;
-      compCtx.putImageData(compositeImageData, 0, 0);
+      //compositeImageData = imageData;
+      //composite.pixels = imageData.data;
+      //compCtx.putImageData(compositeImageData, 0, 0);
+
+      //ctx.putImageData(imageData, 0, 0);
     }
+
+    if (content.paintChanged) {
+      //imageData = new ImageData(content.pixels, canvas.width, canvas.height);
+      //  ctx.putImageData(imageData, 0, 0);
+    }
+
+    // ☀️ TODO: Remove compositeCanvas...
 
     pixelsDidChange = content.paintChanged || false;
 
     function draw() {
-      // A. Draw updated content from the piece.
+      // 🅰️ Draw updated content from the piece.
 
       const db = content.dirtyBox;
       if (db) {
-        compCtx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
+        //compCtx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
         ctx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
-      } else {
-        ctx.drawImage(compositeCanvas, 0, 0); // Comment out for a `dirtyBox` visualization.
+      } else if (pixelsDidChange) {
+        // ctx.drawImage(compositeCanvas, 0, 0); // Comment out for a `dirtyBox` visualization.
         // TODO: Add a global shortcut for testing this when in debug mode? 2022.01.30.01.13
+        ctx.putImageData(imageData, 0, 0);
       }
+      //ctx.putImageData(imageData, 0, 0);
 
-      let nativePen;
-      if (pen.untransformedPosition) {
-        nativePen = {
-          x: (pen.untransformedPosition.x - canvasRect.x) / canvasRect.width,
-          y: (pen.untransformedPosition.y - canvasRect.y) / canvasRect.height,
-        };
-      } else {
-        nativePen = { x: undefined, y: undefined };
-      }
-
-      Glaze.render(ctx.canvas, frameCount, nativePen);
-
-      /*
-      pen = new Pen((x, y) => {
-        return {
-          x: floor(((x - canvasRect.x) / projectedWidth) * screen.width),
-          y: floor(((y - canvasRect.y) / projectedHeight) * screen.height),
-        };
-      });
-      */
+      //Glaze.render(ctx.canvas, frameCount, pen.normalizedPosition(canvasRect));
 
       frameCount += 1;
 
-      // B. Draw anything from the system UI layer on top. (using nativeCanvas)
-      // TODO: Redraw all this UI in webgl2.
+      // 🅱️ Draw anything from the system UI layer on top. (using nativeCanvas)
 
       /*
       natCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
@@ -804,7 +800,7 @@ async function boot(
     }
 
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
-    //console.log("🎨", (performance.now() - startTime).toFixed(2), "ms");
+    // console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
 
     frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
   }

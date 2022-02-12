@@ -22,7 +22,13 @@ const display = {
 export function init() {
   const nativeCanvas = document.createElement("canvas");
   nativeCanvas.dataset.type = "ui";
-  gl = nativeCanvas.getContext("webgl2");
+  gl = nativeCanvas.getContext("webgl2", {
+    alpha: false,
+    depth: false,
+    stencil: false,
+    desynchronized: true,
+    antialias: false,
+  });
 
   // Blending & Culling
   gl.enable(gl.BLEND);
@@ -222,6 +228,7 @@ export function render(canvasTexture, time, mouse) {
   const texSurfHeight = canvasTexture.height;
   // Resolution of lighting. TODO: Switch to full resolution mode.
   gl.viewport(0, 0, texSurfWidth, texSurfHeight);
+  //gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
