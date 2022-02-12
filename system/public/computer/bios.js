@@ -72,9 +72,6 @@ async function boot(
   //const compositeCanvas = document.createElement("canvas");
   //const compCtx = compositeCanvas.getContext("2d");
 
-  // A native resolution canvas for drawing cursors, system UI, and effects.
-  const nativeCanvas = Glaze.init();
-
   // A buffer for nicer resolution switches, nice when moving from
   // low resolution back to high resolution. Could eventually be used
   // for transition effects.
@@ -87,6 +84,9 @@ async function boot(
   let fixedWidth, fixedHeight;
   let projectedWidth, projectedHeight;
   let canvasRect;
+
+  let glaze = { on: false };
+
   let needsReframe = false;
   let freezeFrame = false;
 
@@ -148,18 +148,11 @@ async function boot(
     canvas.style.width = projectedWidth + "px";
     canvas.style.height = projectedHeight + "px";
 
-    // Set the native canvas width and height.
-    nativeCanvas.width = projectedWidth;
-    nativeCanvas.height = projectedHeight;
-    // nativeCanvas.style.removeProperty("opacity");
-
     canvas.width = width;
     canvas.height = height;
 
     //compositeCanvas.width = canvas.width;
     //compositeCanvas.height = canvas.height;
-
-    Glaze.frame(canvas.width, canvas.height);
 
     if (imageData) ctx.putImageData(imageData, 0, 0);
 
@@ -170,14 +163,13 @@ async function boot(
     assign(screen, { pixels: imageData.data, width, height });
     assign(composite, { pixels: compositeImageData.data, width, height });
 
-    // Add the canvas and nativeCanvas when we first boot up.
+    // Add the canvas when we first boot up.
     if (!document.body.contains(canvas)) {
       document.body.append(canvas);
-      document.body.append(nativeCanvas);
+
       // Trigger it to re-draw whenever the window resizes.
       let timeout;
       window.addEventListener("resize", () => {
-        //nativeCanvas.style.opacity = 0;
         window.clearTimeout(timeout); // Small timer to save on performance.
         timeout = setTimeout(() => {
           needsReframe = true;
@@ -198,8 +190,16 @@ async function boot(
 
     canvasRect = canvas.getBoundingClientRect();
 
-    nativeCanvas.style.left = canvasRect.x + "px";
-    nativeCanvas.style.top = canvasRect.y + "px";
+    // A native resolution canvas for drawing cursors, system UI, and effects.
+    if (glaze.on) {
+      Glaze.frame(
+        canvas.width,
+        canvas.height,
+        canvasRect,
+        projectedWidth,
+        projectedHeight
+      );
+    }
 
     needsReframe = false;
     send({ type: "needs-paint" });
@@ -596,7 +596,18 @@ async function boot(
     }
 
     if (type === "glaze") {
-      // console.log("🪟 Glaze:", content);
+      console.log("🪟 Glaze:", content);
+      glaze = content;
+      if (glaze.on === false) Glaze.off();
+      else if (glaze.on === true) {
+        Glaze.on(
+          canvas.width,
+          canvas.height,
+          canvasRect,
+          projectedWidth,
+          projectedHeight
+        );
+      }
       return;
     }
 
@@ -652,6 +663,11 @@ async function boot(
 
       // Close (defocus) software keyboard if it exists.
       document.querySelector("#software-keyboard-input")?.blur();
+
+      // Turn off glaze.
+      console.log(glaze);
+      glaze.on = false;
+      Glaze.off();
 
       return;
     }
@@ -758,11 +774,17 @@ async function boot(
       }
       //ctx.putImageData(imageData, 0, 0);
 
-      //Glaze.render(ctx.canvas, frameCount, pen.normalizedPosition(canvasRect));
+      if (glaze.on) {
+        Glaze.render(
+          ctx.canvas,
+          frameCount,
+          pen.normalizedPosition(canvasRect)
+        );
+      }
 
       frameCount += 1;
 
-      // 🅱️ Draw anything from the system UI layer on top. (using nativeCanvas)
+      // 🅱️ Draw anything from the system UI layer on top.
 
       /*
       natCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any

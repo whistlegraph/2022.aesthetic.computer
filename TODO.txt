@@ -9,8 +9,8 @@ Development ideas: ☁️ Try AceJump!
  (Jeffrey)
 
  - [🟡] Make a new canvas that can be used as the cursor or `ui` canvas.
-
     - What is compCtx doing?
+ - [] Allow glaze to be toggled on or off.
 
  - [] Set glaze parameters from software side.
       - Toggle it on or off.

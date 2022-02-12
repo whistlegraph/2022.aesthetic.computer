@@ -27,7 +27,7 @@ let errorPresent = false;
 let canType = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, net: { preload }, pieceCount }) {
+function boot({ cursor, net: { preload }, pieceCount, glaze }) {
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
     preload(`disks/drawings/font-1/${location}.json`).then((res) => {
@@ -39,6 +39,9 @@ function boot({ cursor, net: { preload }, pieceCount }) {
     canType = true;
     text = "";
   }
+
+  // Enable glaze.
+  glaze({ on: true });
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
