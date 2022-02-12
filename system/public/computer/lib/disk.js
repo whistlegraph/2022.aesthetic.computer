@@ -681,8 +681,9 @@ function makeFrame({ data: { type, content } }) {
 
       $api.inFocus = content.inFocus;
 
-      $api.glaze = function (type, uniforms) {
-        send({ type: "glaze", content: { type, uniforms } });
+      $api.glaze = function (content) {
+        send({ type: "glaze", content });
+        //send({ type: "glaze", content: { type, uniforms } });
       };
 
       // Make a screen buffer or resize it automatically if it doesn't exist.

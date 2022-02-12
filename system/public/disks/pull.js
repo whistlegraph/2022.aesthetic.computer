@@ -54,6 +54,8 @@ export function boot({ resize, painting, screen, wipe, ink }) {
   });
 
   history = painting(screen.width, 1, () => wipe(0));
+
+  // glaze("cloud", { color: "red" });
 }
 
 // 🧮 Simulate (Runs once per logic frame (120fps)).
@@ -70,7 +72,6 @@ export function paint({
   paste,
   clear,
   line,
-  glaze,
   box,
   painting,
   screen,
@@ -163,8 +164,6 @@ export function paint({
   }
 
   paste(history, 0, screen.height - 1);
-
-  glaze("cloud", { color: "red" });
 }
 
 // ✒ Act (Runs once per user interaction)

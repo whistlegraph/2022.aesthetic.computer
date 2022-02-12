@@ -2,7 +2,7 @@
 // This creates a nice webgl2 rendering layer
 // over the scaled software rasterizer.
 
-let gl;
+let gl, canvas;
 
 const shaders = await preloadShaders([
   "lighting-and-display-vert",
@@ -20,9 +20,9 @@ const display = {
 };
 
 export function init() {
-  const nativeCanvas = document.createElement("canvas");
-  nativeCanvas.dataset.type = "ui";
-  gl = nativeCanvas.getContext("webgl2", {
+  canvas = document.createElement("canvas");
+  canvas.dataset.type = "ui";
+  gl = canvas.getContext("webgl2", {
     alpha: false,
     depth: false,
     stencil: false,
@@ -35,7 +35,7 @@ export function init() {
   gl.blendEquation(gl.FUNC_ADD);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-  return nativeCanvas;
+  document.body.append(canvas);
 }
 
 let lightingProgram, displayProgram;
@@ -54,9 +54,21 @@ let displayTexUniformResolutionLocation;
 // TODO: This is run on every resize... but some of this can move into init() above.
 // Resizes the textures & re-initializes the necessary components for a resolution change.
 // See also: `frame` via window.resize in `bios.js`.
-export function frame(w, h) {
-  // Create shader program.
+export function frame(w, h, rect, nativeWidth, nativeHeight) {
+  // Run `init` if the canvas does not exist.
+  // Note: Should `init` just be here?
+  if (canvas === undefined) {
+    this.init();
+  }
 
+  canvas.style.left = rect.x + "px";
+  canvas.style.top = rect.y + "px";
+
+  // Set the native canvas width and height.
+  canvas.width = nativeWidth;
+  canvas.height = nativeHeight;
+
+  // Create shader program.
   const lightingVert = createShader(gl.VERTEX_SHADER, lighting.vert);
   const lightingFrag = createShader(gl.FRAGMENT_SHADER, lighting.frag);
   lightingProgram = createProgram(lightingVert, lightingFrag);
@@ -208,6 +220,20 @@ export function frame(w, h) {
   //  program,
   //  "u_screen_ratio"
   //);
+}
+
+// Turn glaze off if it has already been turned on.
+export function off() {
+  if (canvas) canvas.style.opacity = 0;
+}
+
+// Turn glaze on if it has already been turned off.
+export function on(w, h, rect, nativeWidth, nativeHeight) {
+  if (canvas) {
+    canvas.style.opacity = 1;
+  } else {
+    this.frame(w, h, rect, nativeWidth, nativeHeight);
+  }
 }
 
 export function render(canvasTexture, time, mouse) {
