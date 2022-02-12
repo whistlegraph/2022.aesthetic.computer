@@ -7,15 +7,29 @@ Development ideas: ☁️ Try AceJump!
 
  ***Glaze***
  (Jeffrey)
- - [🟡] Tidy up shader code.
- - [] Make cursor Replacements
+
+ - [🟡] Make a new canvas that can be used as the cursor or `ui` canvas.
+
+    - What is compCtx doing?
+
  - [] Set glaze parameters from software side.
+      - Toggle it on or off.
+      - Change some properties.
+
+ - Always go through WebGL now? Hide original canvas?
+
+ - [] Turn it OFF by default.
+
+
+
  - [] Optimize & tune disks for performance.
  (Sage)
- - [] Orthographic projection option
+ - [] Fix lighting centering bug. (It's smushed into the top right.)
+ - [] Orthographic projection.
 
 🌟 Next Up 🌟
   - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
+  - [] Add sound to `nail`.
 
   ***Whistlegraph***
   - [] Write and complete: `whistlegraph` / `thumb`.
