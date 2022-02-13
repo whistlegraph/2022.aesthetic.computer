@@ -52,6 +52,7 @@ async function boot(
 
   let pen, keyboard;
   let frameCount = 0;
+  let timePassed = 0;
 
   let diskSupervisor;
   let currentPiece = null; // Gets set to a path after `loaded`.
@@ -665,7 +666,6 @@ async function boot(
       document.querySelector("#software-keyboard-input")?.blur();
 
       // Turn off glaze.
-      console.log(glaze);
       glaze.on = false;
       Glaze.off();
 
@@ -749,20 +749,19 @@ async function boot(
       const db = content.dirtyBox;
       if (db) {
         ctx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
+        if (glaze.on) Glaze.update(dirtyBoxBitmapCan, db.x, db.y);
       } else if (pixelsDidChange) {
-        // TODO: Add a global shortcut for testing this when in debug mode? 2022.01.30.01.13
         ctx.putImageData(imageData, 0, 0); // Comment out for a `dirtyBox` visualization.
+        if (glaze.on) Glaze.update(imageData);
       }
 
       if (glaze.on) {
         Glaze.render(
           ctx.canvas,
-          frameCount,
+          timePassed,
           pen.normalizedPosition(canvasRect)
         );
       }
-
-      frameCount += 1;
 
       // 🅱️ Draw anything from the system UI layer on top.
 
@@ -771,15 +770,15 @@ async function boot(
       uiCtx.scale(dpi, dpi);
 
       uiCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
-      //                                previously rendered icons.
+      //                                previously rendered corner icons.
 
-      pen.render(uiCtx, canvasRect); // ️ 🐭 Cursor
+      pen.render(uiCtx, canvasRect); // ️ 🐭 Draw the cursor.
 
-      if (content.loading === true && debug === true) {
-        UI.spinner(uiCtx); // TODO: Make this an actual spinner.
+      if (content.loading === true) {
+        UI.spinner(uiCtx, timePassed);
       }
 
-      if (debug && frameCached && content.loading !== true) UI.cached(uiCtx);
+      if (debug && frameCached && content.loading !== true) UI.cached(uiCtx); // Pause icon.
 
       uiCtx.resetTransform();
     }
@@ -796,7 +795,7 @@ async function boot(
       draw();
     } else if (frameCached === true) {
       //draw(); // TODO: This is causing stuttering.
-      //console.log("Cached...");
+      // console.log("Cached...");
     }
 
     if (freezeFrame) {
@@ -808,6 +807,8 @@ async function boot(
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
     // console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
 
+    timePassed += performance.now() - startTime;
+    frameCount += 1;
     frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
   }
 

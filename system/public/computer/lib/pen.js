@@ -131,7 +131,6 @@ export class Pen {
       } else {
         forceTouchPressure = Math.max(0, e.webkitForce - 1);
       }
-      console.log(forceTouchPressure);
     });
 
     function reportPressure(e) {
