@@ -23,6 +23,19 @@ canvas {
   pointer-events: none;
 }
 
-canvas[data-type="ui"], canvas[data-type="freeze"] {
+canvas[data-type="ui"], canvas[data-type="glaze"], canvas[data-type="freeze"] {
   position: absolute;
+}
+
+canvas[data-type="glaze"] {
+  z-index: 1;
+}
+
+canvas[data-type="freeze"] {
+  z-index: 2;
+}
+
+canvas[data-type="ui"] {
+  z-index: 3;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
 }

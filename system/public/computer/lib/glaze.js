@@ -21,7 +21,8 @@ const display = {
 
 export function init() {
   canvas = document.createElement("canvas");
-  canvas.dataset.type = "ui";
+  canvas.dataset.type = "glaze";
+
   gl = canvas.getContext("webgl2", {
     alpha: false,
     depth: false,
@@ -35,6 +36,7 @@ export function init() {
   gl.blendEquation(gl.FUNC_ADD);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+  // Make sure that this gets added before the uiCanvas.
   document.body.append(canvas);
 }
 
@@ -232,6 +234,7 @@ export function on(w, h, rect, nativeWidth, nativeHeight) {
   if (canvas) {
     canvas.style.opacity = 1;
   } else {
+    // If glaze was never turned on then initialize it.
     this.frame(w, h, rect, nativeWidth, nativeHeight);
   }
 }
