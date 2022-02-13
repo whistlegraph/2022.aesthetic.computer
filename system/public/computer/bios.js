@@ -64,13 +64,10 @@ async function boot(
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  // A composite canvas for optimizing speed of drawing.
-
-  // TODO: Replace composite canvas with a cursorCanvas that gets added
-  //       to the DOM and has it's own dirtyRect.
-
-  //const compositeCanvas = document.createElement("canvas");
-  //const compCtx = compositeCanvas.getContext("2d");
+  // A ui canvas for rendering a native resolution ui on top of everything.
+  const uiCanvas = document.createElement("canvas");
+  const uiCtx = uiCanvas.getContext("2d");
+  uiCanvas.dataset.type = "ui";
 
   // A buffer for nicer resolution switches, nice when moving from
   // low resolution back to high resolution. Could eventually be used
@@ -80,7 +77,6 @@ async function boot(
   freezeFrameCan.dataset.type = "freeze";
 
   let imageData;
-  let compositeImageData;
   let fixedWidth, fixedHeight;
   let projectedWidth, projectedHeight;
   let canvasRect;
@@ -91,7 +87,6 @@ async function boot(
   let freezeFrame = false;
 
   const screen = apiObject("pixels", "width", "height");
-  const composite = apiObject("pixels", "width", "height");
 
   const REFRAME_DELAY = 250;
   let curReframeDelay = REFRAME_DELAY;
@@ -151,26 +146,28 @@ async function boot(
     canvas.width = width;
     canvas.height = height;
 
-    //compositeCanvas.width = canvas.width;
-    //compositeCanvas.height = canvas.height;
+    uiCanvas.width = projectedWidth * window.devicePixelRatio;
+    uiCanvas.height = projectedHeight * window.devicePixelRatio;
+
+    uiCanvas.style.width = projectedWidth + "px";
+    uiCanvas.style.height = projectedHeight + "px";
 
     if (imageData) ctx.putImageData(imageData, 0, 0);
 
     imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    compositeImageData = ctx.getImageData(0, 0, canvas.width, canvas.height); // Allocate composite data.
-
     assign(screen, { pixels: imageData.data, width, height });
-    assign(composite, { pixels: compositeImageData.data, width, height });
 
-    // Add the canvas when we first boot up.
+    // Add the canvas & uiCanvas when we first boot up.
     if (!document.body.contains(canvas)) {
       document.body.append(canvas);
+      document.body.append(uiCanvas);
 
       // Trigger it to re-draw whenever the window resizes.
       let timeout;
       window.addEventListener("resize", () => {
         window.clearTimeout(timeout); // Small timer to save on performance.
+
         timeout = setTimeout(() => {
           needsReframe = true;
           curReframeDelay = REFRAME_DELAY;
@@ -189,6 +186,9 @@ async function boot(
     }
 
     canvasRect = canvas.getBoundingClientRect();
+
+    uiCanvas.style.top = canvasRect.y + "px";
+    uiCanvas.style.left = canvasRect.x + "px";
 
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
@@ -694,14 +694,14 @@ async function boot(
     if (
       content.dirtyBox === undefined &&
       content.pixels?.length !== undefined &&
-      content.pixels?.length !== composite.pixels.length
+      content.pixels?.length !== screen.pixels.length
     ) {
       console.warn("Aborted render. Pixel buffers did not match.");
       console.log(
         "Content pixels:",
         content.pixels.length,
-        "Composite:",
-        composite.pixels.length,
+        "Screen:",
+        screen.pixels.length,
         content.didntRender,
         content.reframe,
         "Freeze:",
@@ -739,24 +739,7 @@ async function boot(
     } else if (content.paintChanged) {
       // 🅱️ Normal full-screen update.
       imageData = new ImageData(content.pixels, canvas.width, canvas.height);
-
-      // Copy all rendered pixels to a composite buffer that can be combined with
-      // the dirtyBox.
-
-      // UI elements like loading spinners and cursors tacked on before displaying.
-      //compositeImageData = imageData;
-      //composite.pixels = imageData.data;
-      //compCtx.putImageData(compositeImageData, 0, 0);
-
-      //ctx.putImageData(imageData, 0, 0);
     }
-
-    if (content.paintChanged) {
-      //imageData = new ImageData(content.pixels, canvas.width, canvas.height);
-      //  ctx.putImageData(imageData, 0, 0);
-    }
-
-    // ☀️ TODO: Remove compositeCanvas...
 
     pixelsDidChange = content.paintChanged || false;
 
@@ -765,14 +748,11 @@ async function boot(
 
       const db = content.dirtyBox;
       if (db) {
-        //compCtx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
         ctx.drawImage(dirtyBoxBitmapCan, db.x, db.y);
       } else if (pixelsDidChange) {
-        // ctx.drawImage(compositeCanvas, 0, 0); // Comment out for a `dirtyBox` visualization.
         // TODO: Add a global shortcut for testing this when in debug mode? 2022.01.30.01.13
-        ctx.putImageData(imageData, 0, 0);
+        ctx.putImageData(imageData, 0, 0); // Comment out for a `dirtyBox` visualization.
       }
-      //ctx.putImageData(imageData, 0, 0);
 
       if (glaze.on) {
         Glaze.render(
@@ -786,18 +766,22 @@ async function boot(
 
       // 🅱️ Draw anything from the system UI layer on top.
 
-      /*
-      natCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
-      //                                 previously rendered icons.
+      const dpi = window.devicePixelRatio;
 
-      pen.render(natCtx, canvasRect); // ️ 🐭 Cursor
+      uiCtx.scale(dpi, dpi);
+
+      uiCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
+      //                                previously rendered icons.
+
+      pen.render(uiCtx, canvasRect); // ️ 🐭 Cursor
 
       if (content.loading === true && debug === true) {
-        UI.spinner(natCtx); // TODO: Make this an actual spinner.
+        UI.spinner(uiCtx); // TODO: Make this an actual spinner.
       }
 
-      if (debug && frameCached && content.loading !== true) UI.cached(natCtx);
-      */
+      if (debug && frameCached && content.loading !== true) UI.cached(uiCtx);
+
+      uiCtx.resetTransform();
     }
 
     if (pixelsDidChange || pen.changedInPiece) {
@@ -999,7 +983,8 @@ async function boot(
     });
   };
 
-  // TODO: Add fullscreen support.
+  // Fullscreen
+
   // Tries to toggle fullscreen. Must be called within a user interaction.
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
@@ -1008,6 +993,14 @@ async function boot(
       document.exitFullscreen();
     }
   }
+
+  document.body.onfullscreenchange = (event) => {
+    if (document.fullscreenElement) {
+      console.log("😱 Entered fullscreen mode!", document.fullscreenElement);
+    } else {
+      console.log("😱 Leaving fullscreen mode!");
+    }
+  };
 }
 
 export { boot };

@@ -230,15 +230,16 @@ export class Pen {
       // 🎯 Precise
       ctx.lineCap = "round";
 
+      ctx.save();
       ctx.translate(round(p.x - r.x), round(p.y - r.y));
 
       // A. Make circle in center.
+      const radius = 2;
       ctx.beginPath();
-      ctx.lineTo(0, 0); // bottom right
+      ctx.arc(0, 0, radius, 0, 2 * Math.PI);
 
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 4;
-      ctx.stroke();
+      ctx.fillStyle = "white";
+      ctx.fill();
 
       const gap = 7.5,
         to = 10;
@@ -256,11 +257,11 @@ export class Pen {
       ctx.strokeStyle = "rgb(0, 255, 255)";
       ctx.lineWidth = 4;
       ctx.stroke();
-      ctx.resetTransform();
+      ctx.restore();
     } else if (this.cursorCode === "tiny") {
       // 🦐 Tiny
       const l = 4;
-
+      ctx.save();
       ctx.translate(round(p.x - r.x), round(p.y - r.y));
 
       ctx.beginPath();
@@ -276,8 +277,9 @@ export class Pen {
       ctx.strokeStyle = "rgba(255, 255, 0, 0.75)";
       ctx.lineWidth = 4;
       ctx.stroke();
-      ctx.resetTransform();
+      ctx.restore();
     } else if (this.cursorCode === "dot") {
+      ctx.save();
       ctx.translate(round(p.x - r.x), round(p.y - r.y));
       ctx.beginPath();
       ctx.lineTo(0, 0); // bottom right
@@ -285,7 +287,7 @@ export class Pen {
       ctx.strokeStyle = "rgba(255, 0, 0, 0.9)";
       ctx.lineWidth = 4;
       ctx.stroke();
-      ctx.resetTransform();
+      ctx.restore();
     } else if (this.cursorCode === "none") {
       // ...
     }

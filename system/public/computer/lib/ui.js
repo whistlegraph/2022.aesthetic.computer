@@ -6,6 +6,7 @@ function spinner(ctx) {
   const gap = 4,
     s = 20;
 
+  ctx.save();
   ctx.translate(s + gap + 7, s + gap + 6);
 
   ctx.beginPath();
@@ -19,13 +20,14 @@ function spinner(ctx) {
   ctx.lineCap = "round";
   ctx.stroke();
 
-  ctx.resetTransform();
+  ctx.restore();
 }
 
 function cached(ctx) {
   const gap = 4,
     s = 20;
 
+  ctx.save();
   ctx.translate(round(gap / 2) + 5, round(gap / 2) + 4); // TODO: Translate before clearing to save some lines? 2022.02.02.03.30
 
   ctx.beginPath();
@@ -40,7 +42,7 @@ function cached(ctx) {
   ctx.lineCap = "round";
   ctx.stroke();
 
-  ctx.resetTransform();
+  ctx.restore();
 }
 
 class Button {

@@ -8,17 +8,16 @@ Development ideas: ☁️ Try AceJump!
  ***Glaze***
  (Jeffrey)
 
- - [🟡] Make a new canvas that can be used as the cursor or `ui` canvas.
+ - [🟡] Fix all resizing weirdness.
+    - Make a css container for all the canvases so they have the same css size.
+    - Remove any specific top / left adjustments for them in the code.
 
- - [] Set glaze parameters from software side.
-      - Toggle it on or off.
+ - [] Set some glaze parameters from software side when enabling.
       - Change some properties.
 
  - Always go through WebGL now? Hide original canvas?
 
  - [] Turn it OFF by default.
-
-
 
  - [] Optimize & tune disks for performance.
  (Sage)
