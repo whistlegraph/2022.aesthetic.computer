@@ -40,7 +40,6 @@ function boot({ cursor, net: { preload }, pieceCount, glaze }) {
     text = "";
   }
 
-  // Enable glaze.
   glaze({ on: true });
 }
 

@@ -8,9 +8,11 @@ Development ideas: ☁️ Try AceJump!
  ***Glaze Integration***
  (Jeffrey)
  - [🟡] Fix all resizing weirdness.
+    - Adjusting the size during pull then going back to prompt will kill the positioning.
     - Make a css container for all the canvases so they have the same css size.
     - Remove any specific top / left adjustments for them in the code.
     - Remove the tiny fullscreen resize delay.
+ - [] Make use of texSubImage2D if a dirtyRect exists.
  - [] Set some glaze parameters from software side when enabling.
       - Change some properties.
 

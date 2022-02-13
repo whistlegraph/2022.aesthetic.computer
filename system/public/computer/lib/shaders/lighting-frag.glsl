@@ -197,4 +197,6 @@ void main() {
       outColor.w = 0.;
     }
   }
+
+  // outColor = texture(v_tex, vec2(v_texc.x, 1. - v_texc.y)).xyz;
 }

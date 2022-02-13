@@ -42,6 +42,7 @@ export function init() {
 
 let lightingProgram, displayProgram;
 let texSurf, fbSurf, fb;
+let texSurfWidth, texSurfHeight;
 let vao;
 let uniformTexLocation;
 let uniformTimeLocation;
@@ -67,8 +68,11 @@ export function frame(w, h, rect, nativeWidth, nativeHeight) {
   canvas.style.top = rect.y + "px";
 
   // Set the native canvas width and height.
-  canvas.width = nativeWidth;
-  canvas.height = nativeHeight;
+  canvas.width = nativeWidth * window.devicePixelRatio;
+  canvas.height = nativeHeight * window.devicePixelRatio;
+
+  canvas.style.width = nativeWidth + "px";
+  canvas.style.height = nativeHeight + "px";
 
   // Create shader program.
   const lightingVert = createShader(gl.VERTEX_SHADER, lighting.vert);
@@ -81,6 +85,9 @@ export function frame(w, h, rect, nativeWidth, nativeHeight) {
 
   // Make surface texture.
   texSurf = gl.createTexture();
+
+  texSurfWidth = w;
+  texSurfHeight = h;
 
   // Temporarily fill texture with random pixels.
   const buffer = new Uint8Array(4 * w * h);
@@ -239,6 +246,27 @@ export function on(w, h, rect, nativeWidth, nativeHeight) {
   }
 }
 
+// Update the texture
+export function update(texture, x = 0, y = 0) {
+  gl.bindTexture(gl.TEXTURE_2D, texSurf);
+
+  // TODO: I could pass in a subrectangle and do texSubImage2D here.
+
+  // texSubImage2D(target: GLenum, level: GLint, xoffset: GLint, yoffset: GLint, width: GLsizei, height: GLsizei, format: GLenum, type: GLenum, pixels: ArrayBufferView | null): void;
+
+  gl.texSubImage2D(
+    gl.TEXTURE_2D,
+    0,
+    x,
+    y,
+    texture.width,
+    texture.height,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    texture // Note: passing in canvasTexture did not work in Safari 15.2 so I am passing in imageData instead.
+  );
+}
+
 export function render(canvasTexture, time, mouse) {
   // 🅰️ Render Surface
   gl.useProgram(lightingProgram);
@@ -253,26 +281,11 @@ export function render(canvasTexture, time, mouse) {
     0
   );
 
-  const texSurfWidth = canvasTexture.width;
-  const texSurfHeight = canvasTexture.height;
   // Resolution of lighting. TODO: Switch to full resolution mode.
   gl.viewport(0, 0, texSurfWidth, texSurfHeight);
-  //gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-  gl.activeTexture(gl.TEXTURE0);
+  //gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
-
-  gl.texImage2D(
-    gl.TEXTURE_2D,
-    0,
-    gl.RGBA,
-    canvasTexture.width,
-    canvasTexture.height,
-    0,
-    gl.RGBA,
-    gl.UNSIGNED_BYTE,
-    canvasTexture
-  );
 
   gl.uniform1i(uniformTexLocation, 0);
   gl.uniform1f(uniformTimeLocation, time);

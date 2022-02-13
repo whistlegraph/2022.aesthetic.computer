@@ -1,21 +1,24 @@
 import { Box } from "./geo.js";
+import { radians } from "./num.js";
 const { round } = Math;
 
-// TODO: Send the tickCount or time in here? 2022.02.02.03.06
-function spinner(ctx) {
-  const gap = 4,
-    s = 20;
+function spinner(ctx, timePassed) {
+  const gap = 12,
+    s = 6;
 
   ctx.save();
-  ctx.translate(s + gap + 7, s + gap + 6);
+  ctx.translate(s + gap, s + gap);
+  ctx.rotate(radians(timePassed % 360) * 16);
 
   ctx.beginPath();
+  // \ of the X
   ctx.moveTo(-s, -s); // top left
   ctx.lineTo(s, s); // bottom right
-  ctx.moveTo(-s, s); // bottom left
-  ctx.lineTo(s, -s); // top right
+  // / of the X
+  //ctx.moveTo(-s, s); // bottom left
+  //ctx.lineTo(s, -s); // top right
 
-  ctx.strokeStyle = "rgb(200, 0, 50)";
+  ctx.strokeStyle = "rgb(255, 255, 0)";
   ctx.lineWidth = 4;
   ctx.lineCap = "round";
   ctx.stroke();
@@ -28,7 +31,7 @@ function cached(ctx) {
     s = 20;
 
   ctx.save();
-  ctx.translate(round(gap / 2) + 5, round(gap / 2) + 4); // TODO: Translate before clearing to save some lines? 2022.02.02.03.30
+  ctx.translate(round(gap / 2) + 6, round(gap / 2) + 4); // TODO: Translate before clearing to save some lines? 2022.02.02.03.30
 
   ctx.beginPath();
 

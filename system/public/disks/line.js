@@ -22,7 +22,17 @@ let db1;
 let lastDirtyBox;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ wipe, paste, cursor, painting: p, screen, resize, fps, geo }) {
+function boot({
+  wipe,
+  paste,
+  cursor,
+  painting: p,
+  screen,
+  resize,
+  fps,
+  geo,
+  glaze,
+}) {
   // fps(15);
   // resize(32, 32);
   cursor("none");
@@ -30,6 +40,7 @@ function boot({ wipe, paste, cursor, painting: p, screen, resize, fps, geo }) {
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(10, 10, 20));
   wipe(100, 100, 100);
   db1 = new geo.DirtyBox();
+  // glaze({ on: true });
 }
 
 let continuedBoxCopy;
