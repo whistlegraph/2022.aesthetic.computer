@@ -5,24 +5,19 @@ Development ideas: ☁️ Try AceJump!
 
 🌟 In Progress 🌟
 
- ***Glaze***
+ ***Glaze Integration***
  (Jeffrey)
-
  - [🟡] Fix all resizing weirdness.
     - Make a css container for all the canvases so they have the same css size.
     - Remove any specific top / left adjustments for them in the code.
-
+    - Remove the tiny fullscreen resize delay.
  - [] Set some glaze parameters from software side when enabling.
       - Change some properties.
 
- - Always go through WebGL now? Hide original canvas?
-
- - [] Turn it OFF by default.
-
- - [] Optimize & tune disks for performance.
  (Sage)
  - [] Fix lighting centering bug. (It's smushed into the top right.)
  - [] Orthographic projection.
+ - [] Which parameters should be exposed through disks api when it's activated?
 
 🌟 Next Up 🌟
   - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
