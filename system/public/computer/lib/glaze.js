@@ -54,6 +54,8 @@ let displayTexUniformTimeLocation;
 let displayTexUniformMouseLocation;
 let displayTexUniformResolutionLocation;
 
+let offed = false;
+
 // TODO: This is run on every resize... but some of this can move into init() above.
 // Resizes the textures & re-initializes the necessary components for a resolution change.
 // See also: `frame` via window.resize in `bios.js`.
@@ -63,6 +65,8 @@ export function frame(w, h, rect, nativeWidth, nativeHeight) {
   if (canvas === undefined) {
     this.init();
   }
+
+  // console.log(w, h);
 
   canvas.style.left = rect.x + "px";
   canvas.style.top = rect.y + "px";
@@ -233,20 +237,17 @@ export function frame(w, h, rect, nativeWidth, nativeHeight) {
 
 // Turn glaze off if it has already been turned on.
 export function off() {
-  if (canvas) canvas.style.opacity = 0;
+  if (offed && canvas) canvas.style.opacity = 0;
+  offed = true;
 }
 
 // Turn glaze on if it has already been turned off.
 export function on(w, h, rect, nativeWidth, nativeHeight) {
-  if (canvas) {
-    canvas.style.opacity = 1;
-  } else {
-    // If glaze was never turned on then initialize it.
-    this.frame(w, h, rect, nativeWidth, nativeHeight);
-  }
+  this.frame(w, h, rect, nativeWidth, nativeHeight);
+  offed = false;
 }
 
-// Update the texture
+// Update the texture either in whole or in part based on a dirtyRect from `bios`.
 export function update(texture, x = 0, y = 0) {
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
 
@@ -265,6 +266,16 @@ export function update(texture, x = 0, y = 0) {
     gl.UNSIGNED_BYTE,
     texture // Note: passing in canvasTexture did not work in Safari 15.2 so I am passing in imageData instead.
   );
+}
+
+// Draw the current output to a scaled freeze frame if the system is changing resolutions and neeeds a hold.
+export function freeze(fCtx) {
+  fCtx.drawImage(canvas, 0, 0, fCtx.canvas.width, fCtx.canvas.height);
+  canvas.style.opacity = 0;
+}
+
+export function unfreeze() {
+  if (canvas) canvas.style.removeProperty("opacity");
 }
 
 export function render(canvasTexture, time, mouse) {

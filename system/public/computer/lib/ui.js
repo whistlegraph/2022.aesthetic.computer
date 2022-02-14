@@ -8,7 +8,7 @@ function spinner(ctx, timePassed) {
 
   ctx.save();
   ctx.translate(s + gap, s + gap);
-  ctx.rotate(radians(timePassed % 360) * 16);
+  ctx.rotate(radians(timePassed % 360) * 1);
 
   ctx.beginPath();
   // \ of the X

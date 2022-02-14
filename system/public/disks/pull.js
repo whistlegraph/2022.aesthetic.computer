@@ -28,7 +28,7 @@ let history,
   plottedTurns = 0;
 
 // 🥾 Boot (Runs once before first paint and sim)
-export function boot({ resize, painting, screen, wipe, ink }) {
+export function boot({ resize, painting, screen, wipe, ink, glaze }) {
   resize(32, 32 + 1);
 
   const palette = {
@@ -56,6 +56,7 @@ export function boot({ resize, painting, screen, wipe, ink }) {
   history = painting(screen.width, 1, () => wipe(0));
 
   // glaze("cloud", { color: "red" });
+  // glaze({ on: true });
 }
 
 // 🧮 Simulate (Runs once per logic frame (120fps)).
