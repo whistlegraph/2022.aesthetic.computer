@@ -8,14 +8,13 @@ Development ideas: ☁️ Try AceJump!
  ***Glaze Integration***
  (Jeffrey)
 
- - Remove tiny hang from glaze when switching disks off of a glazed disk.
-
-
  - [🟡] Fix all resizing weirdness.
-    - Adjusting the size during pull then going back to prompt will kill the positioning.
-    - Make a css container for all the canvases so they have the same css size.
+    - Make a css container for all the canvases so they share the same css size.
     - Remove any specific top / left adjustments for them in the code.
-    - Remove the tiny fullscreen resize delay.
+
+    - Remove the tiny fullscreen resize delay?
+      - Resize immediately but then have a timer for the second resize.
+
  - [] Make use of texSubImage2D if a dirtyRect exists.
  - [] Set some glaze parameters from software side when enabling.
       - Change some properties.

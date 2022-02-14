@@ -1015,19 +1015,33 @@ async function boot(
   };
 
   // Fullscreen
+  // Note: This doesn't work in Safari because you can't fullscreen the body element.
+  //       (Or anything other than a video element?) 22.2.13
+
+  const requestFullscreen =
+    document.body.requestFullscreen || document.body.webkitRequestFullscreen;
+
+  const exitFullScreen =
+    document.exitFullscreen || document.webkitExitFullscreen;
 
   // Tries to toggle fullscreen. Must be called within a user interaction.
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.body.requestFullscreen().catch((e) => console.error(e));
+    const fullscreenElement =
+      document.fullscreenElement || document.webkitFullscreenElement;
+
+    if (!fullscreenElement) {
+      requestFullscreen.apply(document.body)?.catch((e) => console.error(e));
     } else {
-      document.exitFullscreen();
+      exitFullscreen();
     }
   }
 
   document.body.onfullscreenchange = (event) => {
-    if (document.fullscreenElement) {
-      console.log("😱 Entered fullscreen mode!", document.fullscreenElement);
+    const fullscreenElement =
+      document.fullscreenElement || document.webkitFullscreenElement;
+
+    if (fullscreenElement) {
+      console.log("😱 Entered fullscreen mode!", fullscreenElement);
     } else {
       console.log("😱 Leaving fullscreen mode!");
     }
