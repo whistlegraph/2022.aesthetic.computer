@@ -85,7 +85,8 @@ async function boot(
   let glaze = { on: false };
 
   let needsReframe = false;
-  let freezeFrame = false;
+  let freezeFrame = false,
+    freezeFrameGlaze = false;
 
   const screen = apiObject("pixels", "width", "height");
 
@@ -95,14 +96,32 @@ async function boot(
   function frame(width, height) {
     // Cache the current canvas if needed.
     if (freezeFrame && imageData) {
-      console.log("Freezing:", freezeFrame, imageData.width, imageData.height);
+      console.log(
+        "🥶 Freezing:",
+        freezeFrame,
+        imageData.width,
+        imageData.height
+      );
       freezeFrameCan.width = imageData.width;
       freezeFrameCan.height = imageData.height;
       freezeFrameCan.style.width = canvas.style.width;
       freezeFrameCan.style.height = canvas.style.height;
       freezeFrameCan.style.left = canvasRect.x + "px";
       freezeFrameCan.style.top = canvasRect.y + "px";
-      ffCtx.putImageData(imageData, 0, 0);
+
+      // TODO: Save the Glaze canvas if glaze is enabled / figure out how to deal
+      //       with Glaze.
+
+      if (freezeFrameGlaze) {
+        console.log("Freeze glaze!");
+        Glaze.freeze(ffCtx);
+        // ffCtx.fillStyle = "lime";
+        // ffCtx.fillRect(0, 0, ffCtx.canvas.width, ffCtx.canvas.height);
+        freezeFrameGlaze = false;
+      } else {
+        ffCtx.putImageData(imageData, 0, 0);
+      }
+
       if (!document.body.contains(freezeFrameCan))
         document.body.append(freezeFrameCan);
       else freezeFrameCan.style.removeProperty("opacity");
@@ -200,6 +219,8 @@ async function boot(
         projectedWidth,
         projectedHeight
       );
+    } else {
+      Glaze.off();
     }
 
     needsReframe = false;
@@ -645,16 +666,24 @@ async function boot(
       // Note: Any other disk state cleanup that needs to take place on unload
       //       should happen here.
 
-      // Reset the framing to system when unloading a disk if it is using
+      // Reset the framing to a system default when unloading a disk if using
       // a customized resolution.
       // TODO: Do disks with custom resolutions need to be reset
       //       if they are being reloaded?
       if (fixedWidth && fixedHeight) {
         freezeFrame = true;
+        freezeFrameGlaze = glaze.on;
         fixedWidth = undefined;
         fixedHeight = undefined;
         needsReframe = true;
+      } else {
+        console.log("flicker?");
+        //Glaze.off(); // TODO: Move this to bottom of draw?
+        //glaze.on = false;
       }
+
+      // Turn off glaze.
+      glaze.on = false;
 
       // Clear pen events.
       pen.events.length = 0;
@@ -664,10 +693,6 @@ async function boot(
 
       // Close (defocus) software keyboard if it exists.
       document.querySelector("#software-keyboard-input")?.blur();
-
-      // Turn off glaze.
-      glaze.on = false;
-      Glaze.off();
 
       return;
     }
@@ -761,6 +786,8 @@ async function boot(
           timePassed,
           pen.normalizedPosition(canvasRect)
         );
+      } else {
+        Glaze.off();
       }
 
       // 🅱️ Draw anything from the system UI layer on top.
@@ -800,14 +827,17 @@ async function boot(
 
     if (freezeFrame) {
       canvas.style.removeProperty("opacity");
-      freezeFrameCan.style.display = "none";
+      freezeFrameCan.style.opacity = 0;
       freezeFrame = false;
+      freezeFrameGlaze = false;
     }
+
+    if (glaze.on) Glaze.unfreeze();
 
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
     // console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
 
-    timePassed += performance.now() - startTime;
+    timePassed = performance.now();
     frameCount += 1;
     frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
   }

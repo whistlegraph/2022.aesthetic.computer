@@ -7,6 +7,10 @@ Development ideas: ☁️ Try AceJump!
 
  ***Glaze Integration***
  (Jeffrey)
+
+ - Remove tiny hang from glaze when switching disks off of a glazed disk.
+
+
  - [🟡] Fix all resizing weirdness.
     - Adjusting the size during pull then going back to prompt will kill the positioning.
     - Make a css container for all the canvases so they have the same css size.
