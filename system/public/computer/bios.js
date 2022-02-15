@@ -61,6 +61,11 @@ async function boot(
   const videos = [];
 
   // 1. Rendering
+
+  // Wrap everything in an #aesthetic-computer div.
+  const wrapper = document.createElement("div");
+  wrapper.id = "aesthetic-computer";
+
   // Our main display surface.
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -102,10 +107,21 @@ async function boot(
         imageData.width,
         imageData.height
       );
+
       freezeFrameCan.width = imageData.width;
       freezeFrameCan.height = imageData.height;
       freezeFrameCan.style.width = canvas.style.width;
       freezeFrameCan.style.height = canvas.style.height;
+
+      // TODO: Get margin of canvasRect or make freezeFrame work on top of everything...
+
+      console.log(
+        "offset",
+        wrapper.offsetLeft,
+        canvasRect.x,
+        canvasRect.width - canvasRect.x
+      );
+
       freezeFrameCan.style.left = canvasRect.x + "px";
       freezeFrameCan.style.top = canvasRect.y + "px";
 
@@ -122,8 +138,7 @@ async function boot(
         ffCtx.putImageData(imageData, 0, 0);
       }
 
-      if (!document.body.contains(freezeFrameCan))
-        document.body.append(freezeFrameCan);
+      if (!wrapper.contains(freezeFrameCan)) wrapper.append(freezeFrameCan);
       else freezeFrameCan.style.removeProperty("opacity");
       canvas.style.opacity = 0;
     }
@@ -179,9 +194,10 @@ async function boot(
     assign(screen, { pixels: imageData.data, width, height });
 
     // Add the canvas & uiCanvas when we first boot up.
-    if (!document.body.contains(canvas)) {
-      document.body.append(canvas);
-      document.body.append(uiCanvas);
+    if (!wrapper.contains(canvas)) {
+      wrapper.append(canvas);
+      wrapper.append(uiCanvas);
+      document.body.append(wrapper);
 
       // Trigger it to re-draw whenever the window resizes.
       let timeout;
@@ -207,8 +223,8 @@ async function boot(
 
     canvasRect = canvas.getBoundingClientRect();
 
-    uiCanvas.style.top = canvasRect.y + "px";
-    uiCanvas.style.left = canvasRect.x + "px";
+    // uiCanvas.style.top = canvasRect.y + "px";
+    // uiCanvas.style.left = canvasRect.x + "px";
 
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
@@ -217,8 +233,10 @@ async function boot(
         canvas.height,
         canvasRect,
         projectedWidth,
-        projectedHeight
+        projectedHeight,
+        wrapper
       );
+      canvas.style.opacity = 0;
     } else {
       Glaze.off();
     }
@@ -243,10 +261,10 @@ async function boot(
       latencyHint: 0,
       // TODO: Eventually choose a good sample rate and/or make it settable via
       //       the current disk.
-      // sampleRate: 44100,
+      sampleRate: 44100,
       // sampleRate: 48000,
       // sampleRate: 96000,
-      sampleRate: 192000,
+      // sampleRate: 192000,
     });
 
     if (audioContext.state === "running") {
@@ -404,7 +422,7 @@ async function boot(
         input.style.width = 0;
         input.style.height = 0;
         input.style.position = "absolute";
-        document.body.append(input);
+        wrapper.append(input);
 
         input.addEventListener("input", (e) => (e.target.value = null));
 
@@ -620,15 +638,19 @@ async function boot(
     if (type === "glaze") {
       console.log("🪟 Glaze:", content);
       glaze = content;
-      if (glaze.on === false) Glaze.off();
-      else if (glaze.on === true) {
+      if (glaze.on === false) {
+        Glaze.off();
+        canvas.style.removeProperty("opacity");
+      } else if (glaze.on === true) {
         Glaze.on(
           canvas.width,
           canvas.height,
           canvasRect,
           projectedWidth,
-          projectedHeight
+          projectedHeight,
+          wrapper
         );
+        canvas.style.opacity = 0;
       }
       return;
     }
@@ -676,14 +698,12 @@ async function boot(
         fixedWidth = undefined;
         fixedHeight = undefined;
         needsReframe = true;
-      } else {
-        console.log("flicker?");
-        //Glaze.off(); // TODO: Move this to bottom of draw?
-        //glaze.on = false;
       }
 
       // Turn off glaze.
       glaze.on = false;
+
+      canvas.style.removeProperty("opacity");
 
       // Clear pen events.
       pen.events.length = 0;
@@ -826,13 +846,20 @@ async function boot(
     }
 
     if (freezeFrame) {
-      canvas.style.removeProperty("opacity");
-      freezeFrameCan.style.opacity = 0;
+      if (glaze.on === false) {
+        //canvas.style.removeProperty("opacity");
+      }
+      //freezeFrameCan.style.opacity = 0;
+      freezeFrameCan.remove();
       freezeFrame = false;
       freezeFrameGlaze = false;
     }
 
-    if (glaze.on) Glaze.unfreeze();
+    if (glaze.on) {
+      Glaze.unfreeze();
+    } else {
+      canvas.style.removeProperty("opacity");
+    }
 
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
     // console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
@@ -942,8 +969,8 @@ async function boot(
 
       const bufferCtx = buffer.getContext("2d");
 
-      document.body.appendChild(video);
-      document.body.appendChild(buffer);
+      wrapper.appendChild(video);
+      wrapper.appendChild(buffer);
 
       video.style = `position: absolute;
                      top: 0;
@@ -1019,7 +1046,7 @@ async function boot(
   //       (Or anything other than a video element?) 22.2.13
 
   const requestFullscreen =
-    document.body.requestFullscreen || document.body.webkitRequestFullscreen;
+    document.body.requestFullscreen || wrapper.webkitRequestFullscreen;
 
   const exitFullScreen =
     document.exitFullscreen || document.webkitExitFullscreen;

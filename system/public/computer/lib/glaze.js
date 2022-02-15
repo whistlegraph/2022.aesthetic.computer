@@ -19,7 +19,7 @@ const display = {
   frag: shaders["display-frag"],
 };
 
-export function init() {
+export function init(wrapper) {
   canvas = document.createElement("canvas");
   canvas.dataset.type = "glaze";
 
@@ -37,7 +37,7 @@ export function init() {
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   // Make sure that this gets added before the uiCanvas.
-  document.body.append(canvas);
+  wrapper.append(canvas);
 }
 
 let lightingProgram, displayProgram;
@@ -59,17 +59,17 @@ let offed = false;
 // TODO: This is run on every resize... but some of this can move into init() above.
 // Resizes the textures & re-initializes the necessary components for a resolution change.
 // See also: `frame` via window.resize in `bios.js`.
-export function frame(w, h, rect, nativeWidth, nativeHeight) {
+export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   // Run `init` if the canvas does not exist.
   // Note: Should `init` just be here?
   if (canvas === undefined) {
-    this.init();
+    this.init(wrapper);
   }
 
   // console.log(w, h);
 
-  canvas.style.left = rect.x + "px";
-  canvas.style.top = rect.y + "px";
+  // canvas.style.left = rect.x + "px";
+  // canvas.style.top = rect.y + "px";
 
   // Set the native canvas width and height.
   canvas.width = nativeWidth * window.devicePixelRatio;
@@ -242,8 +242,8 @@ export function off() {
 }
 
 // Turn glaze on if it has already been turned off.
-export function on(w, h, rect, nativeWidth, nativeHeight) {
-  this.frame(w, h, rect, nativeWidth, nativeHeight);
+export function on(w, h, rect, nativeWidth, nativeHeight, wrapper) {
+  this.frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
   offed = false;
 }
 

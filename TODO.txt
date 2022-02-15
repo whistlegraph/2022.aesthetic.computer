@@ -44,6 +44,9 @@ Development ideas: ☁️ Try AceJump!
 
 ⏳ Later On ⏳
 
+There seems to be a bug in Safari on my MacBook (while wearing AirPods) that slows
+down the audio?
+
 Surface with simulated chalk that can have multiple users, sound synthesis,
 the ability to clear (slide up / down / left / right), record and playback.
 
