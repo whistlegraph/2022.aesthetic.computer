@@ -16,24 +16,26 @@ html, body, canvas { touch-action: none; }
 
 input { pointer-events: none; }
 
+#aesthetic-computer {
+  margin: auto;
+  pointer-events: none;
+  position: relative;
+}
+
 canvas {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
-  margin: auto;
-  pointer-events: none;
 }
 
-canvas[data-type="ui"], canvas[data-type="glaze"], canvas[data-type="freeze"] {
+canvas[data-type="ui"], canvas[data-type="glaze"] {
   position: absolute;
+  top: 0;
+  left: 0;
 }
 
-canvas[data-type="glaze"] {
-  z-index: 1;
-}
-
-canvas[data-type="freeze"] {
-  z-index: 2;
-}
+canvas[data-type="glaze"] { z-index: 1; }
+canvas[data-type="freeze"] { z-index: 2; }
+canvas[data-type="freeze"] { position: fixed; }
 
 canvas[data-type="ui"] {
   z-index: 3;
