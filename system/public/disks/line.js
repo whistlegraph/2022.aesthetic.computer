@@ -37,7 +37,7 @@ function boot({
   // resize(32, 32);
   cursor("none");
   // Make & display the canvas.
-  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(10, 10, 20));
+  painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 10, 20));
   wipe(100, 100, 100);
   db1 = new geo.DirtyBox();
   // glaze({ on: true });
@@ -46,7 +46,7 @@ function boot({
 let continuedBoxCopy;
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ pen, ink, page, screen, paste, geo }) {
+function paint({ pen, ink, page, screen, paste, geo, paintCount }) {
   // A. Replace any content painted last frame with the contents of `painting`.
   if (lastDirtyBox) {
     paste(
