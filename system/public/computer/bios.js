@@ -838,7 +838,8 @@ async function boot(
       frameCached = true;
       draw();
       //console.log("Caching frame...");
-    } else if (content.loading === true && debug === true) {
+      // } else if (content.loading === true && debug === true) {
+    } else if (content.loading === true) {
       draw();
     } else if (frameCached === true) {
       //draw(); // TODO: This is causing stuttering.

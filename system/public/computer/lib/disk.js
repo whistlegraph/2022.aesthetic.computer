@@ -296,17 +296,22 @@ const { send, noWorker } = (() => {
     }
 
     let fullUrl = "https://" + host + "/" + path + ".js";
-    // The `time` query parameter busts the cache so changes can be seen
-    // if disk code is reloaded while the system is running.
-    if (debug) fullUrl += "?time=" + Date.now();
+    // The hash `time` parameter busts the cache so that the environment is
+    // reset if a disk is re-entered while the system is running.
+    // Why a hash? See also: https://github.com/denoland/deno/issues/6946#issuecomment-668230727
+    fullUrl += "#" + Date.now();
 
+    // TODO: Eliminate the race condition caused by the above line which prevents
+    //       production from working.
     console.log("🕸", fullUrl);
 
+    // const moduleLoadTime = performance.now();
     const module = await import(fullUrl).catch((err) => {
       loading = false;
       console.error(`😡 "${path}" load failure:`, err);
       loadFailure = err;
     });
+    // console.log(performance.now() - moduleLoadTime, module);
 
     if (module === undefined) {
       loading = false;
@@ -513,6 +518,8 @@ function makeFrame({ data: { type, content } }) {
 
     squares.length = 0;
     bubbles.length = 0;
+
+    return;
   }
 
   // 1a. Upload // One send (returns afterwards)
@@ -531,11 +538,16 @@ function makeFrame({ data: { type, content } }) {
   }
 
   // 1b. Video frames.
-  if (type === "video-frame") activeVideo = content;
+  if (type === "video-frame") {
+    activeVideo = content;
+    return;
+  }
 
   // 1c. Loading from History
-  if (type === "history-load")
+  if (type === "history-load") {
     $commonApi.load(content, undefined, undefined, true);
+    return;
+  }
 
   // Request a repaint (runs when the window is resized.)
   if (type === "needs-paint") noPaint = false;
@@ -848,6 +860,7 @@ function makeFrame({ data: { type, content } }) {
         // Run everything that was queued to be painted, then devour paintLayers.
         painting.paint();
         painted = true;
+        paintCount = paintCount + 1n;
 
         if (paintOut) dirtyBox = paintOut;
       }
@@ -884,8 +897,6 @@ function makeFrame({ data: { type, content } }) {
 
       // Note: transferredPixels will be undefined when sendData === {}.
       send({ type: "render", content: sendData }, [transferredPixels]);
-
-      paintCount = paintCount + 1n;
 
       // Flush the `signals` after sending.
       if (reframe) reframe = undefined;
