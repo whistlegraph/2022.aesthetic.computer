@@ -2,7 +2,7 @@
 // A 1px line drawing algorithm.
 
 // TODO: VCR would catch the action layer.
-// TODO: Fix Safari magnifying glass finger hold bug... again?
+
 // Make hotkey & thumb button to clear the page?
 // TODO: Better colors. Abstract everything so it can be used
 //       in multiple instances. (See: `Painters` in `nail`)
@@ -22,25 +22,12 @@ let db1;
 let lastDirtyBox;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({
-  wipe,
-  paste,
-  cursor,
-  painting: p,
-  screen,
-  resize,
-  fps,
-  geo,
-  glaze,
-}) {
-  // fps(15);
-  // resize(32, 32);
+function boot({ wipe, paste, cursor, painting: p, screen, geo }) {
   cursor("none");
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 10, 20));
   wipe(100, 100, 100);
   db1 = new geo.DirtyBox();
-  // glaze({ on: true });
 }
 
 let continuedBoxCopy;
@@ -48,6 +35,11 @@ let continuedBoxCopy;
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ pen, ink, page, screen, paste, geo, paintCount }) {
   // A. Replace any content painted last frame with the contents of `painting`.
+
+  // TODO: How to automate this so I can write..
+  // if (dirty) { paste({painting, crop: dirty}, dirty.x, dirty.y); }
+  // else pase(painting);
+
   if (lastDirtyBox) {
     paste(
       { painting, crop: geo.Box.copy(lastDirtyBox) },
@@ -81,7 +73,7 @@ function paint({ pen, ink, page, screen, paste, geo, paintCount }) {
   //    currently drawing.
   if (pointsToHighlight.length) {
     pointsToHighlight.forEach((p) => {
-      ink(100, 0, 0).plot(p.x, p.y);
+      ink(100, 100, 0).plot(p.x, p.y);
       db1.soil(p);
     });
     ink(200, 0, 0).plot(pen); // 🔴 Painting cursor.

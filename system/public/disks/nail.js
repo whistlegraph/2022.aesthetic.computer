@@ -37,17 +37,7 @@ function boot({ paste, cursor, painting: p, screen, net, resize }) {
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({
-  pen,
-  ink,
-  line,
-  page,
-  screen,
-  paste,
-  geo: { Circle },
-  num: { randIntRange: rnd },
-  help: { repeat: rep },
-}) {
+function paint({ pen, ink, line, page, screen, paste }) {
   paste(painting); // TODO: This could be optimized with a dirty rectangle.
 
   if (actions.length) {
@@ -74,10 +64,9 @@ function paint({
   // TODO: This could be optimized to return false sometimes.
 }
 
-// ✒ Act (Runs once per user interaction)
-
 let lastPoint;
 
+// ✒ Act (Runs once per user interaction)
 function act({ event: e, num: { dist } }) {
   if (e.is("move")) dot = true;
 
@@ -141,28 +130,7 @@ class Painter {
       this.lastPoint = { x: m.x, y: m.y };
     }
 
-    console.log(this.points.length, pixelPerfect(this.points).length);
-
-    //console.log("Last Point: ", this.lastPoint);
-    /*
-    // Plot a line so long as a previous point exists.
-    if (this.lastPoint) {
-      // Generate all the points for this line segment and add them to the mark points.
-      line(this.lastPoint.x, this.lastPoint.y, m.x, m.y, (x, y) => {
-        this.points.push({ x, y });
-      });
-
-      this.points.forEach((point) => ink(255, 0, 0, 50).plot(point.x, point.y));
-
-      // Set last point to last filtered point.
-      //this.lastPoint = this.points[this.points.length - 1];
-      this.lastPoint = { x: m.x, y: m.y };
-      this.points.length = 0;
-    } else {
-      this.lastPoint = { x: m.x, y: m.y };
-    }
-    //ink(255, 0, 0).line(this.lastPoint.x, this.lastPoint.y, m.x, m.y);
-     */
+    // console.log(this.points.length, pixelPerfect(this.points).length);
   }
 
   stop() {

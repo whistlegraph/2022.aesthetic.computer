@@ -1,7 +1,7 @@
 // ✍️ Pen
 // TODO: Clean up this whole class and its connections to the system.
 const { assign } = Object;
-const { floor, round } = Math;
+const { round } = Math;
 
 export class Pen {
   x;
@@ -44,6 +44,18 @@ export class Pen {
 
     let forceTouchPressure = 0;
     let forceTouchEnabled = false;
+
+    // Prevent double-tap delay: https://stackoverflow.com/a/71025095
+    window.addEventListener(
+      "touchend" || "dblclick",
+      (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      },
+      {
+        passive: false,
+      }
+    );
 
     // Touch
     window.addEventListener("pointerdown", (e) => {

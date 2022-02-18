@@ -2,6 +2,7 @@
 // An, interactive line algorithm with curves.
 
 // TODO: Use `spline` within `nail`.
+
 import { Mark } from "../computer/lib/gesture.js";
 const { min, max } = Math;
 
@@ -16,7 +17,7 @@ function boot({ cursor }) {
 
 // 🎨 Paint (Executes ever display frame)
 function paint({ wipe, ink, point, pan, unpan, help, screen }) {
-  wipe(10, 10, 10); // Paint a backdrop.
+  wipe(128); // Paint a backdrop.
 
   // Generate a little periodic data sample.
   const points = [];
@@ -33,7 +34,7 @@ function paint({ wipe, ink, point, pan, unpan, help, screen }) {
   mark.input(points);
 
   pan(0, screen.height / 2);
-  ink(255, 0, 255, 50).poly(mark.spline); // Draw all curve points.
+  ink(255, 100).poly(mark.spline); // Draw all curve points.
 
   ink(255, 0, 0, 100);
   points.forEach((p) => point(p)); // Draw every sample point.
