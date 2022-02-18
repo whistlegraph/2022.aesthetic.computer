@@ -5,27 +5,19 @@ Development ideas: ☁️ Try AceJump!
 
 🌟 In Progress 🌟
 
- ***Glaze Integration***
  (Jeffrey)
+ - [🟢] Abstract `line` and `spline` into `nail`. See also: `gesture`.
 
- - [🟡] Fix all resizing weirdness.
-    - Make a css container for all the canvases so they share the same css size.
-    - Remove any specific top / left adjustments for them in the code.
-
-    - Remove the tiny fullscreen resize delay?
-      - Resize immediately but then have a timer for the second resize.
-
- - [] Make use of texSubImage2D if a dirtyRect exists.
- - [] Set some glaze parameters from software side when enabling.
-      - Change some properties.
-
+ ***Glaze Integration***
  (Sage)
- - [] Fix lighting centering bug. (It's smushed into the top right.)
+ - [🟡] Fix lighting centering bug. (It's smushed into the top right.)
  - [] Orthographic projection.
  - [] Which parameters should be exposed through disks api when it's activated?
+ - [] Set some glaze parameters from software side when enabling.
+      - a. Orthographic vs. Perspective projection.
+      - b. resolution factor (2x, 3x, 4x, 'native' etc.)
 
 🌟 Next Up 🌟
-  - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
   - [] Add sound to `nail`.
 
   ***Whistlegraph***
