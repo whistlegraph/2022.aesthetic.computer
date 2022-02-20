@@ -29,6 +29,7 @@ Development ideas: ☁️ Try AceJump!
   - [] Chalkboard / material simulation.
 
 ❤️ Side Missions ❤️
+ - [] Fix skippy scale rendering of pixels on non-retina displays.
  - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
  - [] in `tracker.js`: Recenter boxes on line 174.
  - [] Multiplayer board reset in `spray` and `server`.
