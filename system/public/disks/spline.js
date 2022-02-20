@@ -34,7 +34,7 @@ function paint({ wipe, ink, point, pan, unpan, help, screen }) {
   mark.input(points);
 
   pan(0, screen.height / 2);
-  ink(255, 100).poly(mark.spline); // Draw all curve points.
+  ink(255, 100).poly(mark.spline()); // Draw all curve points.
 
   ink(255, 0, 0, 100);
   points.forEach((p) => point(p)); // Draw every sample point.

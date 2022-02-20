@@ -1,12 +1,9 @@
 // 💅 Line, 2022.01.24.02.41
 // A 1px line drawing algorithm.
 
-// TODO: VCR would catch the action layer.
-
 // Make hotkey & thumb button to clear the page?
 // TODO: Better colors. Abstract everything so it can be used
 //       in multiple instances. (See: `Painters` in `nail`)
-// TODO: Fix skippy scale rendering of pixels on non-retina displays.
 
 let painting; // A bitmap to draw on.
 let points = []; // This stored every point in a mark.

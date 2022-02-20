@@ -5,36 +5,58 @@ import { lerp } from "./num.js";
 import * as vec2 from "../dep/gl-matrix/vec2.js";
 const { floor, pow } = Math;
 
-// Takes a set of input points and yields a processed spline.
+// Takes and keeps a set of input points and yields a processed spline as
+// a single mark gets continuously drawn.
 export class Mark {
   #rawInputPoints = []; // Data coming from hardware. {x, y, pressure}
+  #points = [];
   #segmentLength;
   #segmentProgress = 0;
-  #segments = [];
 
   constructor(segmentLength = 8) {
     this.#segmentLength = segmentLength;
   }
 
+  get points() {
+    return this.#points;
+  }
+
   // Add fresh points from a hardware device or automata.
   input(raw) {
-    this.#rawInputPoints.push(...raw);
+    if (Array.isArray(raw)) this.#rawInputPoints.push(...raw);
+    else this.#rawInputPoints.push(raw);
     this.#processRawInputIntoSegments();
   }
 
   #processRawInputIntoSegments() {
-    // TODO: Quantize the raw data so the segments have a regulated distance.
-    this.#segments = this.#rawInputPoints.slice();
+    // TODO: Quantize this raw data so the segments have a regulated distance.
+    this.#points.push(...this.#rawInputPoints.slice());
 
     this.#rawInputPoints.length = 0;
   }
 
+  // Feeds the processed raw data back and dumps points.
+  spots() {
+    const points = this.#points.slice();
+    this.#points.length = 0;
+    return points;
+  }
+
+  line() {
+    if (this.#points.length < 2) return [];
+    const points = this.#points.slice();
+    this.#points.length = 0;
+    return points;
+  }
+
   // Calculates the spline from all input points, consumes them, and returns
   // an even sampling of coordinates.
-  get spline() {
+  spline() {
+    //if (this.#points.length < 4) return [];
+
     const coords = [];
-    this.#segments.forEach((coord, i) => {
-      const segs = this.#segments;
+    this.#points.forEach((coord, i) => {
+      const segs = this.#points;
       if (i >= segs.length - 2 || i === 0) return; // Skip last 2 and first seg.
 
       const firstp0 = segs[i];
@@ -52,6 +74,8 @@ export class Mark {
 
       coords.push({ x: floor(p1[0]), y: floor(p1[1]) }); // 1st point
 
+      // TODO: Maybe segmentLength could be defined based on distance from
+      //       a previous point.
       for (let t = 0; t < this.#segmentLength; t += 1) {
         const cR = Mark.#catmullRom(p0, p1, p2, p3, t / this.#segmentLength);
         coords.push({ x: floor(cR.x), y: floor(cR.y) }); // inner points
@@ -60,7 +84,9 @@ export class Mark {
       coords.push({ x: floor(p2[0]), y: floor(p2[1]) }); // last point
     });
 
-    this.#segments.length = 0;
+    console.log("Spline point length:", this.#points.length);
+    this.#points.length = 0;
+
     return coords;
   }
 
@@ -95,4 +121,38 @@ export class Mark {
     const b = pow(a, alpha * 0.5);
     return b + t;
   }
+}
+
+/**
+ *  Takes an array of pixel coordinates {x, y} and filters out L shapes.
+ *
+ *  Note: It checks the previous, current, and next pixel and requires a minimum
+ *        set of 3 before it removes anything.
+ *
+ *  Transcribed from: https://rickyhan.com/jekyll/update/2018/11/22/pixel-art-algorithm-pixel-perfect.html
+ */
+function pixelPerfect(pixels) {
+  if (pixels.length === 1 || pixels.length === 0) {
+    return pixels; // Return the inputs if the length is 0 or 1.
+  }
+
+  let filtered = [];
+  let c = 0;
+
+  while (c < pixels.length) {
+    if (
+      c > 0 &&
+      c + 1 < pixels.length &&
+      (pixels[c - 1].x === pixels[c].x || pixels[c - 1].y === pixels[c].y) && // check left and up
+      (pixels[c + 1].x === pixels[c].x || pixels[c + 1].y === pixels[c].y) && // check right and down
+      pixels[c - 1].x !== pixels[c + 1].x && // check left and right of prev and next
+      pixels[c - 1].y !== pixels[c + 1].y
+    ) {
+      // check top and bottom of prev and next
+      c += 1;
+    }
+    filtered.push(pixels[c]);
+    c += 1;
+  }
+  return filtered;
 }

@@ -259,7 +259,7 @@ function line() {
   }
 
   if (isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1)) {
-    return console.error(x0, y0, x1, y1);
+    return console.error("Invalid line arguments:", x0, y0, x1, y1);
   }
 
   // Add any panTranslations.
