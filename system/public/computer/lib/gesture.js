@@ -49,19 +49,20 @@ export class Mark {
     });
   }
 
-  // Crawl through rawInputs and process them  into points.
+  // Crawl through `rawInputPoints` and process them into `this.#points`.
+  // TODO: Quantize so the segments have a regulated distance?
   #processRawInputIntoSegments() {
     this.#pointsIndex = max(this.#points.length - 1, 0);
-    this.#points.push(...this.#rawInputPoints.slice(this.#rawInputIndex + 1));
-    this.#rawInputIndex = this.#rawInputPoints.length - 1;
 
-    // TODO: Quantize this raw data so the segments have a regulated distance.
-    console.log(
-      "points",
-      this.#points.length,
-      "Raw input index:",
-      this.#rawInputIndex
-    );
+    if (this.#points.length === 0) {
+      // Make sure we are pushing the original pushed point here...
+      this.#points.push(this.#rawInputPoints[0]);
+    } else {
+      // And if we've already done that, then push each additional point.
+      this.#points.push(...this.#rawInputPoints.slice(this.#rawInputIndex + 1));
+    }
+
+    this.#rawInputIndex = this.#rawInputPoints.length - 1;
   }
 
   // Feeds the processed raw data back and dumps points.
@@ -71,18 +72,16 @@ export class Mark {
     return points;
   }
 
-  // TODO: How to render a line and then also a spline before clearing points?
-
   previewLine(paintLine) {
     const currentPoint = this.#latestPoint;
-    const lastPoint = this.#points.slice(-1)[0];
+    const lastPoint = this.#points.slice(-1)[0] || this.#rawInputPoints[0];
     if (currentPoint && lastPoint) paintLine([currentPoint, lastPoint]);
   }
 
   line() {
     // TODO: Only render points from the front.
 
-    if (this.#points.length < 2) return [];
+    //if (this.#points.length < 2) return [];
 
     return this.#points.slice(this.#pointsIndex);
 
