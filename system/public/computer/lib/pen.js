@@ -3,6 +3,8 @@
 const { assign } = Object;
 const { round } = Math;
 
+import { Point } from "./geo.js";
+
 export class Pen {
   x;
   y;
@@ -101,17 +103,22 @@ export class Pen {
           h: penDragAmount.y,
         };
 
-        // TODO: Only set to draw if
-        pen.#event("draw");
+        // Only send an event if the new point differs from the last.
+        pointerMoveEvent("draw");
       } else {
-        // move
-        pen.#event("move");
+        pointerMoveEvent("move");
       }
 
       pen.changed = true;
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
     });
+
+    function pointerMoveEvent(type) {
+      if (!Point.equals(pen, { x: pen.lastPenX, y: pen.lastPenY })) {
+        pen.#event(type);
+      }
+    }
 
     // Lift
     window.addEventListener("pointerup", (e) => {

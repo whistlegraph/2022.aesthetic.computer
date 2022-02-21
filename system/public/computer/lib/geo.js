@@ -1,6 +1,6 @@
 // 🧮 Geometry
 
-const { floor } = Math;
+const { abs, floor } = Math;
 import { dist, randIntRange } from "./num.js";
 
 // A generic circle model for algorithmic use.
@@ -53,6 +53,10 @@ export class Box {
   // Yields a new box that is a copy of an existing old one.
   static copy(box) {
     return new Box(box.x, box.y, box.w, box.h);
+  }
+
+  get area() {
+    return abs(this.w * this.h);
   }
 
   // Yields a box where x, y is at the top left and w, h are positive.
@@ -125,6 +129,13 @@ export class Box {
   // The opposite of contains.
   misses(o) {
     return !this.contains(o);
+  }
+}
+
+// High level behavior for points: {x, y} (See also: num.vec2)
+export class Point {
+  static equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
   }
 }
 

@@ -42,7 +42,23 @@ export function multiply(operands, n) {
 }
 
 // Gets the distance between two points.
-export function dist(x1, y1, x2, y2) {
+// (4) x1, y1, x2, y1
+// (2) {x, y}, {x, y}
+export function dist() {
+  let x1, y1, x2, y2;
+
+  if (arguments.length === 4) {
+    x1 = arguments[0];
+    y1 = arguments[1];
+    x2 = arguments[2];
+    y2 = arguments[3];
+  } else if (arguments.length === 2) {
+    x1 = arguments[0].x;
+    y1 = arguments[0].y;
+    x2 = arguments[1].x;
+    y2 = arguments[1].y;
+  }
+
   const dx = x2 - x1;
   const dy = y2 - y1;
   return Math.sqrt(dx * dx + dy * dy);
