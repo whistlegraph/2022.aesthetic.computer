@@ -236,7 +236,7 @@ function paste(from, destX = 0, destY = 0) {
 }
 
 // Draws a line
-// (2) p1, p2 {x, y}
+// (2) p1, p2: pairs of {x, y} or [x, y]
 // (4) x0, y0, x1, y1
 function line() {
   let x0, y0, x1, y1;
@@ -247,10 +247,19 @@ function line() {
     x1 = arguments[2];
     y1 = arguments[3];
   } else if (arguments.length === 2) {
-    x0 = arguments[0].x;
-    y0 = arguments[0].y;
-    x1 = arguments[1].x;
-    y1 = arguments[1].y;
+    if (Array.isArray(arguments[0])) {
+      // assume [x, y], [x, y]
+      x0 = arguments[0][0];
+      x1 = arguments[0][1];
+      y0 = arguments[1][0];
+      y1 = arguments[1][1];
+    } else {
+      // assume {x, y}, {x, y}
+      x0 = arguments[0].x;
+      y0 = arguments[0].y;
+      x1 = arguments[1].x;
+      y1 = arguments[1].y;
+    }
   } else {
     console.warn(
       "Line did not use the correct number of arguments:",

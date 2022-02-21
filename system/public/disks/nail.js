@@ -16,12 +16,11 @@ const actions = []; // Actions that have been received by `server`. These get
 //                     TODO: Record all actions in order to replay pictures.
 
 const MIN_DIST = 0;
-let lastPoint;
 let dot = false; // Show preview dot while moving cursor.
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, net, resize }) {
-  // resize(96, 96);
+  resize(screen.width / 2, screen.height / 2); // TODO: Get screen.nativeWidth.
   cursor("none");
 
   // Make & display the canvas.
@@ -39,27 +38,26 @@ function boot({ paste, cursor, painting: p, screen, net, resize }) {
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ pen, ink, abstract: { bresenham }, page, screen, paste }) {
-  paste(painting); // TODO: Optimize this with a dirty rectangle (See `line`).
+  //paste(painting); // TODO: Optimize this with a dirty rectangle (See `line`).
 
-  // Process any actions that need rendering.
   if (actions.length) {
+    // Process actions and render to the painting.
     page(painting);
 
-    // Process actions in order of arrival.
     actions.forEach((action) => {
       const painter = painters[action.id];
-      painter[action.type](action.content);
-
-      // Render anything new that occurred as a result of this action.
+      painter[action.type](action.content); // Run the action and then paint it.
       painter.paint(action.type, { ink });
     });
     actions.length = 0;
 
-    // Render
-
     page(screen).paste(painting);
+    for (const painter in painters) painters[painter].overlay({ ink });
     ink(0, 0, 255, 100).plot(pen); // 🔴 Draw cursor.
   } else {
+    // Just show the current state.
+    paste(painting);
+    for (const painter in painters) painters[painter].overlay({ ink });
     ink(255, 255, 0, 100).plot(pen); // 🟡 Move (hover) cursor.
     dot = false;
   }
@@ -69,24 +67,17 @@ function paint({ pen, ink, abstract: { bresenham }, page, screen, paste }) {
 function act({ event: e, num: { dist } }) {
   if (e.is("move")) dot = true;
 
-  // TODO: I could reduce the data into an array here for faster parsing
-  //       and a smaller footprint over the network. 22.1.5
   if (e.is("draw") || e.is("touch")) {
     // Extract the necessary fields from the event object.
+    // TODO: I could reduce the data into an array here for faster parsing
+    //       and a smaller footprint over the network. 22.1.5
+    //       And also send it in batches / frames in order to avoid flooding
+    //       the server. 2022.02.20.22.14
     const point = (({ x, y, pressure }) => ({ x, y, pressure }))(e);
-
-    if (!lastPoint) {
-      server.send("point", point);
-      lastPoint = point;
-    } else if (dist(point.x, point.y, lastPoint.x, lastPoint.y) > MIN_DIST) {
-      // Make sure the points are not equal.
-      server.send("point", point);
-      lastPoint = point;
-    }
+    server.send("point", point);
   }
 
   if (e.is("lift")) {
-    lastPoint = null;
     server.send("stop");
   }
 }
@@ -100,8 +91,6 @@ import { Mark } from "../computer/lib/gesture.js";
  */
 class Painter {
   id;
-  //lastPoint;
-  //points = [];
   currentMark;
 
   constructor(id) {
@@ -109,26 +98,31 @@ class Painter {
   }
 
   paint(action, { ink }) {
-    console.log("Painting: ", action, this.currentMark);
+    if (!this.currentMark) return; // Nothing to paint if there is no mark.
 
-    // TODO: Mark needs to be able to eat up points.
+    // ***
+    // TODO: Mark needs to be able to eat up points or be flagged
+    //       so it doesn't keep painting
+    //       on the painting over and over again...
+    // ***
 
     const lines = this.currentMark.line();
 
     lines.forEach((p, i) => {
-      if (i < lines.length - 1) ink(255, 0, 0).line(p, lines[i + 1]);
+      if (i < lines.length - 1) ink(255, 0, 0, 25).line(p, lines[i + 1]);
     });
 
-    //console.log("Coords len:", this.currentMark.spots());
+    if (action === "stop") this.currentMark = null;
+  }
 
-    if (action === "stop") {
-      this.currentMark = null;
-    }
+  overlay({ ink }) {
+    if (!this.currentMark) return; // Nothing to overlay if there is no mark.
+    this.currentMark.previewLine((pl) => ink(0, 255, 0, 100).line(...pl));
   }
 
   // Runs on every recorded point.
   point(p) {
-    this.currentMark = this.currentMark || new Mark();
+    this.currentMark = this.currentMark || new Mark(8, 8);
     this.currentMark.input(p);
   }
 

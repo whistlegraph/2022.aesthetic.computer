@@ -1,20 +1,32 @@
 // 🖌️ Gesture
 // Classes and functions to support freehand drawing.
 
-import { lerp } from "./num.js";
+import { lerp, dist } from "./num.js";
 import * as vec2 from "../dep/gl-matrix/vec2.js";
-const { floor, pow } = Math;
+const { floor, pow, max } = Math;
 
 // Takes and keeps a set of input points and yields a processed spline as
-// a single mark gets continuously drawn.
+// a single mark gets drawn.
 export class Mark {
+  // Take raw input in the form of {x, y} coordinates.
   #rawInputPoints = []; // Data coming from hardware. {x, y, pressure}
-  #points = [];
-  #segmentLength;
-  #segmentProgress = 0;
+  #lastRawInputPoint;
+  #minDist; // Rate limit the raw input points.
 
-  constructor(segmentLength = 8) {
+  #latestPoint; // The last reported raw point from the device. (Before processing)
+
+  // Process it into points.
+  #points = [];
+  #pointsIndex = 0;
+
+  // Render it out in different ways.
+  #segmentLength;
+
+  #rawInputIndex = 0;
+
+  constructor(segmentLength = 8, minDist = 0) {
     this.#segmentLength = segmentLength;
+    this.#minDist = minDist;
   }
 
   get points() {
@@ -23,16 +35,33 @@ export class Mark {
 
   // Add fresh points from a hardware device or automata.
   input(raw) {
-    if (Array.isArray(raw)) this.#rawInputPoints.push(...raw);
-    else this.#rawInputPoints.push(raw);
-    this.#processRawInputIntoSegments();
+    if (!Array.isArray(raw)) raw = [raw];
+    raw.forEach((newPoint) => {
+      this.#latestPoint = newPoint;
+      if (
+        this.#rawInputPoints.length === 0 ||
+        dist(newPoint, this.#lastRawInputPoint) > this.#minDist
+      ) {
+        this.#rawInputPoints.push(newPoint);
+        this.#lastRawInputPoint = this.#rawInputPoints.slice(-1)[0];
+        this.#processRawInputIntoSegments();
+      }
+    });
   }
 
+  // Crawl through rawInputs and process them  into points.
   #processRawInputIntoSegments() {
-    // TODO: Quantize this raw data so the segments have a regulated distance.
-    this.#points.push(...this.#rawInputPoints.slice());
+    this.#pointsIndex = max(this.#points.length - 1, 0);
+    this.#points.push(...this.#rawInputPoints.slice(this.#rawInputIndex + 1));
+    this.#rawInputIndex = this.#rawInputPoints.length - 1;
 
-    this.#rawInputPoints.length = 0;
+    // TODO: Quantize this raw data so the segments have a regulated distance.
+    console.log(
+      "points",
+      this.#points.length,
+      "Raw input index:",
+      this.#rawInputIndex
+    );
   }
 
   // Feeds the processed raw data back and dumps points.
@@ -42,11 +71,31 @@ export class Mark {
     return points;
   }
 
+  // TODO: How to render a line and then also a spline before clearing points?
+
+  previewLine(paintLine) {
+    const currentPoint = this.#latestPoint;
+    const lastPoint = this.#points.slice(-1)[0];
+    if (currentPoint && lastPoint) paintLine([currentPoint, lastPoint]);
+  }
+
   line() {
+    // TODO: Only render points from the front.
+
     if (this.#points.length < 2) return [];
-    const points = this.#points.slice();
-    this.#points.length = 0;
-    return points;
+
+    return this.#points.slice(this.#pointsIndex);
+
+    //console.log(this.#points);
+
+    //return this.#points;
+
+    // Carry over the last point to make complete lines.
+    // 1. Is this how "tail" needs to be stored?
+    // 2. Where do full gestures and drawings get stored / recorded?
+
+    // this.#points = this.#points.slice(-1);
+    //return points;
   }
 
   // Calculates the spline from all input points, consumes them, and returns
