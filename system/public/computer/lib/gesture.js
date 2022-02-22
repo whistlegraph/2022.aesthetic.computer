@@ -19,6 +19,8 @@ export class Mark {
   #points = [];
   #pointsIndex = 0;
 
+  #paintedIndex = 0;
+
   // Render it out in different ways.
   #segmentLength;
 
@@ -78,23 +80,19 @@ export class Mark {
     if (currentPoint && lastPoint) paintLine([currentPoint, lastPoint]);
   }
 
+  // TODO: Remove duplicate points on the 1px line.
   line() {
-    // TODO: Only render points from the front.
+    //if (this.#paintedIndex > this.#pointsIndex) return [];
 
-    //if (this.#points.length < 2) return [];
+    const lines = this.#points.slice(this.#pointsIndex);
 
-    return this.#points.slice(this.#pointsIndex);
+    //this.#paintedIndex = this.#pointsIndex + lines.length - 1;
 
-    //console.log(this.#points);
+    // Advance the pointsIndex so that `line` does not repaint until it is reset
+    // when points are added.
+    this.#pointsIndex += lines.length - 1;
 
-    //return this.#points;
-
-    // Carry over the last point to make complete lines.
-    // 1. Is this how "tail" needs to be stored?
-    // 2. Where do full gestures and drawings get stored / recorded?
-
-    // this.#points = this.#points.slice(-1);
-    //return points;
+    return lines;
   }
 
   // Calculates the spline from all input points, consumes them, and returns
