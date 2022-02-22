@@ -92,6 +92,7 @@ import { Mark } from "../computer/lib/gesture.js";
 class Painter {
   id;
   currentMark;
+  #paintedMarkOnce = false;
 
   constructor(id) {
     this.id = id;
@@ -100,19 +101,24 @@ class Painter {
   paint(action, { ink }) {
     if (!this.currentMark) return; // Nothing to paint if there is no mark.
 
-    // ***
-    // TODO: Mark needs to be able to eat up points or be flagged
-    //       so it doesn't keep painting
-    //       on the painting over and over again...
-    // ***
-
     const lines = this.currentMark.line();
 
     lines.forEach((p, i) => {
-      if (i < lines.length - 1) ink(255, 0, 0, 25).line(p, lines[i + 1]);
+      if (i < lines.length - 1) {
+        ink(255, 0, 0, 50)
+          // Skip the first point except for the first line.
+          .skip(this.#paintedMarkOnce ? p : null)
+          .line(p, lines[i + 1])
+          .skip(null);
+        this.#paintedMarkOnce = true;
+      }
     });
 
-    if (action === "stop") this.currentMark = null;
+    // TODO: Why would this action behavior be here?
+    if (action === "stop") {
+      this.currentMark = null;
+      this.#paintedMarkOnce = false;
+    }
   }
 
   overlay({ ink }) {
