@@ -107,15 +107,29 @@ class Painter {
       if (i < lines.length - 1) {
         ink(255, 0, 0, 50)
           // Skip the first point except for the first line.
-          .skip(this.#paintedMarkOnce ? p : null)
+          //.skip(this.#paintedMarkOnce ? p : null)
+          .skip(p)
           .line(p, lines[i + 1])
           .skip(null);
+        //this.#paintedMarkOnce = true;
+      } else if (this.#paintedMarkOnce === false) {
+        console.log("length of 1");
         this.#paintedMarkOnce = true;
+        ink(255, 0, 0, 50).plot(p);
       }
     });
 
     // TODO: Why would this action behavior be here?
     if (action === "stop") {
+      // TODO: Paint the rest of previewLine on release.
+
+      this.currentMark.previewLine((pl) =>
+        ink(255, 0, 0, 50)
+          .skip(pl[0])
+          .line(...pl)
+          .skip(null)
+      );
+
       this.currentMark = null;
       this.#paintedMarkOnce = false;
     }
@@ -123,7 +137,13 @@ class Painter {
 
   overlay({ ink }) {
     if (!this.currentMark) return; // Nothing to overlay if there is no mark.
-    this.currentMark.previewLine((pl) => ink(0, 255, 0, 100).line(...pl));
+
+    this.currentMark.previewLine((pl) =>
+      ink(0, 255, 0, 100)
+        .skip(pl[0])
+        .line(...pl)
+        .skip(null)
+    );
   }
 
   // Runs on every recorded point.
