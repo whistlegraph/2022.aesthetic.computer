@@ -75,9 +75,9 @@ export class Mark {
   }
 
   previewLine(paintLine) {
-    const currentPoint = this.#latestPoint;
     const lastPoint = this.#points.slice(-1)[0] || this.#rawInputPoints[0];
-    if (currentPoint && lastPoint) paintLine([currentPoint, lastPoint]);
+    const currentPoint = this.#latestPoint;
+    if (lastPoint && currentPoint) paintLine([lastPoint, currentPoint]);
   }
 
   // TODO: Remove duplicate points on the 1px line.
