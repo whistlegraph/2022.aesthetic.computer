@@ -3,7 +3,7 @@
 
 import { lerp, dist } from "./num.js";
 import * as vec2 from "../dep/gl-matrix/vec2.js";
-const { floor, pow, max } = Math;
+const { floor, round, pow, max } = Math;
 
 // Takes and keeps a set of input points and yields a processed spline as
 // a single mark gets drawn.
@@ -19,16 +19,13 @@ export class Mark {
   #points = [];
   #pointsIndex = 0;
 
-  #paintedIndex = 0;
-
   // Render it out in different ways.
   #segmentLength;
-
   #rawInputIndex = 0;
 
-  constructor(segmentLength = 8, minDist = 0) {
-    this.#segmentLength = segmentLength;
+  constructor({ minDist }) {
     this.#minDist = minDist;
+    this.#segmentLength = 16;
   }
 
   get points() {
@@ -46,14 +43,14 @@ export class Mark {
       ) {
         this.#rawInputPoints.push(newPoint);
         this.#lastRawInputPoint = this.#rawInputPoints.slice(-1)[0];
-        this.#processRawInputIntoSegments();
+        this.#processRawInputIntoPoints();
       }
     });
   }
 
   // Crawl through `rawInputPoints` and process them into `this.#points`.
   // TODO: Quantize so the segments have a regulated distance?
-  #processRawInputIntoSegments() {
+  #processRawInputIntoPoints() {
     this.#pointsIndex = max(this.#points.length - 1, 0);
 
     if (this.#points.length === 0) {
@@ -67,10 +64,13 @@ export class Mark {
     this.#rawInputIndex = this.#rawInputPoints.length - 1;
   }
 
-  // Feeds the processed raw data back and dumps points.
+  // ***Rendering Functions***
+  // These return arrays of graphable points, sometimes advancing
+  // `this.#pointsIndex` to prevent overdrawing.
+
+  // Returns an array of all points.
   spots() {
     const points = this.#points.slice();
-    this.#points.length = 0;
     return points;
   }
 
@@ -82,16 +82,11 @@ export class Mark {
 
   // TODO: Remove duplicate points on the 1px line.
   line() {
-    //if (this.#paintedIndex > this.#pointsIndex) return [];
-
     const lines = this.#points.slice(this.#pointsIndex);
-
-    //this.#paintedIndex = this.#pointsIndex + lines.length - 1;
 
     // Advance the pointsIndex so that `line` does not repaint until it is reset
     // when points are added.
     this.#pointsIndex += lines.length - 1;
-
     return lines;
   }
 
@@ -101,7 +96,7 @@ export class Mark {
     //if (this.#points.length < 4) return [];
 
     const coords = [];
-    this.#points.forEach((coord, i) => {
+    this.#points.slice().forEach((coord, i) => {
       const segs = this.#points;
       if (i >= segs.length - 2 || i === 0) return; // Skip last 2 and first seg.
 
@@ -118,22 +113,20 @@ export class Mark {
       p2 = [p2.x, p2.y];
       p3 = [p3.x, p3.y];
 
-      coords.push({ x: floor(p1[0]), y: floor(p1[1]) }); // 1st point
+      coords.push({ x: round(p1[0]), y: round(p1[1]) }); // 1st point
 
       // TODO: Maybe segmentLength could be defined based on distance from
       //       a previous point.
       for (let t = 0; t < this.#segmentLength; t += 1) {
         const cR = Mark.#catmullRom(p0, p1, p2, p3, t / this.#segmentLength);
-        coords.push({ x: floor(cR.x), y: floor(cR.y) }); // inner points
+        coords.push({ x: round(cR.x), y: round(cR.y) }); // inner points
       }
 
-      coords.push({ x: floor(p2[0]), y: floor(p2[1]) }); // last point
+      coords.push({ x: round(p2[0]), y: round(p2[1]) }); // last point
     });
 
-    console.log("Spline point length:", this.#points.length);
-    this.#points.length = 0;
-
-    return coords;
+    // this.#points.length = 0;
+    return pixelPerfect(coords);
   }
 
   // Parametric representation of the curve from `p1` to `p2` with `p0` and `p3`

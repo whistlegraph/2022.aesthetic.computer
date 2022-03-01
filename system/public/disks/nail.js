@@ -20,7 +20,7 @@ let dot = false; // Show preview dot while moving cursor.
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, net, resize }) {
-  resize(screen.width / 2, screen.height / 2); // TODO: Get screen.nativeWidth.
+  // resize(screen.width / 2, screen.height / 2); // TODO: Get screen.nativeWidth.
   cursor("none");
 
   // Make & display the canvas.
@@ -47,17 +47,17 @@ function paint({ pen, ink, abstract: { bresenham }, page, screen, paste }) {
     actions.forEach((action) => {
       const painter = painters[action.id];
       painter[action.type](action.content); // Run the action and then paint it.
-      painter.paint(action.type, { ink });
+      painter.paint(action.type, [255, 0, 0, 50], { ink });
     });
     actions.length = 0;
 
     page(screen).paste(painting);
-    for (const painter in painters) painters[painter].overlay({ ink });
+    for (const p in painters) painters[p].overlay([0, 255, 0, 100], { ink });
     ink(0, 0, 255, 100).plot(pen); // 🔴 Draw cursor.
   } else {
     // Just show the current state.
     paste(painting);
-    for (const painter in painters) painters[painter].overlay({ ink });
+    for (const p in painters) painters[p].overlay([0, 255, 0, 100], { ink });
     ink(255, 255, 0, 100).plot(pen); // 🟡 Move (hover) cursor.
     dot = false;
   }
@@ -98,24 +98,20 @@ class Painter {
     this.id = id;
   }
 
-  paint(action, { ink }) {
+  paint(action, color, { ink }) {
     if (!this.currentMark) return; // Nothing to paint if there is no mark.
 
     const lines = this.currentMark.line();
 
     lines.forEach((p, i) => {
       if (i < lines.length - 1) {
-        ink(255, 0, 0, 50)
-          // Skip the first point except for the first line.
-          //.skip(this.#paintedMarkOnce ? p : null)
+        ink(color)
           .skip(p)
           .line(p, lines[i + 1])
           .skip(null);
-        //this.#paintedMarkOnce = true;
       } else if (this.#paintedMarkOnce === false) {
-        console.log("length of 1");
         this.#paintedMarkOnce = true;
-        ink(255, 0, 0, 50).plot(p);
+        ink(color).plot(p);
       }
     });
 
@@ -135,20 +131,38 @@ class Painter {
     }
   }
 
-  overlay({ ink }) {
+  // TODO: *** Make a lime-green, pixel-perfect spline preview work!
+
+  overlay(color, { ink }) {
     if (!this.currentMark) return; // Nothing to overlay if there is no mark.
 
+    // Add an interpolated preview from the last point to the current point.
     this.currentMark.previewLine((pl) =>
-      ink(0, 255, 0, 100)
+      //ink(color)
+      ink(color)
         .skip(pl[0])
         .line(...pl)
         .skip(null)
     );
+
+    // Draw a full curve through all the points.
+    //ink(255, 255, 0, 128).poly(this.currentMark.spline());
+    ink(color).poly(this.currentMark.spline());
+
+    // Plot every spline point.
+    this.currentMark.spline().forEach((p) => {
+      //ink(0, 0, 0).plot(p);
+    });
+
+    // Draw every processed point.
+    this.currentMark
+      .spots()
+      .forEach((spot) => ink(255, 0, 128, 255).plot(spot));
   }
 
   // Runs on every recorded point.
   point(p) {
-    this.currentMark = this.currentMark || new Mark(8, 8);
+    this.currentMark = this.currentMark || new Mark({ minDist: 16 });
     this.currentMark.input(p);
   }
 
