@@ -19,6 +19,7 @@ Development ideas: ☁️ Try AceJump!
 
 🌟 Next Up 🌟
   - [] Add sound to `nail`.
+  - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.
 
   ***Whistlegraph***
   - [] Write and complete: `whistlegraph` / `thumb`.
