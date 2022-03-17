@@ -4,33 +4,31 @@ precision highp float;
 in vec2 v_texc;
 out vec4 outColor;
 
-uniform sampler2D u_tex;
-uniform float time;
-uniform vec2 mouse;
-uniform vec2 resolution;
-
+uniform sampler2D inputTexture;
+uniform float iTime;
+uniform vec2 iMouse;
+uniform vec2 iResolution;
 
 const int fogIterations = 20;
 const int shadowIterations = 5;
 
-const vec3 bgColor = vec3(0.084, 0.533, 0.878);
-
 const bool colorMode = true;
 
-const float focal_length = 1.;
+const float focalLength = 1.;
+const float screenScale = focalLength;
 const float shadowRange = 1.;
 const float camera_distance = 2.236;
-const float volumeRadius = 0.008;
-const float inputRadius =  0.008;
+const float volumeRadius = 0.005;
+const float inputRadius =  0.005;
 const float innerDensity = 20.;
-const float outerDensity = 0.0;
+const float outerDensity = 10.1;
 const float anisotropy = -0.123;
 const float worldRotation = .1;
+const vec3 bgColor = vec3(0.084, 0.533, 0.878);
 
 const float LightPower = 4.;
 const vec3 LightCol = vec3(1.);
 const vec3 LightDirection = normalize(vec3(-1., -1., -0.05));
-
 
 // Constants
 const float PI = 3.14159265359;
@@ -88,16 +86,20 @@ float hgPhase(vec3 dirIn, vec3 dirOut)
 
 vec2 worldToDensityMap(vec2 coords)
 {
-    return .5 * (focal_length/-camera_distance) * coords - vec2(.5);
+    return .5 * (screenScale/-camera_distance) * coords - vec2(.5);
 }
 
 vec4 getColor(vec3 pos)
 {
+    if (abs(pos.z) > volumeRadius)
+    {
+      return vec4(0.);
+    }
     vec4 outColor = vec4(bgColor, outerDensity);
     vec2 imgCoords = worldToDensityMap(pos.xy) + vec2(1.);
     if (abs(pos.z) < inputRadius && inBounds(imgCoords))
     {
-        outColor.xyz = texture(u_tex, imgCoords).xyz;
+        outColor.xyz = texture(inputTexture, imgCoords).xyz;
         outColor.w = maxv(outColor.xyz) * innerDensity;
     }
     return outColor;
@@ -149,7 +151,7 @@ void main()
     vec2 uv = v_texc * 2. - vec2(1.);
 
     vec3 ro = vec3(0., 0., camera_distance);
-    vec3 rd = normalize(vec3(uv, focal_length));
+    vec3 rd = normalize(vec3(uv, focalLength));
 
     float nearIntersectionDist = zPlaneIntersect(ro, rd, -volumeRadius);
     float farIntersectionDist = zPlaneIntersect(ro, rd, volumeRadius);
@@ -159,8 +161,8 @@ void main()
     vec3 volAbs = vec3(1.);
     vec3 pos = ro + rd * nearIntersectionDist;
     vec3 previousPos, stepAbs, stepCol;
-    float headStartCam = random(resolution.x * v_texc + time);
-    float headStartShadow = random(resolution.x * v_texc - time);
+    float headStartCam = random(iResolution.x * v_texc + iTime);
+    float headStartShadow = random(iResolution.x * v_texc - iTime);
 
     for (int i = 1; i < fogIterations + 1; i++)
     {

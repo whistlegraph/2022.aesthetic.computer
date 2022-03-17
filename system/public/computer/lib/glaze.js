@@ -5,17 +5,17 @@
 let gl, canvas;
 
 const shaders = await preloadShaders([
-  "lighting-and-display-vert",
+  "passthrough-vert",
   "lighting-frag",
   "display-frag",
 ]);
 
 const lighting = {
-  vert: shaders["lighting-and-display-vert"],
+  vert: shaders["passthrough-vert"],
   frag: shaders["lighting-frag"],
 };
 const display = {
-  vert: shaders["lighting-and-display-vert"],
+  vert: shaders["passthrough-vert"],
   frag: shaders["display-frag"],
 };
 
@@ -44,15 +44,20 @@ let lightingProgram, displayProgram;
 let texSurf, fbSurf, fb;
 let texSurfWidth, texSurfHeight;
 let vao;
-let uniformTexLocation;
-let uniformTimeLocation;
-let uniformMouseLocation;
-let uniformResolutionLocation;
 
-let displayTexUniformLocation;
-let displayTexUniformTimeLocation;
-let displayTexUniformMouseLocation;
-let displayTexUniformResolutionLocation;
+let lightingUniformLocations = {
+  'iTexture': 0,
+  'iTime': 0,
+  'iMouse': 0,
+  'iResolution': 0
+}
+
+let displayUniformLocations = {
+  'iTexture': 0,
+  'iTime': 0,
+  'iMouse': 0,
+  'iResolution': 0
+}
 
 let offed = false;
 
@@ -207,32 +212,25 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   );
 
   // Uniforms
-  displayTexUniformLocation = gl.getUniformLocation(displayProgram, "u_tex");
+  displayUniformLocations.iTexture = gl.getUniformLocation(displayProgram, "inputTexture");
 
-  displayTexUniformMouseLocation = gl.getUniformLocation(
+  displayUniformLocations.iMouse= gl.getUniformLocation(
     displayProgram,
-    "mouse"
+    "iMouse"
   );
-  displayTexUniformResolutionLocation = gl.getUniformLocation(
+  displayUniformLocations.iResolution = gl.getUniformLocation(
     displayProgram,
-    "resolution"
+    "iResolution"
   );
+  displayUniformLocations.iTime = gl.getUniformLocation(displayProgram, "iTime");
 
-  displayTexUniformTimeLocation = gl.getUniformLocation(displayProgram, "time");
-
-  uniformTexLocation = gl.getUniformLocation(lightingProgram, "u_tex");
-  uniformTimeLocation = gl.getUniformLocation(lightingProgram, "time");
-
-  uniformMouseLocation = gl.getUniformLocation(lightingProgram, "mouse");
-  uniformResolutionLocation = gl.getUniformLocation(
+  lightingUniformLocations.iTexture = gl.getUniformLocation(lightingProgram, "inputTexture");
+  lightingUniformLocations.iMouse = gl.getUniformLocation(lightingProgram, "iMouse");
+  lightingUniformLocations.iTime= gl.getUniformLocation(lightingProgram, "iTime");
+  lightingUniformLocations.iResolution = gl.getUniformLocation(
     lightingProgram,
-    "resolution"
+    "iResolution"
   );
-  // uniformAngleLocation = gl.getUniformLocation(program, "u_angle");
-  // uniformScreenRatioLocation = gl.getUniformLocation(
-  //  program,
-  //  "u_screen_ratio"
-  //);
 }
 
 // Turn glaze off if it has already been turned on.
@@ -295,13 +293,12 @@ export function render(canvasTexture, time, mouse) {
   // Resolution of lighting. TODO: Switch to full resolution mode.
   gl.viewport(0, 0, texSurfWidth, texSurfHeight);
 
-  //gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
 
-  gl.uniform1i(uniformTexLocation, 0);
-  gl.uniform1f(uniformTimeLocation, time);
-  gl.uniform2f(uniformMouseLocation, mouse.x, mouse.y);
-  gl.uniform2f(uniformResolutionLocation, texSurfWidth, texSurfHeight);
+  gl.uniform1i(lightingUniformLocations.inputTexture, 0);
+  gl.uniform1f(lightingUniformLocations.iTime, time);
+  gl.uniform2f(lightingUniformLocations.iMouse, mouse.x, mouse.y);
+  gl.uniform2f(lightingUniformLocations.iResolution, texSurfWidth, texSurfHeight);
   gl.bindVertexArray(vao);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1);
 
@@ -314,14 +311,14 @@ export function render(canvasTexture, time, mouse) {
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-  gl.uniform1i(displayTexUniformLocation, 0);
-  gl.uniform2f(displayTexUniformMouseLocation, mouse.x, mouse.y);
+  gl.uniform1i(displayUniformLocations.inputTexture, 0);
+  gl.uniform2f(displayUniformLocations.iMouse, mouse.x, mouse.y);
   gl.uniform2f(
-    displayTexUniformResolutionLocation,
+    displayUniformLocations.iResolution,
     gl.canvas.width,
     gl.canvas.height
   );
-  gl.uniform1f(displayTexUniformTimeLocation, time);
+  gl.uniform1f(displayUniformLocations.iTime, time);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1);
 }
 
