@@ -9,26 +9,27 @@ uniform float iTime;
 uniform vec2 iMouse;
 uniform vec2 iResolution;
 
-const int fogIterations = 20;
-const int shadowIterations = 5;
+uniform int fogIterations;
+uniform int shadowIterations;
 
 const bool colorMode = true;
 
-const float focalLength = 1.;
-const float screenScale = focalLength;
-const float shadowRange = 1.;
-const float camera_distance = 2.236;
-const float volumeRadius = 0.005;
-const float inputRadius =  0.005;
-const float innerDensity = 20.;
-const float outerDensity = 10.1;
-const float anisotropy = -0.123;
-const float worldRotation = .1;
-const vec3 bgColor = vec3(0.084, 0.533, 0.878);
+uniform float focalLength;
+uniform float screenScale;
+uniform float shadowRange;
+uniform float cameraDistance;
+uniform float volumeRadius;
+uniform float inputRadius;
+uniform float innerDensity;
+uniform float outerDensity;
+uniform float anisotropy;
+uniform float lightPower;
+uniform vec3 lightDirection;
+uniform vec3 bgColor;
+uniform vec3 lightColor;
 
-const float LightPower = 4.;
-const vec3 LightCol = vec3(1.);
-const vec3 LightDirection = normalize(vec3(-1., -1., -0.05));
+vec3 normLightDirection;
+
 
 // Constants
 const float PI = 3.14159265359;
@@ -42,6 +43,14 @@ float random(vec2 p)
     vec3 p3 = fract(vec3(p.xyx) * .1031);
     p3 += dot(p3, p3.yzx + 33.33);
     return fract((p3.x + p3.y) * p3.z);
+}
+
+float sRGB(float x)
+{
+    if (x <= 0.00031308)
+        return 12.92 * x;
+    else
+        return 1.055*pow(x, (1.0 / 2.4)) - 0.055;
 }
 
 float maxv(vec3 v)
@@ -86,7 +95,7 @@ float hgPhase(vec3 dirIn, vec3 dirOut)
 
 vec2 worldToDensityMap(vec2 coords)
 {
-    return .5 * (screenScale/-camera_distance) * coords - vec2(.5);
+    return .5 * (screenScale/-cameraDistance) * coords - vec2(.5);
 }
 
 vec4 getColor(vec3 pos)
@@ -121,8 +130,8 @@ vec3 directLight(vec3 pos, vec3 rd, float headStart)
     vec3 volAbs = vec3(1.);
     float stepDist;
 
-    float nearIntersectionDist = zPlaneIntersect(ro, LightDirection, -volumeRadius);
-    float farIntersectionDist = zPlaneIntersect(ro, LightDirection, volumeRadius);
+    float nearIntersectionDist = zPlaneIntersect(ro, normLightDirection, -volumeRadius);
+    float farIntersectionDist = zPlaneIntersect(ro, normLightDirection, volumeRadius);
 
     float traceDist = max(nearIntersectionDist, farIntersectionDist);
     traceDist = min(traceDist, shadowRange);
@@ -131,26 +140,27 @@ vec3 directLight(vec3 pos, vec3 rd, float headStart)
     for (int i = 1; i < shadowIterations + 1; i += 1)
     {
         previousPos = pos;
-        pos = ro - LightDirection * (float(i) + headStart) / float(shadowIterations) * traceDist;
+        pos = ro - normLightDirection * (float(i) + headStart) / float(shadowIterations) * traceDist;
         vec4 colorValue = getColor(pos);
         volAbs *= vec3(exp(-colorValue.w * length(pos - previousPos) * colorValue.xyz));
     }
-    return LightPower * LightCol * volAbs * hgPhase(-LightDirection, rd);
+    return lightPower * lightColor * volAbs * hgPhase(-normLightDirection, rd);
 }
 
 vec3 post(vec3 col)
 {
-    col = pow(col, vec3(1.5));
-    col = pow(col, vec3(0.7 / 1.8));
-
+    col.x = sRGB(col.x);
+    col.y = sRGB(col.y);
+    col.z = sRGB(col.z);
     return col;
 }
 
 void main()
 {
+    normLightDirection = normalize(lightDirection);
     vec2 uv = v_texc * 2. - vec2(1.);
 
-    vec3 ro = vec3(0., 0., camera_distance);
+    vec3 ro = vec3(0., 0., cameraDistance);
     vec3 rd = normalize(vec3(uv, focalLength));
 
     float nearIntersectionDist = zPlaneIntersect(ro, rd, -volumeRadius);
