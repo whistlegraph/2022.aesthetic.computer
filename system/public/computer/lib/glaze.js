@@ -45,19 +45,55 @@ let texSurf, fbSurf, fb;
 let texSurfWidth, texSurfHeight;
 let vao;
 
-let lightingUniformLocations = {
-  'iTexture': 0,
-  'iTime': 0,
-  'iMouse': 0,
-  'iResolution': 0
+let glazeParameters = {
+  'fogIterations': 20,
+  'shadowIterations': 5,
+  'focalLength': 1.,
+  'screenScale': 1.,
+  'shadowRange': 1.,
+  'cameraDistance': 2.236,
+  'volumeRadius': 0.005,
+  'inputRadius': 0.005,
+  'innerDensity': 20.,
+  'outerDensity': 10.1,
+  'anisotropy': -0.123,
+  'lightPower': 4.,
+  'lightDirection': {'x': -1., 'y': -1., 'z': -0.05},
+  'lightColor': {'x': 1., 'y': 1., 'z': 1.},
+  'bgColor': {'x': 0.084, 'y': 0.533, 'z': 0.878}
 }
 
-let displayUniformLocations = {
-  'iTexture': 0,
-  'iTime': 0,
-  'iMouse': 0,
-  'iResolution': 0
-}
+let lightingUniformNames = [
+  'iTexture',
+  'iTime',
+  'iMouse',
+  'iResolution',
+  'fogIterations',
+  'shadowIterations',
+  'focalLength',
+  'screenScale',
+  'shadowRange',
+  'cameraDistance',
+  'volumeRadius',
+  'inputRadius',
+  'innerDensity',
+  'outerDensity',
+  'anisotropy',
+  'lightPower',
+  'lightColor',
+  'lightDirection'
+]
+
+let lightingUniformLocations = {}
+
+let displayUniformNames = [
+  'iTexture',
+  'iTime',
+  'iMouse',
+  'iResolution'
+]
+
+let displayUniformLocations = {};
 
 let offed = false;
 
@@ -224,13 +260,13 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   );
   displayUniformLocations.iTime = gl.getUniformLocation(displayProgram, "iTime");
 
-  lightingUniformLocations.iTexture = gl.getUniformLocation(lightingProgram, "inputTexture");
-  lightingUniformLocations.iMouse = gl.getUniformLocation(lightingProgram, "iMouse");
-  lightingUniformLocations.iTime= gl.getUniformLocation(lightingProgram, "iTime");
-  lightingUniformLocations.iResolution = gl.getUniformLocation(
-    lightingProgram,
-    "iResolution"
-  );
+  displayUniformNames.forEach(function (item, index) {
+    displayUniformLocations[item] = gl.getUniformLocation(displayProgram, item);
+  });
+
+  lightingUniformNames.forEach(function (item, index) {
+    lightingUniformLocations[item] = gl.getUniformLocation(lightingProgram, item);
+  });
 }
 
 // Turn glaze off if it has already been turned on.
@@ -299,6 +335,33 @@ export function render(canvasTexture, time, mouse) {
   gl.uniform1f(lightingUniformLocations.iTime, time);
   gl.uniform2f(lightingUniformLocations.iMouse, mouse.x, mouse.y);
   gl.uniform2f(lightingUniformLocations.iResolution, texSurfWidth, texSurfHeight);
+
+
+  gl.uniform1i(lightingUniformLocations.fogIterations, glazeParameters.fogIterations);
+  gl.uniform1i(lightingUniformLocations.shadowIterations, glazeParameters.shadowIterations);
+  gl.uniform1f(lightingUniformLocations.focalLength, glazeParameters.focalLength);
+  gl.uniform1f(lightingUniformLocations.screenScale, glazeParameters.screenScale);
+  gl.uniform1f(lightingUniformLocations.shadowRange, glazeParameters.shadowRange);
+  gl.uniform1f(lightingUniformLocations.cameraDistance, glazeParameters.cameraDistance);
+  gl.uniform1f(lightingUniformLocations.volumeRadius, glazeParameters.volumeRadius);
+  gl.uniform1f(lightingUniformLocations.inputRadius, glazeParameters.inputRadius);
+  gl.uniform1f(lightingUniformLocations.innerDensity, glazeParameters.innerDensity);
+  gl.uniform1f(lightingUniformLocations.outerDensity, glazeParameters.outerDensity);
+  gl.uniform1f(lightingUniformLocations.anisotropy, glazeParameters.anisotropy);
+  gl.uniform1f(lightingUniformLocations.lightPower, glazeParameters.lightPower);
+  gl.uniform3f(lightingUniformLocations.lightDirection,
+    glazeParameters.lightDirection.x,
+    glazeParameters.lightDirection.y,
+    glazeParameters.lightDirection.z);
+  gl.uniform3f(lightingUniformLocations.bgColor,
+    glazeParameters.bgColor.x,
+    glazeParameters.bgColor.y,
+    glazeParameters.bgColor.z);
+  gl.uniform3f(lightingUniformLocations.lightColor,
+    glazeParameters.lightColor.x,
+    glazeParameters.lightColor.y,
+    glazeParameters.lightColor.z);
+
   gl.bindVertexArray(vao);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1);
 
