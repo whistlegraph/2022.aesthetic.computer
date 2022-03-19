@@ -8,15 +8,6 @@ Development ideas: ☁️ Try AceJump!
  (Jeffrey)
  - [🟢] Abstract `line` and `spline` into `nail`. See also: `gesture`.
 
- ***Glaze Integration***
- (Sage)
- - [🟡] Fix lighting centering bug. (It's smushed into the top right.)
- - [] Orthographic projection.
- - [] Which parameters should be exposed through disks api when it's activated?
- - [] Set some glaze parameters from software side when enabling.
-      - a. Orthographic vs. Perspective projection.
-      - b. resolution factor (2x, 3x, 4x, 'native' etc.)
-
 🌟 Next Up 🌟
   - [] Add sound to `nail`.
   - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.
