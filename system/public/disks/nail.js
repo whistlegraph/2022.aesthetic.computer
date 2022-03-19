@@ -84,7 +84,7 @@ function act({ event: e, num: { dist } }) {
 
 // 📚 Library (Useful functions used throughout the program)
 
-import { Mark } from "../computer/lib/gesture.js";
+import { Mark, pixelPerfect } from "../computer/lib/gesture.js";
 
 /**
  * Draws segments of brushes and keeps track of gesture state for each painter.
@@ -145,8 +145,12 @@ class Painter {
         .skip(null)
     );
 
+    // TODO: Filter by pixel-perfect-ness.
+    // TODO: pixelPerfect... how to make "poly" pixel-perfect?
+
     // Draw a full curve through all the points.
     //ink(255, 255, 0, 128).poly(this.currentMark.spline());
+
     ink(color).poly(this.currentMark.spline());
 
     // Plot every spline point.
@@ -162,7 +166,7 @@ class Painter {
 
   // Runs on every recorded point.
   point(p) {
-    this.currentMark = this.currentMark || new Mark({ minDist: 16 });
+    this.currentMark = this.currentMark || new Mark({ minDist: 4 });
     this.currentMark.input(p);
   }
 

@@ -4,7 +4,7 @@ precision highp float;
 in vec2 v_texc;
 out vec4 outColor;
 
-uniform sampler2D inputTexture;
+uniform sampler2D iTexture;
 uniform float iTime;
 uniform vec2 iMouse;
 uniform vec2 iResolution;
@@ -108,7 +108,7 @@ vec4 getColor(vec3 pos)
     vec2 imgCoords = worldToDensityMap(pos.xy) + vec2(1.);
     if (abs(pos.z) < inputRadius && inBounds(imgCoords))
     {
-        outColor.xyz = texture(inputTexture, imgCoords).xyz;
+        outColor.xyz = texture(iTexture, imgCoords).xyz;
         outColor.w = maxv(outColor.xyz) * innerDensity;
     }
     return outColor;

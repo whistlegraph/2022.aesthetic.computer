@@ -170,7 +170,7 @@ export class Mark {
  *
  *  Transcribed from: https://rickyhan.com/jekyll/update/2018/11/22/pixel-art-algorithm-pixel-perfect.html
  */
-function pixelPerfect(pixels) {
+export function pixelPerfect(pixels) {
   if (pixels.length === 1 || pixels.length === 0) {
     return pixels; // Return the inputs if the length is 0 or 1.
   }

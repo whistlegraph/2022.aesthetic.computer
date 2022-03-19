@@ -14,12 +14,14 @@ let radius = originalRadius;
 let bubbleRadii = [];
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ resize, screen, cursor }) {
+function boot({ resize, screen, cursor, glaze }) {
   cursor("none");
   // TODO: Runs only once!
   // resize(50, 20);
   originalRadius = screen.width / 3;
   radius = originalRadius;
+
+  glaze({ on: true });
 }
 
 const bubbles = [];
@@ -40,7 +42,7 @@ function sim({ sound: { time } }) {
 // 🎨 Paint (Executes ever display frame)
 function paint({ ink, plot, wipe, screen }) {
   const x = (progress || 0) * screen.width;
-  wipe(0);
+  wipe(128);
 
   ink(0, 0, 255).circle(screen.width / 2, screen.height / 2, radius);
 

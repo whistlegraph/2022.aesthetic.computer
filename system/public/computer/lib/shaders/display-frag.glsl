@@ -4,7 +4,7 @@ precision highp float;
 in vec2 v_texc;
 out vec4 outColor;
 
-uniform sampler2D inputTexture;
+uniform sampler2D iTexture;
 
 uniform vec2 iMouse;
 uniform vec2 iResolution;
@@ -18,7 +18,7 @@ float sdSegment(in vec2 p, in vec2 a, in vec2 b) {
 }
 
 void main() {
-  vec3 color = texture(inputTexture, vec2(v_texc.x, 1. - v_texc.y)).xyz;
+  vec3 color = texture(iTexture, vec2(v_texc.x, 1. - v_texc.y)).xyz;
 
   // *** Learning SDFs through making cursors. 2022.02.12.01.14
   /*
