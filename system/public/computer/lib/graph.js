@@ -264,17 +264,20 @@ function paste(from, destX = 0, destY = 0) {
     // A regular copy.
 
     // Pixel by pixel.
+    /*
     for (let x = 0; x < from.width; x += 1) {
       for (let y = 0; y < from.height; y += 1) {
         copy(destX + x, destY + y, x, y, from);
       }
     }
+    */
 
+    // TODO: Fix row algorithm...
     // Row by row.
     // TODO: Get copy by row working!
-    //for (let y = 0; y < from.height; y += 1) {
-    //  copyRow(destX, destY + y, y, from);
-    //}
+    for (let y = 0; y < from.height; y += 1) {
+      copyRow(destX, destY + y, y, from);
+    }
   }
 }
 

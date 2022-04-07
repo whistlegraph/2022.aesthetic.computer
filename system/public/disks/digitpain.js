@@ -21,18 +21,25 @@ async function boot({ net: { preload }, cursor, fps, resize }) {
   });
 }
 
-// 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim($api) {
-  // TODO: Move a ball here!
-  //console.log($api);
-}
-
-// 🎨 Paint (Executes ever display frame)
-
 let thaumaTime = 0;
 let thaumaMax = 10;
 
+let needsFlip = false;
 let flip = true;
+
+// 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
+function sim({ help: { choose } }) {
+  if (img1 && img2) {
+    thaumaTime += 1;
+    if (thaumaTime > thaumaMax) {
+      thaumaTime = 0;
+      thaumaMax = choose(5, 6, 7);
+      needsFlip = true;
+    }
+  }
+}
+
+// 🎨 Paint (Executes ever display frame)
 
 function paint({
   wipe,
@@ -44,23 +51,14 @@ function paint({
   screen,
   paintCount,
 }) {
-  if (img1 && img2) {
-    thaumaTime += 1;
-
-    if (thaumaTime > thaumaMax) {
-      if (flip) {
-        paste(img1, 0, 0);
-      } else {
-        paste(img2, 0, 0);
-      }
-
-      flip = !flip;
-      thaumaTime = 0;
-      thaumaMax = choose(3, 4, 5, 6, 7, 30);
+  if (needsFlip && img1 && img2) {
+    if (flip) {
+      paste(img1, 0, 0);
+    } else {
+      paste(img2, 0, 0);
     }
-
-    //grid(new Grid(0, 0, img1.width, img1.height, 0.5), img1);
-    //return false;
+    flip = !flip;
+    needsFlip = false;
   }
 }
 
