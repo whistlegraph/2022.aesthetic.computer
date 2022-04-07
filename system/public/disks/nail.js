@@ -15,9 +15,6 @@ const actions = []; // Actions that have been received by `server`. These get
 //                     flushed after every `paint` frame.
 //                     TODO: Record all actions in order to replay pictures.
 
-const MIN_DIST = 0;
-let dot = false; // Show preview dot while moving cursor.
-
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, net, resize }) {
   // resize(screen.width / 2, screen.height / 2); // TODO: Get screen.nativeWidth.
@@ -46,27 +43,29 @@ function paint({ pen, ink, abstract: { bresenham }, page, screen, paste }) {
 
     actions.forEach((action) => {
       const painter = painters[action.id];
-      painter[action.type](action.content); // Run the action and then paint it.
-      painter.paint(action.type, [255, 0, 0, 50], { ink });
+      painter[action.type](action.content); // Run the action / method in `Painter`.
+      painter.paint(action.type, [255, 0, 0, 50], { ink }); // Paint to the canvas.
     });
     actions.length = 0;
 
+    // Paste the updated painting.
     page(screen).paste(painting);
+
+    // Draw the UI.
     for (const p in painters) painters[p].overlay([0, 255, 0, 100], { ink });
     ink(0, 0, 255, 100).plot(pen); // 🔴 Draw cursor.
   } else {
-    // Just show the current state.
+    // Paste the unchanged painting.
     paste(painting);
+
+    // Draw the UI.
     for (const p in painters) painters[p].overlay([0, 255, 0, 100], { ink });
     ink(255, 255, 0, 100).plot(pen); // 🟡 Move (hover) cursor.
-    dot = false;
   }
 }
 
 // ✒ Act (Runs once per user interaction)
 function act({ event: e, num: { dist } }) {
-  if (e.is("move")) dot = true;
-
   if (e.is("draw") || e.is("touch")) {
     // Extract the necessary fields from the event object.
     // TODO: I could reduce the data into an array here for faster parsing
@@ -116,18 +115,15 @@ class Painter {
     });
 
     // TODO: Why would this action behavior be here?
+    // TODO: This should go on stop.
     if (action === "stop") {
       // TODO: Paint the rest of previewLine on release.
-
       this.currentMark.previewLine((pl) =>
         ink(255, 0, 0, 50)
           .skip(pl[0])
           .line(...pl)
           .skip(null)
       );
-
-      this.currentMark = null;
-      this.#paintedMarkOnce = false;
     }
   }
 
@@ -171,10 +167,10 @@ class Painter {
   }
 
   stop() {
-    // console.log("Stop", this.currentMark.points);
-    // this.lastPoint = null;
-    // Ingest
-    //this.currentMark = null;
+    console.log("Stop", this.currentMark.points);
+    // TODO: Paint the rest of previewLine on release.
+    this.currentMark = null;
+    this.#paintedMarkOnce = false;
   }
 }
 

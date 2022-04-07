@@ -202,12 +202,47 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   //}
 }
 
+function copyRow(destX, destY, srcY, src) {
+  if (srcY < 0 || srcY > src.height || destY < 0 || destY > height) {
+    return;
+  }
+
+  destX = Math.round(destX);
+  destY = Math.round(destY);
+  srcY = Math.round(srcY);
+
+  const destIndex = (destX + destY * width) * 4;
+  //const destEnd =
+
+  const srcIndex = (0 + srcY * src.width) * 4;
+
+  const rowLength = src.width * 4 - destX * 4;
+
+  let srcStart = srcIndex;
+  let srcEnd = srcIndex + src.width * 4;
+
+  if (destX < 0) {
+    srcStart += destX * 4;
+  } else if (destX > 0) {
+    srcEnd -= destX * 4; //srcStart + (src.width * 4 - destX * 4);
+  }
+
+  // destIndex =
+
+  //const subLength = src.width * 4;
+
+  //const overShoot = destIndex + subLength
+
+  const sub = src.pixels.subarray(srcStart, srcEnd);
+
+  pixels.set(sub, destIndex);
+  //console.log(destIndex, srcIndex);
+}
+
 // Copies pixels from a source buffer to the active buffer and returns
 // the source buffer.
-
 // TODO: Add dirty rectangle support here...
 //       - What would the best parameter set be?
-
 function paste(from, destX = 0, destY = 0) {
   // TODO: See if from has a dirtyBox attribute.
   if (from.crop) {
@@ -227,11 +262,19 @@ function paste(from, destX = 0, destY = 0) {
     }
   } else {
     // A regular copy.
+
+    // Pixel by pixel.
     for (let x = 0; x < from.width; x += 1) {
       for (let y = 0; y < from.height; y += 1) {
         copy(destX + x, destY + y, x, y, from);
       }
     }
+
+    // Row by row.
+    // TODO: Get copy by row working!
+    //for (let y = 0; y < from.height; y += 1) {
+    //  copyRow(destX, destY + y, y, from);
+    //}
   }
 }
 

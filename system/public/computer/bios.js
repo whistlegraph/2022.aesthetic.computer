@@ -146,7 +146,14 @@ async function boot(
     // Find the width and height of our default screen and native projection.
     width = width || fixedWidth;
     height = height || fixedHeight;
-    const gapSize = 8 * window.devicePixelRatio;
+
+    // Add a gapSize, only if we are on https://aesthetic.computer
+    let gapSize;
+    if (document.body.classList.contains("embed") === false) {
+      gapSize = 8 * window.devicePixelRatio;
+    } else {
+      gapSize = 0;
+    }
 
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
@@ -162,6 +169,8 @@ async function boot(
 
       const scale = min(window.innerWidth / width, window.innerHeight / height);
 
+      console.log(window.innerWidth, window.innerHeight);
+
       projectedWidth = floor(width * scale - gapSize);
       projectedHeight = floor(height * scale - gapSize);
     }
@@ -174,6 +183,9 @@ async function boot(
       window.innerWidth,
       window.innerHeight
     );
+
+    // Send a message about this new width and height to any hosting frames.
+    // parent.postMessage({ width: projectedWidth, height: projectedHeight }, "*");
 
     canvas.style.width = projectedWidth + "px";
     canvas.style.height = projectedHeight + "px";
@@ -460,6 +472,7 @@ async function boot(
             dist(downPos.x, downPos.y, e.x, e.y) < 8 &&
             inTime &&
             currentPiece === "disks/prompt" &&
+            // Commenting the above allows iframes to capture keyboard events. 2022.04.07.02.10
             document.activeElement !== input
           ) {
             input.focus();
@@ -482,8 +495,12 @@ async function boot(
       frame(resolution?.width, resolution?.height);
 
       // 🔊 Sound
-      // TODO: Only start this after a user-interaction to prevent warnings. 2022.01.19.19.53
-      startSound();
+      // TODO: Disable sound engine entirely... unless it is enabled by a disk. 2022.04.07.03.33
+      // Only start this after a user-interaction to prevent warnings.
+      window.addEventListener("pointerdown", function down() {
+        startSound();
+        window.removeEventListener("pointerdown", down);
+      });
 
       // ➰ Core Loops for User Input, Music, Object Updates, and Rendering
       Loop.start(
@@ -620,6 +637,42 @@ async function boot(
 
     if (type === "video") {
       receivedVideo(content);
+      return;
+    }
+
+    if (type === "load-bitmap") {
+      fetch(content).then(async (response) => {
+        if (!response.ok) {
+          send({
+            type: "loaded-bitmap-rejection",
+            content: { url: content },
+          });
+        } else {
+          const blob = await response.blob();
+          const bitmap = await createImageBitmap(blob);
+
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.canvas.width = bitmap.width;
+          ctx.canvas.height = bitmap.height;
+          ctx.drawImage(bitmap, 0, 0);
+          const iD = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+
+          send(
+            {
+              type: "loaded-bitmap-success",
+              content: {
+                url: content,
+                img: {
+                  width: iD.width,
+                  height: iD.height,
+                  pixels: iD.data,
+                },
+              },
+            },
+            [iD.data]
+          );
+        }
+      });
       return;
     }
 

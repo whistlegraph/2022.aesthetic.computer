@@ -244,6 +244,14 @@ export class Pen {
       );
 
     assign(this.#lastP, p);
+
+    // Remove native cursor if it was turned off.
+    if (this.cursorCode != "native") {
+      if (document.body.classList.contains("native-cursor")) {
+        document.body.classList.remove("native-cursor");
+      }
+    }
+
     if (!this.cursorCode || this.cursorCode === "precise") {
       // 🎯 Precise
       ctx.lineCap = "round";
@@ -308,6 +316,10 @@ export class Pen {
       ctx.restore();
     } else if (this.cursorCode === "none") {
       // ...
+    } else if (this.cursorCode === "native") {
+      if (document.body.classList.contains("native-cursor") === false) {
+        document.body.classList.add("native-cursor");
+      }
     }
     this.changed = false;
   }
