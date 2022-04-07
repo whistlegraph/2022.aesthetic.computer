@@ -9,7 +9,6 @@ const sprays = []; // Points to draw.
 let dot = false; // Show preview dot while moving cursor.
 
 let server; // Networking
-import { servers } from "./common/servers.js"; // Import server list.
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ paste, cursor, painting: p, screen, net: { socket }, debug }) {

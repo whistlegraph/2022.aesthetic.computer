@@ -12,6 +12,14 @@ body {
   -webkit-text-size-adjust: none;
 }
 
+body.embed {
+  background-color: transparent;
+}
+
+body.native-cursor {
+  cursor: auto;
+}
+
 html, body, canvas { touch-action: none; }
 
 input { pointer-events: none; }

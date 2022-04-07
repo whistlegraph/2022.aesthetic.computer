@@ -7,8 +7,15 @@ import * as gizmo from "./gizmo.js";
 import * as ui from "./ui.js";
 import * as help from "./help.js";
 import { Socket } from "./socket.js"; // TODO: Eventually expand to `net.Socket`
-import { servers } from "../../disks/common/servers.js"; // Default server list.
 import { notArray } from "./helpers.js";
+
+const servers = {
+  main: "server.aesthetic.computer",
+  local: "localhost:8082",
+  julias: "192.168.1.120:8082",
+  lucias: "192.168.1.245:8082",
+  ashland_mbp: "192.168.1.18",
+};
 
 let debug = false; // This can be overwritten on boot.
 
@@ -46,6 +53,7 @@ const store = {}; // This object is used to store and retrieve data across disks
 //                 automatically unless the whole system refreshes.
 let upload;
 let activeVideo; // TODO: Eventually this can be a bank to store video textures.
+let bitmapPromises = {};
 let inFocus;
 let loadFailure;
 
@@ -265,6 +273,7 @@ const { send, noWorker } = (() => {
 
   async function load(path, host = loadHost, search = "", fromHistory = false) {
     loadFailure = undefined;
+    host = host.replace(/\/$/, ""); // Remove any trailing slash from host. Note: This fixes a preview bug on teia.art. 2022.04.07.03.00
     loadHost = host; // Memoize the host.
     pieceHistoryIndex += fromHistory === true ? -1 : 1;
 
@@ -368,6 +377,7 @@ const { send, noWorker } = (() => {
       simCount = 0n;
       initialSim = true;
       activeVideo = null; // reset activeVideo
+      bitmapPromises = {};
       noPaint = false;
       currentPath = path;
       currentHost = host;
@@ -549,6 +559,21 @@ function makeFrame({ data: { type, content } }) {
     return;
   }
 
+  // 1d. Loading Bitmaps
+  if (type === "loaded-bitmap-success") {
+    // console.log("Bitmap load success:", content);
+    bitmapPromises[content.url].resolve(content.img);
+    delete bitmapPromises[content];
+    return;
+  }
+
+  if (type === "loaded-bitmap-rejection") {
+    console.error("Bitmap load failure:", content);
+    bitmapPromises[content.url].reject(content.url);
+    delete bitmapPromises[content.url];
+    return;
+  }
+
   // Request a repaint (runs when the window is resized.)
   if (type === "needs-paint") noPaint = false;
   // 2. Frame
@@ -677,7 +702,6 @@ function makeFrame({ data: { type, content } }) {
           // [Ctrl + X]
           // Enter and exit fullscreen mode.
           if (data.key === "x" && data.ctrl) {
-            console.log(data);
             send({ type: "fullscreen-toggle" });
           }
         }
@@ -783,25 +807,25 @@ function makeFrame({ data: { type, content } }) {
       //          preload("drawings/default.json") // hosted with disk
       // Results: preload().then((r) => ...).catch((e) => ...) // via promise
 
+      // TODO: Add support for files other than .json and .png / .jpeg 2022.04.06.21.42
+
       // TODO: How to know when every preload finishes? 2021.12.16.18.55
 
       // TODO: Preload multiple files and load them into an assets folder with
       //       a complete handler. 2021.12.12.22.24
-
-      // TODO: Prepare / unpack files other than `.json`,
-      //       such as `.png` -> `buffer` or `.wav`. -> `sample`
-      //       2021.12.12.22.26
       $api.net.preload = function (path) {
-        path = encodeURIComponent(path);
+        console.log("Preload path:", path);
+        //path = encodeURIComponent(path); // TODO: Why is this breaking https:// urls?
 
         try {
           const url = new URL(path);
+
+          // console.log("Preload protocol:", url.protocol);
 
           if (url.protocol === "demo:") {
             // Load from aesthetic.computer host.
             path = `/demo/${url.pathname}`;
           } else if (url.protocol === "https:") {
-            console.log("Https", url, path);
             // No need to change path because an original URL was specified.
           }
         } catch {
@@ -809,16 +833,32 @@ function makeFrame({ data: { type, content } }) {
           path = `https://${$api.net.host}/${path}`;
         }
 
-        return new Promise((resolve, reject) => {
-          fetch(path)
-            .then((response) => {
-              if (!response.ok) {
-                reject(response.status);
-              } else return response.json();
-            })
-            .then((json) => resolve(json))
-            .catch(reject);
-        });
+        const extension = path.split(".").pop();
+
+        // If we are loading a .json file then we can do it here.
+        if (extension === "json") {
+          return new Promise((resolve, reject) => {
+            fetch(path)
+              .then(async (response) => {
+                if (!response.ok) {
+                  reject(response.status);
+                } else return response.json();
+              })
+              .then((json) => resolve(json))
+              .catch(reject);
+          });
+        } else if (extension === "jpg" || extension === "png") {
+          // Other-wise we should drop into the other thread and wait...
+
+          return new Promise((resolve, reject) => {
+            send({ type: "load-bitmap", content: path });
+
+            bitmapPromises[path] = { resolve, reject };
+
+            /*
+             */
+          });
+        }
       };
 
       // TODO: Set bpm from boot.
