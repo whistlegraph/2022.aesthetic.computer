@@ -18,9 +18,14 @@ body.embed {
 
 body.native-cursor {
   cursor: auto;
+  touch-action: manipulation;
 }
 
-html, body, canvas { touch-action: none; }
+body.native-cursor canvas {
+  touch-action: manipulation;
+}
+
+body, canvas { touch-action: none; }
 
 input { pointer-events: none; }
 
@@ -28,6 +33,10 @@ input { pointer-events: none; }
   margin: auto;
   pointer-events: none;
   position: relative;
+}
+
+#aesthetic-computer.hidden {
+  opacity: 0;
 }
 
 canvas {

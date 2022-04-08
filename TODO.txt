@@ -6,10 +6,9 @@ Development ideas: ☁️ Try AceJump!
 🌟 In Progress 🌟
 
  * DIGITPAIN Launch
- - Fix row algorithm and add full blit + copy algo.
- - Make panning and zooming work in a projection / non-interactive mode.
- - Or... perhaps I can add zooming?
- - Add layer FX & test all browsers.
+ * Fix row algorithm and add full blit + copy algo.
+ * Add layer FX & test all browsers.
+ * Edit digitpain.com website colors and metadata descriptions / cover images.
 
  (Jeffrey)
  - [🟢] Abstract `line` and `spline` into `nail`. See also: `gesture`.

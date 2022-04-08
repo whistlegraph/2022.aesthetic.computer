@@ -100,7 +100,7 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
     this.init(wrapper);
   }
 
-  // console.log(w, h);
+  console.log(nativeWidth, rect.width);
 
   // canvas.style.left = rect.x + "px";
   // canvas.style.top = rect.y + "px";
@@ -109,8 +109,8 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   canvas.width = nativeWidth * window.devicePixelRatio;
   canvas.height = nativeHeight * window.devicePixelRatio;
 
-  canvas.style.width = nativeWidth + "px";
-  canvas.style.height = nativeHeight + "px";
+  canvas.style.width = rect.width + "px";
+  canvas.style.height = rect.height + "px";
 
   // Create shader program.
   const lightingVert = createShader(gl.VERTEX_SHADER, lighting.vert);

@@ -815,7 +815,7 @@ function makeFrame({ data: { type, content } }) {
       //       a complete handler. 2021.12.12.22.24
       $api.net.preload = function (path) {
         console.log("Preload path:", path);
-        //path = encodeURIComponent(path); // TODO: Why is this breaking https:// urls?
+        path = encodeURIComponent(path);
 
         try {
           const url = new URL(path);
