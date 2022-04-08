@@ -6,11 +6,10 @@ Development ideas: ☁️ Try AceJump!
 🌟 In Progress 🌟
 
  * DIGITPAIN Launch
- * Should be able to slide finger to scroll when first loading.
- * Fix row algorithm and add full blit + copy algo.
- * Make sure upload to Teia works again...
- * Add layer FX & test all browsers.
+ * Paint final pngs for digitpain 0.
+ * Make sure that uploading to Teia works again...
  * Edit digitpain.com website colors and metadata descriptions / cover images.
+ * Test all browsers... and linux?
 
  (Jeffrey)
  - [🟢] Abstract `line` and `spline` into `nail`. See also: `gesture`.
