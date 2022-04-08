@@ -814,8 +814,7 @@ function makeFrame({ data: { type, content } }) {
       // TODO: Preload multiple files and load them into an assets folder with
       //       a complete handler. 2021.12.12.22.24
       $api.net.preload = function (path) {
-        console.log("Preload path:", path);
-        path = encodeURIComponent(path);
+        // console.log("Preload path:", path);
 
         try {
           const url = new URL(path);
@@ -838,7 +837,7 @@ function makeFrame({ data: { type, content } }) {
         // If we are loading a .json file then we can do it here.
         if (extension === "json") {
           return new Promise((resolve, reject) => {
-            fetch(path)
+            fetch(encodeURIComponent(path))
               .then(async (response) => {
                 if (!response.ok) {
                   reject(response.status);

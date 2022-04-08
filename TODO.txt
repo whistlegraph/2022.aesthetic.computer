@@ -6,8 +6,6 @@ Development ideas: ☁️ Try AceJump!
 🌟 In Progress 🌟
 
  * DIGITPAIN Launch
- * Paint final pngs for digitpain 0.
- * Make sure that uploading to Teia works again...
  * Edit digitpain.com website colors and metadata descriptions / cover images.
  * Test all browsers... and linux?
 
