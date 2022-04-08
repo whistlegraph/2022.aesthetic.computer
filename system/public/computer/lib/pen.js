@@ -51,8 +51,11 @@ export class Pen {
     window.addEventListener(
       "touchend" || "dblclick",
       (event) => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
+        // Only prevent double tap to Zoom if native-cursor is enabled.
+        if (document.body.classList.contains("native-cursor") === false) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
       },
       {
         passive: false,

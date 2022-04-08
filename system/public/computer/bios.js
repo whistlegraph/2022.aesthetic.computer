@@ -90,6 +90,7 @@ async function boot(
   let glaze = { on: false };
 
   let needsReframe = false;
+  let needsReappearance = false;
   let freezeFrame = false,
     freezeFrameGlaze = false;
 
@@ -110,8 +111,9 @@ async function boot(
 
       freezeFrameCan.width = imageData.width;
       freezeFrameCan.height = imageData.height;
-      freezeFrameCan.style.width = canvas.style.width;
-      freezeFrameCan.style.height = canvas.style.height;
+
+      freezeFrameCan.style.width = canvas.getBoundingClientRect().width;
+      freezeFrameCan.style.height = canvas.getBoundingClientRect().height;
 
       // TODO: Get margin of canvasRect or make freezeFrame work on top of everything...
 
@@ -147,7 +149,7 @@ async function boot(
     width = width || fixedWidth;
     height = height || fixedHeight;
 
-    // Add a gapSize, only if we are on https://aesthetic.computer
+    // Add a gapSize if aesthetic.computer is not embedded.
     let gapSize;
     if (document.body.classList.contains("embed") === false) {
       gapSize = 8 * window.devicePixelRatio;
@@ -187,17 +189,30 @@ async function boot(
     // Send a message about this new width and height to any hosting frames.
     // parent.postMessage({ width: projectedWidth, height: projectedHeight }, "*");
 
-    canvas.style.width = projectedWidth + "px";
-    canvas.style.height = projectedHeight + "px";
-
     canvas.width = width;
     canvas.height = height;
 
     uiCanvas.width = projectedWidth * window.devicePixelRatio;
     uiCanvas.height = projectedHeight * window.devicePixelRatio;
 
-    uiCanvas.style.width = projectedWidth + "px";
-    uiCanvas.style.height = projectedHeight + "px";
+    // Add some fancy ratios to the canvas and uiCanvas.
+    canvas.style.width = `calc(100vw - ${gapSize}px)`;
+    canvas.style.height = `calc(calc(${
+      height / width
+    } * 100vw) - ${gapSize}px)`;
+    canvas.style.maxHeight = `calc(100vh - ${gapSize}px)`;
+    canvas.style.maxWidth = `calc(calc(${
+      width / height
+    } * 100vh) - ${gapSize}px)`;
+
+    uiCanvas.style.width = `calc(100vw - ${gapSize}px)`;
+    uiCanvas.style.height = `calc(calc(${
+      height / width
+    } * 100vw) - ${gapSize}px)`;
+    uiCanvas.style.maxHeight = `calc(100vh - ${gapSize}px)`;
+    uiCanvas.style.maxWidth = `calc(calc(${
+      width / height
+    } * 100vh) - ${gapSize}px)`;
 
     if (imageData) ctx.putImageData(imageData, 0, 0);
 
@@ -213,11 +228,17 @@ async function boot(
 
       // Trigger it to re-draw whenever the window resizes.
       let timeout;
-      window.addEventListener("resize", () => {
+      window.addEventListener("resize", (e) => {
+        // Check to see if we are in "native-cursor" mode and hide
+        // #aesthetic.computer for the resize if we aren't.
+        if (document.body.classList.contains("native-cursor") === false) {
+          wrapper.classList.add("hidden");
+        }
+
         window.clearTimeout(timeout); // Small timer to save on performance.
 
         timeout = setTimeout(() => {
-          needsReframe = true;
+          needsReframe = true; // This makes zooming work / not work.
           curReframeDelay = REFRAME_DELAY;
         }, curReframeDelay); // Is this needed?
       });
@@ -235,9 +256,6 @@ async function boot(
 
     canvasRect = canvas.getBoundingClientRect();
 
-    // uiCanvas.style.top = canvasRect.y + "px";
-    // uiCanvas.style.left = canvasRect.x + "px";
-
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
       Glaze.frame(
@@ -254,6 +272,7 @@ async function boot(
     }
 
     needsReframe = false;
+    needsReappearance = true; // Only for `native-cursor` mode.
     send({ type: "needs-paint" });
   }
 
@@ -748,6 +767,7 @@ async function boot(
       if (fixedWidth && fixedHeight) {
         freezeFrame = true;
         freezeFrameGlaze = glaze.on;
+
         fixedWidth = undefined;
         fixedHeight = undefined;
         needsReframe = true;
@@ -917,6 +937,11 @@ async function boot(
 
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
     // console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
+
+    if (needsReappearance && wrapper.classList.contains("hidden")) {
+      wrapper.classList.remove("hidden");
+      needsReappearance = false;
+    }
 
     timePassed = performance.now();
     frameCount += 1;
