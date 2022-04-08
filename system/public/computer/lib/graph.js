@@ -114,8 +114,8 @@ function plot() {
     pixels[i + 1] = lerp(pixels[i + 1], c[1], alpha / 255);
     pixels[i + 2] = lerp(pixels[i + 2], c[2], alpha / 255);
     // TODO: Is this the best way to alpha blend? What kind is this? 2021.12.10.15.43
-    // pixels[i + 3] = Math.min(255, pixels[i + 3] + c[3]);
-    pixels[i + 3] = floor(255, (pixels[i + 3] + c[3]) / 2);
+    pixels[i + 3] = Math.min(255, pixels[i + 3] + c[3]);
+    //pixels[i + 3] = floor(255, (pixels[i + 3] + c[3]) / 2);
   }
 }
 
@@ -192,51 +192,57 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   const destIndex = (destX + destY * width) * 4;
   const srcIndex = (srcX + srcY * src.width) * 4;
 
+  const srcAlpha = src.pixels[srcIndex + 3] / 255;
+
   // if (alpha === 1) {
-  pixels[destIndex] = src.pixels[srcIndex] * alpha;
-  pixels[destIndex + 1] = src.pixels[srcIndex + 1] * alpha;
-  pixels[destIndex + 2] = src.pixels[srcIndex + 2] * alpha;
-  pixels[destIndex + 3] = src.pixels[srcIndex + 3];
+
+  /*
+  pixels[destIndex] = src.pixels[srcIndex] * alpha; // R
+  pixels[destIndex + 1] = src.pixels[srcIndex + 1] * alpha; // G
+  pixels[destIndex + 2] = src.pixels[srcIndex + 2] * alpha; // B
+  pixels[destIndex + 3] = src.pixels[srcIndex + 3]; // A
+  */
+
+  // console.log(srcAlpha);
+
+  pixels[destIndex] =
+    lerp(pixels[destIndex], src.pixels[srcIndex], srcAlpha) * alpha;
+  pixels[destIndex + 1] =
+    lerp(pixels[destIndex + 1], src.pixels[srcIndex + 1], srcAlpha) * alpha;
+  pixels[destIndex + 2] =
+    lerp(pixels[destIndex + 2], src.pixels[srcIndex + 2], srcAlpha) * alpha;
+  pixels[destIndex + 3] = 255;
+
+  // TODO: Blend alpha.
+  /*
+  pixels[i + 1] = lerp(pixels[i + 1], c[1], alpha / 255);
+  pixels[i + 2] = lerp(pixels[i + 2], c[2], alpha / 255);
+  // TODO: Is this the best way to alpha blend? What kind is this? 2021.12.10.15.43
+  // pixels[i + 3] = Math.min(255, pixels[i + 3] + c[3]);
+  pixels[i + 3] = floor(255, (pixels[i + 3] + c[3]) / 2);
+   */
+
   //} else {
   //  console.warn("Copy alpha not available.");
   //}
 }
 
-function copyRow(destX, destY, srcY, src) {
-  if (srcY < 0 || srcY > src.height || destY < 0 || destY > height) {
-    return;
-  }
-
+function copyRow(destX, destY, srcX, srcY, src) {
   destX = Math.round(destX);
   destY = Math.round(destY);
+  srcX = Math.round(srcX);
   srcY = Math.round(srcY);
 
   const destIndex = (destX + destY * width) * 4;
-  //const destEnd =
-
-  const srcIndex = (0 + srcY * src.width) * 4;
-
+  const srcIndex = (srcX + srcY * src.width) * 4;
   const rowLength = src.width * 4 - destX * 4;
 
   let srcStart = srcIndex;
   let srcEnd = srcIndex + src.width * 4;
 
-  if (destX < 0) {
-    srcStart += destX * 4;
-  } else if (destX > 0) {
-    srcEnd -= destX * 4; //srcStart + (src.width * 4 - destX * 4);
-  }
-
-  // destIndex =
-
-  //const subLength = src.width * 4;
-
-  //const overShoot = destIndex + subLength
-
   const sub = src.pixels.subarray(srcStart, srcEnd);
 
   pixels.set(sub, destIndex);
-  //console.log(destIndex, srcIndex);
 }
 
 // Copies pixels from a source buffer to the active buffer and returns
@@ -263,20 +269,53 @@ function paste(from, destX = 0, destY = 0) {
   } else {
     // A regular copy.
 
-    // Pixel by pixel.
-    /*
-    for (let x = 0; x < from.width; x += 1) {
-      for (let y = 0; y < from.height; y += 1) {
-        copy(destX + x, destY + y, x, y, from);
-      }
-    }
-    */
+    // Check to see if we can perform a full copy here.
+    if (
+      false
+      // destX === 0 &&
+      // destY === 0 &&
+      // width === from.width &&
+      // height === from.height
+    ) {
+      pixels.set(from.pixels, 0);
+    } else {
+      // TODO: Otherwise, copy in "cropped" rows.
+      // TODO: Fix row algorithm... 2022.04.07.04.36
+      // TODO: Get copy by row working!
+      /*
+      let fromY = 0;
 
-    // TODO: Fix row algorithm...
-    // Row by row.
-    // TODO: Get copy by row working!
-    for (let y = 0; y < from.height; y += 1) {
-      copyRow(destX, destY + y, y, from);
+      if (destY < 0) {
+        fromY = Math.abs(destY);
+      }
+
+      let fromHeight = from.height - Math.abs(destY);
+
+      for (let fy = fromY; fy < fromHeight; fy += 1) {
+        let fromX = Math.abs(destX);
+        let fromWidth = from.width - Math.abs(destX);
+
+        const fromXIndex = (fromX + fy * from.width) * 4;
+
+        const sub = from.pixels.subarray(
+          fromXIndex,
+          fromXIndex + fromWidth * 4
+        );
+
+        const destIndex = (destX + destY * width) * 4;
+
+        pixels.set(sub, fromXIndex);
+
+        //copyRow(destX, destY + y, fromX, fromWidth, from);
+      }
+      */
+      // console.log(destX);
+      // Pixel by pixel fallback.
+      for (let x = 0; x < from.width; x += 1) {
+        for (let y = 0; y < from.height; y += 1) {
+          copy(destX + x, destY + y, x, y, from);
+        }
+      }
     }
   }
 }

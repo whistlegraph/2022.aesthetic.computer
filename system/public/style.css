@@ -13,12 +13,16 @@ body {
 }
 
 body.embed {
-  background-color: transparent;
+  background-color: black;
 }
 
 body.native-cursor {
   cursor: auto;
   touch-action: manipulation;
+}
+
+body.native-cursor canvas[data-type="ui"] {
+  opacity: 0 !important;
 }
 
 body.native-cursor canvas {

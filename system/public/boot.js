@@ -13,16 +13,13 @@ if (window.location.hostname === "aesthetic.computer") {
   if (window.location.pathname.length > 1) host += window.location.pathname;
 }
 
-if (window.self !== window.top) {
-  document.body.classList.add("embed");
-}
-
 const bpm = 120;
 
 if (window.location.hash.length > 0) {
   boot(window.location.hash.slice(1), bpm, host, undefined, debug);
 } else {
   boot("prompt", bpm, host, undefined, debug);
+  // boot("digitpain", bpm, host, { width: 1000, height: 1250 }, debug);
 }
 
 // Incoming Message Responder
