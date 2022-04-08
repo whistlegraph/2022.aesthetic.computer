@@ -13,7 +13,7 @@ body {
 }
 
 body.embed {
-  background-color: black;
+  background-color: transparent;
 }
 
 body.native-cursor {

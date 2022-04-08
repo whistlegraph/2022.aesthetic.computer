@@ -1,7 +1,7 @@
 import { boot } from "./computer/bios.js";
 
 let host,
-  debug = true;
+  debug = false;
 
 if (window.location.hostname === "aesthetic.computer") {
   host = "aesthetic.computer"; // Production

@@ -1127,7 +1127,7 @@ async function boot(
   const requestFullscreen =
     document.body.requestFullscreen || wrapper.webkitRequestFullscreen;
 
-  const exitFullScreen =
+  const exitFullscreen =
     document.exitFullscreen || document.webkitExitFullscreen;
 
   // Tries to toggle fullscreen. Must be called within a user interaction.
