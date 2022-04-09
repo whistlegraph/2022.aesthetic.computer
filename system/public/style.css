@@ -47,6 +47,7 @@ input { pointer-events: none; }
 }
 
 canvas {
+  pointer-events: none;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
 }
