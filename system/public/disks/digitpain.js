@@ -41,7 +41,7 @@ function sim({ help: { choose } }) {
     if (thaumaTime > thaumaMax) {
       thaumaTime = 0;
       thaumaMax = choose(1, 2, 3, 4, 5);
-      if (Math.random() > 0.99) {
+      if (Math.random() > 0.995) {
         thaumaMax = choose(10, 20, 30, 60);
       }
       needsFlip = true;
