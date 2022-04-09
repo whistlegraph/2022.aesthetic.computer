@@ -2,27 +2,11 @@
 // This piece currently hosts only DIGITPAIN 0 but will eventually be added to
 // and host every DIGITPAIN picture.
 
-// All DIGITPAIN timestamps will be placed below:
-// 0: 2022.04.08.22.55
+// All ***DIGITPAIN TIMESIGS*** and titles are to be entered below, in order:
+// DIGITPAIN 0: 2022.04.08.22.55
 
 let img1OriginalPixels, img2OriginalPixels;
 let img1, img2;
-
-// 🥾 Boot (Runs once before first paint and sim)
-async function boot({ wipe, net: { preload }, cursor, fps, resize }) {
-  cursor("native");
-  resize(1000, 1250); // 3x5
-  preload("disks/digitpain/0/0.png").then((img) => {
-    // TODO: Make a copy of img1 and img2 so they can be reverted...
-    img1 = img;
-    img1OriginalPixels = img.pixels.slice();
-  });
-
-  preload("disks/digitpain/0/1.png").then((img) => {
-    img2 = img;
-    img2OriginalPixels = img.pixels.slice();
-  });
-}
 
 let thaumaTime = 0;
 let thaumaMax = 3;
@@ -35,6 +19,21 @@ let needSwap = false;
 let needsFlip = false;
 let flip = true;
 
+// 🥾 Boot (Runs once before first paint and sim)
+async function boot({ wipe, net: { preload }, cursor, fps, resize }) {
+  cursor("native");
+  resize(1000, 1250); // 3x5
+  preload("disks/digitpain/0/0.png").then((img) => {
+    img1 = img;
+    img1OriginalPixels = img.pixels.slice();
+  });
+
+  preload("disks/digitpain/0/1.png").then((img) => {
+    img2 = img;
+    img2OriginalPixels = img.pixels.slice();
+  });
+}
+
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim({ help: { choose } }) {
   if (img1 && img2) {
@@ -42,16 +41,12 @@ function sim({ help: { choose } }) {
     if (thaumaTime > thaumaMax) {
       thaumaTime = 0;
       thaumaMax = choose(1, 2, 3, 4, 5);
-
       if (Math.random() > 0.99) {
         thaumaMax = choose(10, 20, 30, 60);
       }
-
       needsFlip = true;
     }
-
     swapTime += 1;
-
     if (swapTime >= swapMax) {
       swapTime = 0;
       needSwap = true;
@@ -83,6 +78,7 @@ function paint({
         img2.pixels[i + 2],
         img2.pixels[i + 3],
       ];
+
       const img1p = [
         img1.pixels[i] * (1 + Math.random()),
         img1.pixels[i + 1],
@@ -101,7 +97,7 @@ function paint({
 
     swapCount += 1;
 
-    if (swapCount >= 4000) {
+    if (swapCount >= 2000) {
       swapCount = 0;
       if (choose(0, 1) === 0) {
         img1.pixels = img1OriginalPixels.slice();
