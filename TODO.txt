@@ -5,9 +5,11 @@ Development ideas: ☁️ Try AceJump!
 
 🌟 In Progress 🌟
 
- * DIGITPAIN Launch
- * Edit digitpain.com website colors and metadata descriptions / cover images.
- * Test all browsers... and linux?
+ ***Pre Digit-Pain Launch***
+
+ - Disable sound engine on boot?
+ - Mint the work.
+ - Add the work to the JSON.
 
  (Jeffrey)
  - [🟢] Abstract `line` and `spline` into `nail`. See also: `gesture`.
