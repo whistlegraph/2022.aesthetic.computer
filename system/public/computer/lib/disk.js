@@ -23,7 +23,7 @@ const defaults = {
   boot: () => false, // aka Setup
   sim: () => false, // A framerate independent of rendering.
   paint: ($) => {
-    $.noise16();
+    $.noise16DIGITPAIN();
   },
   beat: () => false, // Runs every bpm.
   act: () => false, // All user interaction.
@@ -206,6 +206,7 @@ const $paintApiUnwrapped = {
   unpan: graph.unpan,
   skip: graph.skip,
   noise16: graph.noise16,
+  noise16DIGITPAIN: graph.noise16DIGITPAIN,
   // glaze: ...
 };
 
@@ -816,6 +817,12 @@ function makeFrame({ data: { type, content } }) {
       $api.net.preload = function (path) {
         // console.log("Preload path:", path);
 
+        const extension = path.split(".").pop();
+
+        if (extension === "json") {
+          path = encodeURIComponent(path);
+        }
+
         try {
           const url = new URL(path);
 
@@ -832,12 +839,10 @@ function makeFrame({ data: { type, content } }) {
           path = `https://${$api.net.host}/${path}`;
         }
 
-        const extension = path.split(".").pop();
-
         // If we are loading a .json file then we can do it here.
         if (extension === "json") {
           return new Promise((resolve, reject) => {
-            fetch(encodeURIComponent(path))
+            fetch(path)
               .then(async (response) => {
                 if (!response.ok) {
                   reject(response.status);

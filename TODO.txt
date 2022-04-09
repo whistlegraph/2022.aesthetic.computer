@@ -1,39 +1,46 @@
-Jeffrey's in-Project Notes
-See also: https://www.notion.so/whistlegraph/9abf76a4437a46199087176bd06657ea?v=98b5d3a8965e47d9a4c177dd5147960d
+💀 Jeffrey's `aesthetic.computer` Notepad 💀
 
 Development ideas: ☁️ Try AceJump!
 
 🌟 In Progress 🌟
 
- ***Pre Digit-Pain Launch***
+ ***Pre DIGITPAIN Launch***
+ - [🟢] Mint the work.
+ - [] Add the work to the JSON and release digitpain.com.
 
- - Disable sound engine on boot?
- - Mint the work.
- - Add the work to the JSON.
-
- (Jeffrey)
- - [🟢] Abstract `line` and `spline` into `nail`. See also: `gesture`.
+ ***Post DIGITPAIN Launch***
+ - [] Automate DIGITPAIN (Teia) exports:
+        1. Clone `public` directory.
+        2. Remove any `.html` files that aren't `digitpain-ipfs-index.html`.
+        3. Process `digitpain-ipfs-index.html`, inserting info for a new mint.
+        4. Rename `digitpain-ipfs-index.html` to `index.html`.
+        3. Remove all files other than `/digitpain` and `digitpain.js` from `disks/`.
+        4. Zip the contents so there is a zip file with one directory called `public`,
+           and rename it to `DIGITPAIN #.zip`.
 
 🌟 Next Up 🌟
+ ***Multi-player Drawing / Core Drawing***
+  - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
   - [] Add sound to `nail`.
   - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.
 
-  ***Whistlegraph***
+ ***Whistlegraph***
   - [] Write and complete: `whistlegraph` / `thumb`.
-  - TBD
   - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
   - [] Make whistlegraph recorder disk / nail?
   - [] Global recording of user actions (what about application actions) and audio+video into one file?
   - [] Chalkboard / material simulation.
 
-❤️ Side Missions ❤️
- - [] Fix skippy scale rendering of pixels on non-retina displays.
- - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
- - [] in `tracker.js`: Recenter boxes on line 174.
- - [] Multiplayer board reset in `spray` and `server`.
-
+ ❤️Side Missions❤️
+  - [] Fix skippy scale rendering of pixels on non-retina displays.
+  - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
+  - [] in `tracker.js`: Recenter boxes on line 174.
+  - [] Multiplayer board reset in `spray` and `server`.
 
 ⏳ Later On ⏳
+  |
+  |
+  (Careful, it's messy!)
 
 There seems to be a bug in Safari on my MacBook (while wearing AirPods) that slows
 down the audio?

@@ -1,15 +1,15 @@
-// DIGITPAIN, 2022.04.06.15.40
-//
+// DIGITPAIN, 2022.04.08.22.52
+// This piece currently hosts only DIGITPAIN 0 but will eventually be added to
+// and host every DIGITPAIN picture.
 
-// TODO
-// - Load and display the two painted images.
-// - Should these projects be merged?
+// All DIGITPAIN timestamps will be placed below:
+// 0: 2022.04.08.22.55
 
 let img1OriginalPixels, img2OriginalPixels;
 let img1, img2;
 
 // 🥾 Boot (Runs once before first paint and sim)
-async function boot({ net: { preload }, cursor, fps, resize }) {
+async function boot({ wipe, net: { preload }, cursor, fps, resize }) {
   cursor("native");
   resize(1000, 1250); // 3x5
   preload("disks/digitpain/0/0.png").then((img) => {
@@ -25,7 +25,12 @@ async function boot({ net: { preload }, cursor, fps, resize }) {
 }
 
 let thaumaTime = 0;
-let thaumaMax = 6;
+let thaumaMax = 3;
+
+let swapTime = 0;
+const swapMax = 0;
+let swapCount = 0;
+let needSwap = false;
 
 let needsFlip = false;
 let flip = true;
@@ -36,29 +41,38 @@ function sim({ help: { choose } }) {
     thaumaTime += 1;
     if (thaumaTime > thaumaMax) {
       thaumaTime = 0;
-      //thaumaMax = choose(6, 6, 6, 5, 5, 6);
+      thaumaMax = choose(1, 2, 3, 4, 5);
+
+      if (Math.random() > 0.99) {
+        thaumaMax = choose(10, 20, 30, 60);
+      }
+
       needsFlip = true;
+    }
+
+    swapTime += 1;
+
+    if (swapTime >= swapMax) {
+      swapTime = 0;
+      needSwap = true;
     }
   }
 }
 
 // 🎨 Paint (Executes ever display frame)
-
 function paint({
   wipe,
-  paste,
   page,
   ink,
-  grid,
-  geo: { Grid },
   num: { randIntRange: r },
   help: { choose },
   screen,
   paintCount,
+  noise16DIGITPAIN,
 }) {
   // Swap a pixel from both layers, every frame.
-  if (img1 && img2) {
-    for (let n = 0; n < choose(r(4, 32), r(128, 256)); n += 1) {
+  if (needSwap) {
+    for (let n = 0; n < choose(r(32, 64), r(128, 256)); n += 1) {
       const x = r(0, screen.width);
       const y = r(0, screen.height);
       const i = (x + y * screen.width) * 4;
@@ -76,8 +90,6 @@ function paint({
         img1.pixels[i + 3],
       ];
 
-      //console.log(img2p);
-
       page(img1);
       ink(img2p).plot(x, y);
 
@@ -87,23 +99,29 @@ function paint({
       page(screen);
     }
 
-    if (paintCount % 1200 === 0) {
+    swapCount += 1;
+
+    if (swapCount >= 4000) {
+      swapCount = 0;
       if (choose(0, 1) === 0) {
         img1.pixels = img1OriginalPixels.slice();
       } else {
         img2.pixels = img2OriginalPixels.slice();
       }
     }
+    needSwap = false;
+  } else if (img1 === undefined || img2 === undefined) {
+    wipe(choose(5, 15), 0, 0);
   }
 
   if (needsFlip) {
     if (img1 && img2) {
       if (flip) {
-        wipe(r(0, choose(12, 12, 12, 48)), r(0, 12), r(0, 12)).paste(
-          img1,
-          choose(0, r(-2, 2)),
-          choose(0, r(-2, 2))
-        );
+        wipe(
+          r(0, choose(6, 6, 6, 12, 12, 12, 12, 48, 80)),
+          r(0, 12),
+          r(0, 12)
+        ).paste(img1, choose(0, r(-2, 2)), choose(0, r(-2, 2)));
       } else {
         wipe(r(0, 12), r(0, 12), r(0, 12)).paste(
           img2,
@@ -111,26 +129,21 @@ function paint({
           choose(0, r(-2, 2))
         );
       }
-    } else {
-      wipe(r(10, 20));
     }
-
-    // wipe(0, r(0, 16));
-
     flip = !flip;
     needsFlip = false;
   }
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event }) {}
+// function act({ event }) {}
 
 // 💗 Beat (Runs once per bpm)
-function beat($api) {
-  // TODO: Play a sound here!
-}
+// function beat($api) {
+// TODO: Play a sound here!
+// }
 
 // 📚 Library (Useful classes & functions used throughout the piece)
 // ...
 
-export { boot, sim, paint, act, beat };
+export { boot, sim, paint };

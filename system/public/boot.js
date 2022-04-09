@@ -1,7 +1,15 @@
 import { boot } from "./computer/bios.js";
 
-let host,
-  debug = false;
+let host;
+
+let debug;
+
+if (window.acDEBUG === true || window.acDEBUG === false) {
+  // Check for the DEBUG constant in the index.
+  debug = window.acDEBUG;
+} else {
+  debug = true;
+}
 
 if (window.location.hostname === "aesthetic.computer") {
   host = "aesthetic.computer"; // Production
@@ -18,8 +26,11 @@ const bpm = 120;
 if (window.location.hash.length > 0) {
   boot(window.location.hash.slice(1), bpm, host, undefined, debug);
 } else {
-  boot("prompt", bpm, host, undefined, debug);
-  // boot("digitpain", bpm, host, { width: 1000, height: 1250 }, debug);
+  if (window.acSTARTING_PIECE) {
+    boot(window.acSTARTING_PIECE, bpm, host, undefined, debug);
+  } else {
+    boot("prompt", bpm, host, undefined, debug);
+  }
 }
 
 // Incoming Message Responder
