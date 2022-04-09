@@ -87,7 +87,7 @@ function paint({
       page(screen);
     }
 
-    if (paintCount % 600 === 0) {
+    if (paintCount % 1200 === 0) {
       if (choose(0, 1) === 0) {
         img1.pixels = img1OriginalPixels.slice();
       } else {
