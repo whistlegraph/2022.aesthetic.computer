@@ -729,6 +729,15 @@ function noise16() {
   }
 }
 
+function noise16DIGITPAIN() {
+  for (let i = 0; i < pixels.length; i += 4) {
+    pixels[i] = byteInterval17(randInt(16)) * 0.6; // r
+    pixels[i + 1] = byteInterval17(randInt(16)) * 0.15; // g
+    pixels[i + 2] = byteInterval17(randInt(16)) * 0.55; // b
+    pixels[i + 3] = 255; // a
+  }
+}
+
 export {
   clear,
   point,
@@ -747,6 +756,7 @@ export {
   grid,
   draw,
   noise16,
+  noise16DIGITPAIN,
   printLine,
 };
 

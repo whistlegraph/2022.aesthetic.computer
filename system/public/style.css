@@ -1,3 +1,7 @@
+:root {
+  color-scheme: dark;
+}
+
 body {
   background-color: rgb(32, 32, 32);
   touch-action: none;
@@ -13,7 +17,7 @@ body {
 }
 
 body.embed {
-  background-color: none;
+  background-color: transparent;
 }
 
 body.native-cursor {
@@ -35,7 +39,6 @@ input { pointer-events: none; }
 
 #aesthetic-computer {
   margin: auto;
-  pointer-events: none;
   position: relative;
 }
 
@@ -52,7 +55,10 @@ canvas[data-type="ui"], canvas[data-type="glaze"] {
   position: absolute;
   top: 0;
   left: 0;
+  pointer-events: none;
 }
+
+canvas[data-type="freeze"] { pointer-events: none; }
 
 canvas[data-type="glaze"] { z-index: 1; }
 canvas[data-type="freeze"] { z-index: 2; }

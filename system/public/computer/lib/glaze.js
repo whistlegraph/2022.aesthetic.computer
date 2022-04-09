@@ -100,8 +100,6 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
     this.init(wrapper);
   }
 
-  console.log(nativeWidth, rect.width);
-
   // canvas.style.left = rect.x + "px";
   // canvas.style.top = rect.y + "px";
 
