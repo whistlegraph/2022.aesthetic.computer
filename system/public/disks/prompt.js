@@ -40,7 +40,7 @@ function boot({ cursor, net: { preload }, pieceCount, glaze }) {
     text = "";
   }
 
-  glaze({ on: true });
+  glaze({ on: false});
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
