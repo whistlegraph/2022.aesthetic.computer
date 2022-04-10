@@ -6,13 +6,13 @@ let gl, canvas;
 
 const shaders = await preloadShaders([
   "passthrough-vert",
-  "lighting-frag",
+  "lighting-frag-digitpain",
   "display-frag",
 ]);
 
 const lighting = {
   vert: shaders["passthrough-vert"],
-  frag: shaders["lighting-frag"],
+  frag: shaders["lighting-frag-digitpain"],
 };
 const display = {
   vert: shaders["passthrough-vert"],
@@ -45,7 +45,66 @@ let texSurf, fbSurf, fb;
 let texSurfWidth, texSurfHeight;
 let vao;
 
-const glazeParameters = {
+let glazeParameters = {
+  fogIterations: 5,
+  shadowIterations: 2,
+  focalLength: 1,
+  screenScale: 1,
+  shadowRange: 1,
+  cameraDistance: 2.236,
+  volumeRadius: 0.04,
+  inputRadius: 0.04,
+  innerDensity: 100,
+  outerDensity: 0.0,
+  anisotropy: 0.723,
+  lightPower: 1,
+  lightDirection: { x: -0, y: 1, z: -0.05 },
+  lightColor: { x: 1, y: 1, z: 1 },
+  bgColor: { x: 1., y: 1., z: 1. },
+};
+
+
+const digitPain0b= {
+  fogIterations: 5,
+  shadowIterations: 2,
+  focalLength: 1,
+  screenScale: 1,
+  shadowRange: 1,
+  cameraDistance: 2.236,
+  volumeRadius: 0.04,
+  inputRadius: 0.04,
+  innerDensity: 100,
+  outerDensity: 0.0,
+  anisotropy: 0.723,
+  lightPower: 1,
+  lightDirection: { x: -0, y: 1, z: -0.05 },
+  lightColor: { x: 1, y: 1, z: 1 },
+  bgColor: { x: 1., y: 1., z: 1. },
+};
+
+const digitPain0a= {
+  fogIterations: 5,
+  shadowIterations: 2,
+  focalLength: 1,
+  screenScale: 1,
+  shadowRange: 1,
+  cameraDistance: 2.236,
+  volumeRadius: 0.02,
+  inputRadius: 0.02,
+  innerDensity: 10,
+  outerDensity: 0.0,
+  anisotropy: 0.123,
+  lightPower: 4,
+  lightDirection: { x: -0, y: 1, z: -0.05 },
+  lightColor: { x: 1, y: 1, z: 1 },
+  bgColor: { x: 1., y: 1., z: 1. },
+};
+
+// FLIP THE COMMENT
+//glazeParameters = digitPain0a;
+glazeParameters = digitPain0b;
+
+const originalGlazeParameters = {
   fogIterations: 20,
   shadowIterations: 5,
   focalLength: 1,
@@ -82,6 +141,7 @@ const lightingUniformNames = [
   "lightPower",
   "lightColor",
   "lightDirection",
+  "randomDirection",
 ];
 
 const displayUniformNames = ["iTexture", "iTime", "iMouse", "iResolution"];
@@ -386,7 +446,7 @@ export function render(canvasTexture, time, mouse) {
   gl.uniform1f(lightingUniformLocations.lightPower, glazeParameters.lightPower);
   gl.uniform3f(
     lightingUniformLocations.lightDirection,
-    glazeParameters.lightDirection.x,
+    glazeParameters.lightDirection.x + Math.random()*5.-2.5,
     glazeParameters.lightDirection.y,
     glazeParameters.lightDirection.z
   );
@@ -401,6 +461,12 @@ export function render(canvasTexture, time, mouse) {
     glazeParameters.lightColor.x,
     glazeParameters.lightColor.y,
     glazeParameters.lightColor.z
+  );
+  gl.uniform3f(
+    lightingUniformLocations.randomDirection,
+    Math.random(),
+    Math.random(),
+    Math.random()
   );
 
   gl.bindVertexArray(vao);
