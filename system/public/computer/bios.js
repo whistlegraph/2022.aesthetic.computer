@@ -116,13 +116,16 @@ async function boot(
       freezeFrameCan.style.height = canvas.getBoundingClientRect().height;
 
       // TODO: Get margin of canvasRect or make freezeFrame work on top of everything...
+      // Is this still relevant? 2022.4.09
 
+      /*
       console.log(
-        "offset",
+        "Freezeframe offset",
         wrapper.offsetLeft,
         canvasRect.x,
         canvasRect.width - canvasRect.x
       );
+       */
 
       freezeFrameCan.style.left = canvasRect.x + "px";
       freezeFrameCan.style.top = canvasRect.y + "px";
@@ -720,7 +723,8 @@ async function boot(
           canvasRect,
           projectedWidth,
           projectedHeight,
-          wrapper
+          wrapper,
+          glaze.type
         );
         canvas.style.opacity = 0;
       }
