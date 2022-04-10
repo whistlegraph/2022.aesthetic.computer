@@ -14,7 +14,7 @@ Development ideas: ☁️ Try AceJump!
         2. Remove any `.html` files that aren't `digitpain-ipfs-index.html`.
         3. Process `digitpain-ipfs-index.html`, inserting info for a new mint.
         4. Rename `digitpain-ipfs-index.html` to `index.html`.
-        3. Remove all files other than `/digitpain` and `digitpain.js` from `disks/`.
+        3. Remove all files other than `/digitpain` and `digitpain0.js` from `disks/`.
         4. Zip the contents so there is a zip file with one directory called `public`,
            and rename it to `DIGITPAIN #.zip`.
 
