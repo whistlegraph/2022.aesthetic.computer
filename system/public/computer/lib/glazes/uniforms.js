@@ -6,7 +6,9 @@
 //   1. Place a fragment shader named `myglaze-frag.glsl` in this directory.
 //   2. Make a new `const` below and follow the pattern to notate your types.
 
-// Fill this out for `digitpain_a`.
+// ⚠️
+// Fill this out for `digitpain_a`, and don't forget to
+// add `digitpain_a-frag.glsl` to this directory!
 const digitpain_a = {
   "1i:...": 0,
 };
@@ -36,4 +38,4 @@ const original = {
 };
 
 // 3. Add any additional uniforms here!
-export default { digitpain_0, hello, original };
+export default { digitpain_a, hello, original };
