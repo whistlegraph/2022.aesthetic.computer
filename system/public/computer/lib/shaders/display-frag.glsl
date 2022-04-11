@@ -5,10 +5,9 @@ in vec2 v_texc;
 out vec4 outColor;
 
 uniform sampler2D iTexture;
-
 uniform vec2 iMouse;
 uniform vec2 iResolution;
-uniform float time;
+uniform float iTime;
 
 // See also: https://iquilezles.org/www/articles/distfunctions2d/distfunctions2d.htm
 float sdSegment(in vec2 p, in vec2 a, in vec2 b) {

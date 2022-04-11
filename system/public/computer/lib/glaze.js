@@ -2,18 +2,57 @@
 // This creates a nice webgl2 rendering layer
 // over the scaled software rasterizer.
 
+const { keys } = Object;
+
+import glazes from "./glazes/uniforms.js";
+
+class Glaze {
+  loaded = false;
+  shaderLoaded = false;
+  uniformNames;
+  frag;
+
+  #uniforms;
+  #type;
+
+  constructor(type = "original") {
+    this.#type = type;
+    this.#uniforms = glazes[type];
+    this.uniformNames = keys(this.#uniforms).map((id) => id.split(":")[1]);
+  }
+
+  async load(callback) {
+    const name = `${this.#type}-frag`;
+    this.frag = (await preloadShaders([`./glazes/${name}`]))[name];
+    this.shaderLoaded = true;
+    callback();
+  }
+
+  // Export a list of clean uniform names... everything after the ":".
+  setCustomUniforms(locations, gl) {
+    // Parse every key in custom uniforms, then apply the uniform values.
+    keys(this.#uniforms).forEach((uniformIdentifier) => {
+      const [type, name] = uniformIdentifier.split(":");
+      gl[`uniform${type}`](
+        locations[name],
+        ...wrapNotArray(this.#uniforms[uniformIdentifier])
+      );
+    });
+  }
+}
+
 let gl, canvas;
+let glaze;
+
+// TODO: Replace this with custom code.
+
+import { pathEnd, wrapNotArray } from "./helpers.js";
 
 const shaders = await preloadShaders([
-  "passthrough-vert",
-  "lighting-frag",
-  "display-frag",
+  "shaders/display-frag",
+  "shaders/passthrough-vert",
 ]);
 
-const lighting = {
-  vert: shaders["passthrough-vert"],
-  frag: shaders["lighting-frag"],
-};
 const display = {
   vert: shaders["passthrough-vert"],
   frag: shaders["display-frag"],
@@ -40,52 +79,16 @@ export function init(wrapper) {
   wrapper.append(canvas);
 }
 
-let lightingProgram, displayProgram;
+let customProgram, displayProgram;
 let texSurf, fbSurf, fb;
 let texSurfWidth, texSurfHeight;
 let vao;
 
-const glazeParameters = {
-  fogIterations: 20,
-  shadowIterations: 5,
-  focalLength: 1,
-  screenScale: 1,
-  shadowRange: 1,
-  cameraDistance: 2.236,
-  volumeRadius: 0.005,
-  inputRadius: 0.005,
-  innerDensity: 20,
-  outerDensity: 10.1,
-  anisotropy: -0.123,
-  lightPower: 4,
-  lightDirection: { x: -1, y: -1, z: -0.05 },
-  lightColor: { x: 1, y: 1, z: 1 },
-  bgColor: { x: 0.084, y: 0.533, z: 0.878 },
-};
+const defaultUniformNames = ["iTexture", "iTime", "iMouse", "iResolution"];
 
-const lightingUniformNames = [
-  "iTexture",
-  "iTime",
-  "iMouse",
-  "iResolution",
-  "fogIterations",
-  "shadowIterations",
-  "focalLength",
-  "screenScale",
-  "shadowRange",
-  "cameraDistance",
-  "volumeRadius",
-  "inputRadius",
-  "innerDensity",
-  "outerDensity",
-  "anisotropy",
-  "lightPower",
-  "lightColor",
-  "lightDirection",
-];
+let customUniformLocations = {};
 
-const displayUniformNames = ["iTexture", "iTime", "iMouse", "iResolution"];
-const lightingUniformLocations = {};
+const displayUniformNames = defaultUniformNames;
 const displayUniformLocations = {};
 
 let offed = false;
@@ -94,14 +97,13 @@ let offed = false;
 // Resizes the textures & re-initializes the necessary components for a resolution change.
 // See also: `frame` via window.resize in `bios.js`.
 export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
+  if (glaze.shaderLoaded === false) return;
+
   // Run `init` if the canvas does not exist.
   // Note: Should `init` just be here?
   if (canvas === undefined) {
     this.init(wrapper);
   }
-
-  // canvas.style.left = rect.x + "px";
-  // canvas.style.top = rect.y + "px";
 
   // Set the native canvas width and height.
   canvas.width = nativeWidth * window.devicePixelRatio;
@@ -110,12 +112,13 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   canvas.style.width = rect.width + "px";
   canvas.style.height = rect.height + "px";
 
-  // Create shader program.
-  const lightingVert = createShader(gl.VERTEX_SHADER, lighting.vert);
-  const lightingFrag = createShader(gl.FRAGMENT_SHADER, lighting.frag);
-  lightingProgram = createProgram(lightingVert, lightingFrag);
+  // Create custom shader program.
+  const customVert = createShader(gl.VERTEX_SHADER, display.vert);
+  const customFrag = createShader(gl.FRAGMENT_SHADER, glaze.frag);
+  customProgram = createProgram(customVert, customFrag);
 
-  const displayVert = createShader(gl.VERTEX_SHADER, lighting.vert);
+  // Create display shader program.
+  const displayVert = createShader(gl.VERTEX_SHADER, display.vert);
   const displayFrag = createShader(gl.FRAGMENT_SHADER, display.frag);
   displayProgram = createProgram(displayVert, displayFrag);
 
@@ -187,7 +190,7 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
 
   // Position Attribute
   const positionAttributeLocation = gl.getAttribLocation(
-    lightingProgram,
+    customProgram,
     "a_position"
   );
   const positionBuffer = gl.createBuffer();
@@ -204,7 +207,7 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
 
   // Texture Coordinate Attribute
   const texCoordAttributeLocation = gl.getAttribLocation(
-    lightingProgram,
+    customProgram,
     "a_texc"
   );
   const texCoordBuffer = gl.createBuffer();
@@ -237,37 +240,21 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
     gl.STATIC_DRAW
   );
 
-  // Uniforms
-  displayUniformLocations.iTexture = gl.getUniformLocation(
-    displayProgram,
-    "iTexture"
-  );
-
-  displayUniformLocations.iMouse = gl.getUniformLocation(
-    displayProgram,
-    "iMouse"
-  );
-
-  displayUniformLocations.iResolution = gl.getUniformLocation(
-    displayProgram,
-    "iResolution"
-  );
-
-  displayUniformLocations.iTime = gl.getUniformLocation(
-    displayProgram,
-    "iTime"
-  );
-
-  displayUniformNames.forEach(function (item, index) {
+  // Display Uniforms (Just the defaults.)
+  defaultUniformNames.forEach(function (item, index) {
     displayUniformLocations[item] = gl.getUniformLocation(displayProgram, item);
   });
 
-  lightingUniformNames.forEach(function (item, index) {
-    lightingUniformLocations[item] = gl.getUniformLocation(
-      lightingProgram,
-      item
-    );
-  });
+  // Custom Effect Uniforms (All the defaults, plus custom ones!)
+  customUniformLocations = {};
+
+  glaze.uniformNames
+    .concat(defaultUniformNames)
+    .forEach(function (item, index) {
+      customUniformLocations[item] = gl.getUniformLocation(customProgram, item);
+    });
+
+  glaze.loaded = true;
 }
 
 // Turn glaze off if it has already been turned on.
@@ -277,18 +264,21 @@ export function off() {
 }
 
 // Turn glaze on if it has already been turned off.
-export function on(w, h, rect, nativeWidth, nativeHeight, wrapper, type) {
-  console.log(type);
-  this.frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
-  offed = false;
+export async function on(w, h, rect, nativeWidth, nativeHeight, wrapper, type) {
+  glaze = new Glaze(type);
+  await glaze.load(() => {
+    this.frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
+    offed = false;
+  });
 }
 
 // Update the texture either in whole or in part based on a dirtyRect from `bios`.
 export function update(texture, x = 0, y = 0) {
+  if (glaze.loaded === false) return;
+
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
 
   // TODO: I could pass in a subrectangle and do texSubImage2D here.
-
   // texSubImage2D(target: GLenum, level: GLint, xoffset: GLint, yoffset: GLint, width: GLsizei, height: GLsizei, format: GLenum, type: GLenum, pixels: ArrayBufferView | null): void;
 
   gl.texSubImage2D(
@@ -315,8 +305,10 @@ export function unfreeze() {
 }
 
 export function render(canvasTexture, time, mouse) {
+  if (glaze.loaded === false) return;
+
   // 🅰️ Render Surface
-  gl.useProgram(lightingProgram);
+  gl.useProgram(customProgram);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 
@@ -328,80 +320,18 @@ export function render(canvasTexture, time, mouse) {
     0
   );
 
-  // Resolution of lighting. TODO: Switch to full resolution mode.
+  // Resolution of custom filter.
+  // TODO: Add the option to switch to full "native" resolution mode. 2022.04.11.03.48
   gl.viewport(0, 0, texSurfWidth, texSurfHeight);
 
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
 
-  gl.uniform1i(lightingUniformLocations.iTexture, 0);
-  gl.uniform1f(lightingUniformLocations.iTime, time);
-  gl.uniform2f(lightingUniformLocations.iMouse, mouse.x, mouse.y);
-  gl.uniform2f(
-    lightingUniformLocations.iResolution,
-    texSurfWidth,
-    texSurfHeight
-  );
+  gl.uniform1i(customUniformLocations.iTexture, 0);
+  gl.uniform1f(customUniformLocations.iTime, time);
+  gl.uniform2f(customUniformLocations.iMouse, mouse.x, mouse.y);
+  gl.uniform2f(customUniformLocations.iResolution, texSurfWidth, texSurfHeight);
 
-  gl.uniform1i(
-    lightingUniformLocations.fogIterations,
-    glazeParameters.fogIterations
-  );
-  gl.uniform1i(
-    lightingUniformLocations.shadowIterations,
-    glazeParameters.shadowIterations
-  );
-  gl.uniform1f(
-    lightingUniformLocations.focalLength,
-    glazeParameters.focalLength
-  );
-  gl.uniform1f(
-    lightingUniformLocations.screenScale,
-    glazeParameters.screenScale
-  );
-  gl.uniform1f(
-    lightingUniformLocations.shadowRange,
-    glazeParameters.shadowRange
-  );
-  gl.uniform1f(
-    lightingUniformLocations.cameraDistance,
-    glazeParameters.cameraDistance
-  );
-  gl.uniform1f(
-    lightingUniformLocations.volumeRadius,
-    glazeParameters.volumeRadius
-  );
-  gl.uniform1f(
-    lightingUniformLocations.inputRadius,
-    glazeParameters.inputRadius
-  );
-  gl.uniform1f(
-    lightingUniformLocations.innerDensity,
-    glazeParameters.innerDensity
-  );
-  gl.uniform1f(
-    lightingUniformLocations.outerDensity,
-    glazeParameters.outerDensity
-  );
-  gl.uniform1f(lightingUniformLocations.anisotropy, glazeParameters.anisotropy);
-  gl.uniform1f(lightingUniformLocations.lightPower, glazeParameters.lightPower);
-  gl.uniform3f(
-    lightingUniformLocations.lightDirection,
-    glazeParameters.lightDirection.x,
-    glazeParameters.lightDirection.y,
-    glazeParameters.lightDirection.z
-  );
-  gl.uniform3f(
-    lightingUniformLocations.bgColor,
-    glazeParameters.bgColor.x,
-    glazeParameters.bgColor.y,
-    glazeParameters.bgColor.z
-  );
-  gl.uniform3f(
-    lightingUniformLocations.lightColor,
-    glazeParameters.lightColor.x,
-    glazeParameters.lightColor.y,
-    glazeParameters.lightColor.z
-  );
+  glaze.setCustomUniforms(customUniformLocations, gl);
 
   gl.bindVertexArray(vao);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1);
@@ -451,6 +381,22 @@ function createProgram(vertShader, fragShader) {
   gl.deleteProgram(program);
 }
 
+// Loads shader sources from a list of filenames: [url1, url2...]
+// Then adds them to lib[].
+export async function preloadShaders(pathArray) {
+  const sources = await Promise.all(
+    pathArray.map((path) =>
+      fetch("computer/lib/" + path + ".glsl").then((file) => {
+        return file.text();
+      })
+    )
+  );
+
+  const lib = {};
+  pathArray.forEach((path, i) => (lib[pathEnd(path)] = sources[i]));
+  return lib;
+}
+
 /*
 function clear(r, g, b) {
   gl.clearColor(r, g, b, 1);
@@ -468,18 +414,3 @@ function getSample(point, w = 1, h = 1) {
   return sample;
 }
 */
-
-// Loads shader sources from a list of filenames: [url1, url2...]
-async function preloadShaders(pathArray) {
-  const sources = await Promise.all(
-    pathArray.map((path) =>
-      fetch("computer/lib/shaders/" + path + ".glsl").then((file) => {
-        return file.text();
-      })
-    )
-  );
-
-  const lib = {};
-  pathArray.forEach((path, i) => (lib[path] = sources[i]));
-  return lib;
-}

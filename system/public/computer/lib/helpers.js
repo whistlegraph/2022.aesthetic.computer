@@ -24,3 +24,17 @@ export function extension(filename) {
 export function notArray(obj) {
   return !Array.isArray(obj);
 }
+
+// Wraps anything other than undefined & null that isn't an array with `[any]`.
+// Undefined or null yields: `[]`.
+export function wrapNotArray(any) {
+  if (any !== undefined && any !== null && notArray(any)) return [any];
+  else if (Array.isArray(any)) return any;
+  else return [];
+}
+
+// Returns content remaining after the last "\" of a string.
+// Used for URL path resolution.
+export function pathEnd(path) {
+  return path.substring(path.lastIndexOf("/") + 1);
+}

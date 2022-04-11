@@ -711,7 +711,7 @@ async function boot(
     }
 
     if (type === "glaze") {
-      console.log("🪟 Glaze:", content);
+      console.log("🪟 Glaze:", content, "Type:", content.type || "original");
       glaze = content;
       if (glaze.on === false) {
         Glaze.off();

@@ -30,7 +30,6 @@ uniform vec3 lightColor;
 
 vec3 normLightDirection;
 
-
 // Constants
 const float PI = 3.14159265359;
 const float PI_4 = PI/4.;
