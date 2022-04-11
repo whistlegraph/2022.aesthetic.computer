@@ -33,7 +33,7 @@ async function boot({ wipe, net: { preload }, cursor, fps, resize, glaze }) {
     img2OriginalPixels = img.pixels.slice();
   });
 
-  glaze({ on: true, type: "digitpain" });
+  glaze({ on: true, type: "digitpain_a" });
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
