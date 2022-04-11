@@ -6,8 +6,8 @@
 //   1. Place a fragment shader named `myglaze-frag.glsl` in this directory.
 //   2. Make a new `const` below and follow the pattern to notate your types.
 
-// Fill this out for `digitpain0`.
-const digitpain_0 = {
+// Fill this out for `digitpain_a`.
+const digitpain_a = {
   "1i:...": 0,
 };
 
