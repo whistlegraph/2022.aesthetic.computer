@@ -16,13 +16,15 @@ const actions = []; // Actions that have been received by `server`. These get
 //                     TODO: Record all actions in order to replay pictures.
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ paste, cursor, painting: p, screen, net, resize }) {
+function boot({ paste, cursor, painting: p, screen, net, resize, glaze }) {
   // resize(screen.width / 2, screen.height / 2); // TODO: Get screen.nativeWidth.
   cursor("none");
 
   // Make & display the canvas.
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
   paste(painting);
+
+  glaze({ on: true, type: "hello" });
 
   // Connect to the server and route each message.
   server = net.socket((id, type, content) => {

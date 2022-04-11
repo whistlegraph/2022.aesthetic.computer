@@ -25,6 +25,9 @@ function boot({ wipe, paste, cursor, painting: p, screen, geo }) {
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 10, 20));
   wipe(100, 100, 100);
   db1 = new geo.DirtyBox();
+
+  // TODO: Glaze seems to be incompatible with dirty box on the first frame
+  //       that gets rendered. 2022.04.11.05.57
 }
 
 let continuedBoxCopy;
