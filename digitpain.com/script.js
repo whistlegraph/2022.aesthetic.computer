@@ -1,5 +1,6 @@
 const img = document.querySelector("#img");
 const url = document.querySelector("#url");
+const display = document.querySelector("#display");
 const timesig = document.querySelector("#timesig");
 const number = document.querySelector("#number");
 const footer = document.querySelector("footer");
@@ -11,6 +12,13 @@ const paintings = [
     timesig: "2022.04.08.22.55",
     width: 1000,
     height: 1250,
+  },
+  {
+    url: "",
+    img: "https://aesthetic.computer/#digitpain1",
+    timesig: "2022.?",
+    width: 800,
+    height: 1145,
   },
 ];
 
@@ -43,6 +51,8 @@ function hashCheck() {
     } else {
       url.innerHTML = "NOT YET MINTED";
     }
+
+    display.innerHTML = `<a href="https://aesthetic.computer/#digitpain${index}">AESTHETIC.COMPUTER/#digitpain${index}</a>`;
 
     number.innerHTML = index;
 
