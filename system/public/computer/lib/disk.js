@@ -851,7 +851,11 @@ function makeFrame({ data: { type, content } }) {
               .then((json) => resolve(json))
               .catch(reject);
           });
-        } else if (extension === "jpg" || extension === "png") {
+        } else if (
+          extension === "webp" ||
+          extension === "jpg" ||
+          extension === "png"
+        ) {
           // Other-wise we should drop into the other thread and wait...
 
           return new Promise((resolve, reject) => {
