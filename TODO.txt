@@ -12,6 +12,8 @@ Development ideas: ☁️ Try AceJump!
 
  ***Pre DIGITPAIN Launch***
  - [] Complete DIGITPAIN 0-5.
+       * Replace `digitpain0.gif` with a new image.
+       * Should I make a frame capture tool for generating gifs?
  - [] Mint the work and have the contract made.
  - [] Add the work to the JSON and release digitpain.com.
 

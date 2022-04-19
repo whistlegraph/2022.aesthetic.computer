@@ -23,12 +23,12 @@ let flip = true;
 async function boot({ wipe, net: { preload }, cursor, fps, resize }) {
   cursor("native");
   resize(1000, 1250); // 3x5
-  preload("disks/digitpain/0/0.png").then((img) => {
+  preload("disks/digitpain/0/0.webp").then((img) => {
     img1 = img;
     img1OriginalPixels = img.pixels.slice();
   });
 
-  preload("disks/digitpain/0/1.png").then((img) => {
+  preload("disks/digitpain/0/1.webp").then((img) => {
     img2 = img;
     img2OriginalPixels = img.pixels.slice();
   });

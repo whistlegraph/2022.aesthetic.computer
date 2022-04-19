@@ -1,28 +1,31 @@
-// DIGITPAIN 3
+// DIGITPAIN 2
+// TODO: Preload images by name:
 
 let frameProgress = 0;
 let frameTime = 3;
 let frame = 0;
-const frames = { count: 4, loaded: false, images: [] };
+const frames = { count: 7, loaded: false, images: [] };
 
 // 🥾 Boot
 async function boot({ net: { preload }, cursor, resize, help: { repeat } }) {
   cursor("native");
-  resize(1000, 1250);
-  // Preload all images.
-  repeat(frames.count, (n) => {
-    preload(`disks/digitpain/3/${n}.webp`).then((img) => {
-      frames.images[n] = img;
+  resize(600, 859);
+
+  // Preload all images (by name).
+  ["bg1", "bg2", "bg3", "figure", "info", "shine", "signature"].forEach((n, i) => {
+    preload(`disks/digitpain/2/${n}.webp`).then((img) => {
+      frames.images[i] = img;
       // Set the `loaded` flag if everything is finished.
       frames.loaded = frames.images.reduce((n) => n + 1, 0) === frames.count;
     });
-  });
+  })
+
 }
 
 // 🎨 Paint
 function paint({ wipe, paste, num: { randIntRange: r }, help: { choose } }) {
   if (frames.loaded) {
-    wipe(r(168, 188), r(168, 188), r(168, 188)).paste(frames.images[frame], 0, 0);
+    wipe(r(5, 10), 0, r(30, 40)).paste(frames.images[frame], 0, 0);
   }
 }
 

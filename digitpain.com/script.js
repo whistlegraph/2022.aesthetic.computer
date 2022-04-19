@@ -20,6 +20,20 @@ const paintings = [
     width: 800,
     height: 1145,
   },
+  {
+    url: "",
+    img: "https://aesthetic.computer/#digitpain2",
+    timesig: "2022.?",
+    width: 600,
+    height: 859,
+  },
+  {
+    url: "",
+    img: "https://aesthetic.computer/#digitpain3",
+    timesig: "2022.?",
+    width: 1000,
+    height: 1250,
+  },
 ];
 
 function hashCheck() {
