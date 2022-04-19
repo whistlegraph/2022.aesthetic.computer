@@ -131,6 +131,16 @@ function act({ event: e, needsPaint, load }) {
         // Tokenize text.
         const tokens = text.split(" ");
         const params = tokens.slice(1);
+
+        // TODO: Check a whitelist for special aliases, otherwise load
+        //       `tokens[0]` as a disk.
+
+        // TODO: Finish handling disk loads from remote URLs.
+
+        //if (tokens[0] === "wg-player") {
+        //
+        //}
+
         load(
           "disks/" + tokens[0],
           undefined,

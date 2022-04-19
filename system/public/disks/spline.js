@@ -15,7 +15,7 @@ function boot({ cursor }) {
   cursor("tiny");
 }
 
-// 🎨 Paint (Executes ever display frame)
+// 🎨 Paint (Executes every display frame)
 function paint({ wipe, ink, point, pan, unpan, help, screen }) {
   wipe(128); // Paint a backdrop.
 

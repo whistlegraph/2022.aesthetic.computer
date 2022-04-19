@@ -56,7 +56,7 @@ function sim({ help: { choose } }) {
   }
 }
 
-// 🎨 Paint (Executes ever display frame)
+// 🎨 Paint (Executes every display frame)
 function paint({
   wipe,
   page,

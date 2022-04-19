@@ -4,8 +4,15 @@ Development ideas: ☁️ Try AceJump!
 
 🌟 In Progress 🌟
 
+ ***Feral File Whistlegraph Player***
+ - [🟢] Research whether to add a DOM layer to disks and whether to overload
+        prompt with other pages. Maybe aesthetic.computer is more of an interface
+        project or search engine or *branded* prompt than it is a
+        creative platform?
+
  ***Pre DIGITPAIN Launch***
- - [🟢] Mint the work.
+ - [] Complete DIGITPAIN 0-5.
+ - [] Mint the work and have the contract made.
  - [] Add the work to the JSON and release digitpain.com.
 
  ***Post DIGITPAIN Launch***

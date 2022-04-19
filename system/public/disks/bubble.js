@@ -39,7 +39,7 @@ function sim({ sound: { time } }) {
   //console.log("Square progress:", progress);
 }
 
-// 🎨 Paint (Executes ever display frame)
+// 🎨 Paint (Executes every display frame)
 function paint({ ink, plot, wipe, screen }) {
   const x = (progress || 0) * screen.width;
   wipe(128);
