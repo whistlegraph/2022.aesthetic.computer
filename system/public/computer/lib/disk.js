@@ -61,6 +61,11 @@ let loadFailure;
 
 // For every function to access.
 const $commonApi = {
+  content: {
+    add: function add(template) {
+      console.log(template);
+    }
+  },
   num: {
     randInt: num.randInt,
     randIntArr: num.randIntArr,
@@ -393,6 +398,7 @@ const { send, noWorker } = (() => {
       $commonApi.query = search;
       $commonApi.load = load;
       $commonApi.pieceCount += 1;
+      $commonApi.content = new Content();
       cursorCode = "precise";
       loading = false;
       penX = undefined;
@@ -452,16 +458,50 @@ const { send, noWorker } = (() => {
   return { load, send, noWorker };
 })();
 
+// 3. ✔ Add any APIs that require send.
+//      Just the `content` API for now.
+//      TODO: Move others from makeFrame into here.
+class Content {
+  nodes = [];
+  #id = 0;
+  constructor() {
+    console.log("📖 Content: ON");
+  }
+
+  add(content) {
+    // Make a request to add new content to the DOM.
+    send({ type: "content-create", content: {id: this.#id, content} });
+    this.nodes.push({id: this.#id});
+    this.#id = this.nodes.length - 1;
+    return this.nodes[this.nodes.length - 1];
+  }
+
+  receive({id, response}) {
+    this.nodes[id].response = response;
+  }
+
+  update({id, msg}) {
+    send({ type: "content-update", content: {id: node.id, msg} });
+  }
+}
+
 export { noWorker };
 
-// 3. ✔ Produce a frame.
+// 4. ✔ Respond to incoming messages, and probably produce a frame.
 // Boot procedure:
 // First `paint` happens after `boot`, then any `act` and `sim`s each frame
 // before `paint`ing occurs. One `sim` always happens after `boot` and before
 // any `act`. `paint` can return false to stop drawing every display frame,
 // then, it must be manually restarted via `needsPaint();`).  2022.01.19.01.08
 // TODO: Make simple needsPaint example.
+// TODO: Try to remove as many API calls from here as possible.
 function makeFrame({ data: { type, content } }) {
+
+  if (type === "content-created") {
+    $commonApi.content.receive(content)
+    return;
+  }
+
   // 1. Beat // One send (returns afterwards)
   if (type === "beat") {
     const $api = {};
@@ -576,10 +616,13 @@ function makeFrame({ data: { type, content } }) {
   }
 
   // Request a repaint (runs when the window is resized.)
-  if (type === "needs-paint") noPaint = false;
+  if (type === "needs-paint") {
+    noPaint = false;
+    return;
+  }
   // 2. Frame
-  // This is where each
-  else if (type === "frame") {
+  // This is where each...
+  if (type === "frame") {
     // Act & Sim (Occurs after first boot and paint.)
     if (paintCount > 0n) {
       const $api = {};
@@ -825,9 +868,6 @@ function makeFrame({ data: { type, content } }) {
 
         try {
           const url = new URL(path);
-
-          // console.log("Preload protocol:", url.protocol);
-
           if (url.protocol === "demo:") {
             // Load from aesthetic.computer host.
             path = `/demo/${url.pathname}`;
@@ -857,14 +897,9 @@ function makeFrame({ data: { type, content } }) {
           extension === "png"
         ) {
           // Other-wise we should drop into the other thread and wait...
-
           return new Promise((resolve, reject) => {
             send({ type: "load-bitmap", content: path });
-
             bitmapPromises[path] = { resolve, reject };
-
-            /*
-             */
           });
         }
       };

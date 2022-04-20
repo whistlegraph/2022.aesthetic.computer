@@ -481,11 +481,13 @@ async function boot(
         let inTime = false;
 
         window.addEventListener("pointerdown", (e) => {
-          down = true;
-          downPos = { x: e.x, y: e.y };
-          inTime = true;
-          setTimeout(() => (inTime = false), 250);
-          e.preventDefault();
+          if (currentPiece === "disks/prompt") {
+            down = true;
+            downPos = { x: e.x, y: e.y };
+            inTime = true;
+            setTimeout(() => (inTime = false), 250);
+            e.preventDefault();
+          }
         });
 
         window.addEventListener("pointerup", (e) => {
@@ -503,9 +505,9 @@ async function boot(
               keyboard.events.push({ name: "keyboard:open" });
               keyboardOpen = true;
             }
+            down = false;
+            e.preventDefault();
           }
-          down = false;
-          e.preventDefault();
         });
 
         input.addEventListener("focus", (e) => {
@@ -625,8 +627,35 @@ async function boot(
   let frameCached = false;
   let pixelsDidChange = false; // TODO: Can this whole thing be removed? 2021.11.28.03.50
 
+  let contentFrame;
+
   async function receivedChange({ data: { type, content } }) {
-    // Route to different functions if this change is not a full frame update.
+    // *** Route to different functions if this change is not a full frame update.
+
+    if (type === "content-create") {
+      // Create a DOM container, if it doesn't already exist,
+      // and add it here along with the requested content in the
+      // template.
+      if (!contentFrame) {
+        contentFrame = document.createElement('div');
+        contentFrame.id = "content";
+        wrapper.appendChild(contentFrame)
+
+        contentFrame.innerHTML += content.content; // Add content to contentFrame.
+
+        // Evaluate the first script inside of contentFrame.
+        // TODO: This should only evaluate new scripts, as they are added...
+        const script = contentFrame.querySelector('script');
+        window.eval(script.innerText);
+      }
+
+      send({
+        type: "content-created",
+        content: {id: content.id, response: "Content was made!"}, // TODO: Return an API / better object?
+      });
+      return;
+    }
+
     if (type === "refresh") {
       window.location.reload();
       return;
@@ -754,6 +783,9 @@ async function boot(
     }
 
     if (type === "disk-unload") {
+      contentFrame?.remove(); // Remove the contentFrame if it exists.
+      contentFrame = undefined;
+
       // Remove existing video tags.
       videos.forEach(({ video, buffer, getAnimationRequest }) => {
         console.log("🎥 Removing:", video, buffer, getAnimationRequest());
