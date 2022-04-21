@@ -51,6 +51,7 @@ import { pathEnd, wrapNotArray } from "./helpers.js";
 const shaders = await preloadShaders([
   "shaders/display-frag",
   "shaders/passthrough-vert",
+  "glazes/compute-frag",
 ]);
 
 const display = {
@@ -79,8 +80,8 @@ export function init(wrapper) {
   wrapper.append(canvas);
 }
 
-let customProgram, displayProgram;
-let texSurf, fbSurf, fb;
+let customProgram, computeProgram, displayProgram;
+let texSurf, A, post, fb;
 let texSurfWidth, texSurfHeight;
 let vao;
 
@@ -116,6 +117,11 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   const customVert = createShader(gl.VERTEX_SHADER, display.vert);
   const customFrag = createShader(gl.FRAGMENT_SHADER, glaze.frag);
   customProgram = createProgram(customVert, customFrag);
+
+  // Create compute shader program.
+  const computeVert = createShader(gl.VERTEX_SHADER, display.vert);
+  const computeFrag = createShader(gl.FRAGMENT_SHADER, shaders["compute-frag"]);
+  computeProgram = createProgram(computeVert, computeFrag);
 
   // Create display shader program.
   const displayVert = createShader(gl.VERTEX_SHADER, display.vert);
@@ -157,13 +163,34 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
   // Make fb texture.
-  fbSurf = gl.createTexture();
+  A = gl.createTexture();
 
   // Temporarily fill texture with random pixels.
   const buffer2 = new Uint8Array(4 * w * h);
   buffer2.fill(0);
 
-  gl.bindTexture(gl.TEXTURE_2D, fbSurf);
+  // Make post texture.
+  post = gl.createTexture();
+
+  gl.bindTexture(gl.TEXTURE_2D, post);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    w,
+    h,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    buffer2
+  );
+
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  gl.bindTexture(gl.TEXTURE_2D, A);
   gl.texImage2D(
     gl.TEXTURE_2D,
     0,
@@ -316,7 +343,7 @@ export function render(canvasTexture, time, mouse) {
     gl.FRAMEBUFFER,
     gl.COLOR_ATTACHMENT0,
     gl.TEXTURE_2D,
-    fbSurf,
+    A,
     0
   );
 
@@ -324,9 +351,12 @@ export function render(canvasTexture, time, mouse) {
   // TODO: Add the option to switch to full "native" resolution mode. 2022.04.11.03.48
   gl.viewport(0, 0, texSurfWidth, texSurfHeight);
 
+  gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
-
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, post);
   gl.uniform1i(customUniformLocations.iTexture, 0);
+  gl.uniform1i(gl.getUniformLocation(customProgram, "iPost"), 1);
   gl.uniform1f(customUniformLocations.iTime, time);
   gl.uniform2f(customUniformLocations.iMouse, mouse.x, mouse.y);
   gl.uniform2f(customUniformLocations.iResolution, texSurfWidth, texSurfHeight);
@@ -336,16 +366,48 @@ export function render(canvasTexture, time, mouse) {
   gl.bindVertexArray(vao);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1);
 
+  // 🆘 Compute step (repeats)
+  gl.useProgram(computeProgram);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+  gl.framebufferTexture2D(
+    gl.FRAMEBUFFER,
+    gl.COLOR_ATTACHMENT0,
+    gl.TEXTURE_2D,
+    post,
+    0
+  );
+
+  gl.viewport(0, 0, texSurfWidth, texSurfHeight);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, texSurf);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, A);
+  gl.uniform1i(gl.getUniformLocation(computeProgram, "A"), 1);
+  gl.uniform1f(gl.getUniformLocation(computeProgram, "iTime"), time);
+  gl.uniform2f(gl.getUniformLocation(computeProgram, "iMouse"), mouse.x, mouse.y);
+  gl.uniform2f(gl.getUniformLocation(computeProgram, "iResolution"), texSurfWidth, texSurfHeight);
+
+  //glaze.setCustomUniforms(customUniformLocations, gl);
+
+  gl.bindVertexArray(vao);
+  gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1);
+
   // 🅱️ Display Surface
   gl.useProgram(displayProgram);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, fbSurf);
+  gl.bindTexture(gl.TEXTURE_2D, texSurf);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, post);
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
   gl.uniform1i(displayUniformLocations.iTexture, 0);
+  gl.uniform1i(gl.getUniformLocation(displayProgram, "iPost"), 1);
   gl.uniform2f(displayUniformLocations.iMouse, mouse.x, mouse.y);
   gl.uniform2f(
     displayUniformLocations.iResolution,

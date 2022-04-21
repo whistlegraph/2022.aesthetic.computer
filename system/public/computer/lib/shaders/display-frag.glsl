@@ -5,50 +5,47 @@ in vec2 v_texc;
 out vec4 outColor;
 
 uniform sampler2D iTexture;
+uniform sampler2D iPost;
 uniform vec2 iMouse;
 uniform vec2 iResolution;
 uniform float iTime;
 
-// See also: https://iquilezles.org/www/articles/distfunctions2d/distfunctions2d.htm
-float sdSegment(in vec2 p, in vec2 a, in vec2 b) {
-  vec2 pa = p - a, ba = b - a;
-  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
-  return length(pa - ba * h);
+vec3 lightDirection = normalize(vec3(0., 2., 1.));
+const float specularExponent = 2.;
+vec3 specularColor = vec3(1.);
+float specularBrightness = 40.;
+
+float getSpecularity(vec2 pos)
+{
+  vec2 delta = 1./iResolution;
+
+  vec4 selfColor = texture(iPost, pos);
+  vec4 upColor = texture(iPost, pos + vec2(0., delta.y));
+  vec4 rightColor = texture(iPost, pos + vec2(delta.x, 0.));
+
+  float selfBrightness = max(max(selfColor.x, selfColor.y), selfColor.z);
+  float upBrightness = max(max(upColor.x, upColor.y), upColor.z);
+  float rightBrightness = max(max(rightColor.x, rightColor.y), rightColor.z);
+
+  vec3 up = vec3(0., delta.y, upBrightness) - vec3(0., 0., selfBrightness);
+  vec3 right = vec3(delta.x, 0., rightBrightness) - vec3(0., 0., selfBrightness);
+
+  up = normalize(up);
+  right = normalize(right);
+
+  vec3 normal = cross(up, right);
+
+  float specular = pow(max(dot(normal, lightDirection), 0.), specularExponent);
+  return specular;
 }
 
 void main() {
-  vec3 color = texture(iTexture, vec2(v_texc.x, 1. - v_texc.y)).xyz;
-
-  // *** Learning SDFs through making cursors. 2022.02.12.01.14
-  /*
-  float w = 2. / resolution.x;
-  float h = 2. / resolution.y;
-
-  float dm = .024;
-
-  vec2 ratio = vec2(1, resolution.x / resolution.y);
-
-  float dist = sdSegment(v_texc, mouse, mouse + vec2(w, h));
-
-  if (dist < dm) {
-    color = vec3(1., 0., 0.);
+  vec3 imgColor = texture(iTexture, v_texc.xy).xyz;
+  vec3 postColor = texture(iPost, v_texc.xy).xyz;
+  float postFactor = max(0., cos(iTime*.001));
+  if (sin(iTime*.001) < 0.)
+  {
+    postFactor = 0.;
   }
-
-  float xlength = 30. / resolution.x;
-  float ylength = 30. / resolution.y;
-
-  if (abs(v_texc.x - mouse.x) < w/2. ||
-      abs(v_texc.y - mouse.y) < h/2.) {
-
-    if (v_texc.y < mouse.y + ylength &&
-        v_texc.y > mouse.y - ylength
-        &&
-        v_texc.x < mouse.x + xlength &&
-        v_texc.x > mouse.x - xlength) {
-      color = vec3(1., 0., 0.);
-    }
-  }
-  */
-
-  outColor = vec4(color, 1.0);
+  outColor = vec4(imgColor + vec3(getSpecularity(v_texc.xy)*postFactor), 1.0);
 }
