@@ -637,21 +637,35 @@ async function boot(
       // and add it here along with the requested content in the
       // template.
       if (!contentFrame) {
-        contentFrame = document.createElement('div');
+        contentFrame = document.createElement("div");
         contentFrame.id = "content";
-        wrapper.appendChild(contentFrame)
+        wrapper.appendChild(contentFrame);
 
         contentFrame.innerHTML += content.content; // Add content to contentFrame.
 
         // Evaluate the first script inside of contentFrame.
         // TODO: This should only evaluate new scripts, as they are added...
-        const script = contentFrame.querySelector('script');
-        window.eval(script.innerText);
+        const script = contentFrame.querySelector("script");
+        //console.log(script);
+        if (script.src) {
+          const s = document.createElement("script");
+          s.type = "module";
+          // s.onload = callback; // s.onerror = callback;
+
+          // The hash `time` parameter busts the cache so that the environment is
+          // reset if a disk is re-entered while the system is running.
+          // Why a hash? See also: https://github.com/denoland/deno/issues/6946#issuecomment-668230727
+          s.src = script.src + "#" + Date.now();
+          contentFrame.appendChild(s); // Re-insert the new script tag.
+          script.remove(); // Remove old script element.
+        } else {
+          window.eval(script.innerText);
+        }
       }
 
       send({
         type: "content-created",
-        content: {id: content.id, response: "Content was made!"}, // TODO: Return an API / better object?
+        content: { id: content.id, response: "Content was made!" }, // TODO: Return an API / better object?
       });
       return;
     }

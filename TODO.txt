@@ -4,11 +4,15 @@ Development ideas: ☁️ Try AceJump!
 
 🌟 In Progress 🌟
 
+💀 Regressions: Flicker / held frame while moving between pieces.
+
  ***Feral File Whistlegraph Player***
  - [🟢] Research whether to add a DOM layer to disks and whether to overload
         prompt with other pages. Maybe aesthetic.computer is more of an interface
         project or search engine or *branded* prompt than it is a
         creative platform?
+ - [] Start using Git LFS for bigger assets like the whistlegraph mp4s
+      or digitpain assets.
 
  ***Pre DIGITPAIN Launch***
  - [] Complete DIGITPAIN 0-5.

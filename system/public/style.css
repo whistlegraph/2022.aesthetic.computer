@@ -36,6 +36,7 @@ input { pointer-events: none; }
 #aesthetic-computer {
   margin: auto;
   position: relative;
+  overflow: hidden;
 }
 
 #aesthetic-computer.hidden { opacity: 0; }
