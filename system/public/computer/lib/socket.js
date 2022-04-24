@@ -1,6 +1,7 @@
 export class Socket {
   #killSocket = false;
   #ws;
+  #reconnectTime = 1000;
 
   constructor(host, receive, reload) {
     this.#connect(host, receive, reload);
@@ -12,7 +13,10 @@ export class Socket {
     const ws = this.#ws;
 
     // Send a message to the console after the first connection.
-    ws.onopen = (e) => console.log("📡 Connected");
+    ws.onopen = (e) => {
+      console.log("📡 Connected");
+      this.#reconnectTime = 1000;
+    };
 
     // Respond to incoming messages and assume `e.data` is a JSON String.
     ws.onmessage = (e) => {
@@ -24,7 +28,11 @@ export class Socket {
     ws.onclose = (e) => {
       console.log("📡 Disconnected...", e.reason);
       if (this.#killSocket === false) {
-        setTimeout(() => this.#connect(host, receive, reload), 1000);
+        console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
+        setTimeout(() => {
+          this.#connect(host, receive, reload);
+        }, this.#reconnectTime);
+        this.#reconnectTime = Math.min(this.#reconnectTime * 2, 32000);
       }
     };
 

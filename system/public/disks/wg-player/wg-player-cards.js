@@ -5,9 +5,18 @@ function resize() {
   deck.querySelectorAll(".card-deck .card-view").forEach((cardView) => {
     const card = cardView.querySelector(".card");
     const cardContent = card.querySelector(".card-content");
-    const width = cardView.clientWidth;
-    const height = cardView.clientHeight;
-    const displayRatio = cardView.clientWidth / cardView.clientHeight;
+
+    // TODO: Make these customizable.
+    const margin = 64; // Of the page.
+    //const border = margin / 2;
+    const borderSetting = 0.35;
+
+    const border = margin * borderSetting;
+
+    const width = deck.clientWidth - margin;
+    const height = deck.clientHeight - margin;
+
+    const displayRatio = deck.clientWidth / deck.clientHeight;
     const contentRatioValues = card.dataset.ratio
       .split("x")
       .map((n) => parseFloat(n));
@@ -20,12 +29,31 @@ function resize() {
       cardContent.style.height = Math.floor(width / contentRatio) + "px";
       cardContent.style.width = width + "px";
     }
+
+    card.style.width = parseFloat(cardContent.style.width) + border + "px";
+    card.style.height = parseFloat(cardContent.style.height) + border + "px";
+
+    cardContent.style.left = border / 2 + "px";
+    cardContent.style.top = border / 2 + "px";
+
+    card.style.top = (deck.clientHeight - card.clientHeight) / 2 + "px";
+    card.style.left = (deck.clientWidth - card.clientWidth) / 2 + "px";
   });
 }
 
 let volumeOutInterval, volumeInInterval;
 
-deck.addEventListener("click", (e) => {
+let down = false;
+
+deck.addEventListener("pointerdown", (e) => {
+  // TODO: Detect a proper event for touching down here.
+  // console.log(e.target);
+  // down = true;
+});
+
+deck.addEventListener("pointerup", (e) => {
+  if (!e.isPrimary) return;
+
   const activeView = deck.querySelector(".card-view.active");
   if (!activeView) return; // Cancel if there are no 'active' cards.
 
@@ -35,7 +63,6 @@ deck.addEventListener("click", (e) => {
 
   // 0. Unmute the first video if it hasn't woken up yet...
   const video = activeCard.querySelector("video");
-  console.log(video);
   if (video && video.muted && activeCard.dataset.type === "video") {
     // First click.
     video.muted = false;
@@ -153,9 +180,31 @@ deck.addEventListener("click", (e) => {
 });
 
 resize();
+
+//for zoom detection
+let px_ratio =
+  window.devicePixelRatio ||
+  window.screen.availWidth / document.documentElement.clientWidth;
+
+// TODO: Test this with a cable.
+function isZooming() {
+  const newPx_ratio =
+    window.devicePixelRatio ||
+    window.screen.availWidth / document.documentElement.clientWidth;
+  if (newPx_ratio != px_ratio) {
+    px_ratio = newPx_ratio;
+    console.log("zooming");
+    return true;
+  } else {
+    console.log("just resizing");
+    return false;
+  }
+}
+
 const resizer = new ResizeObserver((entries) => {
   for (let entry of entries) {
-    if (entry.target === deck) resize();
+    if (entry.target === deck && isZooming() === false) resize();
   }
 });
+
 resizer.observe(deck);

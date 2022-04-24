@@ -2,32 +2,39 @@
 // Made on occasion of Whistlegraph's Feral File exhibition.
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
-// TODO: Get a score card working with a different aspect ratio, which will
-//       generalize the video card.
+// ***Current***
+// TODO: Get zooming working on iOS.
 
-// TODO: Loading spinners.
-// TODO: Add mute / audio button?
+// TODO: Fix volume fade on iOS. See createMediaElementSource: https://www.youtube.com/watch?v=ETD26rd7h6c
+// TODO: Make the borders customizable again.
+// TODO: Loading spinners... Should I allow cards to change, while things are
+//       loading?
+// TODO: Add cover images, and web-ready versions of videos.
+// TODO: Background colors
+// TODO: Use no / natural cursor?
+// TODO: Transitions too fast on mobile.
+// TODO: Fix iOS.
 
 const whistlegraphs = {
   butterfly: {
     video: {
-      border: 1,
-      outerRadius: 1.25,
-      innerRadius: 0.5,
+      border: 2,
+      outerRadius: 0.25,
+      innerRadius: 0,
       color: "rgb(200, 200, 50)",
       boxShadow: "4px 4px 12px rgba(0, 0, 255, 0.75)",
     },
     score: {
-      border: 1,
-      outerRadius: 1.25,
-      innerRadius: 0.5,
+      border: 0,
+      outerRadius: 0.25,
+      innerRadius: 0,
       color: "pink",
       boxShadow: "4px 4px 12px rgba(255, 0, 0, 0.75)",
     },
     compilation: {
-      border: 0.5,
-      outerRadius: 1.25,
-      innerRadius: 0.25,
+      border: 0.0,
+      outerRadius: 0.25,
+      innerRadius: 0,
       color: "grey",
       boxShadow: "4px 4px 12px rgba(0, 255, 0, 0.75)",
     },
@@ -43,19 +50,18 @@ const whistlegraphs = {
   "whats-inside-your-heart": {},
 };
 
-const whistlegraph = whistlegraphs["butterfly"];
-
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ wipe, content }) {
+function boot({ wipe, content, query }) {
   wipe(200, 150, 150);
 
-  // Note: This is a little like a react component... maybe I can eventually use
-  //       ShadowDOM or scope the css here.
+  // TODO: Read this info as a command line parameter.
+  const whistlegraph = whistlegraphs[query[0] || "butterfly"];
+
   const deck = content.add(`
     <div class="card-deck">
       <div class="card-view" data-type="compilation" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
-          <video class="card-content" width="100%" height="100%" loop muted src="/disks/wg-player/wg-player-test-tt.mp4"></video>
+          <video class="card-content" width="100%" height="100%" preload="metadata" playsinline loop muted src="/disks/wg-player/wg-player-test-tt.mp4#t=0.001"></video>
         </div>
       </div>
     
@@ -67,7 +73,7 @@ function boot({ wipe, content }) {
       
       <div class="card-view active" data-type="video" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
-          <video class="card-content" width="100%" height="100%" loop muted src="/disks/wg-player/wg-player-test.mp4"></video>
+          <video class="card-content" width="100%" height="100%" preload="metadata" playsinline loop muted src="/disks/wg-player/wg-player-test.mp4#t=0.001"></video>
         </div>
       </div>
     </div>
@@ -79,15 +85,17 @@ function boot({ wipe, content }) {
       box-sizing: border-box;
       user-select: none;
       -webkit-user-select: none;
+      font-size: 32px;
+      display: flex;
     }
     
     #content .card-view {
-      --margin: 5em;
-      height: calc(100% - var(--margin));
-      width: calc(100% - var(--margin));
-      top: calc(var(--margin) / 2);
-      left: calc(var(--margin) / 2);
-      display: flex;
+      /*--margin: 5em;*/
+      /*height: calc(100% - var(--margin));*/
+      /*width: calc(100% - var(--margin));*/
+      /*top: calc(var(--margin) / 2);*/
+      /*left: calc(var(--margin) / 2);*/
+      /*display: flex;*/
       box-sizing: border-box;
       position: absolute;
       pointer-events: none;
@@ -96,9 +104,8 @@ function boot({ wipe, content }) {
     
     .card {
       box-sizing: border-box;
-      margin: auto;
       border-radius: 1em;
-      overflow: hidden;
+      /*overflow: hidden;*/
       position: relative;
       box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.75);
       pointer-events: all;
@@ -110,6 +117,10 @@ function boot({ wipe, content }) {
     
     .card-view.active:active {
       transform: scale(0.98);
+    }
+    
+    .card-view .card-content {
+      position: absolute;
     }
     
     /* Card types */ 
@@ -126,24 +137,24 @@ function boot({ wipe, content }) {
     
     .card-view[data-type=video] .card {
       background: ${whistlegraph.video.color};
-      border: ${whistlegraph.video.border}em solid ${whistlegraph.video.color};
-      top: -${whistlegraph.video.border}em;
+      /*border: ${whistlegraph.video.border}em solid ${whistlegraph.video.color};*/
+      /*top: -${whistlegraph.video.border}em;*/
       border-radius: ${whistlegraph.video.outerRadius}em;
       box-shadow: ${whistlegraph.video.boxShadow}; 
     }
     
     .card-view[data-type=score] .card {
       background: ${whistlegraph.score.color};
-      border: ${whistlegraph.score.border}em solid ${whistlegraph.score.color};
-      top: -${whistlegraph.score.border}em;
+      /*border: ${whistlegraph.score.border}em solid ${whistlegraph.score.color};*/
+      /*top: -${whistlegraph.score.border}em;*/
       border-radius: ${whistlegraph.score.outerRadius}em;
       box-shadow: ${whistlegraph.score.boxShadow}; 
     }
     
     .card-view[data-type=compilation] .card {
       background: ${whistlegraph.compilation.color};
-      border: ${whistlegraph.compilation.border}em solid ${whistlegraph.compilation.color};
-      top: -${whistlegraph.compilation.border}em;
+      /*border: ${whistlegraph.compilation.border}em solid ${whistlegraph.compilation.color};*/
+      /*top: -${whistlegraph.compilation.border}em;*/
       border-radius: ${whistlegraph.compilation.outerRadius}em;
       box-shadow: ${whistlegraph.compilation.boxShadow}; 
     }
