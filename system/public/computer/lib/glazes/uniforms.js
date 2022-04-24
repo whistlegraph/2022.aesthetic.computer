@@ -1,25 +1,18 @@
 // 🌚 Glaze (Shader Uniforms) 2022.04.11.04.52
-// Already available: iTexture, iFrame, iMouse, iResolution
+// Already available: iTexture, iTexturePost, iTime, iMouse, iResolution
 
-// ***How to add new glazes?***
+// ⚠️ This file is for exposing remote customization of uniforms to pieces.
+//    These values are set every frame, currently just for the `frag` stage of
+//    the pipeline.
 
-//   1. Place a fragment shader named `myglaze-frag.glsl` in this directory.
-//   2. Make a new `const` below and follow the pattern to notate your types.
+const uniforms = {}
 
-// ⚠️
-// Fill this out for `digitpain_a`, and don't forget to
-// add `digitpain_a-frag.glsl` to this directory!
-const digitpain_a = {
-  "1i:...": 0,
+uniforms.digitpain0 = {
+  // "1i:testInteger": 0,
 };
 
-// Template called `hello`. You can play with this in the `nail` disk.
-const hello = {
-  "1f:redMix": 0.1,
-};
-
-// Used for `prompt`.
-const original = {
+// Used for the `prompt` piece.
+uniforms.prompt = {
   "1i:fogIterations": 20,
   "1i:shadowIterations": 5,
   "1f:focalLength": 1,
@@ -37,5 +30,4 @@ const original = {
   "3f:bgColor": [0.084, 0.0533, 0.078], // r, g, b,
 };
 
-// 3. Add any additional uniforms here!
-export default { digitpain_a, hello, original };
+export default uniforms;
