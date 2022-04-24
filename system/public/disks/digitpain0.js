@@ -20,9 +20,9 @@ let needsFlip = false;
 let flip = true;
 
 // 🥾 Boot (Runs once before first paint and sim)
-async function boot({ wipe, net: { preload }, cursor, fps, resize }) {
-  cursor("native");
+async function boot({ wipe, net: { preload }, cursor, fps, resize, glaze }) {
   resize(1000, 1250); // 3x5
+  cursor("native");
   preload("disks/digitpain/0/0.png").then((img) => {
     img1 = img;
     img1OriginalPixels = img.pixels.slice();
@@ -32,6 +32,7 @@ async function boot({ wipe, net: { preload }, cursor, fps, resize }) {
     img2 = img;
     img2OriginalPixels = img.pixels.slice();
   });
+  glaze({ on: true, type: "digitpain0" });
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).

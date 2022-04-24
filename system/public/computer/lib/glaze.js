@@ -2,29 +2,42 @@
 // This creates a nice webgl2 rendering layer
 // over the scaled software rasterizer.
 
+// TODO: Rename the pipeline stages from frag->compute->display to something
+//       that makes the most sense for @mxsage.
+
+// TODO: Change `setCustomUniforms` to `setCustomFragUniforms` after renaming
+//       frag to something else.
+
 const { keys } = Object;
 
 import glazes from "./glazes/uniforms.js";
 
 class Glaze {
   loaded = false;
-  shaderLoaded = false;
+  shadersLoaded = false;
   uniformNames;
   frag;
 
   #uniforms;
   #type;
 
-  constructor(type = "original") {
+  constructor(type = "prompt") {
     this.#type = type;
     this.#uniforms = glazes[type];
     this.uniformNames = keys(this.#uniforms).map((id) => id.split(":")[1]);
   }
 
   async load(callback) {
-    const name = `${this.#type}-frag`;
-    this.frag = (await preloadShaders([`./glazes/${name}`]))[name];
-    this.shaderLoaded = true;
+    const names = [
+      `./glazes/${this.#type}/${this.#type}-frag`,
+      `./glazes/${this.#type}/${this.#type}-compute`,
+      `./glazes/${this.#type}/${this.#type}-display`,
+    ];
+    const shaders = await preloadShaders(names);
+    this.frag = shaders[pathEnd(names[0])];
+    this.compute = shaders[pathEnd(names[1])];
+    this.display = shaders[pathEnd(names[2])];
+    this.shadersLoaded = true;
     callback();
   }
 
@@ -48,23 +61,14 @@ let glaze;
 
 import { pathEnd, wrapNotArray } from "./helpers.js";
 
-const shaders = await preloadShaders([
-  "shaders/display-frag",
-  "shaders/passthrough-vert",
-  "glazes/compute-frag",
-]);
-
-const display = {
-  vert: shaders["passthrough-vert"],
-  frag: shaders["display-frag"],
-};
+const passthrough = (await preloadShaders(["glazes/passthrough-vert"]))["passthrough-vert"];
 
 export function init(wrapper) {
   canvas = document.createElement("canvas");
   canvas.dataset.type = "glaze";
 
   gl = canvas.getContext("webgl2", {
-    alpha: false,
+    alpha: true,
     depth: false,
     stencil: false,
     desynchronized: true,
@@ -81,11 +85,13 @@ export function init(wrapper) {
 }
 
 let customProgram, computeProgram, displayProgram;
-let texSurf, A, post, fb;
+let fb; // Frame-buffer.
+let texSurf, texFbSurfA, texFbSurfB; // Original aesthetic.computer surface texture,
+                                     // in addition to a double-buffer.
 let texSurfWidth, texSurfHeight;
 let vao;
 
-const defaultUniformNames = ["iTexture", "iTime", "iMouse", "iResolution"];
+const defaultUniformNames = ["iTexture", "iTexturePost", "iTime", "iMouse", "iResolution"];
 
 let customUniformLocations = {};
 
@@ -98,7 +104,8 @@ let offed = false;
 // Resizes the textures & re-initializes the necessary components for a resolution change.
 // See also: `frame` via window.resize in `bios.js`.
 export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
-  if (glaze.shaderLoaded === false) return;
+  console.log("🪟", glaze)
+  if (glaze.shadersLoaded === false) return;
 
   // Run `init` if the canvas does not exist.
   // Note: Should `init` just be here?
@@ -114,18 +121,18 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   canvas.style.height = rect.height + "px";
 
   // Create custom shader program.
-  const customVert = createShader(gl.VERTEX_SHADER, display.vert);
+  const customVert = createShader(gl.VERTEX_SHADER, passthrough);
   const customFrag = createShader(gl.FRAGMENT_SHADER, glaze.frag);
   customProgram = createProgram(customVert, customFrag);
 
   // Create compute shader program.
-  const computeVert = createShader(gl.VERTEX_SHADER, display.vert);
-  const computeFrag = createShader(gl.FRAGMENT_SHADER, shaders["compute-frag"]);
+  const computeVert = createShader(gl.VERTEX_SHADER, passthrough);
+  const computeFrag = createShader(gl.FRAGMENT_SHADER, glaze.compute);
   computeProgram = createProgram(computeVert, computeFrag);
 
   // Create display shader program.
-  const displayVert = createShader(gl.VERTEX_SHADER, display.vert);
-  const displayFrag = createShader(gl.FRAGMENT_SHADER, display.frag);
+  const displayVert = createShader(gl.VERTEX_SHADER, passthrough);
+  const displayFrag = createShader(gl.FRAGMENT_SHADER, glaze.display);
   displayProgram = createProgram(displayVert, displayFrag);
 
   // Make surface texture.
@@ -163,16 +170,16 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
   // Make fb texture.
-  A = gl.createTexture();
+  texFbSurfA = gl.createTexture();
 
   // Temporarily fill texture with random pixels.
   const buffer2 = new Uint8Array(4 * w * h);
   buffer2.fill(0);
 
   // Make post texture.
-  post = gl.createTexture();
+  texFbSurfB = gl.createTexture();
 
-  gl.bindTexture(gl.TEXTURE_2D, post);
+  gl.bindTexture(gl.TEXTURE_2D, texFbSurfB);
   gl.texImage2D(
     gl.TEXTURE_2D,
     0,
@@ -190,7 +197,7 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-  gl.bindTexture(gl.TEXTURE_2D, A);
+  gl.bindTexture(gl.TEXTURE_2D, texFbSurfA);
   gl.texImage2D(
     gl.TEXTURE_2D,
     0,
@@ -297,11 +304,12 @@ export async function on(w, h, rect, nativeWidth, nativeHeight, wrapper, type) {
     this.frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
     offed = false;
   });
+  return glaze;
 }
 
 // Update the texture either in whole or in part based on a dirtyRect from `bios`.
 export function update(texture, x = 0, y = 0) {
-  if (glaze.loaded === false) return;
+  if (glaze === undefined || glaze.loaded === false) return;
 
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
 
@@ -324,6 +332,7 @@ export function update(texture, x = 0, y = 0) {
 // Draw the current output to a scaled freeze frame if the system is changing resolutions and neeeds a hold.
 export function freeze(fCtx) {
   fCtx.drawImage(canvas, 0, 0, fCtx.canvas.width, fCtx.canvas.height);
+  clear();
   canvas.style.opacity = 0;
 }
 
@@ -332,7 +341,7 @@ export function unfreeze() {
 }
 
 export function render(canvasTexture, time, mouse) {
-  if (glaze.loaded === false) return;
+  if (glaze === undefined || glaze.loaded === false) return;
 
   // 🅰️ Render Surface
   gl.useProgram(customProgram);
@@ -343,7 +352,7 @@ export function render(canvasTexture, time, mouse) {
     gl.FRAMEBUFFER,
     gl.COLOR_ATTACHMENT0,
     gl.TEXTURE_2D,
-    A,
+    texFbSurfA,
     0
   );
 
@@ -354,9 +363,11 @@ export function render(canvasTexture, time, mouse) {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
   gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, post);
+  gl.bindTexture(gl.TEXTURE_2D, texFbSurfB);
+
+
   gl.uniform1i(customUniformLocations.iTexture, 0);
-  gl.uniform1i(gl.getUniformLocation(customProgram, "iPost"), 1);
+  gl.uniform1i(customUniformLocations.iTexturePost, 1);
   gl.uniform1f(customUniformLocations.iTime, time);
   gl.uniform2f(customUniformLocations.iMouse, mouse.x, mouse.y);
   gl.uniform2f(customUniformLocations.iResolution, texSurfWidth, texSurfHeight);
@@ -366,7 +377,7 @@ export function render(canvasTexture, time, mouse) {
   gl.bindVertexArray(vao);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1);
 
-  // 🆘 Compute step (repeats)
+  // 🅱️ Compute Surface
   gl.useProgram(computeProgram);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
@@ -375,7 +386,7 @@ export function render(canvasTexture, time, mouse) {
     gl.FRAMEBUFFER,
     gl.COLOR_ATTACHMENT0,
     gl.TEXTURE_2D,
-    post,
+    texFbSurfB,
     0
   );
 
@@ -384,30 +395,33 @@ export function render(canvasTexture, time, mouse) {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
   gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, A);
-  gl.uniform1i(gl.getUniformLocation(computeProgram, "A"), 1);
+  gl.bindTexture(gl.TEXTURE_2D, texFbSurfA);
+
+  gl.uniform1i(gl.getUniformLocation(computeProgram, "iTexture"), 0);
+  gl.uniform1i(gl.getUniformLocation(computeProgram, "iTexturePost"), 1);
   gl.uniform1f(gl.getUniformLocation(computeProgram, "iTime"), time);
   gl.uniform2f(gl.getUniformLocation(computeProgram, "iMouse"), mouse.x, mouse.y);
   gl.uniform2f(gl.getUniformLocation(computeProgram, "iResolution"), texSurfWidth, texSurfHeight);
 
-  //glaze.setCustomUniforms(customUniformLocations, gl);
+  //glaze.setComputeUniforms(computeUniformLocations, gl);
 
   gl.bindVertexArray(vao);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1);
 
-  // 🅱️ Display Surface
+  //©️ Display Surface
   gl.useProgram(displayProgram);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texSurf);
+
   gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, post);
+  gl.bindTexture(gl.TEXTURE_2D, texFbSurfB);
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
   gl.uniform1i(displayUniformLocations.iTexture, 0);
-  gl.uniform1i(gl.getUniformLocation(displayProgram, "iPost"), 1);
+  gl.uniform1i(displayUniformLocations.iTexturePost, 1);
   gl.uniform2f(displayUniformLocations.iMouse, mouse.x, mouse.y);
   gl.uniform2f(
     displayUniformLocations.iResolution,
@@ -428,7 +442,7 @@ function createShader(type, source) {
     return shader;
   }
 
-  console.error(gl.getShaderInfoLog(shader));
+  console.error(gl.getShaderInfoLog(shader), source);
   gl.deleteShader(shader);
 }
 
@@ -459,12 +473,10 @@ export async function preloadShaders(pathArray) {
   return lib;
 }
 
-/*
-function clear(r, g, b) {
-  gl.clearColor(r, g, b, 1);
-  gl.clear(gl.COLOR_BUFFER_BIT);
+export function clear(r = 0, g = 1, b = 0) {
+  gl?.clearColor(r, g, b, 1);
+  gl?.clear(gl.COLOR_BUFFER_BIT);
 }
-*/
 
 /*
 function getSample(point, w = 1, h = 1) {

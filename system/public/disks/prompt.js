@@ -1,8 +1,6 @@
 // Prompt, 2021.11.28.03.13
 // This is for working on font rendering and making a global disk chooser.
 
-// TODO: Fix mouse movement not working in prompt / other pieces. (due to DirtyBox)
-
 // TODO: Make a basic prompt.
 //       1. Prevent non-printable characters from causing an extra backspace.
 //       2. The iOS app would add a small ESC or arrow overlay button in Swift
@@ -27,7 +25,7 @@ let errorPresent = false;
 let canType = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, net: { preload }, pieceCount, glaze }) {
+function boot({ cursor, net: { preload }, pieceCount, glaze, resize, screen }) {
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
     preload(`disks/drawings/font-1/${location}.json`).then((res) => {
@@ -40,7 +38,7 @@ function boot({ cursor, net: { preload }, pieceCount, glaze }) {
     text = "";
   }
 
-  glaze({ on: true });
+  glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
