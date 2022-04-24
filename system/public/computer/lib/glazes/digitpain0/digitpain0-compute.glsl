@@ -4,7 +4,8 @@ precision highp float;
 in vec2 v_texc;
 out vec4 outColor;
 
-uniform sampler2D A;
+uniform sampler2D iTexture; // The original texture from aesthetic.computer.
+uniform sampler2D iTexturePost; // The processed texture so far.
 uniform vec2 iMouse;
 uniform vec2 iResolution;
 uniform float iTime;
@@ -16,7 +17,7 @@ void main() {
   {
     for (int j = -1; j <= 1; ++j)
     {
-      color += texture(A, v_texc.xy + vec2(i, j)/iResolution.xy).xyz;
+      color += texture(iTexturePost, v_texc.xy + vec2(i, j) / iResolution.xy).xyz;
     }
   }
   color /= 9.;

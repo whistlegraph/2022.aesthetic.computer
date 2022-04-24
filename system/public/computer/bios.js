@@ -88,6 +88,7 @@ async function boot(
   let canvasRect;
 
   let glaze = { on: false };
+  let currentGlaze;
 
   let needsReframe = false;
   let needsReappearance = false;
@@ -100,6 +101,7 @@ async function boot(
   let curReframeDelay = REFRAME_DELAY;
 
   function frame(width, height) {
+
     // Cache the current canvas if needed.
     if (freezeFrame && imageData) {
       console.log(
@@ -142,6 +144,7 @@ async function boot(
       } else {
         ffCtx.putImageData(imageData, 0, 0);
       }
+
 
       if (!wrapper.contains(freezeFrameCan)) wrapper.append(freezeFrameCan);
       else freezeFrameCan.style.removeProperty("opacity");
@@ -259,16 +262,20 @@ async function boot(
 
     canvasRect = canvas.getBoundingClientRect();
 
+    Glaze.clear(); // TODO: Should this be here?
+
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
-      Glaze.frame(
+      currentGlaze = Glaze.on(
         canvas.width,
         canvas.height,
         canvasRect,
         projectedWidth,
         projectedHeight,
-        wrapper
+        wrapper,
+        glaze.type
       );
+
       canvas.style.opacity = 0;
     } else {
       Glaze.off();
@@ -711,23 +718,13 @@ async function boot(
     }
 
     if (type === "glaze") {
-      console.log("🪟 Glaze:", content, "Type:", content.type || "original");
+      console.log("🪟 Glaze:", content, "Type:", content.type || "prompt");
       glaze = content;
       if (glaze.on === false) {
         Glaze.off();
         canvas.style.removeProperty("opacity");
-      } else if (glaze.on === true) {
-        Glaze.on(
-          canvas.width,
-          canvas.height,
-          canvasRect,
-          projectedWidth,
-          projectedHeight,
-          wrapper,
-          glaze.type
-        );
-        canvas.style.opacity = 0;
       }
+      // Note: Glaze gets turned on only on a call to `resize` via a piece.
       return;
     }
 

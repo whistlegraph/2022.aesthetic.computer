@@ -5,7 +5,7 @@ in vec2 v_texc;
 out vec4 outColor;
 
 uniform sampler2D iTexture;
-uniform sampler2D iPost;
+uniform sampler2D iTexturePost;
 uniform vec2 iMouse;
 uniform vec2 iResolution;
 uniform float iTime;
@@ -19,9 +19,9 @@ float getSpecularity(vec2 pos)
 {
   vec2 delta = 1./iResolution;
 
-  vec4 selfColor = texture(iPost, pos);
-  vec4 upColor = texture(iPost, pos + vec2(0., delta.y));
-  vec4 rightColor = texture(iPost, pos + vec2(delta.x, 0.));
+  vec4 selfColor = texture(iTexturePost, pos);
+  vec4 upColor = texture(iTexturePost, pos + vec2(0., delta.y));
+  vec4 rightColor = texture(iTexturePost, pos + vec2(delta.x, 0.));
 
   float selfBrightness = max(max(selfColor.x, selfColor.y), selfColor.z);
   float upBrightness = max(max(upColor.x, upColor.y), upColor.z);
@@ -41,7 +41,7 @@ float getSpecularity(vec2 pos)
 
 void main() {
   vec3 imgColor = texture(iTexture, v_texc.xy).xyz;
-  vec3 postColor = texture(iPost, v_texc.xy).xyz;
+  vec3 postColor = texture(iTexturePost, v_texc.xy).xyz;
   float postFactor = max(0., cos(iTime*.001));
   if (sin(iTime*.001) < 0.)
   {
