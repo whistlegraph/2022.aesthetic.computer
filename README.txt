@@ -1,8 +1,24 @@
-💀 Jeffrey's `aesthetic.computer` Notepad 💀
+💀 Jeffrey's `aesthetic.computer` Notebook 💀
 
-Development ideas: ☁️ Try AceJump!
+❓ Here to contribute code? Scroll waaaaaaaaay down to SETUP for instructions.
 
-🌟 In Progress 🌟
+️🧪 Editor Upgrades: Try AceJump, Use ThinkPad More Often
+☁️ Big Thoughts   : Maybe aesthetic.computer is more of an interface project
+                    or search engine or *branded* prompt than it is a creative
+                    platform?
+
+
+                            🌟 Work In Progress 🌟
+
+
+⚠️ Regressions:
+ - [🟢] Flicker / held frame while moving between pieces. Right now it's just bright green.
+
+ ***Feral File Whistlegraph Player***
+ - [] Research whether to add a DOM layer to disks and whether to overload
+      prompt with other pages.
+ - [] Start using Git LFS for bigger assets like the whistlegraph mp4s
+      or digitpain assets.
 
 💀 Regressions: Flicker / held frame while moving between pieces.
 
@@ -213,3 +229,19 @@ TODO: Write a simple note taking program with saving and loading of drawings
 
 TODO: Ink types? ... can they be procedural using a buffer?
 
+
+                                   🎃 SETUP 💾
+
+
+`aesthetic.computer` is virtual computer environment / interface designed for
+ creative exploration. development requires nodejs, an up-to-date web browser,
+ and knowledge of javascript. if you're interested in learning how to do any of
+ this, visit https://discord.gg/digitpain and i'll help you out - jeffrey 2022.04.24.05.05
+
+Clone, and then get set up for development:
+  0. Check `ssl-dev/readme.txt` to generate SSL certificates before running locally.
+  1. `cd` into `server` and run `npm install` and `npm run dev` to start the socket server
+  2. `cd` into `system` and run `npm install` and `npm run dev` to start the web server
+
+📖 This project originally began as two separate repositories with their own
+commit history: `digitpain0/system` and `digitpain0/disks`.

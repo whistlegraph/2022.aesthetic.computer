@@ -24,7 +24,7 @@ function boot({ paste, cursor, painting: p, screen, net, resize, glaze }) {
   painting = p(screen.width, screen.height, (gfx) => gfx.wipe(100, 100, 100));
   paste(painting);
 
-  glaze({ on: true, type: "hello" });
+  // glaze({ on: true, type: "hello" });
 
   // Connect to the server and route each message.
   server = net.socket((id, type, content) => {

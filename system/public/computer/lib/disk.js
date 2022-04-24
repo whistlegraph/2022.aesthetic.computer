@@ -270,6 +270,7 @@ class Painting {
 }
 
 const painting = new Painting();
+let glazeAfterReframe;
 
 // 2. ✔ Loading the disk.
 const { send, noWorker } = (() => {
@@ -762,8 +763,7 @@ function makeFrame({ data: { type, content } }) {
       $api.inFocus = content.inFocus;
 
       $api.glaze = function (content) {
-        send({ type: "glaze", content });
-        //send({ type: "glaze", content: { type, uniforms } });
+        glazeAfterReframe = { type: "glaze", content };
       };
 
       // Make a screen buffer or resize it automatically if it doesn't exist.
@@ -973,7 +973,13 @@ function makeFrame({ data: { type, content } }) {
       if (loading === true) sendData.loading = true;
 
       // These fields are one time `signals`.
-      if (reframe) sendData.reframe = reframe;
+      if (reframe || glazeAfterReframe) {
+        sendData.reframe = reframe || glazeAfterReframe !== undefined;
+        if (glazeAfterReframe) {
+          send(glazeAfterReframe);
+          glazeAfterReframe = undefined;
+        }
+      };
       if (cursorCode) sendData.cursorCode = cursorCode;
 
       //console.log(sendData);

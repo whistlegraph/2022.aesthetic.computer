@@ -5,6 +5,8 @@ in vec2 v_texc;
 out vec4 outColor;
 
 uniform sampler2D iTexture;
+uniform sampler2D iTexturePost;
+
 uniform float iTime;
 uniform vec2 iMouse;
 uniform vec2 iResolution;
