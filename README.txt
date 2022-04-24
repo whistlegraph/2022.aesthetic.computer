@@ -12,7 +12,7 @@
 
 
 ⚠️ Regressions:
- - [🟢] Flicker / held frame while moving between pieces.
+ - [🟢] Flicker / held frame while moving between pieces. Right now it's just bright green.
 
  ***Feral File Whistlegraph Player***
  - [] Research whether to add a DOM layer to disks and whether to overload
