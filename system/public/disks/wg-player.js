@@ -3,10 +3,10 @@
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
 // ***Current***
-// TODO: Get zooming working on iOS.
-
+// TODO: Make the box-shadow pixels relative to viewport size or a hardcoded margin size.
 // TODO: Fix volume fade on iOS. See createMediaElementSource: https://www.youtube.com/watch?v=ETD26rd7h6c
-// TODO: Make the borders customizable again.
+// TODO: Make all the borders customizable again.
+
 // TODO: Loading spinners... Should I allow cards to change, while things are
 //       loading?
 // TODO: Add cover images, and web-ready versions of videos.
@@ -51,8 +51,10 @@ const whistlegraphs = {
 };
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ wipe, content, query }) {
+function boot({ cursor, wipe, content, query }) {
   wipe(200, 150, 150);
+
+  cursor("native");
 
   // TODO: Read this info as a command line parameter.
   const whistlegraph = whistlegraphs[query[0] || "butterfly"];
@@ -96,11 +98,17 @@ function boot({ wipe, content, query }) {
       /*top: calc(var(--margin) / 2);*/
       /*left: calc(var(--margin) / 2);*/
       /*display: flex;*/
+      width: 100%;
+      height: 100%:
       box-sizing: border-box;
       position: absolute;
       pointer-events: none;
-      transition: 0.1s transform;
     }
+    
+    .card-deck.no-cursor { cursor: none; }
+    .card-deck.no-cursor .card-view.active .card { cursor: none; }
+    
+    .card-view.active .card { cursor: pointer; }
     
     .card {
       box-sizing: border-box;
@@ -111,13 +119,55 @@ function boot({ wipe, content, query }) {
       pointer-events: all;
     }
     
-    .card-view.active:hover {
+    .card-view.active.pressed {
       transform: scale(0.99);
+      animation: bounce 0.15s ease-out;
+      animation-fill-mode: forwards;
     }
     
-    .card-view.active:active {
-      transform: scale(0.98);
+    .card-view.active.pressed .card {
+      box-shadow: 0px 0px 48px rgba(0, 0, 0, 0.35),
+                  0px 0px 24px rgba(0, 0, 0, 0.35),
+                  0px 0px 12px rgba(0, 0, 0, 0.35) !important;
+    } 
+    
+    .card.touch {
+      /* background-color: lime !important; */
+      box-shadow: 0px 0px 48px rgba(0, 0, 0, 0.5),
+                  0px 0px 48px rgba(0, 0, 0, 0.5) !important;
+                  
+      /* transform: scale(0.99); */
     }
+    
+    .card.hover {
+      /*outline: 6px solid rgba(0, 0, 0, 0.25);*/
+      box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.75) !important;
+      /* background-color: yellowgreen !important; */
+      /* transform: scale(0.99); */
+    }
+   
+    .card.touch::after {
+      content: "";
+      box-sizing: border-box;
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      width: calc(100% + 6px);
+      height: calc(100% + 6px);
+      border: 3px solid rgba(0, 0, 0, 0.5);
+      border-radius: 12px; 
+    }
+    
+    .card.running {
+     box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.75) !important;
+     /*background-color: orange !important;*/
+    }
+  
+    @keyframes bounce {
+      0% { transform: scale(0.99); }
+      50% { transform: scale(0.96); }
+      100% { transform: scale(0.99); }
+    } 
     
     .card-view .card-content {
       position: absolute;
