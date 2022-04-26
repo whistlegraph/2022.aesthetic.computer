@@ -53,7 +53,6 @@ const whistlegraphs = {
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ cursor, wipe, content, query }) {
   wipe(200, 150, 150);
-
   cursor("native");
 
   // TODO: Read this info as a command line parameter.

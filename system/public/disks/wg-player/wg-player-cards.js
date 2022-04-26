@@ -7,56 +7,63 @@ let audioContext;
 const audioSources = {};
 const videoGains = {};
 
-// Load audio files. // TODO: This can move elsewhere.
+// Load audio files as buffers in an audioContext.
+audioContext = new AudioContext({
+  latencyHint: "playback",
+});
 
 const audios = document.querySelectorAll("#content .card-deck .card audio");
 
 audios.forEach((audio, i) => {
   const type = audio.closest(".card").dataset.type;
-
   fetch(audio.src)
     .then(function (response) {
       return response.arrayBuffer();
     })
     .then(function (buffer) {
       audioSources[type] = { buffer };
-      if (i === audios.length - 1)
+      if (i === audios.length - 1) {
         console.log("🎼 All whistlegraph audio has loaded!");
-      console.log(audioSources);
+        decodeAudioData();
+      }
     });
 });
 
-// Create an audioContext for crossfading between videos.
-function startAudio() {
-  audioContext = new AudioContext({
-    latencyHint: "playback",
-  });
-
-  // Assume that we have loaded all audio
-  Object.entries(audioSources).forEach(([type, content]) => {
+function decodeAudioData() {
+  const audioSourceEntries = Object.entries(audioSources);
+  audioSourceEntries.forEach(([type, content], i) => {
+    // TODO: Why isn't content just content.decodedBuffer here?
     audioContext.decodeAudioData(content.buffer, function (decodedData) {
       function source() {
         const gainNode = audioContext.createGain();
-        console.log(gainNode.gain.value);
         const s = audioContext.createBufferSource();
-        //s.loop = true;
         s.buffer = decodedData;
         s.connect(gainNode);
-        //gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-        s.start();
         content.gainNode = gainNode;
         gainNode.connect(audioContext.destination);
         gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+        s.start();
+      }
+      if (i === audioSourceEntries.length - 1) {
+        console.log("🎼 All whistlegraph audio data decoded!");
+        //audiosAlreadyDecoded = true;
+
+        // TODO: Actually allow a user to interact with the page now, and hide
+        //       the loading spinner.
       }
       content.source = source;
     });
   });
 }
 
+//let audiosAlreadyDecoded = false;
+
+// Create an audioContext for crossfading between videos.
+
 deck.addEventListener(
   "pointerdown",
   (e) => {
-    startAudio();
+    //startAudio();
   },
   { once: true }
 );
@@ -176,6 +183,8 @@ deck.addEventListener("pointerup", (e) => {
   const video = activeCard.querySelector("video");
   if (video && video.paused && activeCard.dataset.type === "video") {
     // First click.
+
+    // TODO: Fix the race condition that source may not exist here.
     video.play();
     audioSources[activeCard.dataset.type].source();
 
