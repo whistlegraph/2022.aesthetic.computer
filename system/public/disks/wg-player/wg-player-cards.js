@@ -1,49 +1,73 @@
+// TODO: There should be an event on either the video end or this loop that resets either one.
+// TODO: Preload the audio files before showing the video / (add spinners).
+
 const deck = document.querySelector(".card-deck");
 const layerOrder = ["video", "score", "compilation"];
 
-function resize() {
-  deck.querySelectorAll(".card-deck .card-view").forEach((cardView) => {
-    const card = cardView.querySelector(".card");
-    const cardContent = card.querySelector(".card-content");
+let volumeOutInterval, volumeInInterval;
 
-    // TODO: Make these customizable.
-    const margin = 64; // Of the page.
-    //const border = margin / 2;
-    const borderSetting = 0.35;
+let audioContext;
+const audioSources = {};
+const videoGains = {};
 
-    const border = margin * borderSetting;
+// Load audio files. // TODO: This can move elsewhere.
 
-    const width = deck.clientWidth - margin;
-    const height = deck.clientHeight - margin;
+const audios = document.querySelectorAll("#content .card-deck .card audio");
 
-    const displayRatio = deck.clientWidth / deck.clientHeight;
-    const contentRatioValues = card.dataset.ratio
-      .split("x")
-      .map((n) => parseFloat(n));
-    const contentRatio = contentRatioValues[0] / contentRatioValues[1];
+audios.forEach((audio, i) => {
+  const type = audio.closest(".card").dataset.type;
 
-    if (contentRatio < displayRatio) {
-      cardContent.style.width = Math.floor(height * contentRatio) + "px";
-      cardContent.style.height = height + "px";
-    } else {
-      cardContent.style.height = Math.floor(width / contentRatio) + "px";
-      cardContent.style.width = width + "px";
-    }
+  fetch(audio.src)
+    .then(function (response) {
+      return response.arrayBuffer();
+    })
+    .then(function (buffer) {
+      audioSources[type] = { buffer };
+      if (i === audios.length - 1)
+        console.log("🎼 All whistlegraph audio has loaded!");
+      console.log(audioSources);
+    });
+});
 
-    card.style.width = parseFloat(cardContent.style.width) + border + "px";
-    card.style.height = parseFloat(cardContent.style.height) + border + "px";
+// Create an audioContext for crossfading between videos.
+function startAudio() {
+  audioContext = new AudioContext({
+    latencyHint: "playback",
+  });
 
-    cardContent.style.left = border / 2 + "px";
-    cardContent.style.top = border / 2 + "px";
+  console.log("Output latency:", audioContext.baseLatency);
 
-    card.style.top = (deck.clientHeight - card.clientHeight) / 2 + "px";
-    card.style.left = (deck.clientWidth - card.clientWidth) / 2 + "px";
+  // TODO: Clean up this messy gain code.
+
+  // Assume that we have loaded all audio
+  Object.entries(audioSources).forEach(([type, content]) => {
+    audioContext.decodeAudioData(content.buffer, function (decodedData) {
+      function source() {
+        const gainNode = audioContext.createGain();
+        console.log(gainNode.gain.value);
+        const s = audioContext.createBufferSource();
+        //s.loop = true;
+        s.buffer = decodedData;
+        s.connect(gainNode);
+        //gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+        s.start();
+        content.gainNode = gainNode;
+        gainNode.connect(audioContext.destination);
+        gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+      }
+
+      content.source = source;
+    });
   });
 }
 
-let volumeOutInterval, volumeInInterval;
-
-let down = false;
+deck.addEventListener(
+  "pointerdown",
+  (e) => {
+    startAudio();
+  },
+  { once: true }
+);
 
 // 1️⃣ Hover states for cards when using only a mouse, and active states
 //    for mouse and touch.
@@ -57,21 +81,19 @@ let multipleTouches = false;
 let activated = false;
 let deactivateTimeout;
 
-// Hover
 deck.addEventListener("pointermove", (e) => {
   if (!e.isPrimary || multipleTouches === true) return;
   if (e.pointerType === "mouse") deck.classList.remove("no-cursor");
   const card = deck.querySelector(".card-view.active .card");
   if (document.elementFromPoint(e.clientX, e.clientY) === card) {
     if (e.pointerType === "mouse") card.classList.add("hover");
-  } else {
+  } else if (card) {
     card.classList.remove("touch", "hover");
     activated = false;
   }
 });
 
 deck.addEventListener("pointerup", (e) => {
-  // if (!e.isPrimary) return;
   const card = deck.querySelector(".card-view.active .card");
   card.classList.remove("touch");
 });
@@ -80,7 +102,6 @@ deck.addEventListener("touchstart", (e) => {
   if (e.touches.length > 1) {
     multipleTouches = true;
     const card = deck.querySelector(".card-view.active .card");
-    // card.classList.remove("touch");
     clearTimeout(deactivateTimeout);
     deactivateTimeout = setTimeout(() => {
       activated = false;
@@ -99,7 +120,6 @@ deck.addEventListener("touchend", (e) => {
   }
 });
 
-// Active
 deck.addEventListener("pointerdown", (e) => {
   if (!e.isPrimary) return;
   const card = deck.querySelector(".card-view.active .card");
@@ -152,45 +172,66 @@ deck.addEventListener("pointerup", (e) => {
     { once: true }
   );
 
+  // Potentially resume the AudioContext.
+  if (
+    audioContext &&
+    ["suspended", "interrupted"].includes(audioContext.state)
+  ) {
+    audioContext.resume();
+  }
+
   // 0. Unmute the first video if it hasn't woken up yet...
   const video = activeCard.querySelector("video");
-  if (video && video.muted && activeCard.dataset.type === "video") {
+  if (video && video.paused && activeCard.dataset.type === "video") {
     // First click.
-    video.muted = false;
-    video.play(); // TODO: Fix this not working on iOS.
-    video.volume = 1;
-    // if (e.pointerType === "mouse") activeCard.classList.add("hover");
+    video.play();
+    audioSources[activeCard.dataset.type].source();
+
+    video.addEventListener("ended", () => {
+      if (activeView.classList.contains("active")) {
+        video.play();
+        audioSources[activeCard.dataset.type].source();
+      }
+    });
+
     return;
   } else if (video) {
-    // This is either the compilation, or the video, on second time around.
-    clearInterval(volumeOutInterval);
-    volumeOutInterval = setInterval(() => {
-      video.volume *= 0.96;
-      if (video.volume < 0.001) {
-        video.volume = 0;
-        clearInterval(volumeOutInterval);
-      }
-    }, 8);
+    // Fade volume out.
+    const activeCardType = activeCard.dataset.type;
+    //audioSources[activeCardType].gainNode.gain.cancelScheduledValues(
+    //  audioContext.currentTime
+    //);
+    audioSources[activeCardType].gainNode.gain.linearRampToValueAtTime(
+      0,
+      audioContext.currentTime + 1
+    );
   }
 
   // 0.5 Fade in audio if it's necessary for the next layer.
   const nextLayer = layers[layerOrder[1]];
   const nextVideo = nextLayer.querySelector(".card video");
   if (nextVideo) {
+    const nextActiveCardType = nextVideo.closest(".card").dataset.type;
     if (nextVideo.paused) {
       nextVideo.play();
-      nextVideo.muted = false;
+      audioSources[nextActiveCardType].source();
+
+      nextVideo.addEventListener("ended", () => {
+        if (nextVideo.closest(".card-view").classList.contains("active")) {
+          nextVideo.play();
+          audioSources[nextActiveCardType].source();
+        }
+      });
     } else {
       // Bring volume back.
-      nextVideo.volume = 0.0;
-      clearInterval(volumeInInterval);
-      volumeInInterval = setInterval(() => {
-        nextVideo.volume = Math.min(1, nextVideo.volume + 0.01);
-        if (nextVideo.volume >= 1) {
-          nextVideo.volume = 1;
-          clearInterval(volumeInInterval);
-        }
-      }, 8);
+      console.log(audioSources, nextActiveCardType);
+      //audioSources[nextActiveCardType].gainNode.gain.cancelScheduledValues(
+      //  audioContext.currentTime
+      //);
+      audioSources[nextActiveCardType].gainNode.gain.linearRampToValueAtTime(
+        1,
+        audioContext.currentTime + 1
+      );
     }
   }
 
@@ -267,11 +308,51 @@ deck.addEventListener("pointerup", (e) => {
   );
 });
 
-resize();
+function frame() {
+  deck.querySelectorAll(".card-deck .card-view").forEach((cardView) => {
+    const card = cardView.querySelector(".card");
+    const cardContent = card.querySelector(".card-content");
+
+    // TODO: Make these customizable.
+    const margin = 64; // Of the page.
+    //const border = margin / 2;
+    const borderSetting = 0.35;
+
+    const border = margin * borderSetting;
+
+    const width = deck.clientWidth - margin;
+    const height = deck.clientHeight - margin;
+
+    const displayRatio = deck.clientWidth / deck.clientHeight;
+    const contentRatioValues = card.dataset.ratio
+      .split("x")
+      .map((n) => parseFloat(n));
+    const contentRatio = contentRatioValues[0] / contentRatioValues[1];
+
+    if (contentRatio < displayRatio) {
+      cardContent.style.width = Math.floor(height * contentRatio) + "px";
+      cardContent.style.height = height + "px";
+    } else {
+      cardContent.style.height = Math.floor(width / contentRatio) + "px";
+      cardContent.style.width = width + "px";
+    }
+
+    card.style.width = parseFloat(cardContent.style.width) + border + "px";
+    card.style.height = parseFloat(cardContent.style.height) + border + "px";
+
+    cardContent.style.left = border / 2 + "px";
+    cardContent.style.top = border / 2 + "px";
+
+    card.style.top = (deck.clientHeight - card.clientHeight) / 2 + "px";
+    card.style.left = (deck.clientWidth - card.clientWidth) / 2 + "px";
+  });
+}
+
+frame();
 
 const resizer = new ResizeObserver((entries) => {
   for (let entry of entries) {
-    if (entry.target === deck) resize();
+    if (entry.target === deck) frame();
   }
 });
 

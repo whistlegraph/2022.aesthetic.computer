@@ -101,7 +101,6 @@ async function boot(
   let curReframeDelay = REFRAME_DELAY;
 
   function frame(width, height) {
-
     // Cache the current canvas if needed.
     if (freezeFrame && imageData) {
       console.log(
@@ -144,7 +143,6 @@ async function boot(
       } else {
         ffCtx.putImageData(imageData, 0, 0);
       }
-
 
       if (!wrapper.contains(freezeFrameCan)) wrapper.append(freezeFrameCan);
       else freezeFrameCan.style.removeProperty("opacity");
@@ -299,7 +297,7 @@ async function boot(
 
   function startSound() {
     audioContext = new AudioContext({
-      latencyHint: 0,
+      latencyHint: "interactive",
       // TODO: Eventually choose a good sample rate and/or make it settable via
       //       the current disk.
       sampleRate: 44100,
@@ -528,10 +526,13 @@ async function boot(
       // 🔊 Sound
       // TODO: Disable sound engine entirely... unless it is enabled by a disk. 2022.04.07.03.33
       // Only start this after a user-interaction to prevent warnings.
-      window.addEventListener("pointerdown", function down() {
-        startSound();
-        window.removeEventListener("pointerdown", down);
-      });
+      window.addEventListener(
+        "pointerdown",
+        function down() {
+          startSound();
+        },
+        { once: true }
+      );
 
       // ➰ Core Loops for User Input, Music, Object Updates, and Rendering
       Loop.start(

@@ -4,9 +4,7 @@
 
 // ***Current***
 // TODO: Make the box-shadow pixels relative to viewport size or a hardcoded margin size.
-// TODO: Fix volume fade on iOS. See createMediaElementSource: https://www.youtube.com/watch?v=ETD26rd7h6c
 // TODO: Make all the borders customizable again.
-
 // TODO: Loading spinners... Should I allow cards to change, while things are
 //       loading?
 // TODO: Add cover images, and web-ready versions of videos.
@@ -63,7 +61,8 @@ function boot({ cursor, wipe, content, query }) {
     <div class="card-deck">
       <div class="card-view" data-type="compilation" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
-          <video class="card-content" width="100%" height="100%" preload="metadata" playsinline loop muted src="/disks/wg-player/wg-player-test-tt.mp4#t=0.001"></video>
+          <video class="card-content" width="100%" height="100%" preload="metadata" playsinline muted src="/disks/wg-player/wg-player-test-tt.mp4#t=0.001"></video>
+          <audio preload="metadata" src="/disks/wg-player/wg-player-test-tt_1.mp3"></audio>
         </div>
       </div>
     
@@ -75,7 +74,8 @@ function boot({ cursor, wipe, content, query }) {
       
       <div class="card-view active" data-type="video" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
-          <video class="card-content" width="100%" height="100%" preload="metadata" playsinline loop muted src="/disks/wg-player/wg-player-test.mp4#t=0.001"></video>
+          <video class="card-content" width="100%" height="100%" preload="metadata" playsinline muted src="/disks/wg-player/wg-player-test.mp4#t=0.0001"></video>
+          <audio preload="metadata" src="/disks/wg-player/butterfly.wav"></audio>
         </div>
       </div>
     </div>
