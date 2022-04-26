@@ -1,6 +1,3 @@
-// TODO: There should be an event on either the video end or this loop that resets either one.
-// TODO: Preload the audio files before showing the video / (add spinners).
-
 const deck = document.querySelector(".card-deck");
 const layerOrder = ["video", "score", "compilation"];
 
@@ -35,10 +32,6 @@ function startAudio() {
     latencyHint: "playback",
   });
 
-  console.log("Output latency:", audioContext.baseLatency);
-
-  // TODO: Clean up this messy gain code.
-
   // Assume that we have loaded all audio
   Object.entries(audioSources).forEach(([type, content]) => {
     audioContext.decodeAudioData(content.buffer, function (decodedData) {
@@ -55,7 +48,6 @@ function startAudio() {
         gainNode.connect(audioContext.destination);
         gainNode.gain.setValueAtTime(1, audioContext.currentTime);
       }
-
       content.source = source;
     });
   });
@@ -95,7 +87,7 @@ deck.addEventListener("pointermove", (e) => {
 
 deck.addEventListener("pointerup", (e) => {
   const card = deck.querySelector(".card-view.active .card");
-  card.classList.remove("touch");
+  card?.classList.remove("touch");
 });
 
 deck.addEventListener("touchstart", (e) => {
@@ -187,10 +179,12 @@ deck.addEventListener("pointerup", (e) => {
     video.play();
     audioSources[activeCard.dataset.type].source();
 
-    video.addEventListener("ended", () => {
+    video.addEventListener("ended", function end() {
       if (activeView.classList.contains("active")) {
         video.play();
         audioSources[activeCard.dataset.type].source();
+      } else {
+        video.removeEventListener("ended", end);
       }
     });
 
@@ -198,12 +192,17 @@ deck.addEventListener("pointerup", (e) => {
   } else if (video) {
     // Fade volume out.
     const activeCardType = activeCard.dataset.type;
+    console.log("Fading out volume on:", activeCardType);
     //audioSources[activeCardType].gainNode.gain.cancelScheduledValues(
     //  audioContext.currentTime
     //);
+    audioSources[activeCardType].gainNode.gain.setValueAtTime(
+      1,
+      audioContext.currentTime
+    );
     audioSources[activeCardType].gainNode.gain.linearRampToValueAtTime(
       0,
-      audioContext.currentTime + 1
+      audioContext.currentTime + 0.5
     );
   }
 
@@ -216,21 +215,27 @@ deck.addEventListener("pointerup", (e) => {
       nextVideo.play();
       audioSources[nextActiveCardType].source();
 
-      nextVideo.addEventListener("ended", () => {
+      nextVideo.addEventListener("ended", function end() {
         if (nextVideo.closest(".card-view").classList.contains("active")) {
           nextVideo.play();
           audioSources[nextActiveCardType].source();
+        } else {
+          nextVideo.removeEventListener("ended", end);
         }
       });
     } else {
       // Bring volume back.
-      console.log(audioSources, nextActiveCardType);
+      console.log("Bringing back volume on:", nextActiveCardType);
       //audioSources[nextActiveCardType].gainNode.gain.cancelScheduledValues(
       //  audioContext.currentTime
       //);
+      audioSources[nextActiveCardType].gainNode.gain.setValueAtTime(
+        0,
+        audioContext.currentTime
+      );
       audioSources[nextActiveCardType].gainNode.gain.linearRampToValueAtTime(
         1,
-        audioContext.currentTime + 1
+        audioContext.currentTime + 0.5
       );
     }
   }

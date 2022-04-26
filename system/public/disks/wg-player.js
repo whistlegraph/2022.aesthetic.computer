@@ -3,10 +3,12 @@
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
 // ***Current***
-// TODO: Make the box-shadow pixels relative to viewport size or a hardcoded margin size.
-// TODO: Make all the borders customizable again.
+// TODO: Preload the audio files before showing the video / (add spinners).
 // TODO: Loading spinners... Should I allow cards to change, while things are
 //       loading?
+
+// TODO: Make the box-shadow pixels relative to viewport size or a hardcoded margin size.
+// TODO: Make all the borders customizable again.
 // TODO: Add cover images, and web-ready versions of videos.
 // TODO: Background colors
 // TODO: Use no / natural cursor?
