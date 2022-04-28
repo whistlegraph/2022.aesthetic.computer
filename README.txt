@@ -60,6 +60,9 @@
   - [] Global recording of user actions (what about application actions) and audio+video into one file?
   - [] Chalkboard / material simulation.
 
+  ***Radial Menu**
+  - [] Prototype the dream I had about a system-wide, radial menu.
+
  ❤️Side Missions❤️
   - [] Fix skippy scale rendering of pixels on non-retina displays.
   - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]

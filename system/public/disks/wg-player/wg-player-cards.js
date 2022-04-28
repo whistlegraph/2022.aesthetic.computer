@@ -35,7 +35,6 @@ audios.forEach((audio, i) => {
 function decodeAudioData() {
   const audioSourceEntries = Object.entries(audioSources);
   audioSourceEntries.forEach(([type, content], i) => {
-    // TODO: Why isn't content just content.decodedBuffer here?
     audioContext.decodeAudioData(content.buffer, function (decodedData) {
       function source() {
         const gainNode = audioContext.createGain();
@@ -46,6 +45,8 @@ function decodeAudioData() {
         gainNode.connect(audioContext.destination);
         gainNode.gain.setValueAtTime(1, audioContext.currentTime);
         s.start();
+        content.startTime = audioContext.currentTime;
+        console.log(s);
       }
       if (i === audioSourceEntries.length - 1) {
         console.log("🎼 All whistlegraph audio data decoded!");
@@ -57,6 +58,7 @@ function decodeAudioData() {
 }
 
 videos.forEach((video) => {
+  video.load();
   video.addEventListener(
     "canplaythrough",
     () => {
@@ -74,26 +76,12 @@ const spinnerInterval = setInterval(() => {
   if (allVideosReady && allAudioReady) {
     // Remove the loading spinner.
     deck.classList.remove("loading");
+    clearInterval(spinnerInterval);
   }
-  clearInterval(spinnerInterval);
 }, 250);
-
-//let audiosAlreadyDecoded = false;
-
-// Create an audioContext for crossfading between videos.
-/*
-deck.addEventListener(
-  "pointerdown",
-  (e) => {
-    //startAudio();
-  },
-  { once: true }
-);
-*/
 
 // 1️⃣ Hover states for cards when using only a mouse, and active states
 //    for mouse and touch.
-
 deck.addEventListener("click", (event) => {
   event.preventDefault();
   event.stopPropagation();
@@ -180,7 +168,7 @@ deck.addEventListener("pointerup", (e) => {
     layers[layer] = document.querySelector(`.card-view[data-type=${layer}]`);
   });
 
-  // -1. Play the push down animation...
+  // Play the push down animation...
   activeView.classList.add("pressed");
   activeCard.classList.add("running");
 
@@ -202,19 +190,35 @@ deck.addEventListener("pointerup", (e) => {
     audioContext.resume();
   }
 
-  // 0. Unmute the first video if it hasn't woken up yet...
+  // Triggers playback of synchronized audio/video.
+  function playSyncedVideo(video, type) {
+    video.addEventListener(
+      "playing",
+      () => {
+        const syncInterval = setInterval(() => {
+          console.log("Video time:", video.currentTime);
+          if (video.currentTime > 0) {
+            clearInterval(syncInterval);
+            audioSources[type].source();
+          }
+        }, 8); // Sync audio with video @ 120fps.
+      },
+      { once: true }
+    );
+    video.play();
+  }
+
+  // Unmute the first video if it hasn't woken up yet...
   const video = activeCard.querySelector("video");
   if (video && video.paused && activeCard.dataset.type === "video") {
     // First click.
 
     // TODO: Fix the race condition that source may not exist here.
-    video.play();
-    audioSources[activeCard.dataset.type].source();
+    playSyncedVideo(video, activeCard.dataset.type);
 
     video.addEventListener("ended", function end() {
       if (activeView.classList.contains("active")) {
-        video.play();
-        audioSources[activeCard.dataset.type].source();
+        playSyncedVideo(video, activeCard.dataset.type);
       } else {
         video.removeEventListener("ended", end);
       }
@@ -238,19 +242,17 @@ deck.addEventListener("pointerup", (e) => {
     );
   }
 
-  // 0.5 Fade in audio if it's necessary for the next layer.
+  // Fade in audio if it's necessary for the next layer.
   const nextLayer = layers[layerOrder[1]];
   const nextVideo = nextLayer.querySelector(".card video");
   if (nextVideo) {
     const nextActiveCardType = nextVideo.closest(".card").dataset.type;
     if (nextVideo.paused) {
-      nextVideo.play();
-      audioSources[nextActiveCardType].source();
+      playSyncedVideo(nextVideo, nextActiveCardType);
 
       nextVideo.addEventListener("ended", function end() {
         if (nextVideo.closest(".card-view").classList.contains("active")) {
-          nextVideo.play();
-          audioSources[nextActiveCardType].source();
+          playSyncedVideo(nextVideo, nextActiveCardType);
         } else {
           nextVideo.removeEventListener("ended", end);
         }

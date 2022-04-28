@@ -3,19 +3,16 @@
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
 // ***Current***
-// TODO: Preload the audio files before showing the video / (add spinners).
+// TODO: Add a visual spinner via Figma (Butterfly as animated svg).
 // TODO: Loading spinners... Should I allow cards to change, while things are
 //       loading?
 
+// TODO: Convert repository to using Git LFS, then add all videos and audio.
 // TODO: Download all videos beforehand? https://dinbror.dk/blog/how-to-preload-entire-html5-video-before-play-solved
 
 // TODO: Make the box-shadow pixels relative to viewport size or a hardcoded margin size.
 // TODO: Make all the borders customizable again.
 // TODO: Add cover images, and web-ready versions of videos.
-// TODO: Background colors
-// TODO: Use no / natural cursor?
-// TODO: Transitions too fast on mobile.
-// TODO: Fix iOS.
 
 const whistlegraphs = {
   butterfly: {
