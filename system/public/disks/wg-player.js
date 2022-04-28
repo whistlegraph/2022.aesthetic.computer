@@ -7,6 +7,8 @@
 // TODO: Loading spinners... Should I allow cards to change, while things are
 //       loading?
 
+// TODO: Download all videos beforehand? https://dinbror.dk/blog/how-to-preload-entire-html5-video-before-play-solved
+
 // TODO: Make the box-shadow pixels relative to viewport size or a hardcoded margin size.
 // TODO: Make all the borders customizable again.
 // TODO: Add cover images, and web-ready versions of videos.
@@ -20,7 +22,7 @@ const whistlegraphs = {
     video: {
       border: 2,
       outerRadius: 0.25,
-      innerRadius: 0,
+      innerRadius: 0.15,
       color: "rgb(200, 200, 50)",
       boxShadow: "4px 4px 12px rgba(0, 0, 255, 0.75)",
     },
@@ -34,7 +36,7 @@ const whistlegraphs = {
     compilation: {
       border: 0.0,
       outerRadius: 0.25,
-      innerRadius: 0,
+      innerRadius: 0.15,
       color: "grey",
       boxShadow: "4px 4px 12px rgba(0, 255, 0, 0.75)",
     },
@@ -59,10 +61,10 @@ function boot({ cursor, wipe, content, query }) {
   const whistlegraph = whistlegraphs[query[0] || "butterfly"];
 
   const deck = content.add(`
-    <div class="card-deck">
+    <div class="card-deck loading">
       <div class="card-view" data-type="compilation" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
-          <video class="card-content" width="100%" height="100%" preload="metadata" playsinline muted src="/disks/wg-player/wg-player-test-tt.mp4#t=0.001"></video>
+          <video class="card-content" width="100%" height="100%" preload="auto" playsinline muted src="/disks/wg-player/wg-player-test-tt.mp4"></video>
           <audio preload="metadata" src="/disks/wg-player/wg-player-test-tt_1.mp3"></audio>
         </div>
       </div>
@@ -75,10 +77,11 @@ function boot({ cursor, wipe, content, query }) {
       
       <div class="card-view active" data-type="video" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
-          <video class="card-content" width="100%" height="100%" preload="metadata" playsinline muted src="/disks/wg-player/wg-player-test.mp4#t=0.0001"></video>
+          <video class="card-content" width="100%" height="100%" preload="auto" playsinline muted src="/disks/wg-player/wg-player-test.mp4"></video>
           <audio preload="metadata" src="/disks/wg-player/butterfly.wav"></audio>
         </div>
       </div>
+    <div id="card-deck-loading"></div>
     </div>
     <script src="/disks/wg-player/wg-player-cards.js" type="module" defer></script>
     <style>  
@@ -92,6 +95,8 @@ function boot({ cursor, wipe, content, query }) {
       display: flex;
     }
     
+    .card-deck:not(.loading) #card-deck-loading { display: none; }
+    
     #content .card-view {
       /*--margin: 5em;*/
       /*height: calc(100% - var(--margin));*/
@@ -104,6 +109,21 @@ function boot({ cursor, wipe, content, query }) {
       box-sizing: border-box;
       position: absolute;
       pointer-events: none;
+    }
+    
+    #card-deck-loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: calc(100% + 1px);
+      height: calc(100% + 1px);
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+    }
+    
+    #card-deck-loading {
+      backdrop-filter: brightness(0.5) saturate(0);
+      -webkit-backdrop-filter: brightness(0.5) saturate(0);
     }
     
     .card-deck.no-cursor { cursor: none; }
@@ -215,6 +235,14 @@ function boot({ cursor, wipe, content, query }) {
       border-radius: ${whistlegraph.video.innerRadius}em;
     }
     
+    .card-view[data-type=video] .card video {
+      border-radius: ${whistlegraph.video.innerRadius}em;
+    }
+    
+    .card-deck.loading .card-view[data-type=video] .card video {
+      background-color: black;
+    }
+    
     .card-view[data-type=score] .card img {
       box-sizing: border-box;
       border-radius: 0.25em;
@@ -225,7 +253,9 @@ function boot({ cursor, wipe, content, query }) {
     
     .card-view[data-type=compilation] .card video {
       border-radius: ${whistlegraph.compilation.innerRadius}em;
+      box-sizing: border-box;
     }
+    
     </style>
   `);
 }

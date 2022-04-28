@@ -1,18 +1,21 @@
 const deck = document.querySelector(".card-deck");
 const layerOrder = ["video", "score", "compilation"];
 
-let volumeOutInterval, volumeInInterval;
-
 let audioContext;
 const audioSources = {};
 const videoGains = {};
+
+const audios = document.querySelectorAll("#content .card-deck .card audio");
+const videos = document.querySelectorAll("#content .card-deck .card video");
+
+let videosReady = 0;
+let allVideosReady = false;
+let allAudioReady = false;
 
 // Load audio files as buffers in an audioContext.
 audioContext = new AudioContext({
   latencyHint: "playback",
 });
-
-const audios = document.querySelectorAll("#content .card-deck .card audio");
 
 audios.forEach((audio, i) => {
   const type = audio.closest(".card").dataset.type;
@@ -46,20 +49,39 @@ function decodeAudioData() {
       }
       if (i === audioSourceEntries.length - 1) {
         console.log("🎼 All whistlegraph audio data decoded!");
-        //audiosAlreadyDecoded = true;
-
-        // TODO: Actually allow a user to interact with the page now, and hide
-        //       the loading spinner.
+        allAudioReady = true;
       }
       content.source = source;
     });
   });
 }
 
+videos.forEach((video) => {
+  video.addEventListener(
+    "canplaythrough",
+    () => {
+      videosReady += 1;
+      if (videosReady === videos.length - 1) {
+        console.log("📹 All whistlegraph videos are ready to play!");
+        allVideosReady = true;
+      }
+    },
+    false
+  );
+});
+
+const spinnerInterval = setInterval(() => {
+  if (allVideosReady && allAudioReady) {
+    // Remove the loading spinner.
+    deck.classList.remove("loading");
+  }
+  clearInterval(spinnerInterval);
+}, 250);
+
 //let audiosAlreadyDecoded = false;
 
 // Create an audioContext for crossfading between videos.
-
+/*
 deck.addEventListener(
   "pointerdown",
   (e) => {
@@ -67,6 +89,7 @@ deck.addEventListener(
   },
   { once: true }
 );
+*/
 
 // 1️⃣ Hover states for cards when using only a mouse, and active states
 //    for mouse and touch.
