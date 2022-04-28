@@ -78,7 +78,9 @@ function boot({ cursor, wipe, content, query }) {
           <audio preload="metadata" src="/disks/wg-player/butterfly.wav"></audio>
         </div>
       </div>
-    <div id="card-deck-loading"></div>
+    <div id="card-deck-loading">
+      <img src="/disks/wg-player/butterfly-cosplayer.gif">
+    </div>
     </div>
     <script src="/disks/wg-player/wg-player-cards.js" type="module" defer></script>
     <style>  
@@ -116,11 +118,18 @@ function boot({ cursor, wipe, content, query }) {
       height: calc(100% + 1px);
       background: rgba(0, 0, 0, 0.5);
       z-index: 100;
-    }
-    
-    #card-deck-loading {
       backdrop-filter: brightness(0.5) saturate(0);
       -webkit-backdrop-filter: brightness(0.5) saturate(0);
+      display: flex;
+    }
+    
+    #card-deck-loading img { /* Spinner */
+      display: block;
+      margin: auto;
+      width: 25%;
+      max-width: 6em;
+      max-height: 6em;
+      image-rendering: pixelated;
     }
     
     .card-deck.no-cursor { cursor: none; }
@@ -211,6 +220,19 @@ function boot({ cursor, wipe, content, query }) {
       box-shadow: ${whistlegraph.video.boxShadow}; 
     }
     
+    .card-deck.loading .card[data-type=video]::after,
+    .card-deck.loading .card[data-type=compilation]::after {
+      content: '';
+      width: calc(100% - 22.4px);
+      height: calc(100% - 22.4px);
+      top: 11.2px;
+      left: 11.2px;
+      position: absolute;
+      border-radius: ${whistlegraph.video.outerRadius}em;
+      background-color: black;
+      margin: auto;
+    }
+    
     .card-view[data-type=score] .card {
       background: ${whistlegraph.score.color};
       /*border: ${whistlegraph.score.border}em solid ${whistlegraph.score.color};*/
@@ -234,10 +256,6 @@ function boot({ cursor, wipe, content, query }) {
     
     .card-view[data-type=video] .card video {
       border-radius: ${whistlegraph.video.innerRadius}em;
-    }
-    
-    .card-deck.loading .card-view[data-type=video] .card video {
-      background-color: black;
     }
     
     .card-view[data-type=score] .card img {
