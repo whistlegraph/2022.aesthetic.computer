@@ -3,20 +3,10 @@
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
 // ***Current***
-// TODO: Cut WebAudio fade / spinner.
-// TODO: Add a visual spinner via Figma (Butterfly as animated svg).
-// TODO: Loading spinners... Should I allow cards to change, while things are
-//       loading?
-
-// ***Synchronization
-// TODO: Starting really quickly on iOS can still prevent synchronization.
-//         - Instantiate the audio first, then actually start() it once the videp plays.
-// TODO: Tapping before load also prevents synchronization.
-// TODO: There seems to be a zoom-related bug that also messes up the sync.
-
 // TODO: Convert repository to using Git LFS, then add all videos and audio.
+// TODO: - Add separate media files, and all spinners.
+// TODO: Add page turn sound on iOS? (Look up old No Paint sounds)
 // TODO: Download all videos beforehand? https://dinbror.dk/blog/how-to-preload-entire-html5-video-before-play-solved
-
 // TODO: Make the box-shadow pixels relative to viewport size or a hardcoded margin size.
 // TODO: Make all the borders customizable again.
 // TODO: Add cover images, and web-ready versions of videos.
@@ -68,8 +58,7 @@ function boot({ cursor, wipe, content, query }) {
     <div class="card-deck loading">
       <div class="card-view" data-type="compilation" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
-          <video class="card-content" width="100%" height="100%" preload="auto" playsinline muted src="/disks/wg-player/wg-player-test-tt.mp4"></video>
-          <audio preload="metadata" src="/disks/wg-player/wg-player-test-tt_1.mp3"></audio>
+          <video class="card-content" width="100%" height="100%" preload="auto" playsinline src="/disks/wg-player/wg-player-test-tt.mp4"></video>
         </div>
       </div>
     
@@ -81,12 +70,11 @@ function boot({ cursor, wipe, content, query }) {
       
       <div class="card-view active" data-type="video" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
-          <video class="card-content" width="100%" height="100%" preload="auto" playsinline muted src="/disks/wg-player/wg-player-test.mp4"></video>
-          <audio preload="metadata" src="/disks/wg-player/butterfly.wav"></audio>
+          <video class="card-content" width="100%" height="100%" preload="auto" playsinline src="/disks/wg-player/wg-player-test.mp4"></video>
         </div>
       </div>
     <div id="card-deck-loading">
-      <img src="/disks/wg-player/butterfly-cosplayer.gif">
+      <img src="/disks/wg-player/butterfly.webp">
     </div>
     </div>
     <script src="/disks/wg-player/wg-player-cards.js" type="module" defer></script>

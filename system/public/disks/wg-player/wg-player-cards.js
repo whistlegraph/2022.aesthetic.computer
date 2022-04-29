@@ -10,90 +10,15 @@ const videos = document.querySelectorAll("#content .card-deck .card video");
 
 let videosReady = 0;
 let allVideosReady = false;
-let allAudioReady = false;
+let multipleTouches = false;
+let activated = false;
+let deactivateTimeout;
+let volumeOutInterval, volumeInInterval;
 
-// Load audio files as buffers in an audioContext.
-audioContext = new AudioContext({
-  latencyHint: "playback",
-});
-
-audios.forEach((audio, i) => {
-  const type = audio.closest(".card").dataset.type;
-  fetch(audio.src)
-    .then(function (response) {
-      return response.arrayBuffer();
-    })
-    .then(function (buffer) {
-      audioSources[type] = { buffer };
-      if (i === audios.length - 1) {
-        console.log("🎼 All whistlegraph audio has loaded!");
-        decodeAudioData();
-      }
-    });
-});
-
-function decodeAudioData() {
-  const audioSourceEntries = Object.entries(audioSources);
-  audioSourceEntries.forEach(([type, content], i) => {
-    audioContext.decodeAudioData(content.buffer, function (decodedData) {
-      function source() {
-        const gainNode = audioContext.createGain();
-        const s = audioContext.createBufferSource();
-        s.buffer = decodedData;
-        s.connect(gainNode);
-        content.gainNode = gainNode;
-        gainNode.connect(audioContext.destination);
-        gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-        s.start();
-        content.startTime = audioContext.currentTime;
-        //console.log(s);
-        console.log(
-          "Start source:",
-          performance.now(),
-          audioContext.performanceTime
-        );
-      }
-      if (i === audioSourceEntries.length - 1) {
-        console.log("🎼 All whistlegraph audio data decoded!");
-        allAudioReady = true;
-      }
-      content.source = source;
-    });
-  });
-}
+const iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
 
 videos.forEach((video) => {
-  //video.load();
-
-  var req = new XMLHttpRequest();
-  console.log(video.src);
-  req.open("GET", video.src, true);
-  req.responseType = "blob";
-
-  req.onload = function () {
-    // Onload is triggered even on 404
-    // so we need to check the status code
-    if (this.status === 200) {
-      var videoBlob = this.response;
-      var vid = URL.createObjectURL(videoBlob); // IE10+
-      // Video is now downloaded
-      // and we can set it as source on the video element
-      video.src = vid;
-
-      videosReady += 1;
-      if (videosReady === videos.length - 1) {
-        console.log("📹 All whistlegraph videos are ready to play!");
-        allVideosReady = true;
-      }
-    }
-  };
-  req.onerror = function () {
-    // Error
-  };
-
-  req.send();
-
-  /*
+  video.load();
   video.addEventListener(
     "canplaythrough",
     () => {
@@ -101,20 +26,14 @@ videos.forEach((video) => {
       if (videosReady === videos.length - 1) {
         console.log("📹 All whistlegraph videos are ready to play!");
         allVideosReady = true;
+        setTimeout(() => {
+          deck.classList.remove("loading");
+        }, 500);
       }
     },
     false
   );
-   */
 });
-
-const spinnerInterval = setInterval(() => {
-  if (allVideosReady && allAudioReady) {
-    // Remove the loading spinner.
-    deck.classList.remove("loading");
-    clearInterval(spinnerInterval);
-  }
-}, 250);
 
 // 1️⃣ Hover states for cards when using only a mouse, and active states
 //    for mouse and touch.
@@ -122,10 +41,6 @@ deck.addEventListener("click", (event) => {
   event.preventDefault();
   event.stopPropagation();
 });
-
-let multipleTouches = false;
-let activated = false;
-let deactivateTimeout;
 
 deck.addEventListener("pointermove", (e) => {
   if (!e.isPrimary || multipleTouches === true) return;
@@ -157,7 +72,6 @@ deck.addEventListener("touchstart", (e) => {
 });
 
 deck.addEventListener("touchend", (e) => {
-  // if (!e.isPrimary) return;
   if (e.touches.length === 0) {
     multipleTouches = false;
     // number of touches?
@@ -182,7 +96,7 @@ deck.addEventListener("pointerdown", (e) => {
 });
 
 // 2️⃣ Switching from one card to another, animating them, and triggering the media
-//    for each.
+//   for each.
 deck.addEventListener("pointerup", (e) => {
   if (!e.isPrimary) return;
 
@@ -197,6 +111,11 @@ deck.addEventListener("pointerup", (e) => {
   // Make sure the card is still active based on the pointer events.
   if (activated === false) return;
   activated = false;
+
+  // Make sure we are not in the middle of a transition.
+  if (activeView.classList.contains("pressed")) {
+    return;
+  }
 
   // 1. Collect all card elements via layerOrder.
   const layers = {};
@@ -218,65 +137,34 @@ deck.addEventListener("pointerup", (e) => {
     { once: true }
   );
 
-  // Potentially resume the AudioContext.
-  if (
-    audioContext &&
-    ["suspended", "interrupted"].includes(audioContext.state)
-  ) {
-    audioContext.resume();
-  }
-
-  // Triggers playback of synchronized audio/video.
-  function playSyncedVideo(video, type) {
-    video.addEventListener(
-      "playing",
-      (e) => {
-        console.log(e);
-        const syncInterval = setInterval(() => {
-          console.log("Video time:", video.currentTime);
-          if (video.currentTime > 0) {
-            clearInterval(syncInterval);
-            audioSources[type].source();
-          }
-        }, 16); // Sync audio with video @ 120fps.
-      },
-      { once: true }
-    );
-    video.play();
-  }
-
   // Unmute the first video if it hasn't woken up yet...
   const video = activeCard.querySelector("video");
   if (video && video.paused && activeCard.dataset.type === "video") {
     // First click.
-
-    // TODO: Fix the race condition that source may not exist here.
-    playSyncedVideo(video, activeCard.dataset.type);
-
+    video.play();
     video.addEventListener("ended", function end() {
       if (activeView.classList.contains("active")) {
-        playSyncedVideo(video, activeCard.dataset.type);
+        video.play();
       } else {
         video.removeEventListener("ended", end);
       }
     });
-
     return;
   } else if (video) {
     // Fade volume out.
-    const activeCardType = activeCard.dataset.type;
-    console.log("Fading out volume on:", activeCardType);
-    //audioSources[activeCardType].gainNode.gain.cancelScheduledValues(
-    //  audioContext.currentTime
-    //);
-    audioSources[activeCardType].gainNode.gain.setValueAtTime(
-      1,
-      audioContext.currentTime
-    );
-    audioSources[activeCardType].gainNode.gain.linearRampToValueAtTime(
-      0,
-      audioContext.currentTime + 0.5
-    );
+    console.log("Fading out volume on:", video);
+    if (iOS) {
+      video.muted = true;
+    } else {
+      clearInterval(volumeOutInterval);
+      volumeOutInterval = setInterval(() => {
+        video.volume *= 0.96;
+        if (video.volume < 0.001) {
+          video.volume = 0;
+          clearInterval(volumeOutInterval);
+        }
+      }, 8);
+    }
   }
 
   // Fade in audio if it's necessary for the next layer.
@@ -285,29 +173,32 @@ deck.addEventListener("pointerup", (e) => {
   if (nextVideo) {
     const nextActiveCardType = nextVideo.closest(".card").dataset.type;
     if (nextVideo.paused) {
-      playSyncedVideo(nextVideo, nextActiveCardType);
+      nextVideo.play();
+      nextVideo.muted = false;
 
       nextVideo.addEventListener("ended", function end() {
         if (nextVideo.closest(".card-view").classList.contains("active")) {
-          playSyncedVideo(nextVideo, nextActiveCardType);
+          nextVideo.play();
         } else {
           nextVideo.removeEventListener("ended", end);
         }
       });
     } else {
       // Bring volume back.
-      console.log("Bringing back volume on:", nextActiveCardType);
-      //audioSources[nextActiveCardType].gainNode.gain.cancelScheduledValues(
-      //  audioContext.currentTime
-      //);
-      audioSources[nextActiveCardType].gainNode.gain.setValueAtTime(
-        0,
-        audioContext.currentTime
-      );
-      audioSources[nextActiveCardType].gainNode.gain.linearRampToValueAtTime(
-        1,
-        audioContext.currentTime + 0.5
-      );
+      console.log("Bringing back volume on:", nextVideo);
+      if (iOS) {
+        nextVideo.muted = false;
+      } else {
+        nextVideo.volume = 0.0;
+        clearInterval(volumeInInterval);
+        volumeInInterval = setInterval(() => {
+          nextVideo.volume = Math.min(1, nextVideo.volume + 0.01);
+          if (nextVideo.volume >= 1) {
+            nextVideo.volume = 1;
+            clearInterval(volumeInInterval);
+          }
+        }, 8);
+      }
     }
   }
 
