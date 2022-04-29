@@ -46,7 +46,12 @@ function decodeAudioData() {
         gainNode.gain.setValueAtTime(1, audioContext.currentTime);
         s.start();
         content.startTime = audioContext.currentTime;
-        console.log(s);
+        //console.log(s);
+        console.log(
+          "Start source:",
+          performance.now(),
+          audioContext.performanceTime
+        );
       }
       if (i === audioSourceEntries.length - 1) {
         console.log("🎼 All whistlegraph audio data decoded!");
@@ -58,7 +63,37 @@ function decodeAudioData() {
 }
 
 videos.forEach((video) => {
-  video.load();
+  //video.load();
+
+  var req = new XMLHttpRequest();
+  console.log(video.src);
+  req.open("GET", video.src, true);
+  req.responseType = "blob";
+
+  req.onload = function () {
+    // Onload is triggered even on 404
+    // so we need to check the status code
+    if (this.status === 200) {
+      var videoBlob = this.response;
+      var vid = URL.createObjectURL(videoBlob); // IE10+
+      // Video is now downloaded
+      // and we can set it as source on the video element
+      video.src = vid;
+
+      videosReady += 1;
+      if (videosReady === videos.length - 1) {
+        console.log("📹 All whistlegraph videos are ready to play!");
+        allVideosReady = true;
+      }
+    }
+  };
+  req.onerror = function () {
+    // Error
+  };
+
+  req.send();
+
+  /*
   video.addEventListener(
     "canplaythrough",
     () => {
@@ -70,6 +105,7 @@ videos.forEach((video) => {
     },
     false
   );
+   */
 });
 
 const spinnerInterval = setInterval(() => {
@@ -194,14 +230,15 @@ deck.addEventListener("pointerup", (e) => {
   function playSyncedVideo(video, type) {
     video.addEventListener(
       "playing",
-      () => {
+      (e) => {
+        console.log(e);
         const syncInterval = setInterval(() => {
           console.log("Video time:", video.currentTime);
           if (video.currentTime > 0) {
             clearInterval(syncInterval);
             audioSources[type].source();
           }
-        }, 8); // Sync audio with video @ 120fps.
+        }, 16); // Sync audio with video @ 120fps.
       },
       { once: true }
     );

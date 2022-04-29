@@ -3,9 +3,16 @@
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
 // ***Current***
+// TODO: Cut WebAudio fade / spinner.
 // TODO: Add a visual spinner via Figma (Butterfly as animated svg).
 // TODO: Loading spinners... Should I allow cards to change, while things are
 //       loading?
+
+// ***Synchronization
+// TODO: Starting really quickly on iOS can still prevent synchronization.
+//         - Instantiate the audio first, then actually start() it once the videp plays.
+// TODO: Tapping before load also prevents synchronization.
+// TODO: There seems to be a zoom-related bug that also messes up the sync.
 
 // TODO: Convert repository to using Git LFS, then add all videos and audio.
 // TODO: Download all videos beforehand? https://dinbror.dk/blog/how-to-preload-entire-html5-video-before-play-solved
