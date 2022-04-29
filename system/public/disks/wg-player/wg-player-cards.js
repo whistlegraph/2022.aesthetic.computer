@@ -175,6 +175,7 @@ deck.addEventListener("pointerup", (e) => {
     if (nextVideo.paused) {
       nextVideo.play();
       nextVideo.muted = false;
+      nextVideo.volume = 1;
 
       nextVideo.addEventListener("ended", function end() {
         if (nextVideo.closest(".card-view").classList.contains("active")) {

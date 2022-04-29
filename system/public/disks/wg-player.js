@@ -3,7 +3,6 @@
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
 // ***Current***
-// TODO: Convert repository to using Git LFS, then add all videos and audio.
 // TODO: - Add separate media files, and all spinners.
 // TODO: Add page turn sound on iOS? (Look up old No Paint sounds)
 // TODO: Download all videos beforehand? https://dinbror.dk/blog/how-to-preload-entire-html5-video-before-play-solved
@@ -12,7 +11,7 @@
 // TODO: Add cover images, and web-ready versions of videos.
 
 const whistlegraphs = {
-  butterfly: {
+  "butterfly-cosplayer": {
     video: {
       border: 2,
       outerRadius: 0.25,
@@ -51,30 +50,35 @@ function boot({ cursor, wipe, content, query }) {
   wipe(200, 150, 150);
   cursor("native");
 
+  const wg = query[0] || "butterfly-cosplayer";
+
   // TODO: Read this info as a command line parameter.
-  const whistlegraph = whistlegraphs[query[0] || "butterfly"];
+  const whistlegraph = whistlegraphs[wg];
 
   const deck = content.add(`
     <div class="card-deck loading">
       <div class="card-view" data-type="compilation" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
-          <video class="card-content" width="100%" height="100%" preload="auto" playsinline src="/disks/wg-player/wg-player-test-tt.mp4"></video>
+          <video class="card-content" width="100%" height="100%" preload="auto"
+           playsinline src="/disks/wg-player/${wg}/${wg}-tt.mp4"></video>
         </div>
       </div>
     
       <div class="card-view" data-type="score" style="z-index: 1">
         <div class="card" data-type="score" data-ratio="8.5x11">
-          <img class="card-content" width="100%" height="100%" src="/disks/wg-player/wg-player-test.svg">
+          <img class="card-content" width="100%" height="100%"
+           src="/disks/wg-player/${wg}/${wg}.svg">
         </div>
       </div>
       
       <div class="card-view active" data-type="video" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
-          <video class="card-content" width="100%" height="100%" preload="auto" playsinline src="/disks/wg-player/wg-player-test.mp4"></video>
+          <video class="card-content" width="100%" height="100%" preload="auto"
+           playsinline src="/disks/wg-player/${wg}/${wg}-web.mp4"></video>
         </div>
       </div>
     <div id="card-deck-loading">
-      <img src="/disks/wg-player/butterfly.webp">
+      <img src="/disks/wg-player/${wg}/${wg}.webp">
     </div>
     </div>
     <script src="/disks/wg-player/wg-player-cards.js" type="module" defer></script>
