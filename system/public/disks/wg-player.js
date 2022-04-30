@@ -2,6 +2,9 @@
 // Made on occasion of Whistlegraph's Feral File exhibition.
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
+import { randIntRange } from "../computer/lib/num.js";
+import { anyKey } from "../computer/lib/help.js";
+
 // ***Current***
 // TODO: Rotation and scaling. Subtle, random.
 // TODO: Zooming in.
@@ -21,11 +24,8 @@
 // https://aesthetic.computer/?name=puzzle#wg-player
 // https://aesthetic.computer/?name=whats-inside-your-heart#wg-player
 
-// If no whistlegraph is specified when the player loads.
-const defaultWhistlegraph = "butterfly-cosplayer";
-
 const defaultDisplay = {
-  backgroundTint: [120, 20, 10],
+  backgroundTint: [120, 120, 120],
   video: {
     border: 0.25,
     outerRadius: 0.25,
@@ -85,6 +85,11 @@ const whistlegraphs = {
   "whats-inside-your-heart": defaultDisplay,
 };
 
+// If no whistlegraph is specified when the player loads.
+const defaultWhistlegraph = anyKey(whistlegraphs);
+
+console.log(defaultWhistlegraph);
+
 let whistlegraph;
 
 // 🥾 Boot (Runs once before first paint and sim)
@@ -99,14 +104,12 @@ function boot({ cursor, wipe, content, query }) {
   } else if (query.length > 0) {
     // Params from URL eg: (?name=butterfly-cosplayer#wg-player)
     const params = new URLSearchParams(query);
-    wg = params.get("name") || "butterfly-cosplayer";
+    wg = params.get("name") || defaultWhistlegraph;
   } else {
-    wg = "butterfly-cosplayer";
+    wg = defaultWhistlegraph;
   }
 
   whistlegraph = whistlegraphs[wg];
-
-  wipe(whistlegraph.backgroundTint);
 
   const deck = content.add(`
     <div class="card-deck loading">
@@ -285,6 +288,8 @@ function boot({ cursor, wipe, content, query }) {
     }
     </style>
   `);
+
+  wipe(whistlegraph.backgroundTint);
 }
 
 // 🎨 Paint (Executes every display frame)

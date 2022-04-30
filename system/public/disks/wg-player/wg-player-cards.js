@@ -1,12 +1,14 @@
+import { randIntRange } from "../../computer/lib/num.js";
+import { shuffleInPlace } from "../../computer/lib/help.js";
+
 const deck = document.querySelector(".card-deck");
 const layerOrder = ["video", "score", "compilation"];
 
-let audioContext;
 const audioSources = {};
 const videoGains = {};
-
 const audios = document.querySelectorAll("#content .card-deck .card audio");
 const videos = document.querySelectorAll("#content .card-deck .card video");
+const cardViews = deck.querySelectorAll(".card-deck .card-view");
 
 let videosReady = 0;
 let allVideosReady = false;
@@ -277,7 +279,7 @@ deck.addEventListener("pointerup", (e) => {
 });
 
 function frame() {
-  deck.querySelectorAll(".card-deck .card-view").forEach((cardView) => {
+  cardViews.forEach((cardView) => {
     const card = cardView.querySelector(".card");
     const cardContent = card.querySelector(".card-content");
 
@@ -286,7 +288,6 @@ function frame() {
     const longestSide = Math.min(deck.clientWidth, deck.clientHeight);
 
     const margin = Math.floor(longestSide * 0.15); // Of the page.
-    console.log("Long:", longestSide, "Margin:", margin);
 
     const borderSetting = cardView.dataset.borderSetting;
     const innerRadiusSetting = cardView.dataset.innerRadius;
@@ -294,8 +295,6 @@ function frame() {
 
     card.style.borderRadius = margin * outerRadiusSetting + "px";
     cardContent.style.borderRadius = margin * innerRadiusSetting + "px";
-
-    console.log(cardView.dataset);
 
     const border = Math.floor(margin * borderSetting);
 
@@ -345,10 +344,31 @@ function frame() {
 
 frame();
 
+// Randomly rotate the back two cards on initialization.
+
+{
+  let wentNegative = false;
+  const tiltRight = randIntRange(6, 15);
+  const tiltLeft = randIntRange(-6, -15);
+
+  const tiltBag = [tiltRight, tiltLeft];
+
+  shuffleInPlace(tiltBag);
+
+  // TODO: Pull items out of shuffle bag... eventually make a class?
+
+  console.log(tiltBag);
+
+  cardViews.forEach((cardView, i) => {
+    if (i === cardViews.length - 1) return;
+    console.log(i, cardView);
+
+    //cardView.style.transform = `rotate(${}deg)`;
+  });
+}
+
 const resizer = new ResizeObserver((entries) => {
   for (let entry of entries) {
     if (entry.target === deck) frame();
   }
 });
-
-resizer.observe(deck);

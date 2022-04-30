@@ -16,6 +16,32 @@ export function any(obj) {
   return obj[keys[(keys.length * Math.random()) << 0]];
 }
 
+// Returns a random key from an object.
+export function anyKey(obj) {
+  const keys = Object.keys(obj);
+  return keys[num.randInt(keys.length - 1)];
+}
+
+// Shuffles an array: https://stackoverflow.com/a/2450976
+export function shuffleInPlace(array) {
+  let currentIndex = array.length,
+    randomIndex;
+
+  // While there remain elements to shuffle.
+  while (currentIndex != 0) {
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex],
+    ];
+  }
+  return array;
+}
+
 // Run a function on every value in an object.
 // Ex. each(obj, (value, key) => console.log(value, key));
 export function each(obj, fn) {
