@@ -10,25 +10,13 @@
 
                             🌟 Work In Progress 🌟
 
+***Feral File Whistlegraph Player***
+- [🟢]] Finish player.
 
 ⚠️ Regressions:
- - [🟢] Flicker / held frame while moving between pieces. Right now it's just bright green.
-
- ***Feral File Whistlegraph Player***
- - [] Research whether to add a DOM layer to disks and whether to overload
-      prompt with other pages.
- - [] Start using Git LFS for bigger assets like the whistlegraph mp4s
-      or digitpain assets.
+ - [] Flicker / held frame while moving between pieces. Right now it's just bright green.
 
 💀 Regressions: Flicker / held frame while moving between pieces.
-
- ***Feral File Whistlegraph Player***
- - [🟢] Research whether to add a DOM layer to disks and whether to overload
-        prompt with other pages. Maybe aesthetic.computer is more of an interface
-        project or search engine or *branded* prompt than it is a
-        creative platform?
- - [] Start using Git LFS for bigger assets like the whistlegraph mp4s
-      or digitpain assets.
 
  ***Pre DIGITPAIN Launch***
  - [] Complete DIGITPAIN 0-5.
@@ -54,6 +42,7 @@
   - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.
 
  ***Whistlegraph***
+  - [] https://webaudioapi.com/samples/
   - [] Write and complete: `whistlegraph` / `thumb`.
   - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
   - [] Make whistlegraph recorder disk / nail?

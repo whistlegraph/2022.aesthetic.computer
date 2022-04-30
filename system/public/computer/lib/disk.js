@@ -64,7 +64,7 @@ const $commonApi = {
   content: {
     add: function add(template) {
       console.log(template);
-    }
+    },
   },
   num: {
     randInt: num.randInt,
@@ -471,18 +471,18 @@ class Content {
 
   add(content) {
     // Make a request to add new content to the DOM.
-    send({ type: "content-create", content: {id: this.#id, content} });
-    this.nodes.push({id: this.#id});
+    send({ type: "content-create", content: { id: this.#id, content } });
+    this.nodes.push({ id: this.#id });
     this.#id = this.nodes.length - 1;
     return this.nodes[this.nodes.length - 1];
   }
 
-  receive({id, response}) {
+  receive({ id, response }) {
     this.nodes[id].response = response;
   }
 
-  update({id, msg}) {
-    send({ type: "content-update", content: {id: node.id, msg} });
+  update({ id, msg }) {
+    send({ type: "content-update", content: { id: node.id, msg } });
   }
 }
 
@@ -497,9 +497,8 @@ export { noWorker };
 // TODO: Make simple needsPaint example.
 // TODO: Try to remove as many API calls from here as possible.
 function makeFrame({ data: { type, content } }) {
-
   if (type === "content-created") {
-    $commonApi.content.receive(content)
+    $commonApi.content.receive(content);
     return;
   }
 
@@ -979,10 +978,8 @@ function makeFrame({ data: { type, content } }) {
           send(glazeAfterReframe);
           glazeAfterReframe = undefined;
         }
-      };
+      }
       if (cursorCode) sendData.cursorCode = cursorCode;
-
-      //console.log(sendData);
 
       // Note: transferredPixels will be undefined when sendData === {}.
       send({ type: "render", content: sendData }, [transferredPixels]);

@@ -1,7 +1,6 @@
 import { boot } from "./computer/bios.js";
 
 let host;
-
 let debug;
 
 if (window.acDEBUG === true || window.acDEBUG === false) {

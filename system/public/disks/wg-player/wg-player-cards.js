@@ -282,11 +282,22 @@ function frame() {
     const cardContent = card.querySelector(".card-content");
 
     // TODO: Make these customizable.
-    const margin = 64; // Of the page.
-    //const border = margin / 2;
-    const borderSetting = 0.35;
 
-    const border = margin * borderSetting;
+    const longestSide = Math.min(deck.clientWidth, deck.clientHeight);
+
+    const margin = Math.floor(longestSide * 0.15); // Of the page.
+    console.log("Long:", longestSide, "Margin:", margin);
+
+    const borderSetting = cardView.dataset.borderSetting;
+    const innerRadiusSetting = cardView.dataset.innerRadius;
+    const outerRadiusSetting = cardView.dataset.outerRadius;
+
+    card.style.borderRadius = margin * outerRadiusSetting + "px";
+    cardContent.style.borderRadius = margin * innerRadiusSetting + "px";
+
+    console.log(cardView.dataset);
+
+    const border = Math.floor(margin * borderSetting);
 
     const width = deck.clientWidth - margin;
     const height = deck.clientHeight - margin;
@@ -313,6 +324,22 @@ function frame() {
 
     card.style.top = (deck.clientHeight - card.clientHeight) / 2 + "px";
     card.style.left = (deck.clientWidth - card.clientWidth) / 2 + "px";
+
+    const cardCover = card.querySelector(".card-cover");
+
+    if (cardCover) {
+      cardCover.style.top = cardContent.style.top;
+      cardCover.style.left = cardContent.style.left;
+      cardCover.style.width = cardContent.style.width;
+      cardCover.style.height = cardContent.style.height;
+      cardCover.style.borderRadius = cardContent.style.borderRadius;
+    }
+
+    const cardOutline = card.querySelector(".card-outline");
+
+    if (cardOutline) {
+      cardOutline.style.borderRadius = card.style.borderRadius;
+    }
   });
 }
 
