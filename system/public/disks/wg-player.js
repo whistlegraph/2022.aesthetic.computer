@@ -6,10 +6,9 @@ import { randIntRange } from "../computer/lib/num.js";
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Current***
-// TODO: Add all TikTok comps.
 // TODO: Give loading screen borders one standard color.
 // TODO: Tap / highlight outlines should be full opacity and either be white, black, or... grey?
-// TODO: Replace all blacks with a CSS variable (20, 20, 20);
+// TODO: Experiment with low fps animated noise on playback.
 // TODO: Fix compilation display ratio for all screen sizes.
 // TODO: Always alternate back cards to be tilted in BOTH directions.
 // TODO: Add card cover to score so it starts as black, along with a load event.
@@ -25,35 +24,6 @@ import { anyKey } from "../computer/lib/help.js";
 // https://aesthetic.computer/?name=slinky-dog#wg-player
 // https://aesthetic.computer/?name=puzzle#wg-player
 // https://aesthetic.computer/?name=whats-inside-your-heart#wg-player
-
-const defaultDisplay = {
-  bg: {
-    tint: [100, 150, 255], // rgb
-    tintAmount: 0.6,
-    pixelSaturation: 1,
-  },
-  video: {
-    border: 0.25,
-    outerRadius: 0.25,
-    innerRadius: 0.15,
-    color: "rgb(48, 200, 212)",
-    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(50, 0, 200, 1)",
-  },
-  score: {
-    border: 0.15,
-    outerRadius: 0.15,
-    innerRadius: 0.1,
-    color: "rgb(150, 208, 150)",
-    boxShadow: "0.1vmin 0.1vmin 2vmin rgba(60, 90, 166, 1)",
-  },
-  compilation: {
-    border: 0.2,
-    outerRadius: 0.25,
-    innerRadius: 0.15,
-    color: "rgb(20, 20, 20)",
-    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(100, 80, 228, 0.99)",
-  },
-};
 
 const butterflyCosplayer = {
   bg: {
@@ -229,6 +199,122 @@ const puzzle = {
   },
 };
 
+const slinkyDog = {
+  bg: {
+    tint: [90, 90, 70], // rgb
+    tintAmount: 0.9,
+    pixelSaturation: 0.7,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(100, 140, 90)",
+    boxShadow: "0.75vmin 0.75vmin 2vmin rgba(120, 185, 45, 1)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(170, 175, 130)",
+    boxShadow: "0.1vmin 0.1vmin 2.5vmin rgba(200, 130, 25, 1)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(226, 252, 161, 0.5)",
+  },
+};
+
+const mommyWow = {
+  bg: {
+    tint: [10, 10, 30], // rgb
+    tintAmount: 0.8,
+    pixelSaturation: 0.5,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(80, 82, 110)",
+    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(120, 45, 100, 1)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(250, 246, 65)",
+    boxShadow: "0vmin 0vmin 3vmin rgba(255, 160, 0, 1)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0vmin 0vmin 3vmin rgba(255, 160, 0, 0.5)",
+  },
+};
+
+const peoplePleaser = {
+  bg: {
+    tint: [130, 80, 80], // rgb
+    tintAmount: 0.92,
+    pixelSaturation: 0.2,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(190, 176, 205)",
+    boxShadow: "0.75vmin 0.75vmin 3vmin rgba(180, 126, 200, 1)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(255, 187, 187)",
+    boxShadow: "0.25vmin 0.25vmin 2.5vmin rgba(230, 0, 30, 1)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0vmin 0vmin 3vmin rgba(200, 150, 206, 0.8)",
+  },
+};
+
+const whatsInsideYourHeart = {
+  bg: {
+    tint: [0, 10, 70], // rgb
+    tintAmount: 0.65,
+    pixelSaturation: 1,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 30)",
+    boxShadow: "0.25vmin 0.25vmin 4vmin rgba(255, 10, 10, 0.7)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(30, 20, 20)",
+    boxShadow: "0.25vmin 0.25vmin 2.5vmin rgba(0, 40, 255, 1)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 30, 20)",
+    boxShadow: "0.2vmin 0.2vmin 2vmin rgba(10, 250, 30, 0.8)",
+  },
+};
+
 const whistlegraphs = {
   "butterfly-cosplayer": butterflyCosplayer,
   "time-to-grow": timeToGrow,
@@ -236,10 +322,10 @@ const whistlegraphs = {
   "i-dont-need-an-iphone": iDontNeedAniPhone,
   "lately-when-i-fly": latelyWhenIFly,
   puzzle: puzzle,
-  "slinky-dog": defaultDisplay,
-  "mommy-wow": defaultDisplay,
-  "people-pleaser": defaultDisplay,
-  "whats-inside-your-heart": defaultDisplay,
+  "slinky-dog": slinkyDog,
+  "mommy-wow": mommyWow,
+  "people-pleaser": peoplePleaser,
+  "whats-inside-your-heart": whatsInsideYourHeart,
 };
 
 // If no whistlegraph is specified when the player loads.
@@ -273,7 +359,7 @@ function boot({ cursor, noiseTinted, content, query }) {
       <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline src="/disks/wg-player/${wg}/${wg}-tt.mp4"></video>
+           playsinline src="/disks/wg-player/${wg}/${wg}-tt-compilation.mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline"></div>
         </div>
@@ -489,7 +575,10 @@ function paint({ noiseTinted }) {
     whistlegraph.bg.tintAmount,
     whistlegraph.bg.pixelSaturation
   );
+
+  // if (whistlegraph !== whatsInsideYourHeart) {
   return false;
+  // }
 }
 
 function act({ event }) {

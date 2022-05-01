@@ -280,6 +280,7 @@ deck.addEventListener("pointerup", (e) => {
 
       cardView.classList.remove("active");
       card.classList.remove("running");
+      card.classList.remove("hover");
 
       card.addEventListener("transitionend", function end(e) {
         card.removeEventListener("transitionend", end);
