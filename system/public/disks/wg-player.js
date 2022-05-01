@@ -6,11 +6,13 @@ import { randIntRange } from "../computer/lib/num.js";
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Current***
-// TODO: Rotation and scaling. Subtle, random.
-// TODO: Zooming in.
-
-// TODO: Noise in the tinted backdrops.
-// TODO: Regenerate all webp spinners.
+// TODO: Add all TikTok comps.
+// TODO: Give loading screen borders one standard color.
+// TODO: Tap / highlight outlines should be full opacity and either be white, black, or... grey?
+// TODO: Replace all blacks with a CSS variable (20, 20, 20);
+// TODO: Fix compilation display ratio for all screen sizes.
+// TODO: Always alternate back cards to be tilted in BOTH directions.
+// TODO: Add card cover to score so it starts as black, along with a load event.
 
 // Final URLS:
 // https://aesthetic.computer/?name=butterfly-cosplayer#wg-player
@@ -25,63 +27,218 @@ import { anyKey } from "../computer/lib/help.js";
 // https://aesthetic.computer/?name=whats-inside-your-heart#wg-player
 
 const defaultDisplay = {
-  backgroundTint: [120, 120, 120],
+  bg: {
+    tint: [100, 150, 255], // rgb
+    tintAmount: 0.6,
+    pixelSaturation: 1,
+  },
   video: {
     border: 0.25,
     outerRadius: 0.25,
     innerRadius: 0.15,
-    color: "rgb(200, 200, 50)",
-    boxShadow: "4px 4px 12px rgba(0, 0, 255, 0.75)",
+    color: "rgb(48, 200, 212)",
+    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(50, 0, 200, 1)",
   },
   score: {
     border: 0.15,
     outerRadius: 0.15,
     innerRadius: 0.1,
-    color: "pink",
-    boxShadow: "4px 4px 12px rgba(255, 0, 0, 0.75)",
+    color: "rgb(150, 208, 150)",
+    boxShadow: "0.1vmin 0.1vmin 2vmin rgba(60, 90, 166, 1)",
   },
   compilation: {
     border: 0.2,
     outerRadius: 0.25,
     innerRadius: 0.15,
-    color: "grey",
-    boxShadow: "4px 4px 12px rgba(0, 255, 0, 0.75)",
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(100, 80, 228, 0.99)",
+  },
+};
+
+const butterflyCosplayer = {
+  bg: {
+    tint: [30, 70, 25], // rgb
+    tintAmount: 0.93,
+    pixelSaturation: 0.5,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(210, 128, 0)",
+    boxShadow: "1vmin 1vmin 1.5vmin rgba(0, 80, 225, 0.83)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(170, 170, 150)",
+    boxShadow: "1vmin 1vmin 1.5vmin rgba(80, 137, 4, 0.70)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "1vmin 1vmin 2.5vmin rgba(120, 76, 11, 0.85)",
+  },
+};
+
+const timeToGrow = {
+  bg: {
+    tint: [20, 10, 3], // rgb
+    tintAmount: 0.96,
+    pixelSaturation: 0.1,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(255, 166, 202)",
+    boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(250, 240, 5, 0.6)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(95, 152, 132)",
+    boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(113, 45, 159, 0.85)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0.9vmin 0.9vmin 2.5vmin rgba(125, 115, 115, 0.85)",
+  },
+};
+
+const loner = {
+  bg: {
+    tint: [255, 170, 190], // rgb
+    tintAmount: 0.85,
+    pixelSaturation: 0.8,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(10, 38, 88)",
+    boxShadow: "0.5vmin 0.5vmin 2vmin rgba(250, 0, 0, 0.9)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(233, 195, 2)",
+    boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(132, 64, 12, 0.95)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0.7vmin 0.7vmin 2.5vmin rgba(59, 80, 134, 0.75)",
+  },
+};
+
+const iDontNeedAniPhone = {
+  bg: {
+    tint: [110, 10, 10], // rgb
+    tintAmount: 0.85,
+    pixelSaturation: 0.5,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(215, 14, 14)",
+    boxShadow: "0.35vmin 0.35vmin 2.5vmin rgba(20, 20, 120, 1)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(255, 150, 130)",
+    boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(245, 50, 0, 0.88)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0.5vmin 0.5vmin 2vmin rgba(255, 0, 80, 0.95)",
+  },
+};
+
+const latelyWhenIFly = {
+  bg: {
+    tint: [20, 5, 40], // rgb
+    tintAmount: 0.93,
+    pixelSaturation: 0.2,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(90, 5, 165)",
+    boxShadow: "0vmin 0vmin 2.5vmin rgba(0, 15, 115, 0.95)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(160, 140, 240)",
+    boxShadow: "0.25vmin 0.25vmin 2vmin rgba(161, 68, 153, 0.84)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0.5vmin 0.5vmin 4vmin rgba(101, 14, 14, 0.75)",
+  },
+};
+
+const puzzle = {
+  bg: {
+    tint: [100, 150, 255], // rgb
+    tintAmount: 0.6,
+    pixelSaturation: 1,
+  },
+  video: {
+    border: 0.25,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(48, 200, 212)",
+    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(50, 0, 200, 1)",
+  },
+  score: {
+    border: 0.15,
+    outerRadius: 0.15,
+    innerRadius: 0.1,
+    color: "rgb(150, 208, 150)",
+    boxShadow: "0.1vmin 0.1vmin 2vmin rgba(60, 90, 166, 1)",
+  },
+  compilation: {
+    border: 0.2,
+    outerRadius: 0.25,
+    innerRadius: 0.15,
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(100, 80, 228, 0.99)",
   },
 };
 
 const whistlegraphs = {
-  "butterfly-cosplayer": defaultDisplay,
-  "i-dont-need-an-iphone": defaultDisplay,
-  "time-to-grow": defaultDisplay,
-  "lately-when-i-fly": defaultDisplay,
-  loner: {
-    backgroundTint: [250, 160, 180],
-    video: {
-      border: 0.35,
-      outerRadius: 0.2,
-      innerRadius: 0.05,
-      color: "rgb(200, 130, 140)",
-      boxShadow: "4px 4px 12px rgba(0, 0, 255, 0.75)",
-    },
-    score: {
-      border: 0.2,
-      outerRadius: 0.25,
-      innerRadius: 0.15,
-      color: "pink",
-      boxShadow: "4px 4px 12px rgba(255, 0, 0, 0.75)",
-    },
-    compilation: {
-      border: 0.25,
-      outerRadius: 0.25,
-      innerRadius: 0.15,
-      color: "grey",
-      boxShadow: "4px 4px 12px rgba(0, 255, 0, 0.75)",
-    },
-  },
+  "butterfly-cosplayer": butterflyCosplayer,
+  "time-to-grow": timeToGrow,
+  loner,
+  "i-dont-need-an-iphone": iDontNeedAniPhone,
+  "lately-when-i-fly": latelyWhenIFly,
+  puzzle: puzzle,
+  "slinky-dog": defaultDisplay,
   "mommy-wow": defaultDisplay,
   "people-pleaser": defaultDisplay,
-  puzzle: defaultDisplay,
-  "slinky-dog": defaultDisplay,
   "whats-inside-your-heart": defaultDisplay,
 };
 
@@ -93,7 +250,7 @@ console.log(defaultWhistlegraph);
 let whistlegraph;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, wipe, content, query }) {
+function boot({ cursor, noiseTinted, content, query }) {
   cursor("native");
 
   // Decide what whistlegraph to use.
@@ -136,6 +293,10 @@ function boot({ cursor, wipe, content, query }) {
            playsinline src="/disks/wg-player/${wg}/${wg}-web.mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline"></div>
+           <div id="card-play">
+             <img src="/disks/wg-player/play-circle.svg"> 
+             <img src="/disks/wg-player/play-triangle.svg"> 
+           </div>
         </div>
       </div>
     <div id="card-deck-loading">
@@ -164,6 +325,10 @@ function boot({ cursor, wipe, content, query }) {
       pointer-events: none;
     }
     
+    #content .card-view:not(.active):not(.running) {
+      transition: 1s ease-out transform;
+    }
+    
     #card-deck-loading {
       position: absolute;
       top: 0;
@@ -180,14 +345,45 @@ function boot({ cursor, wipe, content, query }) {
     #card-deck-loading img { /* Spinner */
       display: block;
       margin: auto;
-      width: 50vmin;
+      width: 40vmin;
       filter: brightness(0.75);
     }
     
-    .card-deck.no-cursor { cursor: none; }
-    .card-deck.no-cursor .card-view.active .card { cursor: none; }
+    .card-deck.loading #card-play { display: none; }
+    
+    #card-play.played {
+     opacity: 0;
+     transform: scale(2);
+     transition: 0.25s opacity, 0.25s transform;
+    }
+    
+    #card-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      pointer-events: none;
+    }
+    
+    #card-play img {
+      position: absolute;
+      width: 25vmin;
+      margin-left: -12.5vmin;
+      margin-top: -12.5vmin;
+    }
+    
+    #card-play img:nth-child(1) { filter: brightness(0); }
+    #card-play img:nth-child(2) { filter: brightness(1); }
+    
+    .card.touch #card-play {
+      transform: scale(0.95);
+    }
+    
+    /*.card-deck.no-cursor { cursor: none; }*/
+    /*.card-deck.no-cursor .card-view.active .card { cursor: none; }*/
     
     .card-view.active .card { cursor: pointer; }
+    .card-view.active .card.running { cursor: alias; }
+    .card-view.active .card[data-type=score] { cursor: alias; }
     
     .card {
       box-sizing: border-box;
@@ -231,10 +427,6 @@ function boot({ cursor, wipe, content, query }) {
       pointer-events: none;
     }
     
-    .card.running {
-     box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.75) !important;
-    }
-  
     @keyframes bounce {
       0% { transform: scale(0.99); }
       50% { transform: scale(0.96); }
@@ -288,13 +480,15 @@ function boot({ cursor, wipe, content, query }) {
     }
     </style>
   `);
-
-  wipe(whistlegraph.backgroundTint);
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ wipe }) {
-  wipe(whistlegraph.backgroundTint);
+function paint({ noiseTinted }) {
+  noiseTinted(
+    whistlegraph.bg.tint,
+    whistlegraph.bg.tintAmount,
+    whistlegraph.bg.pixelSaturation
+  );
   return false;
 }
 

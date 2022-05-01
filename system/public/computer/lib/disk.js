@@ -212,6 +212,7 @@ const $paintApiUnwrapped = {
   skip: graph.skip,
   noise16: graph.noise16,
   noise16DIGITPAIN: graph.noise16DIGITPAIN,
+  noiseTinted: graph.noiseTinted,
   // glaze: ...
 };
 

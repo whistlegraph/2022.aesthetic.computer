@@ -1,5 +1,7 @@
 import { randIntRange } from "../../computer/lib/num.js";
-import { shuffleInPlace } from "../../computer/lib/help.js";
+import { shuffleInPlace, choose } from "../../computer/lib/help.js";
+
+const { min, random, floor } = Math;
 
 const deck = document.querySelector(".card-deck");
 const layerOrder = ["video", "score", "compilation"];
@@ -9,6 +11,10 @@ const videoGains = {};
 const audios = document.querySelectorAll("#content .card-deck .card audio");
 const videos = document.querySelectorAll("#content .card-deck .card video");
 const cardViews = deck.querySelectorAll(".card-deck .card-view");
+const cards = deck.querySelectorAll(".card-deck .card-view .card");
+
+const initialCardScale = 0.95;
+const cardScale = 0.9;
 
 let videosReady = 0;
 let allVideosReady = false;
@@ -46,7 +52,7 @@ deck.addEventListener("click", (event) => {
 
 deck.addEventListener("pointermove", (e) => {
   if (!e.isPrimary || multipleTouches === true) return;
-  if (e.pointerType === "mouse") deck.classList.remove("no-cursor");
+  // if (e.pointerType === "mouse") deck.classList.remove("no-cursor");
   const card = deck.querySelector(".card-view.active .card");
   if (document.elementFromPoint(e.clientX, e.clientY) === card) {
     if (e.pointerType === "mouse") card.classList.add("hover");
@@ -143,6 +149,8 @@ deck.addEventListener("pointerup", (e) => {
   const video = activeCard.querySelector("video");
   if (video && video.paused && activeCard.dataset.type === "video") {
     // First click.
+    activeView.style.transform = "none";
+    document.querySelector("#card-play").classList.add("played");
     video.play();
     video.addEventListener("ended", function end() {
       if (activeView.classList.contains("active")) {
@@ -173,9 +181,11 @@ deck.addEventListener("pointerup", (e) => {
   const nextLayer = layers[layerOrder[1]];
   const nextVideo = nextLayer.querySelector(".card video");
   if (nextVideo) {
-    const nextActiveCardType = nextVideo.closest(".card").dataset.type;
+    const nextCard = nextVideo.closest(".card");
+    const nextActiveCardType = nextCard.dataset.type;
     if (nextVideo.paused) {
       nextVideo.play();
+      nextCard.classList.add("running");
       nextVideo.muted = false;
       nextVideo.volume = 1;
 
@@ -189,13 +199,14 @@ deck.addEventListener("pointerup", (e) => {
     } else {
       // Bring volume back.
       console.log("Bringing back volume on:", nextVideo);
+      nextCard.classList.add("running");
       if (iOS) {
         nextVideo.muted = false;
       } else {
         nextVideo.volume = 0.0;
         clearInterval(volumeInInterval);
         volumeInInterval = setInterval(() => {
-          nextVideo.volume = Math.min(1, nextVideo.volume + 0.01);
+          nextVideo.volume = min(1, nextVideo.volume + 0.01);
           if (nextVideo.volume >= 1) {
             nextVideo.volume = 1;
             clearInterval(volumeInInterval);
@@ -205,12 +216,13 @@ deck.addEventListener("pointerup", (e) => {
     }
   }
 
+  // 2. Animate the top one off the screen, after the press animation ends.
   activeView.addEventListener(
     "animationend",
     (e) => {
-      // 2. Animate the top one off the screen.
-      const top = layers[layerOrder[0]];
-      const card = top.querySelector(".card");
+      const cardView = layers[layerOrder[0]];
+      const card = cardView.querySelector(".card");
+      layerOrder.push(layerOrder.shift()); // Move the 1st element to the end...
 
       // By calculating the proper distance it can move to based on what else
       // is left in the deck and its own size.
@@ -237,26 +249,37 @@ deck.addEventListener("pointerup", (e) => {
       maxTranslateWidth *= 1.025;
       maxTranslateHeight *= 1.025;
 
-      if (Math.random() > 0.5) {
+      if (random() > 0.5) {
         rX += maxTranslateWidth;
-        rY += Math.random() * maxTranslateHeight;
+        rY += random() * maxTranslateHeight;
       } else {
         rY += maxTranslateHeight;
-        rX += Math.random() * maxTranslateWidth;
+        rX += random() * maxTranslateWidth;
       }
 
-      if (Math.random() > 0.5) rX *= -1;
-      if (Math.random() > 0.5) rY *= -1;
+      if (random() > 0.5) rX *= -1;
+      if (random() > 0.5) rY *= -1;
 
-      // 3. Trigger the first transition.
+      // 3. Trigger the first transition, where the card moves off the top.
       card.style.transition = "0.25s ease-out transform";
-      card.style.transform = `translate(${rX}px, ${rY}px)`;
 
-      top.classList.remove("active");
+      const rotation = choose(randIntRange(6, 15), randIntRange(-6, -15));
+
+      card.dataset.rotation = rotation;
+
+      card.style.transform = `rotate(${rotation}deg) translate(${rX}px, ${rY}px)`;
+
+      // 3a. Turn the card.
+
+      // 3b.
+      // Remove the transform from the next cardView.
+      const nextCardView = layers[layerOrder[0]];
+      const nextCard = nextCardView.querySelector(".card");
+      nextCard.style.transition = "0.3s ease-out transform";
+      nextCard.style.transform = "none";
+
+      cardView.classList.remove("active");
       card.classList.remove("running");
-
-      // 4. Move the 1st element from layering to the end...
-      layerOrder.push(layerOrder.shift());
 
       card.addEventListener("transitionend", function end(e) {
         card.removeEventListener("transitionend", end);
@@ -269,9 +292,10 @@ deck.addEventListener("pointerup", (e) => {
           if (zIndex === 2) el.classList.add("active");
         });
 
-        // 5. Animate the top (now bottom) one back.
+        // 5. Animate the top (now bottom) one back into the stack of cards.
         card.style.transition = "0.5s ease-in transform";
-        card.style.transform = "none";
+        //card.style.transform = "none";
+        card.style.transform = `scale(${cardScale}) rotate(${card.dataset.rotation}deg)`;
       });
     },
     { once: true }
@@ -283,12 +307,8 @@ function frame() {
     const card = cardView.querySelector(".card");
     const cardContent = card.querySelector(".card-content");
 
-    // TODO: Make these customizable.
-
-    const longestSide = Math.min(deck.clientWidth, deck.clientHeight);
-
-    const margin = Math.floor(longestSide * 0.15); // Of the page.
-
+    const longestSide = min(deck.clientWidth, deck.clientHeight);
+    const margin = floor(longestSide * 0.17); // Of the page.
     const borderSetting = cardView.dataset.borderSetting;
     const innerRadiusSetting = cardView.dataset.innerRadius;
     const outerRadiusSetting = cardView.dataset.outerRadius;
@@ -296,7 +316,7 @@ function frame() {
     card.style.borderRadius = margin * outerRadiusSetting + "px";
     cardContent.style.borderRadius = margin * innerRadiusSetting + "px";
 
-    const border = Math.floor(margin * borderSetting);
+    const border = floor(margin * borderSetting);
 
     const width = deck.clientWidth - margin;
     const height = deck.clientHeight - margin;
@@ -307,12 +327,35 @@ function frame() {
       .map((n) => parseFloat(n));
     const contentRatio = contentRatioValues[0] / contentRatioValues[1];
 
+    let widthOffset = 0,
+      heightOffset = 0;
+
+    // TODO: Fix compilation display card ratio stuff.
+    if (card.dataset.type === "compilation") {
+      // console.log(displayRatio, contentRatio);
+      if (displayRatio < 1) {
+        let difference = (1 - displayRatio) * (contentRatio / 1);
+        //if (displayRatio < 0.5) {
+        //  difference = (1 - displayRatio) / 3;
+        //}
+        widthOffset = floor(width * difference);
+        heightOffset = floor(height * difference);
+      } else {
+        //let difference = (displayRatio - 1) * (contentRatio / 2);
+        //widthOffset = -floor(width * difference);
+        //heightOffset = -floor(height * difference);
+      }
+      console.log("Compilation offset:", widthOffset, heightOffset);
+    }
+
     if (contentRatio < displayRatio) {
-      cardContent.style.width = Math.floor(height * contentRatio) + "px";
-      cardContent.style.height = height + "px";
+      cardContent.style.width =
+        floor(height * contentRatio) - widthOffset + "px";
+      cardContent.style.height = height - heightOffset + "px";
     } else {
-      cardContent.style.height = Math.floor(width / contentRatio) + "px";
-      cardContent.style.width = width + "px";
+      cardContent.style.height =
+        floor(width / contentRatio) - heightOffset + "px";
+      cardContent.style.width = width - widthOffset + "px";
     }
 
     card.style.width = parseFloat(cardContent.style.width) + border + "px";
@@ -335,40 +378,29 @@ function frame() {
     }
 
     const cardOutline = card.querySelector(".card-outline");
-
-    if (cardOutline) {
-      cardOutline.style.borderRadius = card.style.borderRadius;
-    }
+    if (cardOutline) cardOutline.style.borderRadius = card.style.borderRadius;
   });
 }
 
-frame();
-
 // Randomly rotate the back two cards on initialization.
-
 {
-  let wentNegative = false;
-  const tiltRight = randIntRange(6, 15);
-  const tiltLeft = randIntRange(-6, -15);
-
-  const tiltBag = [tiltRight, tiltLeft];
-
+  // Assuming that there are two card views.
+  const tiltBag = [randIntRange(6, 10), randIntRange(-10, -6)];
   shuffleInPlace(tiltBag);
 
   // TODO: Pull items out of shuffle bag... eventually make a class?
-
-  console.log(tiltBag);
-
-  cardViews.forEach((cardView, i) => {
+  cards.forEach((card, i) => {
     if (i === cardViews.length - 1) return;
-    console.log(i, cardView);
-
-    //cardView.style.transform = `rotate(${}deg)`;
+    card.style.transform = `scale(${initialCardScale}) rotate(${tiltBag.pop()}deg)`;
   });
 }
 
 const resizer = new ResizeObserver((entries) => {
   for (let entry of entries) {
-    if (entry.target === deck) frame();
+    if (entry.target === deck) {
+      frame();
+    }
   }
 });
+
+resizer.observe(deck);

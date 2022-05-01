@@ -2,7 +2,7 @@
 
 ❓ Here to contribute code? Scroll waaaaaaaaay down to SETUP for instructions.
 
-️🧪 Editor Upgrades: Try AceJump, Use ThinkPad More Often
+️🧪 Editor Upgrades: Try AceJump, Use ThinkPad More Often, Try: https://github.com/machakann/vim-swap
 ☁️ Big Thoughts   : Maybe aesthetic.computer is more of an interface project
                     or search engine or *branded* prompt than it is a creative
                     platform?

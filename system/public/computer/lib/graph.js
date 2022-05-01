@@ -738,6 +738,29 @@ function noise16DIGITPAIN() {
   }
 }
 
+function noiseTinted(tint, amount, saturation) {
+  console.log("Tinting:", tint, amount, saturation);
+  for (let i = 0; i < pixels.length; i += 4) {
+    const grayscale = randInt(255);
+    pixels[i] = lerp(
+      lerp(grayscale, randInt(255), saturation),
+      tint[0],
+      amount
+    ); // r
+    pixels[i + 1] = lerp(
+      lerp(grayscale, randInt(255), saturation),
+      tint[1],
+      amount
+    ); // g
+    pixels[i + 2] = lerp(
+      lerp(grayscale, randInt(255), saturation),
+      tint[2],
+      amount
+    ); // b
+    pixels[i + 3] = 255; // a
+  }
+}
+
 export {
   clear,
   point,
@@ -757,6 +780,7 @@ export {
   draw,
   noise16,
   noise16DIGITPAIN,
+  noiseTinted,
   printLine,
 };
 
