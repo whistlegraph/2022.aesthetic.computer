@@ -13,18 +13,19 @@ import { anyKey } from "../computer/lib/help.js";
 // TODO: Fix compilation display ratio for all screen sizes.
 // TODO: Always alternate back cards to be tilted in BOTH directions.
 // TODO: Add card cover to score so it starts as black, along with a load event.
+// TODO: Try out an alt-color scheme for Slinky dog w/ Alex.
 
 // Final URLS:
-// https://aesthetic.computer/?name=butterfly-cosplayer#wg-player
-// https://aesthetic.computer/?name=iphone#wg-player
-// https://aesthetic.computer/?name=time-to-grow#wg-player
-// https://aesthetic.computer/?name=lately-when-i-fly#wg-player
-// https://aesthetic.computer/?name=loner#wg-player
-// https://aesthetic.computer/?name=mommy-wow#wg-player
-// https://aesthetic.computer/?name=people-pleaser#wg-player
-// https://aesthetic.computer/?name=slinky-dog#wg-player
-// https://aesthetic.computer/?name=puzzle#wg-player
-// https://aesthetic.computer/?name=whats-inside-your-heart#wg-player
+// https://127.0.0.1/?name=butterfly-cosplayer#wg-player
+// https://127.0.0.1/?name=its-time-to-grow#wg-player
+// https://127.0.0.1/?name=i-dont-need-an-iphone#wg-player
+// https://127.0.0.1/?name=lately-when-i-fly#wg-player
+// https://127.0.0.1/?name=loner#wg-player
+// https://127.0.0.1/?name=mommy-wow#wg-player
+// https://127.0.0.1/?name=people-pleaser#wg-player
+// https://127.0.0.1/?name=slinky-dog#wg-player
+// https://127.0.0.1/?name=puzzle#wg-player
+// https://127.0.0.1/?name=whats-inside-your-heart#wg-player
 
 const butterflyCosplayer = {
   bg: {
@@ -55,7 +56,7 @@ const butterflyCosplayer = {
   },
 };
 
-const timeToGrow = {
+const ItsTimeToGrow = {
   bg: {
     tint: [20, 10, 3], // rgb
     tintAmount: 0.96,
@@ -189,7 +190,7 @@ const puzzle = {
     outerRadius: 0.15,
     innerRadius: 0.1,
     color: "rgb(150, 208, 150)",
-    boxShadow: "0.1vmin 0.1vmin 2vmin rgba(60, 90, 166, 1)",
+    boxShadow: "0.1vmin 0.1vmin 2vmin rgba(255, 100, 100, 1)",
   },
   compilation: {
     border: 0.2,
@@ -318,7 +319,7 @@ const whatsInsideYourHeart = {
 
 const whistlegraphs = {
   "butterfly-cosplayer": butterflyCosplayer,
-  "time-to-grow": timeToGrow,
+  "its-time-to-grow": ItsTimeToGrow,
   loner,
   "i-dont-need-an-iphone": iDontNeedAniPhone,
   "lately-when-i-fly": latelyWhenIFly,
@@ -570,16 +571,16 @@ function boot({ cursor, noiseTinted, content, query }) {
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ noiseTinted }) {
+function paint({ noiseTinted, paintCount }) {
   noiseTinted(
     whistlegraph.bg.tint,
     whistlegraph.bg.tintAmount,
     whistlegraph.bg.pixelSaturation
   );
 
-  // if (whistlegraph !== whatsInsideYourHeart) {
+  //if (whistlegraph !== mommyWow && paintCount % 32 !== 0n) {
   return false;
-  // }
+  //}
 }
 
 function act({ event }) {
