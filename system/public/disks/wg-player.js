@@ -6,6 +6,7 @@ import { randIntRange } from "../computer/lib/num.js";
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Current***
+// TODO: Replace spinners.
 // TODO: Give loading screen borders one standard color.
 // TODO: Tap / highlight outlines should be full opacity and either be white, black, or... grey?
 // TODO: Experiment with low fps animated noise on playback.
