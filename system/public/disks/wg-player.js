@@ -6,9 +6,6 @@ import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
 
-// TODO: Freeze spinner on fade out by drawing it to an intermediate canvas
-//       underneath, and wrapping it in another element.
-
 // TODO: Tap / highlight outlines should be full opacity and either be white,
 //       black, or... grey?
 
@@ -23,6 +20,10 @@ import { anyKey } from "../computer/lib/help.js";
 
 // ***Design***
 // TODO: Try out an alt-color scheme for Slinky dog w/ Alex.
+// TODO: Spinner – time to grow [the circle should be centered in each subsequent frame]
+//                              [and a duplicate frame should be added so it grows up and down]
+//               - lately       [the plane should start a bit behind the ground, and continue a bit past it]
+//               - mommy        [2 frames up, then 2 frames down so it wiggles then flips, wiggles then flips]
 
 // Dev URLS:
 // https://127.0.0.1/?name=butterfly-cosplayer#wg-player
@@ -181,7 +182,7 @@ const latelyWhenIFly = {
     innerRadius: 0.15,
     color: "rgb(90, 5, 165)",
     boxShadow: "0vmin 0vmin 2.5vmin rgba(0, 15, 115, 0.95)",
-    highlight: "rgba(0, 0, 0, 1)",
+    highlight: "rgba(80, 80, 80, 1)",
   },
   score: {
     border: 0.15,
@@ -189,7 +190,7 @@ const latelyWhenIFly = {
     innerRadius: 0.1,
     color: "rgb(160, 140, 240)",
     boxShadow: "0.25vmin 0.25vmin 2vmin rgba(161, 68, 153, 0.84)",
-    highlight: "rgba(0, 0, 0, 1)",
+    highlight: "rgba(80, 80, 80, 1)",
   },
   compilation: {
     border: 0.2,
@@ -230,7 +231,7 @@ const puzzle = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0.5vmin 0.5vmin 3vmin rgba(100, 80, 228, 0.99)",
-    highlight: "rgba(120, 120, 120, 1)",
+    highlight: "rgba(200, 200, 200, 1)",
   },
 };
 
@@ -288,7 +289,7 @@ const mommyWow = {
     innerRadius: 0.1,
     color: "rgb(250, 246, 65)",
     boxShadow: "0vmin 0vmin 3vmin rgba(255, 160, 0, 1)",
-    highlight: "rgba(0, 0, 0, 1)",
+    highlight: "rgba(180, 180, 180, 1)",
   },
   compilation: {
     border: 0.2,
@@ -329,7 +330,7 @@ const peoplePleaser = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0vmin 0vmin 3vmin rgba(200, 150, 206, 0.8)",
-    highlight: "rgba(120, 120, 120, 1)",
+    highlight: "rgba(180, 180, 180, 1)",
   },
 };
 
@@ -346,7 +347,7 @@ const whatsInsideYourHeart = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 30)",
     boxShadow: "0.25vmin 0.25vmin 4vmin rgba(255, 10, 10, 0.7)",
-    highlight: "rgba(0, 0, 0, 1)",
+    highlight: "rgba(80, 80, 80, 1)",
   },
   score: {
     border: 0.15,
@@ -354,7 +355,7 @@ const whatsInsideYourHeart = {
     innerRadius: 0.1,
     color: "rgb(30, 20, 20)",
     boxShadow: "0.25vmin 0.25vmin 2.5vmin rgba(0, 40, 255, 1)",
-    highlight: "rgba(0, 0, 0, 1)",
+    highlight: "rgba(80, 80, 80, 1)",
   },
   compilation: {
     border: 0.2,
