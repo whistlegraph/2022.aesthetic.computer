@@ -7,3 +7,4 @@ end
 
 # add function here for making animated webps (for whistlegraph spinners)
 # (requires webp [installable via homebrew]) https://chromium.googlesource.com/webm/libwebp
+# See also: https://stackoverflow.com/questions/58374189/convert-a-bunch-of-png-or-webp-images-to-a-webp-animation
