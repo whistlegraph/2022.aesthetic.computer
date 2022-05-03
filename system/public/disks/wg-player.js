@@ -5,21 +5,16 @@
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
-
-// TODO: Tap / highlight outlines should be full opacity and either be white,
-//       black, or... grey?
-
 // TODO: Fix compilation display ratio, and rotation... for all screen sizes.
-// TODO: Experiment with low fps animated noise on playback.
 // TODO: Always alternate back cards to be tilted in BOTH directions.
-// TODO: Add card cover to score so it starts as black, along with a load event.
 // TODO: Add shortcuts for each wg; rename wg-player to wg.
 // TODO: Make wg re-entrant so that it doesn't break the page on multiple loads.
 // TODO: Test on poor connections.
 // TODO: Test in all browsers... (esp. Firefox)
 
 // ***Design***
-// TODO: Try out an alt-color scheme for Slinky dog w/ Alex.
+// TODO: Scores – the svgs with shadows (like mommy wow or ppl pleaser) have rendering bugs on iOS where they rasterize poorly,
+//                [this might be fixable if we increase the resolution of the svgs we export from figma]
 // TODO: Spinner – time to grow [the circle should be centered in each subsequent frame]
 //                              [and a duplicate frame should be added so it grows up and down]
 //               - lately       [the plane should start a bit behind the ground, and continue a bit past it]
@@ -39,9 +34,10 @@ import { anyKey } from "../computer/lib/help.js";
 
 const butterflyCosplayer = {
   glow: "rgba(255, 150, 0, 0.85)",
+  fuzz: 8n,
   bg: {
     tint: [30, 70, 25], // rgb
-    tintAmount: 0.93,
+    tintAmount: 0.9,
     pixelSaturation: 0.5,
   },
   video: {
@@ -72,9 +68,10 @@ const butterflyCosplayer = {
 
 const timeToGrow = {
   glow: "rgba(255, 150, 210, 0.75)",
+  fuzz: 18n,
   bg: {
     tint: [20, 10, 3], // rgb
-    tintAmount: 0.96,
+    tintAmount: 0.92,
     pixelSaturation: 0.1,
   },
   video: {
@@ -105,9 +102,10 @@ const timeToGrow = {
 
 const loner = {
   glow: "rgba(255, 130, 130, 0.85)",
+  fuzz: 16n,
   bg: {
     tint: [255, 170, 190], // rgb
-    tintAmount: 0.85,
+    tintAmount: 0.9,
     pixelSaturation: 0.8,
   },
   video: {
@@ -138,9 +136,10 @@ const loner = {
 
 const iDontNeedAniPhone = {
   glow: "rgba(240, 0, 0, 0.85)",
+  fuzz: 16n,
   bg: {
     tint: [110, 10, 10], // rgb
-    tintAmount: 0.85,
+    tintAmount: 0.9,
     pixelSaturation: 0.5,
   },
   video: {
@@ -171,6 +170,7 @@ const iDontNeedAniPhone = {
 
 const latelyWhenIFly = {
   glow: "rgba(90, 5, 230, 0.95)",
+  fuzz: 10n,
   bg: {
     tint: [20, 5, 40], // rgb
     tintAmount: 0.93,
@@ -204,6 +204,7 @@ const latelyWhenIFly = {
 
 const puzzle = {
   glow: "rgba(48, 200, 252, 0.85)",
+  fuzz: 12n,
   bg: {
     tint: [100, 150, 255], // rgb
     tintAmount: 0.6,
@@ -237,9 +238,10 @@ const puzzle = {
 
 const slinkyDog = {
   glow: "rgba(0, 200, 0, 0.75)",
+  fuzz: 8n,
   bg: {
     tint: [90, 90, 70], // rgb
-    tintAmount: 0.9,
+    tintAmount: 0.94,
     pixelSaturation: 0.7,
   },
   video: {
@@ -270,6 +272,7 @@ const slinkyDog = {
 
 const mommyWow = {
   glow: "rgba(255, 0, 255, 0.8)",
+  fuzz: 2n,
   bg: {
     tint: [10, 10, 30], // rgb
     tintAmount: 0.8,
@@ -303,6 +306,7 @@ const mommyWow = {
 
 const peoplePleaser = {
   glow: "rgba(190, 80, 220, 0.75)",
+  fuzz: 8n,
   bg: {
     tint: [130, 80, 80], // rgb
     tintAmount: 0.92,
@@ -336,9 +340,10 @@ const peoplePleaser = {
 
 const whatsInsideYourHeart = {
   glow: "rgba(0, 0, 200, 0.75)",
+  fuzz: 5n,
   bg: {
     tint: [0, 10, 70], // rgb
-    tintAmount: 0.65,
+    tintAmount: 0.75,
     pixelSaturation: 1,
   },
   video: {
@@ -384,6 +389,7 @@ const whistlegraphs = {
 const defaultWhistlegraph = anyKey(whistlegraphs);
 
 let whistlegraph;
+let fuzzy = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ cursor, content, query }) {
@@ -506,7 +512,6 @@ function boot({ cursor, content, query }) {
     .card-deck:not(.loading) #spinner canvas { display: block; }
     
     .card-deck:not(.loading) #card-deck-loading {
-      /*display: none;*/
       transform: scale(2);
       opacity: 0;
       transition: 0.25s transform ease-out, 0.25s opacity ease-in;
@@ -653,6 +658,11 @@ function boot({ cursor, content, query }) {
   `);
 }
 
+function sim({ simCount, needsPaint }) {
+  if (fuzzy && whistlegraph.fuzz && simCount % whistlegraph.fuzz === 0n)
+    needsPaint();
+}
+
 // 🎨 Paint (Executes every display frame)
 function paint({ noiseTinted }) {
   noiseTinted(
@@ -660,17 +670,14 @@ function paint({ noiseTinted }) {
     whistlegraph.bg.tintAmount,
     whistlegraph.bg.pixelSaturation
   );
-
-  //if (whistlegraph !== mommyWow && paintCount % 32 !== 0n) {
   return false;
-  //}
 }
 
-function act({ event }) {
-  //console.log(event);
+function act({ event: e }) {
+  if (e.is("signal") && e.signal === "wg-player:started") fuzzy = true;
 }
 
-export { boot, paint, act };
+export { boot, sim, paint, act };
 
 // 📚 Library (Useful classes & functions used throughout the piece)
 // ...

@@ -1155,13 +1155,24 @@ async function boot(
     }
   }
 
+  // 🚨 Signal (Used to pass messages via window... important for embedded HTML
+  //           `content` used within pieces that needs communication with the
+  //           main system)
+  window.signal = function (message) {
+    console.log("🚨 Signal:", message);
+    send({
+      type: "signal",
+      content: message,
+    });
+  };
+
   // 📚 History
   // TODO: Extract all the history features into a class of some kind?
   // TODO: Eventually add an API so that a disk can list all the history of
   //       a user's session. This could also be used for autocompletion of
   //       pieces / up + down arrow prev-next etc.
   window.onpopstate = function (e) {
-    console.log("Popping State!");
+    // console.log("Popping State!");
     send({
       type: "history-load",
       content: document.location.hash.substring(1),

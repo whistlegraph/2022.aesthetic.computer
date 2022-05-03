@@ -493,7 +493,18 @@ export { noWorker };
 // then, it must be manually restarted via `needsPaint();`).  2022.01.19.01.08
 // TODO: Make simple needsPaint example.
 // TODO: Try to remove as many API calls from here as possible.
+// TODO: makeFrame is no longer a great name for this function, which actually
+//       receives every message from the main thread, one of which renders a
+//       frame.
+
+let signal;
+
 function makeFrame({ data: { type, content } }) {
+  if (type === "signal") {
+    signal = content;
+    return;
+  }
+
   if (type === "content-created") {
     $commonApi.content.receive(content);
     return;
@@ -617,6 +628,7 @@ function makeFrame({ data: { type, content } }) {
     noPaint = false;
     return;
   }
+
   // 2. Frame
   // This is where each...
   if (type === "frame") {
@@ -658,7 +670,7 @@ function makeFrame({ data: { type, content } }) {
         }
       }
 
-      // 🌟 Act
+      // 💾 Uploading + Downloading
       // Add download event to trigger a file download from the main thread.
       $api.download = (dl) => send({ type: "download", content: dl });
 
@@ -672,6 +684,7 @@ function makeFrame({ data: { type, content } }) {
         });
       };
 
+      // 🌟 Act
       // *Device Event Handling*
 
       // TODO: Shouldn't all these events come in as part of one array to
@@ -692,6 +705,18 @@ function makeFrame({ data: { type, content } }) {
         loadFailure = undefined;
       }
 
+      // Signaling
+      if (signal) {
+        const data = { signal };
+        Object.assign(data, {
+          device: "none",
+          is: (e) => e === "signal",
+        });
+        $api.event = data;
+        act($api);
+        signal = undefined;
+      }
+
       // Window Events
       if (content.inFocus !== inFocus) {
         inFocus = content.inFocus;
@@ -706,7 +731,6 @@ function makeFrame({ data: { type, content } }) {
 
       // Ingest all pen input events by running act for each event.
       // TODO: I could also be transforming pen coordinates here...
-
       // TODO: Keep track of lastPen to see if it changed.
 
       content.pen.forEach((data) => {
