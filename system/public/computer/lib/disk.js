@@ -61,11 +61,7 @@ let loadFailure;
 
 // For every function to access.
 const $commonApi = {
-  content: {
-    add: function add(template) {
-      console.log(template);
-    },
-  },
+  // content: added programmatically: see Content class
   num: {
     randInt: num.randInt,
     randIntArr: num.randIntArr,
