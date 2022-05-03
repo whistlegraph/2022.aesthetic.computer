@@ -9,6 +9,7 @@ const layerOrder = ["video", "score", "compilation"];
 const videos = document.querySelectorAll("#content .card-deck .card video");
 const cardViews = deck.querySelectorAll(".card-deck .card-view");
 const cards = deck.querySelectorAll(".card-deck .card-view .card");
+const loadingScreen = deck.querySelector("#card-deck-loading");
 
 const initialCardScale = 0.95;
 const cardScale = 0.9;
@@ -39,6 +40,10 @@ videos.forEach((video) => {
     false
   );
 });
+
+loadingScreen.addEventListener('transitionend', () => {
+  loadingScreen.style.display = "none";
+}, { once: true })
 
 // 1️⃣ Hover states for cards when using only a mouse, and active states
 //    for mouse and touch.

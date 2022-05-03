@@ -3,15 +3,16 @@
 ❓ Here to contribute code? Scroll waaaaaaaaay down to SETUP for instructions.
 
 ️🧪 Editor Upgrades: Try AceJump, Use ThinkPad More Often, Try: https://github.com/machakann/vim-swap
+                    Figure out how to swap vim panes with one another in neovim: https://github.com/wesQ3/vim-windowswap,
+
 ☁️ Big Thoughts   : Maybe aesthetic.computer is more of an interface project
                     or search engine or *branded* prompt than it is a creative
                     platform?
 
-
                             🌟 Work In Progress 🌟
 
 ***Feral File Whistlegraph Player***
-- [🟢]] Finish player.
+- [🟢] Finish player.
 
 ⚠️ Regressions:
  - [] Flicker / held frame while moving between pieces. Right now it's just bright green.
@@ -36,6 +37,7 @@
            and rename it to `DIGITPAIN #.zip`.
 
 🌟 Next Up 🌟
+
  ***Multi-player Drawing / Core Drawing***
   - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
   - [] Add sound to `nail`.
@@ -157,7 +159,7 @@ Add $api.sound.beatCount counter to `beat`.
 Refactor (screen.width -> screen.w & screen.height -> screen.h) across the board?
   - To be more consistent with `graph.box`.
 
-📩 Future
+📩 Future (Outdated)
 
 📅 End of January
   - Shader situation. `const fragmentEffect = video('webgl', screen.width, screen.height)`

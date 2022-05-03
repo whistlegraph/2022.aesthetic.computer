@@ -5,7 +5,6 @@
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
-// TODO: Give loading screen borders one standard color.
 // TODO: Tap / highlight outlines should be full opacity and either be white,
 //       black, or... grey?
 // TODO: Fix compilation display ratio, and rotation... for all screen sizes.
@@ -33,6 +32,7 @@ import { anyKey } from "../computer/lib/help.js";
 // https://127.0.0.1/?name=whats-inside-your-heart#wg-player
 
 const butterflyCosplayer = {
+  glow: "rgba(255, 150, 0, 0.85)",
   bg: {
     tint: [30, 70, 25], // rgb
     tintAmount: 0.93,
@@ -62,6 +62,7 @@ const butterflyCosplayer = {
 };
 
 const timeToGrow = {
+  glow: "rgba(255, 150, 210, 0.75)",
   bg: {
     tint: [20, 10, 3], // rgb
     tintAmount: 0.96,
@@ -91,6 +92,7 @@ const timeToGrow = {
 };
 
 const loner = {
+  glow: "rgba(255, 130, 130, 0.85)",
   bg: {
     tint: [255, 170, 190], // rgb
     tintAmount: 0.85,
@@ -120,6 +122,7 @@ const loner = {
 };
 
 const iDontNeedAniPhone = {
+  glow: "rgba(240, 0, 0, 0.85)",
   bg: {
     tint: [110, 10, 10], // rgb
     tintAmount: 0.85,
@@ -149,6 +152,7 @@ const iDontNeedAniPhone = {
 };
 
 const latelyWhenIFly = {
+  glow: "rgba(90, 5, 230, 0.95)",
   bg: {
     tint: [20, 5, 40], // rgb
     tintAmount: 0.93,
@@ -178,6 +182,7 @@ const latelyWhenIFly = {
 };
 
 const puzzle = {
+  glow: "rgba(48, 200, 252, 0.85)",
   bg: {
     tint: [100, 150, 255], // rgb
     tintAmount: 0.6,
@@ -207,6 +212,7 @@ const puzzle = {
 };
 
 const slinkyDog = {
+  glow: "rgba(0, 200, 0, 0.75)",
   bg: {
     tint: [90, 90, 70], // rgb
     tintAmount: 0.9,
@@ -236,6 +242,7 @@ const slinkyDog = {
 };
 
 const mommyWow = {
+  glow: "rgba(255, 0, 255, 0.8)",
   bg: {
     tint: [10, 10, 30], // rgb
     tintAmount: 0.8,
@@ -265,6 +272,7 @@ const mommyWow = {
 };
 
 const peoplePleaser = {
+  glow: "rgba(190, 80, 220, 0.75)",
   bg: {
     tint: [130, 80, 80], // rgb
     tintAmount: 0.92,
@@ -294,6 +302,7 @@ const peoplePleaser = {
 };
 
 const whatsInsideYourHeart = {
+  glow: "rgba(0, 0, 200, 0.75)",
   bg: {
     tint: [0, 10, 70], // rgb
     tintAmount: 0.65,
@@ -337,8 +346,6 @@ const whistlegraphs = {
 
 // If no whistlegraph is specified when the player loads.
 const defaultWhistlegraph = anyKey(whistlegraphs);
-
-console.log(defaultWhistlegraph);
 
 let whistlegraph;
 
@@ -393,7 +400,7 @@ function boot({ cursor, content, query }) {
         </div>
       </div>
     <div id="card-deck-loading">
-      <img src="/disks/wg-player/${wg}/${wg}.webp">
+      <img src="/disks/wg-player/${wg}/${wg}.webp" style="filter: brightness(0.85) drop-shadow(0px 0px 1.5vmin ${whistlegraph.glow})">
     </div>
     </div>
     <script src="/disks/wg-player/wg-player-cards.js" type="module" defer></script>
@@ -411,8 +418,6 @@ function boot({ cursor, content, query }) {
          which everything seems to work fine. 2022.05.02.20.49 */ 
       transform: rotate(0.00001deg);
     }
-    
-    .card-deck:not(.loading) #card-deck-loading { display: none; }
     
     #content .card-view {
       width: 100%;
@@ -432,10 +437,10 @@ function boot({ cursor, content, query }) {
       left: 0;
       width: calc(100% + 1px);
       height: calc(100% + 1px);
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(20, 20, 20, 1);
       z-index: 100;
-      backdrop-filter: brightness(0.5) saturate(0);
-      -webkit-backdrop-filter: brightness(0.5) saturate(0);
+      /*backdrop-filter: brightness(0.5) saturate(0);*/
+      /*-webkit-backdrop-filter: brightness(0.5) saturate(0);*/
       display: flex;
     }
     
@@ -443,7 +448,13 @@ function boot({ cursor, content, query }) {
       display: block;
       margin: auto;
       width: 40vmin;
-      filter: brightness(0.75);
+    }
+    
+    .card-deck:not(.loading) #card-deck-loading {
+      /*display: none;*/
+      transform: scale(2);
+      opacity: 0;
+      transition: 0.25s transform, 0.25s opacity;
     }
     
     .card-deck.loading #card-play { display: none; }
