@@ -580,7 +580,7 @@ function boot({ cursor, content, query }) {
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ noiseTinted }t pu) {
+function paint({ noiseTinted }) {
   noiseTinted(
     whistlegraph.bg.tint,
     whistlegraph.bg.tintAmount,
