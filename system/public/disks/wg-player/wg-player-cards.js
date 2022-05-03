@@ -6,9 +6,6 @@ const { min, random, floor } = Math;
 const deck = document.querySelector(".card-deck");
 const layerOrder = ["video", "score", "compilation"];
 
-const audioSources = {};
-const videoGains = {};
-const audios = document.querySelectorAll("#content .card-deck .card audio");
 const videos = document.querySelectorAll("#content .card-deck .card video");
 const cardViews = deck.querySelectorAll(".card-deck .card-view");
 const cards = deck.querySelectorAll(".card-deck .card-view .card");
@@ -62,7 +59,7 @@ deck.addEventListener("pointermove", (e) => {
   }
 });
 
-deck.addEventListener("pointerup", (e) => {
+deck.addEventListener("pointerup", () => {
   const card = deck.querySelector(".card-view.active .card");
   card?.classList.remove("touch");
 });
@@ -182,7 +179,6 @@ deck.addEventListener("pointerup", (e) => {
   const nextVideo = nextLayer.querySelector(".card video");
   if (nextVideo) {
     const nextCard = nextVideo.closest(".card");
-    const nextActiveCardType = nextCard.dataset.type;
     if (nextVideo.paused) {
       nextVideo.play();
       nextCard.classList.add("running");
@@ -219,7 +215,7 @@ deck.addEventListener("pointerup", (e) => {
   // 2. Animate the top one off the screen, after the press animation ends.
   activeView.addEventListener(
     "animationend",
-    (e) => {
+    () => {
       const cardView = layers[layerOrder[0]];
       const card = cardView.querySelector(".card");
       layerOrder.push(layerOrder.shift()); // Move the 1st element to the end...
@@ -282,7 +278,7 @@ deck.addEventListener("pointerup", (e) => {
       card.classList.remove("running");
       card.classList.remove("hover");
 
-      card.addEventListener("transitionend", function end(e) {
+      card.addEventListener("transitionend", function end() {
         card.removeEventListener("transitionend", end);
 
         // and re-sort them on the z-axis.
@@ -335,12 +331,12 @@ function frame() {
     if (card.dataset.type === "compilation") {
       // console.log(displayRatio, contentRatio);
       if (displayRatio < 1) {
-        let difference = (1 - displayRatio) * (contentRatio / 1);
+        //let difference = (1 - displayRatio) * (contentRatio / 1);
         //if (displayRatio < 0.5) {
         //  difference = (1 - displayRatio) / 3;
         //}
-        widthOffset = floor(width * difference);
-        heightOffset = floor(height * difference);
+        //widthOffset = floor(width * difference);
+        //heightOffset = floor(height * difference);
       } else {
         //let difference = (displayRatio - 1) * (contentRatio / 2);
         //widthOffset = -floor(width * difference);

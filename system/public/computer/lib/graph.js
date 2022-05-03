@@ -7,7 +7,7 @@ import {
   radians,
   lerp,
 } from "./num.js";
-const { abs, sign, ceil, floor, round, sin, cos } = Math;
+const { abs, sign, ceil, floor, sin, cos } = Math;
 
 let width, height, pixels;
 const depthBuffer = [];
@@ -227,6 +227,7 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   //}
 }
 
+/*
 function copyRow(destX, destY, srcX, srcY, src) {
   destX = Math.round(destX);
   destY = Math.round(destY);
@@ -244,6 +245,7 @@ function copyRow(destX, destY, srcX, srcY, src) {
 
   pixels.set(sub, destIndex);
 }
+ */
 
 // Copies pixels from a source buffer to the active buffer and returns
 // the source buffer.
@@ -739,7 +741,7 @@ function noise16DIGITPAIN() {
 }
 
 function noiseTinted(tint, amount, saturation) {
-  console.log("Tinting:", tint, amount, saturation);
+  // console.log("Tinting:", tint, amount, saturation);
   for (let i = 0; i < pixels.length; i += 4) {
     const grayscale = randInt(255);
     pixels[i] = lerp(
@@ -865,7 +867,7 @@ class Camera {
 
 // Mesh
 class Form {
-  #primitive = "triangle";
+  // #primitive = "triangle";
 
   // Model
   vertices = [];
@@ -881,11 +883,13 @@ class Form {
     [0.0, 0.0, 1.0, 1.0],
   ];
 
+  /*
   #texCoords = [
     [0.0, 0.0, 0.0, 0.0],
     [0.0, 1.0, 0.0, 0.0],
     [1.0, 1.0, 0.0, 0.0],
   ];
+  */
 
   // Transform
   position = [0, 0, 0];
@@ -1397,7 +1401,7 @@ function drawTriangle(v1, v2, v3, texture, alpha) {
   }
 
   // TODO: Fix clipping.
-  return;
+  // return;
 
   /*
   const vertices = [v1, v2, v3];
@@ -1636,9 +1640,11 @@ export { Camera, Form };
 let graphicLogCount = 0;
 const graphicLogMax = 5;
 
+/*
 function graphicLog(log) {
   graphicLogCount = Math.min(graphicLogCount + 1, graphicLogMax);
   if (graphicLogCount < graphicLogMax) {
     console.log(log);
   }
 }
+*/

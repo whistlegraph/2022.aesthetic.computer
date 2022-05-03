@@ -2,23 +2,27 @@
 // Made on occasion of Whistlegraph's Feral File exhibition.
 // This player orchestrates the data for displaying 10 different whistlegraphs.
 
-import { randIntRange } from "../computer/lib/num.js";
 import { anyKey } from "../computer/lib/help.js";
 
-// ***Current***
-// TODO: Replace spinners.
-// TODO: Move live site to netlify which supports GIT LFS.
+// ***Code***
 // TODO: Give loading screen borders one standard color.
-// TODO: Tap / highlight outlines should be full opacity and either be white, black, or... grey?
+// TODO: Tap / highlight outlines should be full opacity and either be white,
+//       black, or... grey?
+// TODO: Fix compilation display ratio, and rotation... for all screen sizes.
 // TODO: Experiment with low fps animated noise on playback.
-// TODO: Fix compilation display ratio for all screen sizes.
 // TODO: Always alternate back cards to be tilted in BOTH directions.
 // TODO: Add card cover to score so it starts as black, along with a load event.
+// TODO: Add shortcuts for each wg; rename wg-player to wg.
+// TODO: Make wg re-entrant so that it doesn't break the page on multiple loads.
+// TODO: Test on poor connections.
+// TODO: Test in all browsers... (esp. Firefox)
+
+// ***Design***
 // TODO: Try out an alt-color scheme for Slinky dog w/ Alex.
 
 // Final URLS:
 // https://127.0.0.1/?name=butterfly-cosplayer#wg-player
-// https://127.0.0.1/?name=its-time-to-grow#wg-player
+// https://127.0.0.1/?name=time-to-grow#wg-player
 // https://127.0.0.1/?name=i-dont-need-an-iphone#wg-player
 // https://127.0.0.1/?name=lately-when-i-fly#wg-player
 // https://127.0.0.1/?name=loner#wg-player
@@ -57,7 +61,7 @@ const butterflyCosplayer = {
   },
 };
 
-const ItsTimeToGrow = {
+const timeToGrow = {
   bg: {
     tint: [20, 10, 3], // rgb
     tintAmount: 0.96,
@@ -320,7 +324,7 @@ const whatsInsideYourHeart = {
 
 const whistlegraphs = {
   "butterfly-cosplayer": butterflyCosplayer,
-  "its-time-to-grow": ItsTimeToGrow,
+  "time-to-grow": timeToGrow,
   loner,
   "i-dont-need-an-iphone": iDontNeedAniPhone,
   "lately-when-i-fly": latelyWhenIFly,
@@ -339,7 +343,7 @@ console.log(defaultWhistlegraph);
 let whistlegraph;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, noiseTinted, content, query }) {
+function boot({ cursor, content, query }) {
   cursor("native");
 
   // Decide what whistlegraph to use.
@@ -357,7 +361,7 @@ function boot({ cursor, noiseTinted, content, query }) {
 
   whistlegraph = whistlegraphs[wg];
 
-  const deck = content.add(`
+  content.add(`
     <div class="card-deck loading">
       <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
@@ -402,6 +406,10 @@ function boot({ cursor, noiseTinted, content, query }) {
       -webkit-user-select: none;
       font-size: 32px;
       display: flex;
+      /* This fixes a rendering bug specific to Google Chrome on Windows.
+         It doesn't affect the look, but forces a different rendering stack in
+         which everything seems to work fine. 2022.05.02.20.49 */ 
+      transform: rotate(0.00001deg);
     }
     
     .card-deck:not(.loading) #card-deck-loading { display: none; }
@@ -572,7 +580,7 @@ function boot({ cursor, noiseTinted, content, query }) {
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ noiseTinted, paintCount }) {
+function paint({ noiseTinted }) {
   noiseTinted(
     whistlegraph.bg.tint,
     whistlegraph.bg.tintAmount,
