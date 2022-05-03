@@ -6,9 +6,16 @@ let frame = 0;
 const frames = { count: 4, loaded: false, images: [] };
 
 // 🥾 Boot
-async function boot({ net: { preload }, cursor, resize, help: { repeat } }) {
+async function boot({
+  net: { preload },
+  cursor,
+  resize,
+  gap,
+  help: { repeat },
+}) {
   cursor("native");
   resize(800, 1145);
+  gap(0);
   // Preload all images.
   repeat(frames.count, (n) => {
     preload(`disks/digitpain/1/${n}.webp`).then((img) => {

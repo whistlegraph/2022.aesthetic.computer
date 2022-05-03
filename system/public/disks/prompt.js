@@ -25,7 +25,17 @@ let errorPresent = false;
 let canType = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, net: { preload }, pieceCount, glaze, resize, screen }) {
+function boot({
+  cursor,
+  net: { preload },
+  pieceCount,
+  glaze,
+  resize,
+  gap,
+  screen,
+}) {
+  gap(8);
+
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
     preload(`disks/drawings/font-1/${location}.json`).then((res) => {

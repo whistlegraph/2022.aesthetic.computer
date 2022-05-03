@@ -392,8 +392,9 @@ let whistlegraph;
 let fuzzy = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, content, query }) {
+function boot({ cursor, content, query, gap }) {
   cursor("native");
+  gap(0);
 
   // Decide what whistlegraph to use.
   let wg;
@@ -480,8 +481,8 @@ function boot({ cursor, content, query }) {
       position: absolute;
       top: 0;
       left: 0;
-      width: calc(100% + 1px);
-      height: calc(100% + 1px);
+      width: 100%;
+      height: 100%;
       background: rgba(20, 20, 20, 1);
       z-index: 100;
       display: flex;

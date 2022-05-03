@@ -20,8 +20,17 @@ let needsFlip = false;
 let flip = true;
 
 // 🥾 Boot (Runs once before first paint and sim)
-async function boot({ wipe, net: { preload }, cursor, fps, resize, glaze }) {
+async function boot({
+  wipe,
+  net: { preload },
+  cursor,
+  fps,
+  resize,
+  glaze,
+  gap,
+}) {
   resize(1000, 1250); // 3x5
+  gap(0);
   cursor("native");
   preload("disks/digitpain/0/0.webp").then((img) => {
     img1 = img;

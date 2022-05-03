@@ -99,6 +99,7 @@ async function boot(
 
   const REFRAME_DELAY = 250;
   let curReframeDelay = REFRAME_DELAY;
+  let gap = 0;
 
   function frame(width, height) {
     // Cache the current canvas if needed.
@@ -153,13 +154,7 @@ async function boot(
     width = width || fixedWidth;
     height = height || fixedHeight;
 
-    // Add a gapSize if aesthetic.computer is not embedded.
-    let gapSize;
-    if (document.body.classList.contains("embed") === false) {
-      gapSize = 8 * window.devicePixelRatio;
-    } else {
-      gapSize = 0;
-    }
+    const gapSize = gap * window.devicePixelRatio;
 
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
@@ -761,6 +756,15 @@ async function boot(
       return;
     }
 
+    if (type === "gap-change") {
+      console.log("🕳️ Gap:", content);
+      if (gap !== content) {
+        gap = content;
+        needsReframe = true;
+      }
+      return;
+    }
+
     if (type === "glaze") {
       console.log("🪟 Glaze:", content, "Type:", content.type || "prompt");
       glaze = content;
@@ -818,6 +822,11 @@ async function boot(
 
         fixedWidth = undefined;
         fixedHeight = undefined;
+        needsReframe = true;
+      }
+
+      if (gap !== 0) {
+        gap = 0;
         needsReframe = true;
       }
 

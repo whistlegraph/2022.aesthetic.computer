@@ -814,6 +814,10 @@ function makeFrame({ data: { type, content } }) {
         send({ type: "fps-change", content: newFps });
       };
 
+      $api.gap = function (newGap) {
+        send({ type: "gap-change", content: newGap });
+      };
+
       $api.resize = function (width, height) {
         // Don't do anything if there is no change.
 

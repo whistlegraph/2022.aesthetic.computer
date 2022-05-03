@@ -6,9 +6,16 @@ let frame = 0;
 const frames = { count: 4, loaded: false, images: [] };
 
 // 🥾 Boot
-async function boot({ net: { preload }, cursor, resize, help: { repeat } }) {
+async function boot({
+  net: { preload },
+  cursor,
+  resize,
+  gap,
+  help: { repeat },
+}) {
   cursor("native");
   resize(1000, 1250);
+  gap(0);
   // Preload all images.
   repeat(frames.count, (n) => {
     preload(`disks/digitpain/3/${n}.webp`).then((img) => {
@@ -22,7 +29,11 @@ async function boot({ net: { preload }, cursor, resize, help: { repeat } }) {
 // 🎨 Paint
 function paint({ wipe, paste, num: { randIntRange: r }, help: { choose } }) {
   if (frames.loaded) {
-    wipe(r(168, 188), r(168, 188), r(168, 188)).paste(frames.images[frame], 0, 0);
+    wipe(r(168, 188), r(168, 188), r(168, 188)).paste(
+      frames.images[frame],
+      0,
+      0
+    );
   }
 }
 

@@ -7,19 +7,27 @@ let frame = 0;
 const frames = { count: 7, loaded: false, images: [] };
 
 // 🥾 Boot
-async function boot({ net: { preload }, cursor, resize, help: { repeat } }) {
+async function boot({
+  net: { preload },
+  cursor,
+  resize,
+  gap,
+  help: { repeat },
+}) {
   cursor("native");
   resize(600, 859);
+  gap(0);
 
   // Preload all images (by name).
-  ["bg1", "bg2", "bg3", "figure", "info", "shine", "signature"].forEach((n, i) => {
-    preload(`disks/digitpain/2/${n}.webp`).then((img) => {
-      frames.images[i] = img;
-      // Set the `loaded` flag if everything is finished.
-      frames.loaded = frames.images.reduce((n) => n + 1, 0) === frames.count;
-    });
-  })
-
+  ["bg1", "bg2", "bg3", "figure", "info", "shine", "signature"].forEach(
+    (n, i) => {
+      preload(`disks/digitpain/2/${n}.webp`).then((img) => {
+        frames.images[i] = img;
+        // Set the `loaded` flag if everything is finished.
+        frames.loaded = frames.images.reduce((n) => n + 1, 0) === frames.count;
+      });
+    }
+  );
 }
 
 // 🎨 Paint
