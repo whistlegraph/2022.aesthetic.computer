@@ -10,10 +10,13 @@ const videos = document.querySelectorAll("#content .card-deck .card video");
 const cardViews = deck.querySelectorAll(".card-deck .card-view");
 const cards = deck.querySelectorAll(".card-deck .card-view .card");
 const loadingScreen = deck.querySelector("#card-deck-loading");
+const spinnerCtx = deck.querySelector("#spinner-canvas").getContext("2d");
+const spinnerImg = deck.querySelector("#spinner img");
 
 const initialCardScale = 0.95;
 const cardScale = 0.9;
 
+let pointerDown = false;
 let videosReady = 0;
 let allVideosReady = false;
 let multipleTouches = false;
@@ -34,6 +37,7 @@ videos.forEach((video) => {
         allVideosReady = true;
         setTimeout(() => {
           deck.classList.remove("loading");
+          spinnerCtx.drawImage(spinnerImg, 0, 0);
         }, 500);
       }
     },
@@ -41,9 +45,13 @@ videos.forEach((video) => {
   );
 });
 
-loadingScreen.addEventListener('transitionend', () => {
-  loadingScreen.style.display = "none";
-}, { once: true })
+loadingScreen.addEventListener(
+  "transitionend",
+  () => {
+    loadingScreen.style.display = "none";
+  },
+  { once: true }
+);
 
 // 1️⃣ Hover states for cards when using only a mouse, and active states
 //    for mouse and touch.
@@ -57,9 +65,15 @@ deck.addEventListener("pointermove", (e) => {
   // if (e.pointerType === "mouse") deck.classList.remove("no-cursor");
   const card = deck.querySelector(".card-view.active .card");
   if (document.elementFromPoint(e.clientX, e.clientY) === card) {
-    if (e.pointerType === "mouse") card.classList.add("hover");
+    if (
+      e.pointerType === "mouse" &&
+      activated === false &&
+      pointerDown === false
+    )
+      card.classList.add("hover");
   } else if (card) {
-    card.classList.remove("touch", "hover");
+    card.classList.remove("touch");
+    card.classList.remove("hover");
     activated = false;
   }
 });
@@ -67,6 +81,7 @@ deck.addEventListener("pointermove", (e) => {
 deck.addEventListener("pointerup", () => {
   const card = deck.querySelector(".card-view.active .card");
   card?.classList.remove("touch");
+  pointerDown = false;
 });
 
 deck.addEventListener("touchstart", (e) => {
@@ -92,6 +107,7 @@ deck.addEventListener("touchend", (e) => {
 
 deck.addEventListener("pointerdown", (e) => {
   if (!e.isPrimary) return;
+  pointerDown = true;
   const card = deck.querySelector(".card-view.active .card");
   if (document.elementFromPoint(e.clientX, e.clientY) === card) {
     card.classList.add("touch");
@@ -100,7 +116,7 @@ deck.addEventListener("pointerdown", (e) => {
     clearTimeout(deactivateTimeout);
     deactivateTimeout = setTimeout(() => {
       activated = false;
-      card.classList.remove("touch");
+      card.classList.remove("touch", "hover");
     }, 500);
   }
 });

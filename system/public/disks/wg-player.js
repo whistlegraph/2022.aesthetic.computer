@@ -5,9 +5,12 @@
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
+
+// TODO: Freeze spinner on fade out by drawing it to an intermediate canvas
+//       underneath, and wrapping it in another element.
+
 // TODO: Tap / highlight outlines should be full opacity and either be white,
 //       black, or... grey?
-//       - Also fix the mouseover delay on these?
 
 // TODO: Fix compilation display ratio, and rotation... for all screen sizes.
 // TODO: Experiment with low fps animated noise on playback.
@@ -21,7 +24,7 @@ import { anyKey } from "../computer/lib/help.js";
 // ***Design***
 // TODO: Try out an alt-color scheme for Slinky dog w/ Alex.
 
-// Final URLS:
+// Dev URLS:
 // https://127.0.0.1/?name=butterfly-cosplayer#wg-player
 // https://127.0.0.1/?name=time-to-grow#wg-player
 // https://127.0.0.1/?name=i-dont-need-an-iphone#wg-player
@@ -46,6 +49,7 @@ const butterflyCosplayer = {
     innerRadius: 0.15,
     color: "rgb(210, 128, 0)",
     boxShadow: "1vmin 1vmin 1.5vmin rgba(0, 80, 225, 0.83)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -53,6 +57,7 @@ const butterflyCosplayer = {
     innerRadius: 0.1,
     color: "rgb(170, 170, 150)",
     boxShadow: "1vmin 1vmin 1.5vmin rgba(80, 137, 4, 0.70)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -60,6 +65,7 @@ const butterflyCosplayer = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "1vmin 1vmin 2.5vmin rgba(120, 76, 11, 0.85)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -76,6 +82,7 @@ const timeToGrow = {
     innerRadius: 0.15,
     color: "rgb(255, 166, 202)",
     boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(250, 240, 5, 0.6)",
+    highlight: "rgba(127, 127, 127, 1)",
   },
   score: {
     border: 0.15,
@@ -83,6 +90,7 @@ const timeToGrow = {
     innerRadius: 0.1,
     color: "rgb(95, 152, 132)",
     boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(113, 45, 159, 0.85)",
+    highlight: "rgba(200, 200, 200, 1)",
   },
   compilation: {
     border: 0.2,
@@ -90,6 +98,7 @@ const timeToGrow = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0.9vmin 0.9vmin 2.5vmin rgba(125, 115, 115, 0.85)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -106,6 +115,7 @@ const loner = {
     innerRadius: 0.15,
     color: "rgb(10, 38, 88)",
     boxShadow: "0.5vmin 0.5vmin 2vmin rgba(250, 0, 0, 0.9)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -113,6 +123,7 @@ const loner = {
     innerRadius: 0.1,
     color: "rgb(233, 195, 2)",
     boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(132, 64, 12, 0.95)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -120,6 +131,7 @@ const loner = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0.7vmin 0.7vmin 2.5vmin rgba(59, 80, 134, 0.75)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -136,6 +148,7 @@ const iDontNeedAniPhone = {
     innerRadius: 0.15,
     color: "rgb(215, 14, 14)",
     boxShadow: "0.35vmin 0.35vmin 2.5vmin rgba(20, 20, 120, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -143,6 +156,7 @@ const iDontNeedAniPhone = {
     innerRadius: 0.1,
     color: "rgb(255, 150, 130)",
     boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(245, 50, 0, 0.88)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -150,6 +164,7 @@ const iDontNeedAniPhone = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0.5vmin 0.5vmin 2vmin rgba(255, 0, 80, 0.95)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -166,6 +181,7 @@ const latelyWhenIFly = {
     innerRadius: 0.15,
     color: "rgb(90, 5, 165)",
     boxShadow: "0vmin 0vmin 2.5vmin rgba(0, 15, 115, 0.95)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -173,6 +189,7 @@ const latelyWhenIFly = {
     innerRadius: 0.1,
     color: "rgb(160, 140, 240)",
     boxShadow: "0.25vmin 0.25vmin 2vmin rgba(161, 68, 153, 0.84)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -180,6 +197,7 @@ const latelyWhenIFly = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0.5vmin 0.5vmin 4vmin rgba(101, 14, 14, 0.75)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -196,6 +214,7 @@ const puzzle = {
     innerRadius: 0.15,
     color: "rgb(48, 200, 212)",
     boxShadow: "0.5vmin 0.5vmin 3vmin rgba(50, 0, 200, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -203,6 +222,7 @@ const puzzle = {
     innerRadius: 0.1,
     color: "rgb(150, 208, 150)",
     boxShadow: "0.1vmin 0.1vmin 2vmin rgba(255, 100, 100, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -210,6 +230,7 @@ const puzzle = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0.5vmin 0.5vmin 3vmin rgba(100, 80, 228, 0.99)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -224,8 +245,9 @@ const slinkyDog = {
     border: 0.25,
     outerRadius: 0.25,
     innerRadius: 0.15,
-    color: "rgb(100, 140, 90)",
+    color: "rgb(50, 80, 45)",
     boxShadow: "0.75vmin 0.75vmin 2vmin rgba(120, 185, 45, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -233,6 +255,7 @@ const slinkyDog = {
     innerRadius: 0.1,
     color: "rgb(170, 175, 130)",
     boxShadow: "0.1vmin 0.1vmin 2.5vmin rgba(200, 130, 25, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -240,6 +263,7 @@ const slinkyDog = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0.5vmin 0.5vmin 3vmin rgba(226, 252, 161, 0.5)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -256,6 +280,7 @@ const mommyWow = {
     innerRadius: 0.15,
     color: "rgb(80, 82, 110)",
     boxShadow: "0.5vmin 0.5vmin 3vmin rgba(120, 45, 100, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -263,6 +288,7 @@ const mommyWow = {
     innerRadius: 0.1,
     color: "rgb(250, 246, 65)",
     boxShadow: "0vmin 0vmin 3vmin rgba(255, 160, 0, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -270,6 +296,7 @@ const mommyWow = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0vmin 0vmin 3vmin rgba(255, 160, 0, 0.5)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -286,6 +313,7 @@ const peoplePleaser = {
     innerRadius: 0.15,
     color: "rgb(190, 176, 205)",
     boxShadow: "0.75vmin 0.75vmin 3vmin rgba(180, 126, 200, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -293,6 +321,7 @@ const peoplePleaser = {
     innerRadius: 0.1,
     color: "rgb(255, 187, 187)",
     boxShadow: "0.25vmin 0.25vmin 2.5vmin rgba(230, 0, 30, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -300,6 +329,7 @@ const peoplePleaser = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
     boxShadow: "0vmin 0vmin 3vmin rgba(200, 150, 206, 0.8)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -316,6 +346,7 @@ const whatsInsideYourHeart = {
     innerRadius: 0.15,
     color: "rgb(20, 20, 30)",
     boxShadow: "0.25vmin 0.25vmin 4vmin rgba(255, 10, 10, 0.7)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
     border: 0.15,
@@ -323,6 +354,7 @@ const whatsInsideYourHeart = {
     innerRadius: 0.1,
     color: "rgb(30, 20, 20)",
     boxShadow: "0.25vmin 0.25vmin 2.5vmin rgba(0, 40, 255, 1)",
+    highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
     border: 0.2,
@@ -330,6 +362,7 @@ const whatsInsideYourHeart = {
     innerRadius: 0.15,
     color: "rgb(20, 30, 20)",
     boxShadow: "0.2vmin 0.2vmin 2vmin rgba(10, 250, 30, 0.8)",
+    highlight: "rgba(120, 120, 120, 1)",
   },
 };
 
@@ -377,7 +410,7 @@ function boot({ cursor, content, query }) {
           <video class="card-content" width="100%" height="100%" preload="auto"
            playsinline src="/disks/wg-player/${wg}/${wg}-tt-compilation.mp4"></video>
            <div class="card-cover"></div>
-           <div class="card-outline"></div>
+           <div class="card-outline" style="border-color: ${whistlegraph.compilation.highlight}"></div>
         </div>
       </div>
     
@@ -385,7 +418,7 @@ function boot({ cursor, content, query }) {
         <div class="card" data-type="score" data-ratio="8.5x11">
           <img class="card-content" width="100%" height="100%"
            src="/disks/wg-player/${wg}/${wg}.svg">
-           <div class="card-outline"></div>
+           <div class="card-outline" style="border-color: ${whistlegraph.score.highlight}"></div>
         </div>
       </div>
       
@@ -394,7 +427,7 @@ function boot({ cursor, content, query }) {
           <video class="card-content" width="100%" height="100%" preload="auto"
            playsinline src="/disks/wg-player/${wg}/${wg}-web.mp4"></video>
            <div class="card-cover"></div>
-           <div class="card-outline"></div>
+           <div class="card-outline" style="border-color: ${whistlegraph.video.highlight}"></div>
            <div id="card-play">
              <img src="/disks/wg-player/play-circle.svg"> 
              <img src="/disks/wg-player/play-triangle.svg"> 
@@ -402,7 +435,10 @@ function boot({ cursor, content, query }) {
         </div>
       </div>
     <div id="card-deck-loading">
-      <img src="/disks/wg-player/${wg}/${wg}.webp" style="filter: brightness(0.85) drop-shadow(0px 0px 1.5vmin ${whistlegraph.glow})">
+      <div id="spinner" style="filter: brightness(0.9) drop-shadow(0px 0px 1.5vmin ${whistlegraph.glow})">
+        <img width="1000" height="1000" src="/disks/wg-player/${wg}/${wg}.webp">
+        <canvas width="1000" height="1000" id="spinner-canvas"></canvas>
+      </div>
     </div>
     </div>
     <script src="/disks/wg-player/wg-player-cards.js" type="module" defer></script>
@@ -441,22 +477,38 @@ function boot({ cursor, content, query }) {
       height: calc(100% + 1px);
       background: rgba(20, 20, 20, 1);
       z-index: 100;
-      /*backdrop-filter: brightness(0.5) saturate(0);*/
-      /*-webkit-backdrop-filter: brightness(0.5) saturate(0);*/
       display: flex;
     }
     
-    #card-deck-loading img { /* Spinner */
+    #card-deck-loading #spinner {
       display: block;
       margin: auto;
       width: 40vmin;
+      height: 40vmin;
+      position: relative;
     }
+    
+    #spinner img {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+    
+    #spinner canvas {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      display: none;
+    }
+    
+    .card-deck:not(.loading) #spinner img { display: none; }
+    .card-deck:not(.loading) #spinner canvas { display: block; }
     
     .card-deck:not(.loading) #card-deck-loading {
       /*display: none;*/
       transform: scale(2);
       opacity: 0;
-      transition: 0.25s transform, 0.25s opacity;
+      transition: 0.25s transform ease-out, 0.25s opacity ease-in;
     }
     
     .card-deck.loading #card-play { display: none; }
@@ -487,9 +539,6 @@ function boot({ cursor, content, query }) {
     .card.touch #card-play {
       transform: scale(0.95);
     }
-    
-    /*.card-deck.no-cursor { cursor: none; }*/
-    /*.card-deck.no-cursor .card-view.active .card { cursor: none; }*/
     
     .card-view.active .card { cursor: pointer; }
     .card-view.active .card.running { cursor: alias; }
@@ -525,11 +574,29 @@ function boot({ cursor, content, query }) {
       display: block;
       box-sizing: border-box;
       position: absolute;
-      top: -1.5px;
-      left: -1.5px;
-      width: calc(100% + 3px);
-      height: calc(100% + 3px);
-      border: 3px solid rgba(0, 0, 0, 0.5);
+      border-style: solid;
+      border-color: rgba(0, 0, 0, 1);
+      border-width: 1vmin;
+      top: -0.5vmin;
+      left: -0.5vmin;
+      width: calc(100% + 1vmin);
+      height: calc(100% + 1vmin);
+    }
+    
+    .card[data-type=score].touch .card-outline {
+      border-width: 0.75vmin;
+      top: -0.375vmin;
+      left: -0.375vmin;
+      width: calc(100% + 0.75vmin);
+      height: calc(100% + 0.75vmin);
+    }
+    
+    .card[data-type=compilation].touch .card-outline {
+      border-width: 0.75vmin;
+      top: -0.375vmin;
+      left: -0.375vmin;
+      width: calc(100% + 0.75vmin);
+      height: calc(100% + 0.75vmin);
     }
     
     .card-outline {
@@ -543,9 +610,7 @@ function boot({ cursor, content, query }) {
       100% { transform: scale(0.99); }
     } 
     
-    .card-view .card-content {
-      position: absolute;
-    }
+    .card-view .card-content { position: absolute; }
     
     .card-cover { /* A black screen that gets removed once videos are loaded. */
       background: black;
@@ -583,11 +648,6 @@ function boot({ cursor, content, query }) {
       margin: auto;
       pointer-events: none;
     } 
-    
-    .card-view[data-type=compilation] .card video {
-      /*border-radius: ${whistlegraph.compilation.innerRadius}em;*/
-      box-sizing: border-box;
-    }
     </style>
   `);
 }
