@@ -7,6 +7,8 @@ import { anyKey } from "../computer/lib/help.js";
 // ***Code***
 // TODO: Tap / highlight outlines should be full opacity and either be white,
 //       black, or... grey?
+//       - Also fix the mouseover delay on these?
+
 // TODO: Fix compilation display ratio, and rotation... for all screen sizes.
 // TODO: Experiment with low fps animated noise on playback.
 // TODO: Always alternate back cards to be tilted in BOTH directions.
