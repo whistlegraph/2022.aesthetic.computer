@@ -32,9 +32,11 @@ function boot({
   glaze,
   resize,
   gap,
+  density,
   screen,
 }) {
   gap(8);
+  density(1);
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {

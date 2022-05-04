@@ -818,6 +818,10 @@ function makeFrame({ data: { type, content } }) {
         send({ type: "gap-change", content: newGap });
       };
 
+      $api.density = function (newDensity) {
+        send({ type: "density-change", content: newDensity });
+      };
+
       $api.resize = function (width, height) {
         // Don't do anything if there is no change.
 

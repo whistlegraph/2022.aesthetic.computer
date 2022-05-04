@@ -100,6 +100,7 @@ async function boot(
   const REFRAME_DELAY = 250;
   let curReframeDelay = REFRAME_DELAY;
   let gap = 0;
+  let density = 1; // added to window.devicePixelRatio
 
   function frame(width, height) {
     // Cache the current canvas if needed.
@@ -158,7 +159,8 @@ async function boot(
 
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
-      const subdivisions = 1 + window.devicePixelRatio;
+      // Or pull from density.
+      const subdivisions = density + window.devicePixelRatio;
       width = floor(window.innerWidth / subdivisions);
       height = floor(window.innerHeight / subdivisions);
       projectedWidth = width * subdivisions - gapSize;
@@ -760,6 +762,15 @@ async function boot(
       console.log("🕳️ Gap:", content);
       if (gap !== content) {
         gap = content;
+        needsReframe = true;
+      }
+      return;
+    }
+
+    if (type === "density-change") {
+      console.log("💻️ Density:", content);
+      if (density !== content) {
+        density = content;
         needsReframe = true;
       }
       return;

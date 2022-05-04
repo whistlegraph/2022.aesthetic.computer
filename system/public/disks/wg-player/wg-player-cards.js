@@ -152,6 +152,7 @@ deck.addEventListener("pointerup", (e) => {
   // Play the push down animation...
   activeView.classList.add("pressed");
   activeCard.classList.add("running");
+  activeCard.classList.add("animating");
 
   if (e.pointerType === "mouse") deck.classList.add("no-cursor");
 
@@ -302,22 +303,32 @@ deck.addEventListener("pointerup", (e) => {
       card.classList.remove("running");
       card.classList.remove("hover");
 
-      card.addEventListener("transitionend", function end() {
-        card.removeEventListener("transitionend", end);
+      card.addEventListener(
+        "transitionend",
+        function end() {
+          // and re-sort them on the z-axis.
+          layerOrder.forEach((layer, index) => {
+            const zIndex = layerOrder.length - 1 - index;
+            const el = layers[layer];
+            el.style.zIndex = zIndex;
+            if (zIndex === 2) el.classList.add("active");
+          });
 
-        // and re-sort them on the z-axis.
-        layerOrder.forEach((layer, index) => {
-          const zIndex = layerOrder.length - 1 - index;
-          const el = layers[layer];
-          el.style.zIndex = zIndex;
-          if (zIndex === 2) el.classList.add("active");
-        });
+          // 5. Animate the top (now bottom) one back into the stack of cards.
+          card.style.transition = "0.5s ease-in transform";
+          //card.style.transform = "none";
+          card.style.transform = `scale(${cardScale}) rotate(${card.dataset.rotation}deg)`;
 
-        // 5. Animate the top (now bottom) one back into the stack of cards.
-        card.style.transition = "0.5s ease-in transform";
-        //card.style.transform = "none";
-        card.style.transform = `scale(${cardScale}) rotate(${card.dataset.rotation}deg)`;
-      });
+          card.addEventListener(
+            "transitionend",
+            function secondEnd() {
+              card.classList.remove("animating");
+            },
+            { once: true }
+          );
+        },
+        { once: true }
+      );
     },
     { once: true }
   );

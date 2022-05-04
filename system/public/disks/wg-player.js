@@ -5,7 +5,7 @@
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
-// TODO: Once moving / animating, a card's tap highlight should always disappear.
+// TODO: Add updated spinners.
 // TODO: Fix compilation display ratio, and rotation... for all screen sizes.
 // TODO: Always alternate back cards to be tilted in BOTH directions.
 // TODO: Add shortcuts for each wg; rename wg-player to wg.
@@ -393,9 +393,10 @@ let whistlegraph;
 let fuzzy = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, content, query, gap }) {
+function boot({ cursor, content, query, gap, density }) {
   cursor("native");
   gap(0);
+  density(1);
 
   // Decide what whistlegraph to use.
   let wg;
@@ -605,6 +606,10 @@ function boot({ cursor, content, query, gap }) {
       left: -0.375vmin;
       width: calc(100% + 0.75vmin);
       height: calc(100% + 0.75vmin);
+    }
+    
+    .card.animating .card-outline {
+      display: none !important;
     }
     
     .card-outline {
