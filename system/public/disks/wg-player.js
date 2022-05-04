@@ -5,6 +5,7 @@
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
+// TODO: Once moving / animating, a card's tap highlight should always disappear.
 // TODO: Fix compilation display ratio, and rotation... for all screen sizes.
 // TODO: Always alternate back cards to be tilted in BOTH directions.
 // TODO: Add shortcuts for each wg; rename wg-player to wg.
@@ -33,8 +34,8 @@ import { anyKey } from "../computer/lib/help.js";
 // https://127.0.0.1/?name=whats-inside-your-heart#wg-player
 
 const butterflyCosplayer = {
-  glow: "rgba(255, 150, 0, 0.85)",
-  fuzz: 8n,
+  glow: "rgba(255, 150, 0, 0.4)",
+  fuzz: 20n,
   bg: {
     tint: [30, 70, 25], // rgb
     tintAmount: 0.9,
@@ -45,7 +46,7 @@ const butterflyCosplayer = {
     outerRadius: 0.25,
     innerRadius: 0.15,
     color: "rgb(210, 128, 0)",
-    boxShadow: "1vmin 1vmin 1.5vmin rgba(0, 80, 225, 0.83)",
+    boxShadow: "0.5vmin 0.5vmin 2.5vmin rgba(0, 40, 200, 0.83)",
     highlight: "rgba(0, 0, 0, 1)",
   },
   score: {
@@ -67,7 +68,7 @@ const butterflyCosplayer = {
 };
 
 const timeToGrow = {
-  glow: "rgba(255, 150, 210, 0.75)",
+  glow: "rgba(255, 150, 210, 0.35)",
   fuzz: 18n,
   bg: {
     tint: [20, 10, 3], // rgb
@@ -101,7 +102,7 @@ const timeToGrow = {
 };
 
 const loner = {
-  glow: "rgba(255, 130, 130, 0.85)",
+  glow: "rgba(255, 130, 130, 0)",
   fuzz: 16n,
   bg: {
     tint: [255, 170, 190], // rgb
@@ -114,7 +115,7 @@ const loner = {
     innerRadius: 0.15,
     color: "rgb(10, 38, 88)",
     boxShadow: "0.5vmin 0.5vmin 2vmin rgba(250, 0, 0, 0.9)",
-    highlight: "rgba(0, 0, 0, 1)",
+    highlight: "rgba(100, 100, 100, 1)",
   },
   score: {
     border: 0.15,
@@ -135,7 +136,7 @@ const loner = {
 };
 
 const iDontNeedAniPhone = {
-  glow: "rgba(240, 0, 0, 0.85)",
+  glow: "rgba(240, 0, 0, 0.45)",
   fuzz: 16n,
   bg: {
     tint: [110, 10, 10], // rgb
@@ -146,7 +147,7 @@ const iDontNeedAniPhone = {
     border: 0.25,
     outerRadius: 0.25,
     innerRadius: 0.15,
-    color: "rgb(215, 14, 14)",
+    color: "rgb(225, 14, 14)",
     boxShadow: "0.35vmin 0.35vmin 2.5vmin rgba(20, 20, 120, 1)",
     highlight: "rgba(0, 0, 0, 1)",
   },
@@ -170,7 +171,7 @@ const iDontNeedAniPhone = {
 
 const latelyWhenIFly = {
   glow: "rgba(90, 5, 230, 0.95)",
-  fuzz: 10n,
+  fuzz: 12n,
   bg: {
     tint: [20, 5, 40], // rgb
     tintAmount: 0.93,
@@ -203,11 +204,11 @@ const latelyWhenIFly = {
 };
 
 const puzzle = {
-  glow: "rgba(48, 200, 252, 0.85)",
+  glow: "rgba(48, 200, 252, 0.45)",
   fuzz: 12n,
   bg: {
     tint: [100, 150, 255], // rgb
-    tintAmount: 0.6,
+    tintAmount: 0.7,
     pixelSaturation: 1,
   },
   video: {
@@ -237,27 +238,27 @@ const puzzle = {
 };
 
 const slinkyDog = {
-  glow: "rgba(0, 200, 0, 0.75)",
-  fuzz: 8n,
+  glow: "rgba(0, 0, 0, 0.75)",
+  fuzz: 16n,
   bg: {
-    tint: [90, 90, 70], // rgb
-    tintAmount: 0.94,
-    pixelSaturation: 0.7,
+    tint: [247 - 40, 247 - 40, 255 - 40], // rgb
+    tintAmount: 0.9,
+    pixelSaturation: 0.1,
   },
   video: {
     border: 0.25,
     outerRadius: 0.25,
     innerRadius: 0.15,
-    color: "rgb(50, 80, 45)",
-    boxShadow: "0.75vmin 0.75vmin 2vmin rgba(120, 185, 45, 1)",
-    highlight: "rgba(0, 0, 0, 1)",
+    color: "rgb(0, 0, 5)",
+    boxShadow: "0.75vmin 0.75vmin 2.5v8min rgba(200, 70, 0, 1)",
+    highlight: "rgba(180, 180, 180, 1)",
   },
   score: {
     border: 0.15,
     outerRadius: 0.15,
     innerRadius: 0.1,
-    color: "rgb(170, 175, 130)",
-    boxShadow: "0.1vmin 0.1vmin 2.5vmin rgba(200, 130, 25, 1)",
+    color: "rgb(90, 90, 110)",
+    boxShadow: "0.1vmin 0.1vmin 2.5vmin rgba(255, 255, 255, 1)",
     highlight: "rgba(0, 0, 0, 1)",
   },
   compilation: {
@@ -265,18 +266,18 @@ const slinkyDog = {
     outerRadius: 0.25,
     innerRadius: 0.15,
     color: "rgb(20, 20, 20)",
-    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(226, 252, 161, 0.5)",
-    highlight: "rgba(120, 120, 120, 1)",
+    boxShadow: "0.5vmin 0.5vmin 3vmin rgba(226, 252, 220, 0.7)",
+    highlight: "rgba(190, 190, 190, 1)",
   },
 };
 
 const mommyWow = {
-  glow: "rgba(255, 0, 255, 0.8)",
-  fuzz: 2n,
+  glow: "rgba(255, 200, 0, 0.9)",
+  fuzz: 6n,
   bg: {
     tint: [10, 10, 30], // rgb
-    tintAmount: 0.8,
-    pixelSaturation: 0.5,
+    tintAmount: 0.85,
+    pixelSaturation: 0.9,
   },
   video: {
     border: 0.25,
@@ -306,10 +307,10 @@ const mommyWow = {
 
 const peoplePleaser = {
   glow: "rgba(190, 80, 220, 0.75)",
-  fuzz: 8n,
+  fuzz: 17n,
   bg: {
-    tint: [130, 80, 80], // rgb
-    tintAmount: 0.92,
+    tint: [130 - 20, 80 - 20, 80 - 20], // rgb
+    tintAmount: 0.94,
     pixelSaturation: 0.2,
   },
   video: {
@@ -339,18 +340,18 @@ const peoplePleaser = {
 };
 
 const whatsInsideYourHeart = {
-  glow: "rgba(0, 0, 200, 0.75)",
+  glow: "rgba(0, 0, 245, 1)",
   fuzz: 5n,
   bg: {
     tint: [0, 10, 70], // rgb
-    tintAmount: 0.75,
+    tintAmount: 0.65,
     pixelSaturation: 1,
   },
   video: {
     border: 0.25,
     outerRadius: 0.25,
     innerRadius: 0.15,
-    color: "rgb(20, 20, 30)",
+    color: "rgb(20, 20, 40)",
     boxShadow: "0.25vmin 0.25vmin 4vmin rgba(255, 10, 10, 0.7)",
     highlight: "rgba(80, 80, 80, 1)",
   },
@@ -358,7 +359,7 @@ const whatsInsideYourHeart = {
     border: 0.15,
     outerRadius: 0.15,
     innerRadius: 0.1,
-    color: "rgb(30, 20, 20)",
+    color: "rgb(40, 20, 20)",
     boxShadow: "0.25vmin 0.25vmin 2.5vmin rgba(0, 40, 255, 1)",
     highlight: "rgba(80, 80, 80, 1)",
   },
@@ -366,8 +367,8 @@ const whatsInsideYourHeart = {
     border: 0.2,
     outerRadius: 0.25,
     innerRadius: 0.15,
-    color: "rgb(20, 30, 20)",
-    boxShadow: "0.2vmin 0.2vmin 2vmin rgba(10, 250, 30, 0.8)",
+    color: "rgb(20, 20, 20)",
+    boxShadow: "0.2vmin 0.2vmin 2vmin rgba(250, 250, 250, 0.8)",
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
@@ -443,7 +444,7 @@ function boot({ cursor, content, query, gap }) {
         </div>
       </div>
     <div id="card-deck-loading">
-      <div id="spinner" style="filter: brightness(0.9) drop-shadow(0px 0px 1.5vmin ${whistlegraph.glow})">
+      <div id="spinner" style="filter: brightness(0.9) drop-shadow(0 0 1vmin ${whistlegraph.glow})">
         <img width="1000" height="1000" src="/disks/wg-player/${wg}/${wg}.webp">
         <canvas width="1000" height="1000" id="spinner-canvas"></canvas>
       </div>

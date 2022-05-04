@@ -158,7 +158,7 @@ async function boot(
 
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
-      const subdivisions = 2 + window.devicePixelRatio;
+      const subdivisions = 1 + window.devicePixelRatio;
       width = floor(window.innerWidth / subdivisions);
       height = floor(window.innerHeight / subdivisions);
       projectedWidth = width * subdivisions - gapSize;
