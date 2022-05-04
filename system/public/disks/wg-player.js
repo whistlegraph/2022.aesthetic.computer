@@ -426,7 +426,7 @@ function boot({ cursor, content, query, gap }) {
       <div class="card-view" data-type="score" data-outer-radius="${whistlegraph.score.outerRadius}" data-inner-radius="${whistlegraph.score.innerRadius}" data-border-setting="${whistlegraph.score.border}" style="z-index: 1">
         <div class="card" data-type="score" data-ratio="8.5x11">
           <img class="card-content" width="100%" height="100%"
-           src="/disks/wg-player/${wg}/${wg}.svg">
+           src="/disks/wg-player/${wg}/${wg}-score.svg">
            <div class="card-outline" style="border-color: ${whistlegraph.score.highlight}"></div>
         </div>
       </div>
