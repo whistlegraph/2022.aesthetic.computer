@@ -426,7 +426,6 @@ const rotRange = [6, 14];
 
   // TODO: Pull items out of shuffle bag... eventually make a class?
   cards.forEach((card, i) => {
-    console.log(cards);
     if (i === cardViews.length - 1) return;
     if (i === 0) {
       // Remember last rotation direction of the bottom card (first in this loop).
@@ -438,10 +437,17 @@ const rotRange = [6, 14];
 
 const resizer = new ResizeObserver((entries) => {
   for (let entry of entries) {
-    if (entry.target === deck) {
+    // Frame the deck upon adding it to the DOM, and on each resize, but not
+    // when removing it from the DOM!
+    if (
+      entry.target === deck &&
+      entry.contentRect.width > 0 &&
+      entry.contentRect.height > 0
+    ) {
       frame();
     }
   }
 });
+//
 
 resizer.observe(deck);

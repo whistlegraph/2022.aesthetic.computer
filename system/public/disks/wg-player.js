@@ -5,10 +5,10 @@
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
+
 // TODO: Add updated spinners.
 // TODO: Fix compilation display ratio, and rotation amount... for all screen sizes.
 // TODO: Add shortcuts for each wg; rename wg-player to wg.
-// TODO: Make wg re-entrant so that it doesn't break the page on multiple loads.
 // TODO: Test on poor connections.
 // TODO: Test in all browsers... (esp. Firefox)
 
