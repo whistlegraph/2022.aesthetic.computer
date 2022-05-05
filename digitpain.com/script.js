@@ -8,28 +8,28 @@ const footer = document.querySelector("footer");
 const paintings = [
   {
     url: "",
-    img: "https://aesthetic.computer/#digitpain0",
+    img: "https://127.0.0.1/#digitpain0",
     timesig: "2022.04.08.22.55",
     width: 1000,
     height: 1250,
   },
   {
     url: "",
-    img: "https://aesthetic.computer/#digitpain1",
+    img: "https://127.0.0.1/#digitpain1",
     timesig: "2022.?",
     width: 800,
     height: 1145,
   },
   {
     url: "",
-    img: "https://aesthetic.computer/#digitpain2",
+    img: "https://127.0.0.1/#digitpain2",
     timesig: "2022.?",
     width: 600,
     height: 859,
   },
   {
     url: "",
-    img: "https://aesthetic.computer/#digitpain3",
+    img: "https://127.0.0.1/#digitpain3",
     timesig: "2022.?",
     width: 1000,
     height: 1250,
@@ -66,7 +66,7 @@ function hashCheck() {
       url.innerHTML = "NOT YET MINTED";
     }
 
-    display.innerHTML = `<a href="https://aesthetic.computer/#digitpain${index}">AESTHETIC.COMPUTER/#digitpain${index}</a>`;
+    display.innerHTML = `<a href="https://127.0.0.1/#digitpain${index}">AESTHETIC.COMPUTER/#digitpain${index}</a>`;
 
     number.innerHTML = index;
 

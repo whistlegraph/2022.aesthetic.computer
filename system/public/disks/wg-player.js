@@ -6,8 +6,7 @@ import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
 // TODO: Add updated spinners.
-// TODO: Fix compilation display ratio, and rotation... for all screen sizes.
-// TODO: Always alternate back cards to be tilted in BOTH directions.
+// TODO: Fix compilation display ratio, and rotation amount... for all screen sizes.
 // TODO: Add shortcuts for each wg; rename wg-player to wg.
 // TODO: Make wg re-entrant so that it doesn't break the page on multiple loads.
 // TODO: Test on poor connections.

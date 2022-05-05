@@ -284,7 +284,8 @@ deck.addEventListener("pointerup", (e) => {
       // 3. Trigger the first transition, where the card moves off the top.
       card.style.transition = "0.25s ease-out transform";
 
-      const rotation = choose(randIntRange(6, 15), randIntRange(-6, -15));
+      const rotation = randIntRange(...rotRange) * lastTiltDir;
+      lastTiltDir *= -1;
 
       card.dataset.rotation = rotation;
 
@@ -414,15 +415,23 @@ function frame() {
   });
 }
 
+let lastTiltDir; // Use the lastTilt dir to offset every subsequent card above.
+const rotRange = [6, 14];
+
 // Randomly rotate the back two cards on initialization.
 {
-  // Assuming that there are two card views.
-  const tiltBag = [randIntRange(6, 10), randIntRange(-10, -6)];
+  // Assumes that there are two rotated card views behind a top card.
+  const tiltBag = [randIntRange(...rotRange), randIntRange(...rotRange) * -1];
   shuffleInPlace(tiltBag);
 
   // TODO: Pull items out of shuffle bag... eventually make a class?
   cards.forEach((card, i) => {
+    console.log(cards);
     if (i === cardViews.length - 1) return;
+    if (i === 0) {
+      // Remember last rotation direction of the bottom card (first in this loop).
+      lastTiltDir = Math.sin(tiltBag[tiltBag.length - 1]);
+    }
     card.style.transform = `scale(${initialCardScale}) rotate(${tiltBag.pop()}deg)`;
   });
 }
