@@ -172,7 +172,7 @@ deck.addEventListener("pointerup", (e) => {
     document.querySelector("#card-play").classList.add("played");
     video.play();
 
-    signal("wg-player:started");
+    signal("whistlegraph:started");
 
     video.addEventListener("ended", function end() {
       if (activeView.classList.contains("active")) {

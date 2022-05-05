@@ -1,36 +1,27 @@
-// Whistlegraph Player, 2022.4.19
+// Whistlegraph Index, 2022.4.19
 // Made on occasion of Whistlegraph's Feral File exhibition.
-// This player orchestrates the data for displaying 10 different whistlegraphs.
+// This player currently orchestrates the data for displaying 10 different whistlegraphs.
 
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
-
+// TODO: Make forward and back button work with query parameters.
 // TODO: Add updated spinners.
-// TODO: Fix compilation display ratio, and rotation amount... for all screen sizes.
-// TODO: Add shortcuts for each wg; rename wg-player to wg.
 // TODO: Test on poor connections.
 // TODO: Test in all browsers... (esp. Firefox)
 
-// ***Design***
-// TODO: Scores – the svgs with shadows (like mommy wow or ppl pleaser) have rendering bugs on iOS where they rasterize poorly,
-//                [this might be fixable if we increase the resolution of the svgs we export from figma]
-// TODO: Spinner – time to grow [the circle should be centered in each subsequent frame]
-//                              [and a duplicate frame should be added so it grows up and down]
-//               - lately       [the plane should start a bit behind the ground, and continue a bit past it]
-//               - mommy        [2 frames up, then 2 frames down so it wiggles then flips, wiggles then flips]
-
-// Dev URLS:
-// https://127.0.0.1/?name=butterfly-cosplayer#wg-player
-// https://127.0.0.1/?name=time-to-grow#wg-player
-// https://127.0.0.1/?name=i-dont-need-an-iphone#wg-player
-// https://127.0.0.1/?name=lately-when-i-fly#wg-player
-// https://127.0.0.1/?name=loner#wg-player
-// https://127.0.0.1/?name=mommy-wow#wg-player
-// https://127.0.0.1/?name=people-pleaser#wg-player
-// https://127.0.0.1/?name=slinky-dog#wg-player
-// https://127.0.0.1/?name=puzzle#wg-player
-// https://127.0.0.1/?name=whats-inside-your-heart#wg-player
+const shortcuts = {
+  imab: "butterfly-cosplayer",
+  grow: "time-to-grow",
+  idni: "i-dont-need-an-iphone",
+  l8ly: "lately-when-i-fly",
+  lonr: "loner",
+  w0w: "mommy-wow",
+  ppl: "people-pleaser",
+  slink: "slinky-dog",
+  puzz: "puzzle",
+  wiyh: "whats-inside-your-heart",
+};
 
 const butterflyCosplayer = {
   glow: "rgba(255, 150, 0, 0.4)",
@@ -397,27 +388,27 @@ function boot({ cursor, content, query, gap, density }) {
   gap(0);
   density(1);
 
-  // Decide what whistlegraph to use.
+  // Decide what whistlegraph to use either directly or via `shortcuts`.
   let wg;
   if (Array.isArray(query)) {
     // Params from the `prompt`.
     wg = query[0];
   } else if (query.length > 0) {
-    // Params from URL eg: (?name=butterfly-cosplayer#wg-player)
+    // Params from URL or the prompt eg: (?name=butterfly-cosplayer#wg-player, whistlegraph l8ly)
     const params = new URLSearchParams(query);
-    wg = params.get("name") || defaultWhistlegraph;
-  } else {
-    wg = defaultWhistlegraph;
+    wg = params.get("name");
   }
 
-  whistlegraph = whistlegraphs[wg];
+  if (whistlegraphs[wg] === undefined)
+    wg = shortcuts[wg] || defaultWhistlegraph;
+  whistlegraph = whistlegraphs[wg] || defaultWhistlegraph;
 
   content.add(`
     <div class="card-deck loading">
       <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline src="/disks/wg-player/${wg}/${wg}-tt-compilation.mp4"></video>
+           playsinline src="/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline" style="border-color: ${whistlegraph.compilation.highlight}"></div>
         </div>
@@ -426,7 +417,7 @@ function boot({ cursor, content, query, gap, density }) {
       <div class="card-view" data-type="score" data-outer-radius="${whistlegraph.score.outerRadius}" data-inner-radius="${whistlegraph.score.innerRadius}" data-border-setting="${whistlegraph.score.border}" style="z-index: 1">
         <div class="card" data-type="score" data-ratio="8.5x11">
           <img class="card-content" width="100%" height="100%"
-           src="/disks/wg-player/${wg}/${wg}-score.svg">
+           src="/disks/whistlegraph/${wg}/${wg}-score.svg">
            <div class="card-outline" style="border-color: ${whistlegraph.score.highlight}"></div>
         </div>
       </div>
@@ -434,23 +425,23 @@ function boot({ cursor, content, query, gap, density }) {
       <div class="card-view active" data-type="video" data-outer-radius="${whistlegraph.video.outerRadius}" data-inner-radius="${whistlegraph.video.innerRadius}" data-border-setting="${whistlegraph.video.border}" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline src="/disks/wg-player/${wg}/${wg}-web.mp4"></video>
+           playsinline src="/disks/whistlegraph/${wg}/${wg}-web.mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline" style="border-color: ${whistlegraph.video.highlight}"></div>
            <div id="card-play">
-             <img src="/disks/wg-player/play-circle.svg"> 
-             <img src="/disks/wg-player/play-triangle.svg"> 
+             <img src="/disks/whistlegraph/play-circle.svg"> 
+             <img src="/disks/whistlegraph/play-triangle.svg"> 
            </div>
         </div>
       </div>
     <div id="card-deck-loading">
       <div id="spinner" style="filter: brightness(0.9) drop-shadow(0 0 1vmin ${whistlegraph.glow})">
-        <img width="1000" height="1000" src="/disks/wg-player/${wg}/${wg}.webp">
+        <img width="1000" height="1000" src="/disks/whistlegraph/${wg}/${wg}.webp">
         <canvas width="1000" height="1000" id="spinner-canvas"></canvas>
       </div>
     </div>
     </div>
-    <script src="/disks/wg-player/wg-player-cards.js" type="module" defer></script>
+    <script src="/disks/whistlegraph/whistlegraph-cards.js" type="module" defer></script>
     <style>  
     #content .card-deck {
       width: 100%;
@@ -680,7 +671,7 @@ function paint({ noiseTinted }) {
 }
 
 function act({ event: e }) {
-  if (e.is("signal") && e.signal === "wg-player:started") fuzzy = true;
+  if (e.is("signal") && e.signal === "whistlegraph:started") fuzzy = true;
 }
 
 export { boot, sim, paint, act };
