@@ -5,16 +5,18 @@
 ️🧪 Editor Upgrades: Try AceJump, Use ThinkPad More Often, Try: https://github.com/machakann/vim-swap
                     Figure out how to swap vim panes with one another in neovim: https://github.com/wesQ3/vim-windowswap,
 
-☁️ Big Thoughts   : Maybe aesthetic.computer is more of an interface project
-                    or search engine or *branded* prompt than it is a creative
-                    platform?
+☁️ Big Thoughts Maybe aesthetic.computer is more of an interface project
+               or search engine or *branded* prompt than it is a creative
+               platform? What about a wallet? Make editors that can store AC
+               source files.
 
-                            🌟 Work In Progress 🌟
+🌟 Work In Progress 🌟
 
 ***Feral File Whistlegraph Player***
-- [🟢] Finish player.
+- [🟢] Finish player and upload it to Feral File.
 
 ⚠️ Regressions:
+ - [] DIGITPAIN: Can no longer scroll with one finger when the page loads...
  - [] Flicker / held frame while moving between pieces. Right now it's just bright green.
 
 💀 Regressions: Flicker / held frame while moving between pieces.
