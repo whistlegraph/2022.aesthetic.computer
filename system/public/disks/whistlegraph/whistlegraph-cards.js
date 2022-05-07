@@ -28,21 +28,17 @@ const iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
 
 videos.forEach((video) => {
   video.load();
-  video.addEventListener(
-    "canplaythrough",
-    () => {
-      videosReady += 1;
-      if (videosReady === videos.length - 1) {
-        console.log("📹 All whistlegraph videos are ready to play!");
-        allVideosReady = true;
-        setTimeout(() => {
-          deck.classList.remove("loading");
-          spinnerCtx.drawImage(spinnerImg, 0, 0);
-        }, 500);
-      }
-    },
-    false
-  );
+  video.addEventListener("canplaythrough", () => {
+    videosReady += 1;
+    if (videosReady === videos.length - 1) {
+      console.log("📹 All whistlegraph videos are ready to play!");
+      allVideosReady = true;
+      setTimeout(() => {
+        deck.classList.remove("loading");
+        spinnerCtx.drawImage(spinnerImg, 0, 0);
+      }, 500);
+    }
+  });
 });
 
 loadingScreen.addEventListener(
@@ -360,35 +356,14 @@ function frame() {
       .map((n) => parseFloat(n));
     const contentRatio = contentRatioValues[0] / contentRatioValues[1];
 
-    let widthOffset = 0,
-      heightOffset = 0;
-
-    // TODO: Fix compilation display card ratio stuff.
-    if (card.dataset.type === "compilation") {
-      // console.log(displayRatio, contentRatio);
-      if (displayRatio < 1) {
-        //let difference = (1 - displayRatio) * (contentRatio / 1);
-        //if (displayRatio < 0.5) {
-        //  difference = (1 - displayRatio) / 3;
-        //}
-        //widthOffset = floor(width * difference);
-        //heightOffset = floor(height * difference);
-      } else {
-        //let difference = (displayRatio - 1) * (contentRatio / 2);
-        //widthOffset = -floor(width * difference);
-        //heightOffset = -floor(height * difference);
-      }
-      console.log("Compilation offset:", widthOffset, heightOffset);
-    }
-
     if (contentRatio < displayRatio) {
       cardContent.style.width =
-        floor(height * contentRatio) - widthOffset + "px";
-      cardContent.style.height = height - heightOffset + "px";
+        floor(height * contentRatio) + "px";
+      cardContent.style.height = height + "px";
     } else {
       cardContent.style.height =
-        floor(width / contentRatio) - heightOffset + "px";
-      cardContent.style.width = width - widthOffset + "px";
+        floor(width / contentRatio) + "px";
+      cardContent.style.width = width + "px";
     }
 
     card.style.width = parseFloat(cardContent.style.width) + border + "px";

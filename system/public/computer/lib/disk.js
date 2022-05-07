@@ -468,9 +468,9 @@ class Content {
 
   add(content) {
     // Make a request to add new content to the DOM.
-    send({ type: "content-create", content: { id: this.#id, content } });
     this.nodes.push({ id: this.#id });
     this.#id = this.nodes.length - 1;
+    send({ type: "content-create", content: { id: this.#id, content } });
     return this.nodes[this.nodes.length - 1];
   }
 
@@ -479,7 +479,7 @@ class Content {
   }
 
   update({ id, msg }) {
-    send({ type: "content-update", content: { id: node.id, msg } });
+    send({ type: "content-update", content: { id, msg } });
   }
 }
 

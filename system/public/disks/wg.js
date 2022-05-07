@@ -5,10 +5,8 @@
 import { anyKey } from "../computer/lib/help.js";
 
 // ***Code***
+// TODO: Check screen density code.
 // TODO: Make forward and back button work with query parameters.
-// TODO: Add updated spinners.
-// TODO: Test on poor connections.
-// TODO: Test in all browsers... (esp. Firefox)
 
 const shortcuts = {
   imab: "butterfly-cosplayer",
@@ -408,7 +406,7 @@ function boot({ cursor, content, query, gap, density }) {
       <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline src="/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4"></video>
+           playsinline disablepictureinpicture src="/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4" type="video/mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline" style="border-color: ${whistlegraph.compilation.highlight}"></div>
         </div>
@@ -425,7 +423,7 @@ function boot({ cursor, content, query, gap, density }) {
       <div class="card-view active" data-type="video" data-outer-radius="${whistlegraph.video.outerRadius}" data-inner-radius="${whistlegraph.video.innerRadius}" data-border-setting="${whistlegraph.video.border}" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline src="/disks/whistlegraph/${wg}/${wg}-web.mp4"></video>
+           playsinline disablepictureinpicture src="/disks/whistlegraph/${wg}/${wg}-web.mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline" style="border-color: ${whistlegraph.video.highlight}"></div>
            <div id="card-play">

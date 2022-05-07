@@ -16,13 +16,17 @@
 
 ⚠️ Regressions:
  - [] Flicker / held frame while moving between pieces. Right now it's just bright green.
+ - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
+ - [] Write a file editor for something crucial in aesthetic.computer, like TODO.
+      GIT-LFS: https://web.dev/file-system-access.
 
-💀 Regressions: Flicker / held frame while moving between pieces.
+🪟 Browser Quirks
+ - [] Development server only: videos don't load in Firefox (tested on Windows). 2022.05.07.00.01
 
  ***Pre DIGITPAIN Launch***
  - [] Complete DIGITPAIN 0-5.
-       * Replace `digitpain0.gif` with a new image.
-       * Should I make a frame capture tool for generating gifs?
+   * Replace `digitpain0.gif` with a new image.
+   * Should I make a frame capture tool for generating gifs?
  - [] Mint the work and have the contract made.
  - [] Add the work to the JSON and release digitpain.com.
 
