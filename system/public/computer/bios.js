@@ -679,6 +679,11 @@ async function boot(
       return;
     }
 
+    if (type === "title") {
+      document.title = content; // Change the page title.
+      return;
+    }
+
     if (type === "refresh") {
       window.location.reload();
       return;

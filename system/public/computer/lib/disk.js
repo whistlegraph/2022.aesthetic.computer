@@ -329,6 +329,8 @@ const { send, noWorker } = (() => {
     });
     // console.log(performance.now() - moduleLoadTime, module);
 
+    console.log(module)
+
     if (module === undefined) {
       loading = false;
       return;
@@ -341,6 +343,11 @@ const { send, noWorker } = (() => {
       } else {
         load(currentPath, currentHost, currentSearch, currentParams); // Reload the disk.
       }
+    };
+
+    // Add title to the common api.
+    $commonApi.title = (title) => {
+      send({ type: "title", content: title }); // Change the page title.
     };
 
     // Add host to the networking api.

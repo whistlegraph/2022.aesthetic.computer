@@ -22,6 +22,7 @@ const shortcuts = {
 };
 
 const butterflyCosplayer = {
+  title: "Butterfly Cosplayer",
   glow: "rgba(255, 150, 0, 0.4)",
   fuzz: 20n,
   bg: {
@@ -56,6 +57,7 @@ const butterflyCosplayer = {
 };
 
 const timeToGrow = {
+  title: "Time To Grow",
   glow: "rgba(255, 150, 210, 0.35)",
   fuzz: 18n,
   bg: {
@@ -90,6 +92,7 @@ const timeToGrow = {
 };
 
 const loner = {
+  title: "Loner",
   glow: "rgba(255, 130, 130, 0)",
   fuzz: 16n,
   bg: {
@@ -124,6 +127,7 @@ const loner = {
 };
 
 const iDontNeedAniPhone = {
+  title: "I Don't Need an iPhone",
   glow: "rgba(240, 0, 0, 0.45)",
   fuzz: 16n,
   bg: {
@@ -158,6 +162,7 @@ const iDontNeedAniPhone = {
 };
 
 const latelyWhenIFly = {
+  title: "Lately When I Fly",
   glow: "rgba(90, 5, 230, 0.95)",
   fuzz: 12n,
   bg: {
@@ -192,6 +197,7 @@ const latelyWhenIFly = {
 };
 
 const puzzle = {
+  title: "Puzzle",
   glow: "rgba(48, 200, 252, 0.45)",
   fuzz: 12n,
   bg: {
@@ -226,6 +232,7 @@ const puzzle = {
 };
 
 const slinkyDog = {
+  title: "Slinky Dog",
   glow: "rgba(0, 0, 0, 0.75)",
   fuzz: 16n,
   bg: {
@@ -260,6 +267,7 @@ const slinkyDog = {
 };
 
 const mommyWow = {
+  title: "Mommy Wow",
   glow: "rgba(255, 200, 0, 0.9)",
   fuzz: 6n,
   bg: {
@@ -294,6 +302,7 @@ const mommyWow = {
 };
 
 const peoplePleaser = {
+  title: "People Pleaser",
   glow: "rgba(190, 80, 220, 0.75)",
   fuzz: 17n,
   bg: {
@@ -328,6 +337,7 @@ const peoplePleaser = {
 };
 
 const whatsInsideYourHeart = {
+  title: "What's Inside Your Heat?",
   glow: "rgba(0, 0, 245, 1)",
   fuzz: 5n,
   bg: {
@@ -381,7 +391,7 @@ let whistlegraph;
 let fuzzy = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, content, params, gap, density }) {
+function boot({ title, cursor, content, params, gap, density }) {
   cursor("native");
   gap(0);
   density(1);
@@ -391,6 +401,8 @@ function boot({ cursor, content, params, gap, density }) {
   if (whistlegraphs[wg] === undefined)
     wg = shortcuts[wg] || defaultWhistlegraph;
   whistlegraph = whistlegraphs[wg] || defaultWhistlegraph;
+
+  title(whistlegraph.title);
 
   content.add(`
     <div class="card-deck loading">

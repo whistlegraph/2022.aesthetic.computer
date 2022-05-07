@@ -7,8 +7,7 @@
 🌟 Work In Progress 🌟
 
 ***Feral File Whistlegraph Player***
-- [] Get forward and back button working.
-- [] Meta-program the page title using the first line in each disk?
+- [] Get forward and back button working so the tilde key makes sense.
 - [🟢] Clean up aesthetic.computer console.log statements.
     - [] Wrap console.log into print(), devlog(), error() and warn().
     - Rewrite visible logs.
