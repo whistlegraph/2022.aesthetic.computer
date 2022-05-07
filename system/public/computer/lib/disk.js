@@ -1,4 +1,4 @@
-// 👩‍💻 Disk (Jockey) aka the tape player?
+// 👩‍💻 Disk (Jockey) aka the tape / piece player?
 
 import * as graph from "./graph.js";
 import * as num from "./num.js";
@@ -23,7 +23,10 @@ const defaults = {
   boot: () => false, // aka Setup
   sim: () => false, // A framerate independent of rendering.
   paint: ($) => {
-    $.noise16DIGITPAIN();
+    //$.noiseTinted([20, 20, 20], 0.8, 0.7);
+    //$.noise16DIGITPAIN();
+    // TODO: Make this a boot choice via the index.html file?
+    $.wipe(20, 20, 20);
   },
   beat: () => false, // Runs every bpm.
   act: () => false, // All user interaction.
@@ -35,7 +38,7 @@ let paint = defaults.paint;
 let beat = defaults.beat;
 let act = defaults.act;
 
-let currentPath, currentHost, currentSearch;
+let currentPath, currentHost, currentSearch, currentParams;
 let loading = false;
 let reframe;
 let screen;
@@ -275,7 +278,7 @@ const { send, noWorker } = (() => {
   let firstLoad = true;
   let firstPiece;
 
-  async function load(path, host = loadHost, search = "", fromHistory = false) {
+  async function load(path, host = loadHost, search = "", params, fromHistory = false) {
     loadFailure = undefined;
     host = host.replace(/\/$/, ""); // Remove any trailing slash from host. Note: This fixes a preview bug on teia.art. 2022.04.07.03.00
     loadHost = host; // Memoize the host.
@@ -336,7 +339,7 @@ const { send, noWorker } = (() => {
       if (type === "refresh") {
         send({ type: "refresh" }); // Refresh the browser.
       } else {
-        load(currentPath, currentHost, currentSearch); // Reload the disk.
+        load(currentPath, currentHost, currentSearch, currentParams); // Reload the disk.
       }
     };
 
@@ -386,6 +389,7 @@ const { send, noWorker } = (() => {
       currentPath = path;
       currentHost = host;
       currentSearch = search;
+      currentParams = params;
 
       // Redefine the default event functions if they exist in the module.
       boot = module.boot || defaults.boot;
@@ -394,6 +398,7 @@ const { send, noWorker } = (() => {
       beat = module.beat || defaults.beat;
       act = module.act || defaults.act;
       $commonApi.query = search;
+      $commonApi.params = params || [];
       $commonApi.load = load;
       $commonApi.pieceCount += 1;
       $commonApi.content = new Content();
@@ -430,7 +435,7 @@ const { send, noWorker } = (() => {
   if (isWorker) {
     onmessage = async function (e) {
       debug = e.data.debug;
-      await load(e.data.path, e.data.host, e.data.search);
+      await load(e.data.path, e.data.host, e.data.search, e.data.params);
       onmessage = makeFrame;
       send({ loaded: true });
     };
@@ -439,7 +444,7 @@ const { send, noWorker } = (() => {
     noWorker.onMessage = async (e) => {
       e = { data: e };
       debug = e.data.debug;
-      await load(e.data.path, e.data.host, e.data.search);
+      await load(e.data.path, e.data.host, e.data.search, e.data.params);
       noWorker.onMessage = (d) => makeFrame({ data: d });
       send({ loaded: true });
     };
@@ -463,7 +468,7 @@ class Content {
   nodes = [];
   #id = 0;
   constructor() {
-    console.log("📖 Content: ON");
+    //console.log("📖 Content: On");
   }
 
   add(content) {
@@ -604,7 +609,8 @@ function makeFrame({ data: { type, content } }) {
 
   // 1c. Loading from History
   if (type === "history-load") {
-    $commonApi.load(content, undefined, undefined, true);
+    // TODO: Inherit search and params when loading from history.
+    $commonApi.load(content, undefined, undefined, undefined, true);
     return;
   }
 
@@ -760,8 +766,14 @@ function makeFrame({ data: { type, content } }) {
             if (pieceHistoryIndex > 0) {
               send({ type: "back-to-piece" });
             } else {
-              $api.load("prompt");
+              // Load the prompt automatically.
+              // $api.load("prompt"); Disabled on 2022.05.07.03.45
             }
+          }
+
+          if (data.key === "~") {
+            // Load prompt when typing tilde.
+            $api.load("prompt");
           }
 
           // [Ctrl + X]

@@ -2,17 +2,16 @@ import { randIntRange } from "../../computer/lib/num.js";
 import { shuffleInPlace, choose } from "../../computer/lib/help.js";
 
 const { min, random, floor } = Math;
+const iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
 
 const deck = document.querySelector(".card-deck");
 const layerOrder = ["video", "score", "compilation"];
-
 const videos = document.querySelectorAll("#content .card-deck .card video");
 const cardViews = deck.querySelectorAll(".card-deck .card-view");
 const cards = deck.querySelectorAll(".card-deck .card-view .card");
 const loadingScreen = deck.querySelector("#card-deck-loading");
 const spinnerCtx = deck.querySelector("#spinner-canvas").getContext("2d");
 const spinnerImg = deck.querySelector("#spinner img");
-
 const initialCardScale = 0.95;
 const cardScale = 0.9;
 
@@ -24,8 +23,7 @@ let activated = false;
 let deactivateTimeout;
 let volumeOutInterval, volumeInInterval;
 
-const iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
-
+// Preload videos and animate away a loading spinner when complete.
 videos.forEach((video) => {
   video.load();
   video.addEventListener("canplaythrough", () => {
@@ -49,8 +47,10 @@ loadingScreen.addEventListener(
   { once: true }
 );
 
-// 1️⃣ Hover states for cards when using only a mouse, and active states
-//    for mouse and touch.
+// 1️⃣ Input Events
+// Hover states for cards when using only a mouse, and active statesfor mouse
+// and touch.
+
 deck.addEventListener("click", (event) => {
   event.preventDefault();
   event.stopPropagation();
@@ -95,7 +95,6 @@ deck.addEventListener("touchstart", (e) => {
 deck.addEventListener("touchend", (e) => {
   if (e.touches.length === 0) {
     multipleTouches = false;
-    // number of touches?
     const card = deck.querySelector(".card-view.active .card");
     card.classList.remove("touch");
   }
@@ -117,8 +116,8 @@ deck.addEventListener("pointerdown", (e) => {
   }
 });
 
-// 2️⃣ Switching from one card to another, animating them, and triggering the media
-//   for each.
+// 2️⃣ Switching from one card to another, animating them, and triggering the
+// media for each.
 deck.addEventListener("pointerup", (e) => {
   if (!e.isPrimary) return;
 
@@ -287,9 +286,6 @@ deck.addEventListener("pointerup", (e) => {
 
       card.style.transform = `rotate(${rotation}deg) translate(${rX}px, ${rY}px)`;
 
-      // 3a. Turn the card.
-
-      // 3b.
       // Remove the transform from the next cardView.
       const nextCardView = layers[layerOrder[0]];
       const nextCard = nextCardView.querySelector(".card");
@@ -390,20 +386,19 @@ function frame() {
   });
 }
 
-let lastTiltDir; // Use the lastTilt dir to offset every subsequent card above.
+let lastTiltDir; // Used to offset every subsequent card.
 const rotRange = [6, 14];
 
-// Randomly rotate the back two cards on initialization.
+// 🎲 Randomly rotate the back two cards on initialization.
 {
-  // Assumes that there are two rotated card views behind a top card.
+  // ⚠️ Assumes that there are TWO rotated card views behind a top card.
   const tiltBag = [randIntRange(...rotRange), randIntRange(...rotRange) * -1];
   shuffleInPlace(tiltBag);
 
-  // TODO: Pull items out of shuffle bag... eventually make a class?
   cards.forEach((card, i) => {
     if (i === cardViews.length - 1) return;
     if (i === 0) {
-      // Remember last rotation direction of the bottom card (first in this loop).
+      // Remember last rotation dir. of the bottom card, the first in this loop.
       lastTiltDir = Math.sin(tiltBag[tiltBag.length - 1]);
     }
     card.style.transform = `scale(${initialCardScale}) rotate(${tiltBag.pop()}deg)`;
@@ -423,6 +418,5 @@ const resizer = new ResizeObserver((entries) => {
     }
   }
 });
-//
 
 resizer.observe(deck);

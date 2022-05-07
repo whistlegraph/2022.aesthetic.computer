@@ -1,12 +1,12 @@
-// Whistlegraph Index, 2022.4.19
-// Made on occasion of Whistlegraph's Feral File exhibition.
-// This player currently orchestrates the data for displaying 10 different whistlegraphs.
+// Whistlegraph Index 😮‍💨 Created on: 2022.04.19, Release 1: 2022.05.07.02.24
+
+// 📖 Parameter 1: imab, grow, idni, l8ly, lonr, w0w, ppl, slink, puzz, wiyh
+
+// ❓ Made on occasion of Whistlegraph's Feral File exhibition.
+// This player currently orchestrates the data for displaying 10 different
+// whistlegraphs.
 
 import { anyKey } from "../computer/lib/help.js";
-
-// ***Code***
-// TODO: Check screen density code.
-// TODO: Make forward and back button work with query parameters.
 
 const shortcuts = {
   imab: "butterfly-cosplayer",
@@ -374,29 +374,20 @@ const whistlegraphs = {
   "whats-inside-your-heart": whatsInsideYourHeart,
 };
 
-// If no whistlegraph is specified when the player loads.
+// Choose a random whistlegraph in case none are specified when the player loads.
 const defaultWhistlegraph = anyKey(whistlegraphs);
 
 let whistlegraph;
 let fuzzy = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, content, query, gap, density }) {
+function boot({ cursor, content, params, gap, density }) {
   cursor("native");
   gap(0);
   density(1);
 
   // Decide what whistlegraph to use either directly or via `shortcuts`.
-  let wg;
-  if (Array.isArray(query)) {
-    // Params from the `prompt`.
-    wg = query[0];
-  } else if (query.length > 0) {
-    // Params from URL or the prompt eg: (?name=butterfly-cosplayer#wg-player, whistlegraph l8ly)
-    const params = new URLSearchParams(query);
-    wg = params.get("name");
-  }
-
+  let wg = params[0];
   if (whistlegraphs[wg] === undefined)
     wg = shortcuts[wg] || defaultWhistlegraph;
   whistlegraph = whistlegraphs[wg] || defaultWhistlegraph;

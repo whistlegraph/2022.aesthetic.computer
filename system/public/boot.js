@@ -17,7 +17,7 @@ if (window.location.hostname === "aesthetic.computer") {
   // Build a hostname (with a path if one exists) from the current location.
   // Hosts can also be remote domains. (HTTPS is assumed)
   host = window.location.hostname;
-  if (window.location.pathname.length > 1) host += window.location.pathname;
+  if (window.location.pathname.length > 1 && window.location.pathname.endsWith(".html") === false) host += window.location.pathname;
 }
 
 const bpm = 120;
