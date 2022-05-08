@@ -8,11 +8,13 @@ if (window.acDEBUG === true || window.acDEBUG === false) {
   debug = window.acDEBUG;
 } else {
   debug = true;
+  window.acDEBUG = debug;
 }
 
 if (window.location.hostname === "aesthetic.computer") {
   host = "aesthetic.computer"; // Production
   debug = false;
+  window.acDEBUG = debug;
 } else {
   // Build a hostname (with a path if one exists) from the current location.
   // Hosts can also be remote domains. (HTTPS is assumed)
