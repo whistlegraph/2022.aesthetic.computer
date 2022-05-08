@@ -7,7 +7,8 @@
 🌟 Work In Progress 🌟
 
 ***Feral File Whistlegraph Player***
-- [] Upload all the work to Feral File's website.
+- [] Make finished zip packages for each work.
+- [] Upload all the pieces to Feral File's website.
 - [X] Finish player
 - [X] Get forward and back button working so the tilde key makes sense, and so
      that history works on disks, even if there is no hash on the first disk.
