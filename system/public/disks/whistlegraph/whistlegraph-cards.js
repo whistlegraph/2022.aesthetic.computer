@@ -29,7 +29,7 @@ videos.forEach((video) => {
   video.addEventListener("canplaythrough", () => {
     videosReady += 1;
     if (videosReady === videos.length - 1) {
-      console.log("📹 All whistlegraph videos are ready to play!");
+      // console.log("📹 Whistlegraph videos are ready to play!");
       allVideosReady = true;
       setTimeout(() => {
         deck.classList.remove("loading");
@@ -214,7 +214,6 @@ deck.addEventListener("pointerup", (e) => {
       });
     } else {
       // Bring volume back.
-      console.log("Bringing back volume on:", nextVideo);
       nextCard.classList.add("running");
       if (iOS) {
         nextVideo.muted = false;

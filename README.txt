@@ -8,8 +8,6 @@
 
 ***Feral File Whistlegraph Player***
 - [🟢] Clean up aesthetic.computer console.log statements.
-    - [] Wrap console.log into print(), devlog(), error() and warn().
-    - [] Rewrite visible logs.
     - [] Include tilde shortcut.
 - [] Upload the work to Feral File's website.
 - [X] Finish player
@@ -17,6 +15,8 @@
      that history works on disks, even if there is no hash on the first disk.
 
 ***Post Feral File Launch (Hit these, plus all regressions before moving on!)
+ - [] Wrap console.log into print(), devlog(), error() and warn().
+ - [] Rewrite visible logs.
  - [] (disk.js:28) Make this a boot choice via the index.html file?
  - [] Inherit search and params when loading from history. See disk.js:607.
       (AKA) Make forward and back button work with query parameters.
@@ -29,7 +29,8 @@
  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
  - [] Write a file editor for something crucial in aesthetic.computer, like a
       TODO: Program, or produce media to store with GIT-LFS.
-      See also: https://web.dev/file-system-access.
+      See also: https://web.dev/file-system-access
+      And: https://googlechromelabs.github.io/text-editor
 
 ***Whistlegraph***
  * Recording the user's voice:

@@ -404,6 +404,15 @@ function boot({ title, cursor, content, params, gap, density }) {
 
   title(whistlegraph.title);
 
+  console.log(`%cWhistlegraph → ${whistlegraph.title}`,
+  `background-color: rgb(50, 50, 0);
+   color: yellow;
+   padding: 0 0.25em;
+   border-radius: 0.25em;
+   font-size: 120%;`
+  );
+
+
   content.add(`
     <div class="card-deck loading">
       <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">

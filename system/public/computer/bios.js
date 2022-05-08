@@ -30,24 +30,35 @@ async function boot(
      padding: 0 0.25em;
      border-radius: 0.15em;
      border-bottom: 0.75px solid rgb(120, 120, 170);
-     border-right: 0.75px solid rgb(120, 120, 170);
-   `
+     border-right: 0.75px solid rgb(120, 120, 170);`
   ); // Print a pretty title in the console.
 
   // Global Keyboard Shortcuts
-  console.log("Fullscreen:", "[ctrl+x]");
-  console.log("Back:", "[esc]");
+  console.log(
+    `%cFullscreen: C-x, Prompt: ~`,
+    `background-color: black;
+     color: grey;
+     padding: 0 0.25em;
+     border-left: 0.75px solid rgb(60, 60, 60);
+     border-right: 0.75px solid rgb(60, 60, 60);`
+  );
 
   // What words to type in?
   console.log(
-    "Pieces:",
-    "plot w h, tracker, melody, spray, sprinkles, starfield, pull, stage, metronome"
+    "%cgithub.com/digitpain/aesthetic.computer",
+    `color: rgb(100, 100, 100);
+     background-color: black;
+     padding: 0 0.25em;
+     border-left: 0.75px solid rgb(60, 60, 60);
+     border-right: 0.75px solid rgb(60, 60, 60);`
   );
 
-  if (window.isSecureContext) {
-    console.log("🔒 Secure");
-  } else {
-    console.warn("🔓 Insecure");
+  if (debug) {
+    if (window.isSecureContext) {
+      console.log("🔒 Secure");
+    } else {
+      console.warn("🔓 Insecure");
+    }
   }
 
   let pen, keyboard;
@@ -179,7 +190,7 @@ async function boot(
       projectedHeight = floor(height * scale - gapSize);
     }
 
-    console.info(
+    if (debug) console.info(
       "🔭 View:",
       width,
       height,
@@ -768,7 +779,7 @@ async function boot(
     }
 
     if (type === "gap-change") {
-      console.log("🕳️ Gap:", content);
+      if (debug) console.log("🕳️ Gap:", content);
       if (gap !== content) {
         gap = content;
         needsReframe = true;
@@ -777,7 +788,7 @@ async function boot(
     }
 
     if (type === "density-change") {
-      console.log("💻️ Density:", content);
+      if (debug) console.log("💻️ Density:", content);
       if (density !== content) {
         density = content;
         needsReframe = true;
@@ -1188,7 +1199,7 @@ async function boot(
   //           `content` used within pieces that needs communication with the
   //           main system)
   window.signal = function (message) {
-    console.log("🚨 Signal:", message);
+    if (debug) console.log("🚨 Signal:", message);
     send({
       type: "signal",
       content: message,

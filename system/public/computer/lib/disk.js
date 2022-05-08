@@ -298,16 +298,16 @@ const { send, noWorker } = (() => {
     if (path === firstPiece && params.length === 0) params = firstParams;
     // TODO: In larger multi-disk IPFS exports, a new root path should be defined.
 
-    console.log("💾", path, "🌐", host);
+    if (debug) console.log("💾", path, "🌐", host);
 
     // Set path to the first loaded disk if empty.
     if (path.indexOf("/") === -1) path = "disks/" + path;
 
     if (path)
       if (debug) {
-        console.log("🟡 Developing");
+        console.log("🟡 Development");
       } else {
-        console.log("🟢 Starting");
+        // console.log("🟢 Production");
       }
 
     if (loading === false) {
@@ -324,9 +324,7 @@ const { send, noWorker } = (() => {
     // Why a hash? See also: https://github.com/denoland/deno/issues/6946#issuecomment-668230727
     fullUrl += "#" + Date.now();
 
-    // TODO: Eliminate the race condition caused by the above line which prevents
-    //       production from working.
-    console.log("🕸", fullUrl);
+    // console.log("🕸", fullUrl);
 
     // const moduleLoadTime = performance.now();
     const module = await import(fullUrl).catch((err) => {
