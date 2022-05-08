@@ -329,8 +329,6 @@ const { send, noWorker } = (() => {
     });
     // console.log(performance.now() - moduleLoadTime, module);
 
-    console.log(module)
-
     if (module === undefined) {
       loading = false;
       return;
@@ -617,7 +615,10 @@ function makeFrame({ data: { type, content } }) {
   // 1c. Loading from History
   if (type === "history-load") {
     // TODO: Inherit search and params when loading from history.
+
+    console.log("Load from history:", content, currentSearch, currentParams)
     $commonApi.load(content, undefined, undefined, undefined, true);
+
     return;
   }
 

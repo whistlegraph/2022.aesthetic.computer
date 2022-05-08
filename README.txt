@@ -7,7 +7,9 @@
 🌟 Work In Progress 🌟
 
 ***Feral File Whistlegraph Player***
-- [] Get forward and back button working so the tilde key makes sense.
+- [] Get forward and back button working so the tilde key makes sense, and so
+     that history works on disks, even if there is no hash on the first disk.
+
 - [🟢] Clean up aesthetic.computer console.log statements.
     - [] Wrap console.log into print(), devlog(), error() and warn().
     - Rewrite visible logs.
