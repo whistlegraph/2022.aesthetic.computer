@@ -1,14 +1,12 @@
-// Whistlegraph Index, 2022.4.19
-// Made on occasion of Whistlegraph's Feral File exhibition.
-// This player currently orchestrates the data for displaying 10 different whistlegraphs.
+// Whistlegraph Index 😮‍💨 Created on: 2022.04.19, Release 1: 2022.05.07.02.24
+
+// 📖 Parameter 1: imab, grow, idni, l8ly, lonr, w0w, ppl, slink, puzz, wiyh
+
+// ❓ Made on occasion of Whistlegraph's Feral File exhibition.
+// This player currently orchestrates the data for displaying 10 different
+// whistlegraphs.
 
 import { anyKey } from "../computer/lib/help.js";
-
-// ***Code***
-// TODO: Make forward and back button work with query parameters.
-// TODO: Add updated spinners.
-// TODO: Test on poor connections.
-// TODO: Test in all browsers... (esp. Firefox)
 
 const shortcuts = {
   imab: "butterfly-cosplayer",
@@ -24,6 +22,7 @@ const shortcuts = {
 };
 
 const butterflyCosplayer = {
+  title: "Butterfly Cosplayer",
   glow: "rgba(255, 150, 0, 0.4)",
   fuzz: 20n,
   bg: {
@@ -58,6 +57,7 @@ const butterflyCosplayer = {
 };
 
 const timeToGrow = {
+  title: "Time To Grow",
   glow: "rgba(255, 150, 210, 0.35)",
   fuzz: 18n,
   bg: {
@@ -92,6 +92,7 @@ const timeToGrow = {
 };
 
 const loner = {
+  title: "Loner",
   glow: "rgba(255, 130, 130, 0)",
   fuzz: 16n,
   bg: {
@@ -126,6 +127,7 @@ const loner = {
 };
 
 const iDontNeedAniPhone = {
+  title: "I Don't Need an iPhone",
   glow: "rgba(240, 0, 0, 0.45)",
   fuzz: 16n,
   bg: {
@@ -160,6 +162,7 @@ const iDontNeedAniPhone = {
 };
 
 const latelyWhenIFly = {
+  title: "Lately When I Fly",
   glow: "rgba(90, 5, 230, 0.95)",
   fuzz: 12n,
   bg: {
@@ -194,6 +197,7 @@ const latelyWhenIFly = {
 };
 
 const puzzle = {
+  title: "Puzzle",
   glow: "rgba(48, 200, 252, 0.45)",
   fuzz: 12n,
   bg: {
@@ -228,6 +232,7 @@ const puzzle = {
 };
 
 const slinkyDog = {
+  title: "Slinky Dog",
   glow: "rgba(0, 0, 0, 0.75)",
   fuzz: 16n,
   bg: {
@@ -262,6 +267,7 @@ const slinkyDog = {
 };
 
 const mommyWow = {
+  title: "Mommy Wow",
   glow: "rgba(255, 200, 0, 0.9)",
   fuzz: 6n,
   bg: {
@@ -296,6 +302,7 @@ const mommyWow = {
 };
 
 const peoplePleaser = {
+  title: "People Pleaser",
   glow: "rgba(190, 80, 220, 0.75)",
   fuzz: 17n,
   bg: {
@@ -330,6 +337,7 @@ const peoplePleaser = {
 };
 
 const whatsInsideYourHeart = {
+  title: "What's Inside Your Heat?",
   glow: "rgba(0, 0, 245, 1)",
   fuzz: 5n,
   bg: {
@@ -376,39 +384,32 @@ const whistlegraphs = {
   "whats-inside-your-heart": whatsInsideYourHeart,
 };
 
-// If no whistlegraph is specified when the player loads.
+// Choose a random whistlegraph in case none are specified when the player loads.
 const defaultWhistlegraph = anyKey(whistlegraphs);
 
 let whistlegraph;
 let fuzzy = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ cursor, content, query, gap, density }) {
+function boot({ title, cursor, content, params, gap, density }) {
   cursor("native");
   gap(0);
   density(1);
 
   // Decide what whistlegraph to use either directly or via `shortcuts`.
-  let wg;
-  if (Array.isArray(query)) {
-    // Params from the `prompt`.
-    wg = query[0];
-  } else if (query.length > 0) {
-    // Params from URL or the prompt eg: (?name=butterfly-cosplayer#wg-player, whistlegraph l8ly)
-    const params = new URLSearchParams(query);
-    wg = params.get("name");
-  }
-
+  let wg = params[0];
   if (whistlegraphs[wg] === undefined)
     wg = shortcuts[wg] || defaultWhistlegraph;
   whistlegraph = whistlegraphs[wg] || defaultWhistlegraph;
+
+  title(whistlegraph.title);
 
   content.add(`
     <div class="card-deck loading">
       <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline src="/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4"></video>
+           playsinline disablepictureinpicture src="/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4" type="video/mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline" style="border-color: ${whistlegraph.compilation.highlight}"></div>
         </div>
@@ -425,7 +426,7 @@ function boot({ cursor, content, query, gap, density }) {
       <div class="card-view active" data-type="video" data-outer-radius="${whistlegraph.video.outerRadius}" data-inner-radius="${whistlegraph.video.innerRadius}" data-border-setting="${whistlegraph.video.border}" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline src="/disks/whistlegraph/${wg}/${wg}-web.mp4"></video>
+           playsinline disablepictureinpicture src="/disks/whistlegraph/${wg}/${wg}-web.mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline" style="border-color: ${whistlegraph.video.highlight}"></div>
            <div id="card-play">

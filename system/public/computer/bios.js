@@ -160,6 +160,7 @@ async function boot(
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
       // Or pull from density.
+      if (window.devicePixelRatio === 1) density = 2; // Always force a screen density of 3 on non-retina displays.
       const subdivisions = density + window.devicePixelRatio;
       width = floor(window.innerWidth / subdivisions);
       height = floor(window.innerHeight / subdivisions);
@@ -400,7 +401,10 @@ async function boot(
   // Try to load the disk boilerplate as a worker first.
   // Safari and FF support is coming for worker module imports: https://bugs.webkit.org/show_bug.cgi?id=164860
   const worker = new Worker("./computer/lib/disk.js", { type: "module" });
-  const firstMessage = { path, host, search, debug };
+  const params = path.split(":");
+  const program = params[0];
+  params.shift(); // Strip the program out of params.
+  const firstMessage = { path: program, params, host, search, debug };
 
   // Rewire things a bit if workers with modules are not supported (Firefox).
   worker.onerror = async (err) => {
@@ -672,6 +676,11 @@ async function boot(
         type: "content-created",
         content: { id: content.id, response: "Content was made!" }, // TODO: Return an API / better object?
       });
+      return;
+    }
+
+    if (type === "title") {
+      document.title = content; // Change the page title.
       return;
     }
 

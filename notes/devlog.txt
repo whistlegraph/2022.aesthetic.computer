@@ -1,0 +1,13 @@
+🧪 Dev Log
+Practical and conceptual notes, weaved together.
+
+☁️ Ideas
+Maybe aesthetic.computer is more of an interface project
+or search engine or *branded* prompt than it is a creative
+platform?
+
+🧑‍💻 Text Editor
+Try AceJump, Use thinkpad more often, Try: https://github.com/machakann/vim-swap
+Figure out how to swap vim panes with one another in neovim: https://github.com/wesQ3/vim-windowswap,
+
+2022.05.07.02.56

@@ -1,34 +1,54 @@
-💀 Jeffrey's `aesthetic.computer` Notebook 💀
 
-❓ Here to contribute code? Scroll waaaaaaaaay down to SETUP for instructions.
+        Welcome to
+    AESTHETIC.COMPUTER 🎃
 
-️🧪 Editor Upgrades: Try AceJump, Use ThinkPad More Often, Try: https://github.com/machakann/vim-swap
-                    Figure out how to swap vim panes with one another in neovim: https://github.com/wesQ3/vim-windowswap,
-
-☁️ Big Thoughts Maybe aesthetic.computer is more of an interface project
-               or search engine or *branded* prompt than it is a creative
-               platform? What about a wallet? Make editors that can store AC
-               source files.
+⚠️ Are you here to clone & contribute code? Scroll to the bottom of this file!
 
 🌟 Work In Progress 🌟
 
 ***Feral File Whistlegraph Player***
-- [🟢] Finish player and upload it to Feral File.
+- [] Get forward and back button working so the tilde key makes sense, and so
+     that history works on disks, even if there is no hash on the first disk.
+
+- [🟢] Clean up aesthetic.computer console.log statements.
+    - [] Wrap console.log into print(), devlog(), error() and warn().
+    - Rewrite visible logs.
+    - Include tilde shortcut.
+- [] Upload the work to Feral File's website.
+- [X] Finish player
+
+***Post Feral File Launch (Hit these, plus all regressions before moving on!)
+ - [] (disk.js:28) Make this a boot choice via the index.html file?
+ - [] Inherit search and params when loading from history. See disk.js:607.
+      (AKA) Make forward and back button work with query parameters.
+ - [] Remove Quirks mode. (It breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
 
 ⚠️ Regressions:
  - [] DIGITPAIN: Can no longer scroll with one finger when the page loads...
+ - [] Fix finger touch drag not scrolling digitpain embeds. (Make sure whistlegraphs still work!)
  - [] Flicker / held frame while moving between pieces. Right now it's just bright green.
+ - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
+ - [] Write a file editor for something crucial in aesthetic.computer, like a
+      TODO program. Or produce media to store with GIT-LFS.
+      See also: https://web.dev/file-system-access.
 
-💀 Regressions: Flicker / held frame while moving between pieces.
+***Whistlegraph***
+ * Recording the user's voice:
+ - [] https://webaudioapi.com/samples/
+ - [] Write and complete: `whistlegraph` / `thumb`.
+ - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
+ - [] Make whistlegraph recorder disk / nail?
+ - [] Global recording of user actions (what about application actions) and audio+video into one file?
+ - [] Chalkboard / material simulation.
 
- ***Pre DIGITPAIN Launch***
+🪟 Browser Quirks
+ - [] Development server only: videos don't load in Firefox (tested on Windows). 2022.05.07.00.01
+
+*** 🎃 DIGITPAIN ***
  - [] Complete DIGITPAIN 0-5.
-       * Replace `digitpain0.gif` with a new image.
-       * Should I make a frame capture tool for generating gifs?
  - [] Mint the work and have the contract made.
+ - [] Make a frame capture tool for generating webp images.
  - [] Add the work to the JSON and release digitpain.com.
-
- ***Post DIGITPAIN Launch***
  - [] Automate DIGITPAIN (Teia) exports:
         1. Clone `public` directory.
         2. Remove any `.html` files that aren't `digitpain-ipfs-index.html`.
@@ -38,34 +58,24 @@
         4. Zip the contents so there is a zip file with one directory called `public`,
            and rename it to `DIGITPAIN #.zip`.
 
-🌟 Next Up 🌟
+🌟 Next In Line 🌟
 
  ***Multi-player Drawing / Core Drawing***
   - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
   - [] Add sound to `nail`.
   - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.
 
- ***Whistlegraph***
-  - [] https://webaudioapi.com/samples/
-  - [] Write and complete: `whistlegraph` / `thumb`.
-  - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
-  - [] Make whistlegraph recorder disk / nail?
-  - [] Global recording of user actions (what about application actions) and audio+video into one file?
-  - [] Chalkboard / material simulation.
-
-  ***Radial Menu**
-  - [] Prototype the dream I had about a system-wide, radial menu.
-
  ❤️Side Missions❤️
   - [] Fix skippy scale rendering of pixels on non-retina displays.
   - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
   - [] in `tracker.js`: Recenter boxes on line 174.
   - [] Multiplayer board reset in `spray` and `server`.
+  - [] Prototype the dream I had about a system-wide, radial menu.
 
 ⏳ Later On ⏳
   |
   |
-  (Careful, it's messy!)
+  (Careful, it's messy!) 🥟
 
 There seems to be a bug in Safari on my MacBook (while wearing AirPods) that slows
 down the audio?
@@ -225,9 +235,7 @@ TODO: Write a simple note taking program with saving and loading of drawings
 
 TODO: Ink types? ... can they be procedural using a buffer?
 
-
-                                   🎃 SETUP 💾
-
+🎃 SETUP 💾
 
 `aesthetic.computer` is virtual computer environment / interface designed for
  creative exploration. development requires nodejs, an up-to-date web browser,

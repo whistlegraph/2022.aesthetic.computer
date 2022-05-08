@@ -104,7 +104,7 @@ let offed = false;
 // Resizes the textures & re-initializes the necessary components for a resolution change.
 // See also: `frame` via window.resize in `bios.js`.
 export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
-  console.log("🪟", glaze)
+  //console.log("🪟", glaze)
   if (glaze.shadersLoaded === false) return;
 
   // Run `init` if the canvas does not exist.
