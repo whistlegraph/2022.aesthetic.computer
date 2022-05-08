@@ -7,15 +7,14 @@
 🌟 Work In Progress 🌟
 
 ***Feral File Whistlegraph Player***
-- [] Get forward and back button working so the tilde key makes sense, and so
-     that history works on disks, even if there is no hash on the first disk.
-
 - [🟢] Clean up aesthetic.computer console.log statements.
     - [] Wrap console.log into print(), devlog(), error() and warn().
-    - Rewrite visible logs.
-    - Include tilde shortcut.
+    - [] Rewrite visible logs.
+    - [] Include tilde shortcut.
 - [] Upload the work to Feral File's website.
 - [X] Finish player
+- [X] Get forward and back button working so the tilde key makes sense, and so
+     that history works on disks, even if there is no hash on the first disk.
 
 ***Post Feral File Launch (Hit these, plus all regressions before moving on!)
  - [] (disk.js:28) Make this a boot choice via the index.html file?
@@ -29,7 +28,7 @@
  - [] Flicker / held frame while moving between pieces. Right now it's just bright green.
  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
  - [] Write a file editor for something crucial in aesthetic.computer, like a
-      TODO program. Or produce media to store with GIT-LFS.
+      TODO: Program, or produce media to store with GIT-LFS.
       See also: https://web.dev/file-system-access.
 
 ***Whistlegraph***

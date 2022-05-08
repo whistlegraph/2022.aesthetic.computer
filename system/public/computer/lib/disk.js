@@ -276,9 +276,15 @@ let glazeAfterReframe;
 const { send, noWorker } = (() => {
   let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
   let firstLoad = true;
-  let firstPiece;
+  let firstPiece, firstParams, firstSearch;
 
-  async function load(path, host = loadHost, search = "", params, fromHistory = false) {
+  async function load(
+    path,
+    host = loadHost,
+    search = "",
+    params = [],
+    fromHistory = false
+  ) {
     loadFailure = undefined;
     host = host.replace(/\/$/, ""); // Remove any trailing slash from host. Note: This fixes a preview bug on teia.art. 2022.04.07.03.00
     loadHost = host; // Memoize the host.
@@ -287,8 +293,9 @@ const { send, noWorker } = (() => {
     // Kill any existing socket that has remained open from a previous disk.
     socket?.kill();
 
-    // Set the empty path to prompt.
-    if (path === "") path = "prompt";
+    // Set the empty path to whatever the first piece was, or choose the prompt as the default.
+    if (path === "") path = firstPiece || "prompt";
+    if (path === firstPiece && params.length === 0) params = firstParams;
     // TODO: In larger multi-disk IPFS exports, a new root path should be defined.
 
     console.log("💾", path, "🌐", host);
@@ -428,6 +435,8 @@ const { send, noWorker } = (() => {
       } else {
         firstLoad = false;
         firstPiece = path;
+        firstParams = params;
+        firstSearch = search;
       }
     }, 100);
   }
@@ -615,10 +624,8 @@ function makeFrame({ data: { type, content } }) {
   // 1c. Loading from History
   if (type === "history-load") {
     // TODO: Inherit search and params when loading from history.
-
-    console.log("Load from history:", content, currentSearch, currentParams)
+    console.log("Load from history:", content, currentSearch, currentParams);
     $commonApi.load(content, undefined, undefined, undefined, true);
-
     return;
   }
 

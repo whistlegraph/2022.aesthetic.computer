@@ -179,7 +179,7 @@ deck.addEventListener("pointerup", (e) => {
     return;
   } else if (video) {
     // Fade volume out.
-    console.log("Fading out volume on:", video);
+    // console.log("Fading out volume on:", video);
     if (iOS) {
       video.muted = true;
     } else {
@@ -353,12 +353,10 @@ function frame() {
     const contentRatio = contentRatioValues[0] / contentRatioValues[1];
 
     if (contentRatio < displayRatio) {
-      cardContent.style.width =
-        floor(height * contentRatio) + "px";
+      cardContent.style.width = floor(height * contentRatio) + "px";
       cardContent.style.height = height + "px";
     } else {
-      cardContent.style.height =
-        floor(width / contentRatio) + "px";
+      cardContent.style.height = floor(width / contentRatio) + "px";
       cardContent.style.width = width + "px";
     }
 

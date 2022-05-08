@@ -655,7 +655,7 @@ async function boot(
         // Evaluate the first script inside of contentFrame.
         // TODO: This should only evaluate new scripts, as they are added...
         const script = contentFrame.querySelector("script");
-        //console.log(script);
+
         if (script.src) {
           const s = document.createElement("script");
           s.type = "module";
