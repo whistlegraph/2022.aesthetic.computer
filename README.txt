@@ -7,9 +7,7 @@
 🌟 Work In Progress 🌟
 
 ***Feral File Whistlegraph Player***
-- [🟢] Clean up aesthetic.computer console.log statements.
-    - [] Include tilde shortcut.
-- [] Upload the work to Feral File's website.
+- [] Upload all the work to Feral File's website.
 - [X] Finish player
 - [X] Get forward and back button working so the tilde key makes sense, and so
      that history works on disks, even if there is no hash on the first disk.
