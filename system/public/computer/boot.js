@@ -1,4 +1,4 @@
-import { boot } from "./computer/bios.js";
+import { boot } from "./bios.js";
 
 let host;
 let debug;
@@ -20,7 +20,14 @@ if (window.location.hostname === "aesthetic.computer") {
   // Hosts can also be remote domains. (HTTPS is assumed)
   host = window.location.hostname;
   if (window.location.pathname.length > 1) {
-    host += window.location.pathname.replace("index.html", "");
+    // TODO: Split the path into slashes, then remove the last one if it ends
+    //       with index.html, then concatenate them all.
+    const pathSegments = window.location.pathname.split("/");
+    if (pathSegments[pathSegments.length - 1].endsWith(".html")) {
+      pathSegments.pop();
+    }
+
+    host += pathSegments.join("/");
   }
 }
 
