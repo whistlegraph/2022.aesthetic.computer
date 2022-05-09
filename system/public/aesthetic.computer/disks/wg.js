@@ -414,16 +414,18 @@ function boot({ title, cursor, content, params, gap, density }) {
 
   title(whistlegraph.title);
 
-  console.log(`%cWhistlegraph → ${whistlegraph.title}`,
-  `background-color: rgb(50, 50, 0);
+  console.log(
+    `%cWhistlegraph → ${whistlegraph.title}`,
+    `background-color: rgb(50, 50, 0);
    color: yellow;
    padding: 0 0.25em;
    border-radius: 0.25em;
    font-size: 120%;`
   );
 
-  console.log(`%c${whistlegraph.byline}`,
-  `background-color: rgb(25, 25, 0);
+  console.log(
+    `%c${whistlegraph.byline}`,
+    `background-color: rgb(25, 25, 0);
    color: rgb(100, 100, 0);
    padding: 0 0.25em;
    border-radius: 0.25em;
@@ -445,8 +447,7 @@ function boot({ title, cursor, content, params, gap, density }) {
     
       <div class="card-view" data-type="score" data-outer-radius="${whistlegraph.score.outerRadius}" data-inner-radius="${whistlegraph.score.innerRadius}" data-border-setting="${whistlegraph.score.border}" style="z-index: 1">
         <div class="card" data-type="score" data-ratio="8.5x11">
-          <img class="card-content" width="100%" height="100%"
-           src="./aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.svg">
+          <img class="card-content" src="./aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png">
            <div class="card-outline" style="border-color: ${whistlegraph.score.highlight}"></div>
         </div>
       </div>
