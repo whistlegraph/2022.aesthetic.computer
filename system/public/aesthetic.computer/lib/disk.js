@@ -626,7 +626,6 @@ function makeFrame({ data: { type, content } }) {
     if (debug)
       console.log("Load from history:", content, currentSearch, currentParams);
 
-    console.log("Content", content);
     const params = content.split(":");
     const program = params[0];
     params.shift(); // Strip the program out of params.
