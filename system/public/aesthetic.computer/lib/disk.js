@@ -23,10 +23,10 @@ const defaults = {
   boot: () => false, // aka Setup
   sim: () => false, // A framerate independent of rendering.
   paint: ($) => {
-    //$.noiseTinted([20, 20, 20], 0.8, 0.7);
-    //$.noise16DIGITPAIN();
     // TODO: Make this a boot choice via the index.html file?
-    $.wipe(20, 20, 20);
+    //$.noise16DIGITPAIN();
+    $.noiseTinted([20, 20, 20], 0.8, 0.7);
+    //$.wipe(20, 20, 20);
   },
   beat: () => false, // Runs every bpm.
   act: () => false, // All user interaction.
