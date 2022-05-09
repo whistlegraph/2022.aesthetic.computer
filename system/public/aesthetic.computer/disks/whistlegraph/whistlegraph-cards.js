@@ -107,7 +107,7 @@ deck.addEventListener("pointerdown", (e) => {
   const card = deck.querySelector(".card-view.active .card");
   if (
     document.elementFromPoint(e.clientX, e.clientY) === card &&
-    card.classList.contains("touch") === false
+    card.classList.contains("animating") === false
   ) {
     card.classList.add("touch");
     card.classList.remove("hover");
@@ -159,6 +159,7 @@ deck.addEventListener("pointerup", (e) => {
     "animationend",
     () => {
       activeView.classList.remove("pressed");
+      activeCard.classList.remove("animating");
     },
     { once: true }
   );
@@ -300,6 +301,7 @@ deck.addEventListener("pointerup", (e) => {
       cardView.classList.remove("active");
       card.classList.remove("running");
       card.classList.remove("hover");
+      card.classList.add("animating");
 
       card.addEventListener(
         "transitionend",
