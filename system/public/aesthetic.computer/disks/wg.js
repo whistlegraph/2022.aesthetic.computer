@@ -505,7 +505,7 @@ function boot({ title, cursor, content, params, gap, density }) {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(20, 20, 20, 1);
+      background: rgba(0, 0, 0, 1);
       z-index: 100;
       display: flex;
     }

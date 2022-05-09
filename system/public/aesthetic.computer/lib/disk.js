@@ -25,8 +25,8 @@ const defaults = {
   paint: ($) => {
     // TODO: Make this a boot choice via the index.html file?
     //$.noise16DIGITPAIN();
-    $.noiseTinted([20, 20, 20], 0.8, 0.7);
-    //$.wipe(20, 20, 20);
+    //$.noiseTinted([20, 20, 20], 0.8, 0.7);
+    $.wipe(0, 0, 0);
   },
   beat: () => false, // Runs every bpm.
   act: () => false, // All user interaction.

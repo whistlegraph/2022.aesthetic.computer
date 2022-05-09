@@ -21,7 +21,8 @@ let allVideosReady = false;
 let multipleTouches = false;
 let activated = false;
 let deactivateTimeout;
-let volumeOutInterval, volumeInInterval;
+//let volumeOutInterval, volumeInInterval;
+let volumeIntervals = {};
 
 // Preload videos and animate away a loading spinner when complete.
 videos.forEach((video) => {
@@ -183,12 +184,13 @@ deck.addEventListener("pointerup", (e) => {
     if (iOS) {
       video.muted = true;
     } else {
-      clearInterval(volumeOutInterval);
-      volumeOutInterval = setInterval(() => {
+      clearInterval(volumeIntervals[video.src]);
+      video.volume = 1;
+      volumeIntervals[video.src] = setInterval(() => {
         video.volume *= 0.96;
         if (video.volume < 0.001) {
           video.volume = 0;
-          clearInterval(volumeOutInterval);
+          clearInterval(volumeIntervals[video.src]);
         }
       }, 8);
     }
@@ -219,12 +221,13 @@ deck.addEventListener("pointerup", (e) => {
         nextVideo.muted = false;
       } else {
         nextVideo.volume = 0.0;
-        clearInterval(volumeInInterval);
-        volumeInInterval = setInterval(() => {
+        clearInterval(volumeIntervals[nextVideo.src]);
+        nextVideo.volume = 0;
+        volumeIntervals[nextVideo.src] = setInterval(() => {
           nextVideo.volume = min(1, nextVideo.volume + 0.01);
           if (nextVideo.volume >= 1) {
             nextVideo.volume = 1;
-            clearInterval(volumeInInterval);
+            clearInterval(volumeIntervals[nextVideo.src]);
           }
         }, 8);
       }
