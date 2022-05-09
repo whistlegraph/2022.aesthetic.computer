@@ -6,20 +6,29 @@
 
 🌟 Work In Progress 🌟
 
+***Whistlegraph Recorder***
+ * Recording the user's voice.
+ * Single-player.
+ - [] https://webaudioapi.com/samples/
+ - [] Write and complete: `whistlegraph` / `thumb`.
+ - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
+ - [] Make whistlegraph recorder disk / nail?
+ - [] Global recording of user actions (what about application actions) and audio+video into one file?
+ - [] Chalkboard / material simulation.
+
+***Post Feral File Launch (Hit these, plus all regressions before moving on!)
+ - [] (disk.js:28) Make this a boot choice via the index.html file?
+ - [] Remove Quirks mode. (It breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
+
 ***Feral File Whistlegraph Player***
-- [] Make finished zip packages for each work.
-- [] Upload all the pieces to Feral File's website.
+- [X] Make finished zip packages for each work.
+- [X] Upload all the pieces to Feral File's website.
 - [X] Finish player
 - [X] Get forward and back button working so the tilde key makes sense, and so
      that history works on disks, even if there is no hash on the first disk.
-
-***Post Feral File Launch (Hit these, plus all regressions before moving on!)
- - [] Wrap console.log into print(), devlog(), error() and warn().
- - [] Rewrite visible logs.
- - [] (disk.js:28) Make this a boot choice via the index.html file?
- - [] Inherit search and params when loading from history. See disk.js:607.
+- [X] Rewrite visible logs.
+- [X] Inherit search and params when loading from history. See disk.js:607.
       (AKA) Make forward and back button work with query parameters.
- - [] Remove Quirks mode. (It breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
 
 ⚠️ Regressions:
  - [] DIGITPAIN: Can no longer scroll with one finger when the page loads...
@@ -30,15 +39,6 @@
       TODO: Program, or produce media to store with GIT-LFS.
       See also: https://web.dev/file-system-access
       And: https://googlechromelabs.github.io/text-editor
-
-***Whistlegraph***
- * Recording the user's voice:
- - [] https://webaudioapi.com/samples/
- - [] Write and complete: `whistlegraph` / `thumb`.
- - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
- - [] Make whistlegraph recorder disk / nail?
- - [] Global recording of user actions (what about application actions) and audio+video into one file?
- - [] Chalkboard / material simulation.
 
 🪟 Browser Quirks
  - [] Development server only: videos don't load in Firefox (tested on Windows). 2022.05.07.00.01
