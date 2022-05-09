@@ -420,6 +420,7 @@ const { send, noWorker } = (() => {
         type: "disk-loaded",
         content: {
           path,
+          params,
           pieceCount: $commonApi.pieceCount,
           firstPiece,
           fromHistory,
@@ -622,7 +623,8 @@ function makeFrame({ data: { type, content } }) {
   // 1c. Loading from History
   if (type === "history-load") {
     // TODO: Inherit search and params when loading from history.
-    if (debug) console.log("Load from history:", content, currentSearch, currentParams);
+    if (debug)
+      console.log("Load from history:", content, currentSearch, currentParams);
 
     console.log("Content", content);
     const params = content.split(":");
@@ -780,7 +782,10 @@ function makeFrame({ data: { type, content } }) {
           // [Escape]
           // If not on prompt, then move backwards through the history of
           // previously loaded pieces in a session.
-          if (data.key === "Escape" && currentPath !== "computer/disks/prompt") {
+          if (
+            data.key === "Escape" &&
+            currentPath !== "computer/disks/prompt"
+          ) {
             if (pieceHistoryIndex > 0) {
               send({ type: "back-to-piece" });
             } else {

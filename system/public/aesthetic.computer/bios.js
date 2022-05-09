@@ -190,14 +190,15 @@ async function boot(
       projectedHeight = floor(height * scale - gapSize);
     }
 
-    if (debug) console.info(
-      "🔭 View:",
-      width,
-      height,
-      "🖥 Window:",
-      window.innerWidth,
-      window.innerHeight
-    );
+    if (debug)
+      console.info(
+        "🔭 View:",
+        width,
+        height,
+        "🖥 Window:",
+        window.innerWidth,
+        window.innerHeight
+      );
 
     // Send a message about this new width and height to any hosting frames.
     // parent.postMessage({ width: projectedWidth, height: projectedHeight }, "*");
@@ -340,7 +341,9 @@ async function boot(
         mediaStream: micStream,
       });
 
-      await audioContext.audioWorklet.addModule("aesthetic.computer/lib/microphone.js");
+      await audioContext.audioWorklet.addModule(
+        "aesthetic.computer/lib/microphone.js"
+      );
       const playerNode = new AudioWorkletNode(audioContext, "microphone", {
         outputChannelCount: [2],
       });
@@ -351,7 +354,9 @@ async function boot(
 
     // Sound Synthesis Processor
     (async () => {
-      await audioContext.audioWorklet.addModule("aesthetic.computer/lib/speaker.js");
+      await audioContext.audioWorklet.addModule(
+        "aesthetic.computer/lib/speaker.js"
+      );
       const soundProcessor = new AudioWorkletNode(
         audioContext,
         "sound-processor",
@@ -411,7 +416,9 @@ async function boot(
 
   // Try to load the disk boilerplate as a worker first.
   // Safari and FF support is coming for worker module imports: https://bugs.webkit.org/show_bug.cgi?id=164860
-  const worker = new Worker("./aesthetic.computer/lib/disk.js", { type: "module" });
+  const worker = new Worker("./aesthetic.computer/lib/disk.js", {
+    type: "module",
+  });
   const params = path.split(":");
   const program = params[0];
   params.shift(); // Strip the program out of params.
@@ -797,7 +804,8 @@ async function boot(
     }
 
     if (type === "glaze") {
-      if (debug) console.log("🪟 Glaze:", content, "Type:", content.type || "prompt");
+      if (debug)
+        console.log("🪟 Glaze:", content, "Type:", content.type || "prompt");
       glaze = content;
       if (glaze.on === false) {
         Glaze.off();
@@ -811,11 +819,14 @@ async function boot(
       // Emit a push state for the old disk if it was not the first. This is so
       // a user can use browser history to switch between disks.
       if (content.pieceCount > 0) {
-        const url =
+        let url =
           content.path === content.firstPiece
             ? ""
             : // Set hash to be the last segment of the currentPiece path.
               "#" + content.path.substring(content.path.lastIndexOf("/") + 1);
+        if (content.params.length > 0) {
+          url += ":" + content.params.join(" ");
+        }
         if (content.fromHistory === false) {
           history.pushState("", document.title, url);
         }

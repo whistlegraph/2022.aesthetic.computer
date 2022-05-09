@@ -40,9 +40,11 @@ function boot({
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
-    preload(`aesthetic.computer/disks/drawings/font-1/${location}.json`).then((res) => {
-      glyphs[glyph] = res;
-    });
+    preload(`aesthetic.computer/disks/drawings/font-1/${location}.json`).then(
+      (res) => {
+        glyphs[glyph] = res;
+      }
+    );
   });
 
   if (pieceCount > 0) {
@@ -151,9 +153,11 @@ function act({ event: e, needsPaint, load }) {
         //
         //}
 
+        // TODO: Give load function a labeled options parameter.
         load(
           "aesthetic.computer/disks/" + tokens[0],
           undefined,
+          "",
           params.length ? params : undefined
         );
       }
