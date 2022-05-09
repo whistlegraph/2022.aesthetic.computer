@@ -105,7 +105,10 @@ deck.addEventListener("pointerdown", (e) => {
   if (!e.isPrimary) return;
   pointerDown = true;
   const card = deck.querySelector(".card-view.active .card");
-  if (document.elementFromPoint(e.clientX, e.clientY) === card) {
+  if (
+    document.elementFromPoint(e.clientX, e.clientY) === card &&
+    card.classList.contains("touch") === false
+  ) {
     card.classList.add("touch");
     card.classList.remove("hover");
     activated = true;

@@ -20,7 +20,10 @@ const servers = {
 let debug = false; // This can be overwritten on boot.
 
 const defaults = {
-  boot: () => false, // aka Setup
+  boot: ($) => {
+    $.cursor("native");
+    $.gap(0);
+  }, // aka Setup
   sim: () => false, // A framerate independent of rendering.
   paint: ($) => {
     // TODO: Make this a boot choice via the index.html file?
