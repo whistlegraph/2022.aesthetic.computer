@@ -159,6 +159,7 @@ deck.addEventListener("pointerup", (e) => {
   activeView.addEventListener(
     "animationend",
     () => {
+      //console.log("ANIMATION ONE ENDED");
       activeView.classList.remove("pressed");
       activeCard.classList.remove("animating");
     },
@@ -240,99 +241,105 @@ deck.addEventListener("pointerup", (e) => {
   }
 
   // 2. Animate the top one off the screen, after the press animation ends.
-  activeView.addEventListener(
-    "animationend",
-    () => {
-      const cardView = layers[layerOrder[0]];
-      const card = cardView.querySelector(".card");
-      layerOrder.push(layerOrder.shift()); // Move the 1st element to the end...
+  // Note: For some reason adding a delay here helps prevent the animation from
+  //       triggering too early.
+  setTimeout(function () {
+    activeView.addEventListener(
+      "animationend",
+      () => {
+        //console.log("ANIMATION TWO ENDED");
 
-      // By calculating the proper distance it can move to based on what else
-      // is left in the deck and its own size.
-      let rX = 0,
-        rY = 0;
-      let maxTranslateHeight = 0,
-        maxTranslateWidth = 0;
-      const cardRect = card.getBoundingClientRect();
+        const cardView = layers[layerOrder[0]];
+        const card = cardView.querySelector(".card");
+        layerOrder.push(layerOrder.shift()); // Move the 1st element to the end...
 
-      [...deck.querySelectorAll(".card-view:not(.active) .card")]
-        .map((card) => {
-          return card.getBoundingClientRect();
-        })
-        .forEach((rect) => {
-          if (rect.width > maxTranslateWidth) maxTranslateWidth = rect.width;
-          if (rect.height > maxTranslateHeight)
-            maxTranslateHeight = rect.height;
-        });
+        // By calculating the proper distance it can move to based on what else
+        // is left in the deck and its own size.
+        let rX = 0,
+          rY = 0;
+        let maxTranslateHeight = 0,
+          maxTranslateWidth = 0;
+        const cardRect = card.getBoundingClientRect();
 
-      maxTranslateWidth -= (maxTranslateWidth - cardRect.width) / 2;
-      maxTranslateHeight -= (maxTranslateHeight - cardRect.height) / 2;
-
-      // Pad each by a bit.
-      maxTranslateWidth *= 1.025;
-      maxTranslateHeight *= 1.025;
-
-      if (random() > 0.5) {
-        rX += maxTranslateWidth;
-        rY += random() * maxTranslateHeight;
-      } else {
-        rY += maxTranslateHeight;
-        rX += random() * maxTranslateWidth;
-      }
-
-      if (random() > 0.5) rX *= -1;
-      if (random() > 0.5) rY *= -1;
-
-      // 3. Trigger the first transition, where the card moves off the top.
-      card.style.transition = "0.25s ease-out transform";
-
-      const rotation = randIntRange(...rotRange) * lastTiltDir;
-      lastTiltDir *= -1;
-
-      card.dataset.rotation = rotation;
-
-      card.style.transform = `rotate(${rotation}deg) translate(${rX}px, ${rY}px)`;
-
-      // Remove the transform from the next cardView.
-      const nextCardView = layers[layerOrder[0]];
-      const nextCard = nextCardView.querySelector(".card");
-      nextCard.style.transition = "0.3s ease-out transform";
-      nextCard.style.transform = "none";
-
-      cardView.classList.remove("active");
-      card.classList.remove("running");
-      card.classList.remove("hover");
-      card.classList.add("animating");
-
-      card.addEventListener(
-        "transitionend",
-        function end() {
-          // and re-sort them on the z-axis.
-          layerOrder.forEach((layer, index) => {
-            const zIndex = layerOrder.length - 1 - index;
-            const el = layers[layer];
-            el.style.zIndex = zIndex;
-            if (zIndex === 2) el.classList.add("active");
+        [...deck.querySelectorAll(".card-view:not(.active) .card")]
+          .map((card) => {
+            return card.getBoundingClientRect();
+          })
+          .forEach((rect) => {
+            if (rect.width > maxTranslateWidth) maxTranslateWidth = rect.width;
+            if (rect.height > maxTranslateHeight)
+              maxTranslateHeight = rect.height;
           });
 
-          // 5. Animate the top (now bottom) one back into the stack of cards.
-          card.style.transition = "0.5s ease-in transform";
-          //card.style.transform = "none";
-          card.style.transform = `scale(${cardScale}) rotate(${card.dataset.rotation}deg)`;
+        maxTranslateWidth -= (maxTranslateWidth - cardRect.width) / 2;
+        maxTranslateHeight -= (maxTranslateHeight - cardRect.height) / 2;
 
-          card.addEventListener(
-            "transitionend",
-            function secondEnd() {
-              card.classList.remove("animating");
-            },
-            { once: true }
-          );
-        },
-        { once: true }
-      );
-    },
-    { once: true }
-  );
+        // Pad each by a bit.
+        maxTranslateWidth *= 1.025;
+        maxTranslateHeight *= 1.025;
+
+        if (random() > 0.5) {
+          rX += maxTranslateWidth;
+          rY += random() * maxTranslateHeight;
+        } else {
+          rY += maxTranslateHeight;
+          rX += random() * maxTranslateWidth;
+        }
+
+        if (random() > 0.5) rX *= -1;
+        if (random() > 0.5) rY *= -1;
+
+        // 3. Trigger the first transition, where the card moves off the top.
+
+        const rotation = randIntRange(...rotRange) * lastTiltDir;
+        lastTiltDir *= -1;
+
+        card.dataset.rotation = rotation;
+
+        card.style.transition = "0.25s ease-out transform";
+        card.style.transform = `rotate(${rotation}deg) translate(${rX}px, ${rY}px)`;
+
+        // Remove the transform from the next cardView.
+        const nextCardView = layers[layerOrder[0]];
+        const nextCard = nextCardView.querySelector(".card");
+        nextCard.style.transition = "0.3s ease-out transform";
+        nextCard.style.transform = "none";
+
+        cardView.classList.remove("active");
+        card.classList.remove("running");
+        card.classList.remove("hover");
+        card.classList.add("animating");
+
+        card.addEventListener(
+          "transitionend",
+          function end() {
+            // and re-sort them on the z-axis.
+            layerOrder.forEach((layer, index) => {
+              const zIndex = layerOrder.length - 1 - index;
+              const el = layers[layer];
+              el.style.zIndex = zIndex;
+              if (zIndex === 2) el.classList.add("active");
+            });
+
+            // 5. Animate the top (now bottom) one back into the stack of cards.
+            card.style.transition = "0.5s ease-in transform";
+            //card.style.transform = "none";
+            card.style.transform = `scale(${cardScale}) rotate(${card.dataset.rotation}deg)`;
+
+            card.addEventListener(
+              "transitionend",
+              function secondEnd() {
+                card.classList.remove("animating");
+              },
+              { once: true }
+            );
+          },
+          { once: true }
+        );
+      },
+      { once: true }
+    );
+  }, 25);
 });
 
 function frame() {

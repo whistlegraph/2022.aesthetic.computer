@@ -328,7 +328,7 @@ async function load(
   // Why a hash? See also: https://github.com/denoland/deno/issues/6946#issuecomment-668230727
   fullUrl += "#" + Date.now();
 
-  // console.log("🕸", fullUrl);
+  if (debug) console.log("🕸", fullUrl);
 
   // const moduleLoadTime = performance.now();
   const module = await import(fullUrl).catch((err) => {

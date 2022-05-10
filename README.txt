@@ -6,6 +6,10 @@
 
 🌟 Work In Progress 🌟
 
+***Post Feral File Launch (Hit these, plus all regressions before moving on!)
+ - [] Try and roll-up my javascript in order to decrease page load.
+ - [] Remove Quirks mode. (it breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
+
 ***Whistlegraph Recorder***
  * Recording the user's voice.
  * Record a video.
@@ -16,11 +20,6 @@
  - [] Make whistlegraph recorder disk / nail?
  - [] Global recording of user actions (what about application actions) and audio+video into one file?
  - [] Chalkboard / material simulation.
-
-***Post Feral File Launch (Hit these, plus all regressions before moving on!)
- - [] Try and roll-up my javascript in order to decrease page load.
- - [] (disk.js:28) Make this a boot choice via the index.html file?
- - [] Remove Quirks mode. (It breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
 
 ***Feral File Whistlegraph Player***
 - [X] Make finished zip packages for each work.
@@ -67,6 +66,7 @@
   - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.
 
  ❤️Side Missions❤️
+  - [] (disk.js:28) Make this a boot choice via the index.html file?
   - [] Fix skippy scale rendering of pixels on non-retina displays.
   - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
   - [] in `tracker.js`: Recenter boxes on line 174.
