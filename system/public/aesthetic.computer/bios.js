@@ -4,14 +4,13 @@
 import * as Loop from "./lib/loop.js";
 import { Pen } from "./lib/pen.js";
 import { Keyboard } from "./lib/keyboard.js";
-import * as Graph from "./lib/graph.js";
 import * as UI from "./lib/ui.js";
 import * as Glaze from "./lib/glaze.js";
 import { apiObject, extension } from "./lib/helpers.js";
 import { dist } from "./lib/num.js";
 
 const { assign } = Object;
-const { round, floor, min } = Math;
+const { floor, min } = Math;
 
 // 💾 Boot the system and load a disk.
 async function boot(
@@ -416,9 +415,14 @@ async function boot(
 
   // Try to load the disk boilerplate as a worker first.
   // Safari and FF support is coming for worker module imports: https://bugs.webkit.org/show_bug.cgi?id=164860
-  const worker = new Worker("./aesthetic.computer/lib/disk.js", {
+  //const worker = new Worker("./aesthetic.computer/lib/disk.js", {
+  //  type: "module",
+  //});
+
+  const worker = new Worker(new URL("./lib/disk.js", import.meta.url), {
     type: "module",
   });
+
   const params = path.split(":");
   const program = params[0];
   params.shift(); // Strip the program out of params.

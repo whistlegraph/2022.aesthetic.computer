@@ -56,12 +56,11 @@ class Glaze {
 
 let gl, canvas;
 let glaze;
+let passthrough;
 
 // TODO: Replace this with custom code.
 
 import { pathEnd, wrapNotArray } from "./helpers.js";
-
-const passthrough = (await preloadShaders(["glazes/passthrough-vert"]))["passthrough-vert"];
 
 export function init(wrapper) {
   canvas = document.createElement("canvas");
@@ -87,11 +86,17 @@ export function init(wrapper) {
 let customProgram, computeProgram, displayProgram;
 let fb; // Frame-buffer.
 let texSurf, texFbSurfA, texFbSurfB; // Original aesthetic.computer surface texture,
-                                     // in addition to a double-buffer.
+// in addition to a double-buffer.
 let texSurfWidth, texSurfHeight;
 let vao;
 
-const defaultUniformNames = ["iTexture", "iTexturePost", "iTime", "iMouse", "iResolution"];
+const defaultUniformNames = [
+  "iTexture",
+  "iTexturePost",
+  "iTime",
+  "iMouse",
+  "iResolution",
+];
 
 let customUniformLocations = {};
 
@@ -110,7 +115,7 @@ export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
   // Run `init` if the canvas does not exist.
   // Note: Should `init` just be here?
   if (canvas === undefined) {
-    this.init(wrapper);
+    init(wrapper);
   }
 
   // Set the native canvas width and height.
@@ -300,8 +305,14 @@ export function off() {
 // Turn glaze on if it has already been turned off.
 export async function on(w, h, rect, nativeWidth, nativeHeight, wrapper, type) {
   glaze = new Glaze(type);
+
+  // Before any glaze loads, make sure that the passthrough shader is loaded.
+  passthrough = (await preloadShaders(["glazes/passthrough-vert"]))[
+    "passthrough-vert"
+  ];
+
   await glaze.load(() => {
-    this.frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
+    frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
     offed = false;
   });
   return glaze;
@@ -365,7 +376,6 @@ export function render(canvasTexture, time, mouse) {
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, texFbSurfB);
 
-
   gl.uniform1i(customUniformLocations.iTexture, 0);
   gl.uniform1i(customUniformLocations.iTexturePost, 1);
   gl.uniform1f(customUniformLocations.iTime, time);
@@ -400,8 +410,16 @@ export function render(canvasTexture, time, mouse) {
   gl.uniform1i(gl.getUniformLocation(computeProgram, "iTexture"), 0);
   gl.uniform1i(gl.getUniformLocation(computeProgram, "iTexturePost"), 1);
   gl.uniform1f(gl.getUniformLocation(computeProgram, "iTime"), time);
-  gl.uniform2f(gl.getUniformLocation(computeProgram, "iMouse"), mouse.x, mouse.y);
-  gl.uniform2f(gl.getUniformLocation(computeProgram, "iResolution"), texSurfWidth, texSurfHeight);
+  gl.uniform2f(
+    gl.getUniformLocation(computeProgram, "iMouse"),
+    mouse.x,
+    mouse.y
+  );
+  gl.uniform2f(
+    gl.getUniformLocation(computeProgram, "iResolution"),
+    texSurfWidth,
+    texSurfHeight
+  );
 
   //glaze.setComputeUniforms(computeUniformLocations, gl);
 

@@ -2,7 +2,6 @@
 import * as mat4 from "../dep/gl-matrix/mat4.js";
 import * as vec2 from "../dep/gl-matrix/vec2.js";
 import * as vec4 from "../dep/gl-matrix/vec4.js";
-import { repeat } from "./help.js";
 
 export { vec2, vec4, mat4 };
 
