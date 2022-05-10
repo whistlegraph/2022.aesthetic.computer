@@ -8,6 +8,7 @@
 
 ***Whistlegraph Recorder***
  * Recording the user's voice.
+ * Record a video.
  * Single-player.
  - [] https://webaudioapi.com/samples/
  - [] Write and complete: `whistlegraph` / `thumb`.
@@ -17,6 +18,7 @@
  - [] Chalkboard / material simulation.
 
 ***Post Feral File Launch (Hit these, plus all regressions before moving on!)
+ - [] Try and roll-up my javascript in order to decrease page load.
  - [] (disk.js:28) Make this a boot choice via the index.html file?
  - [] Remove Quirks mode. (It breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
 
@@ -181,8 +183,8 @@ stack of disks look like?
 
   1. Make a new directory D for the build.
   2. Copy a subset of /disks/public to D/disks
-  3. Copy index.html, style.css, boot.js and /computer to D.
-  4. Modify boot.js to start loading from the first listed disk.
+  3. Copy index.html, style.css, boot-rolled.js and /computer to D.
+  4. Modify boot-rolled.js to start loading from the first listed disk.
   5. Generate metadata.json for the work.
   6. Zip and upload to fxHash or put whole directory into Pinata.
   7. Test to make sure everything works.
