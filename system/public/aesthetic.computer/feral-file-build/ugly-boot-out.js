@@ -3357,7 +3357,7 @@ async function boot$1(
     attachMicrophone,
     audioContext;
   var search = new URL(self.location).search;
-  const worker = new Worker(new URL("./ugly-disk-out.js", import.meta.url), {
+  const worker = new Worker(new URL("../lib/disk.js", import.meta.url), {
       type: "module",
     }),
     params = path.split(":");
@@ -5120,143 +5120,138 @@ class Painting {
   }
 }
 const painting = new Painting();
-let glazeAfterReframe;
-const { send, noWorker } = (() => {
-  let loadHost,
-    firstLoad = !0,
-    firstPiece,
-    firstParams;
-  async function load(
-    path,
-    host = loadHost,
-    search = "",
-    params = [],
-    fromHistory = !1
-  ) {
-    if (
-      ((loadFailure = void 0),
-      (host = host.replace(/\/$/, "")),
-      (loadHost = host),
-      (pieceHistoryIndex += !0 === fromHistory ? -1 : 1),
-      socket?.kill(),
-      (path = "" === path ? firstPiece || "prompt" : path) === firstPiece &&
-        0 === params.length &&
-        (params = firstParams),
-      debug && console.log("💾", path, "🌐", host),
-      (path =
-        -1 === path.indexOf("/") ? "aesthetic.computer/disks/" + path : path) &&
-        debug &&
-        console.log("🟡 Development"),
-      !1 !== loading)
-    )
-      console.warn("Already loading another disk:", path);
+let glazeAfterReframe,
+  loadHost,
+  firstLoad = !0,
+  firstPiece,
+  firstParams;
+async function load(
+  path,
+  host = loadHost,
+  search = "",
+  params = [],
+  fromHistory = !1
+) {
+  if (
+    ((loadFailure = void 0),
+    (host = host.replace(/\/$/, "")),
+    (loadHost = host),
+    (pieceHistoryIndex += !0 === fromHistory ? -1 : 1),
+    socket?.kill(),
+    (path = "" === path ? firstPiece || "prompt" : path) === firstPiece &&
+      0 === params.length &&
+      (params = firstParams),
+    debug && console.log("💾", path, "🌐", host),
+    (path =
+      -1 === path.indexOf("/") ? "aesthetic.computer/disks/" + path : path) &&
+      debug &&
+      console.log("🟡 Development"),
+    !1 !== loading)
+  )
+    console.warn("Already loading another disk:", path);
+  else {
+    loading = !0;
+    var fullUrl = "https://" + host + "/" + path + ".js";
+    fullUrl += "#" + Date.now();
+    const module = await import(fullUrl).catch((err) => {
+      (loading = !1),
+        console.error(`😡 "${path}" load failure:`, err),
+        (loadFailure = err);
+    });
+    if (void 0 === module) loading = !1;
     else {
-      loading = !0;
-      var fullUrl = "https://" + host + "/" + path + ".js";
-      fullUrl += "#" + Date.now();
-      const module = await import(fullUrl).catch((err) => {
-        (loading = !1),
-          console.error(`😡 "${path}" load failure:`, err),
-          (loadFailure = err);
-      });
-      if (void 0 === module) loading = !1;
-      else {
-        if (
-          (($commonApi.reload = (type) => {
-            "refresh" === type
-              ? send({ type: "refresh" })
-              : load(currentPath, currentHost, currentSearch, currentParams);
-          }),
-          ($commonApi.title = (title) => {
-            send({ type: "title", content: title });
-          }),
-          ($commonApi.net.host = host),
-          ($commonApi.net.web = (url) => {
-            send({ type: "web", content: url });
-          }),
-          debug)
+      if (
+        (($commonApi.reload = (type) => {
+          "refresh" === type
+            ? send({ type: "refresh" })
+            : load(currentPath, currentHost, currentSearch, currentParams);
+        }),
+        ($commonApi.title = (title) => {
+          send({ type: "title", content: title });
+        }),
+        ($commonApi.net.host = host),
+        ($commonApi.net.web = (url) => {
+          send({ type: "web", content: url });
+        }),
+        debug)
+      ) {
+        let receiver;
+        (socket = new Socket(
+          servers.local,
+          (id, type, content) => receiver?.(id, type, content),
+          $commonApi.reload
+        )),
+          ($commonApi.net.socket = function (receive) {
+            return (receiver = receive), socket;
+          });
+      } else
+        $commonApi.net.socket = function (
+          receive,
+          host = debug ? servers.local : servers.main
         ) {
-          let receiver;
-          (socket = new Socket(
-            servers.local,
-            (id, type, content) => receiver?.(id, type, content),
-            $commonApi.reload
-          )),
-            ($commonApi.net.socket = function (receive) {
-              return (receiver = receive), socket;
-            });
-        } else
-          $commonApi.net.socket = function (
-            receive,
-            host = debug ? servers.local : servers.main
-          ) {
-            return (socket = new Socket(host, receive));
-          };
-        setTimeout(() => {
-          (paintCount = 0n),
-            (simCount = 0n),
-            (initialSim = !0),
-            (activeVideo = null),
-            (bitmapPromises = {}),
-            (noPaint = !1),
-            (currentPath = path),
-            (currentHost = host),
-            (currentSearch = search),
-            (currentParams = params),
-            (boot = module.boot || defaults.boot),
-            (sim = module.sim || defaults.sim),
-            (paint = module.paint || defaults.paint),
-            (beat = module.beat || defaults.beat),
-            (act = module.act || defaults.act),
-            ($commonApi.query = search),
-            ($commonApi.params = params || []),
-            ($commonApi.load = load),
-            ($commonApi.pieceCount += 1),
-            ($commonApi.content = new Content()),
-            (cursorCode = "precise"),
-            (loading = !1),
-            (penX = void 0),
-            (penY = void 0),
-            send({
-              type: "disk-loaded",
-              content: {
-                path: path,
-                params: params,
-                pieceCount: $commonApi.pieceCount,
-                firstPiece: firstPiece,
-                fromHistory: fromHistory,
-              },
-            }),
-            !1 === firstLoad
-              ? send({ type: "disk-unload" })
-              : ((firstLoad = !1), (firstPiece = path), (firstParams = params));
-        }, 100);
-      }
+          return (socket = new Socket(host, receive));
+        };
+      setTimeout(() => {
+        (paintCount = 0n),
+          (simCount = 0n),
+          (initialSim = !0),
+          (activeVideo = null),
+          (bitmapPromises = {}),
+          (noPaint = !1),
+          (currentPath = path),
+          (currentHost = host),
+          (currentSearch = search),
+          (currentParams = params),
+          (boot = module.boot || defaults.boot),
+          (sim = module.sim || defaults.sim),
+          (paint = module.paint || defaults.paint),
+          (beat = module.beat || defaults.beat),
+          (act = module.act || defaults.act),
+          ($commonApi.query = search),
+          ($commonApi.params = params || []),
+          ($commonApi.load = load),
+          ($commonApi.pieceCount += 1),
+          ($commonApi.content = new Content()),
+          (cursorCode = "precise"),
+          (loading = !1),
+          (penX = void 0),
+          (penY = void 0),
+          send({
+            type: "disk-loaded",
+            content: {
+              path: path,
+              params: params,
+              pieceCount: $commonApi.pieceCount,
+              firstPiece: firstPiece,
+              fromHistory: fromHistory,
+            },
+          }),
+          !1 === firstLoad
+            ? send({ type: "disk-unload" })
+            : ((firstLoad = !1), (firstPiece = path), (firstParams = params));
+      }, 100);
     }
   }
-  const isWorker = "function" == typeof importScripts,
-    noWorker = { onMessage: void 0, postMessage: void 0 };
-  function send(data) {
-    isWorker ? postMessage(data) : noWorker.postMessage({ data: data });
-  }
-  return (
-    isWorker
-      ? (onmessage = async function (e) {
-          (debug = e.data.debug),
-            await load(e.data.path, e.data.host, e.data.search, e.data.params),
-            (onmessage = makeFrame),
-            send({ loaded: !0 });
-        })
-      : (noWorker.onMessage = async (e) => {
-          (e = { data: e }),
-            (debug = e.data.debug),
-            await load(e.data.path, e.data.host, e.data.search, e.data.params),
-            (noWorker.onMessage = (d) => makeFrame({ data: d })),
-            send({ loaded: !0 });
-        }),
-    { load: load, send: send, noWorker: noWorker }
-  );
-})();
+}
+const isWorker = "function" == typeof importScripts,
+  noWorker = { onMessage: void 0, postMessage: void 0 };
+function send(data) {
+  isWorker ? postMessage(data) : noWorker.postMessage({ data: data });
+}
+isWorker
+  ? (onmessage = async function (e) {
+      (debug = e.data.debug),
+        await load(e.data.path, e.data.host, e.data.search, e.data.params),
+        (onmessage = makeFrame),
+        send({ loaded: !0 });
+    })
+  : (noWorker.onMessage = async (e) => {
+      (e = { data: e }),
+        (debug = e.data.debug),
+        await load(e.data.path, e.data.host, e.data.search, e.data.params),
+        (noWorker.onMessage = (d) => makeFrame({ data: d })),
+        send({ loaded: !0 });
+    });
 class Content {
   nodes = [];
   #id = 0;
@@ -5595,7 +5590,7 @@ function makeFrame({ data: { type, content } }) {
               glazeAfterReframe &&
                 (send(glazeAfterReframe), (glazeAfterReframe = void 0))),
             cursorCode && (sendData.cursorCode = cursorCode),
-            send({ type: "render", content: sendData }, [transferredPixels]),
+            send({ type: "render", content: sendData }),
             (reframe = reframe && void 0),
             (cursorCode = cursorCode && void 0);
         } else

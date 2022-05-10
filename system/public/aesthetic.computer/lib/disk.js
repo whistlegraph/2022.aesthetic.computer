@@ -9,6 +9,8 @@ import * as help from "./help.js";
 import { Socket } from "./socket.js"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.js";
 
+export const noWorker = { onMessage: undefined, postMessage: undefined };
+
 const servers = {
   main: "server.aesthetic.computer",
   local: "localhost:8082",
@@ -276,206 +278,201 @@ const painting = new Painting();
 let glazeAfterReframe;
 
 // 2. ✔ Loading the disk.
-const { send, noWorker } = (() => {
-  let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
-  let firstLoad = true;
-  let firstPiece, firstParams, firstSearch;
+let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
+let firstLoad = true;
+let firstPiece, firstParams, firstSearch;
 
-  async function load(
-    path,
-    host = loadHost,
-    search = "",
-    params = [],
-    fromHistory = false
-  ) {
-    loadFailure = undefined;
-    host = host.replace(/\/$/, ""); // Remove any trailing slash from host. Note: This fixes a preview bug on teia.art. 2022.04.07.03.00
-    loadHost = host; // Memoize the host.
-    pieceHistoryIndex += fromHistory === true ? -1 : 1;
+async function load(
+  path,
+  host = loadHost,
+  search = "",
+  params = [],
+  fromHistory = false
+) {
+  loadFailure = undefined;
+  host = host.replace(/\/$/, ""); // Remove any trailing slash from host. Note: This fixes a preview bug on teia.art. 2022.04.07.03.00
+  loadHost = host; // Memoize the host.
+  pieceHistoryIndex += fromHistory === true ? -1 : 1;
 
-    // Kill any existing socket that has remained open from a previous disk.
-    socket?.kill();
+  // Kill any existing socket that has remained open from a previous disk.
+  socket?.kill();
 
-    // Set the empty path to whatever the first piece was, or choose the prompt as the default.
-    if (path === "") path = firstPiece || "prompt";
-    if (path === firstPiece && params.length === 0) params = firstParams;
-    // TODO: In larger multi-disk IPFS exports, a new root path should be defined.
+  // Set the empty path to whatever the first piece was, or choose the prompt as the default.
+  if (path === "") path = firstPiece || "prompt";
+  if (path === firstPiece && params.length === 0) params = firstParams;
+  // TODO: In larger multi-disk IPFS exports, a new root path should be defined.
 
-    if (debug) console.log("💾", path, "🌐", host);
+  if (debug) console.log("💾", path, "🌐", host);
 
-    // Set path to the first loaded disk if empty.
-    if (path.indexOf("/") === -1) path = "aesthetic.computer/disks/" + path;
+  // Set path to the first loaded disk if empty.
+  if (path.indexOf("/") === -1) path = "aesthetic.computer/disks/" + path;
 
-    if (path)
-      if (debug) {
-        console.log("🟡 Development");
-      } else {
-        // console.log("🟢 Production");
-      }
-
-    if (loading === false) {
-      loading = true;
-    } else {
-      // TODO: Implement some kind of loading screen system here?
-      console.warn("Already loading another disk:", path);
-      return;
-    }
-
-    let fullUrl = "https://" + host + "/" + path + ".js";
-    // The hash `time` parameter busts the cache so that the environment is
-    // reset if a disk is re-entered while the system is running.
-    // Why a hash? See also: https://github.com/denoland/deno/issues/6946#issuecomment-668230727
-    fullUrl += "#" + Date.now();
-
-    // console.log("🕸", fullUrl);
-
-    // const moduleLoadTime = performance.now();
-    const module = await import(fullUrl).catch((err) => {
-      loading = false;
-      console.error(`😡 "${path}" load failure:`, err);
-      loadFailure = err;
-    });
-    // console.log(performance.now() - moduleLoadTime, module);
-
-    if (module === undefined) {
-      loading = false;
-      return;
-    }
-
-    // Add reload to the common api.
-    $commonApi.reload = (type) => {
-      if (type === "refresh") {
-        send({ type: "refresh" }); // Refresh the browser.
-      } else {
-        load(currentPath, currentHost, currentSearch, currentParams); // Reload the disk.
-      }
-    };
-
-    // Add title to the common api.
-    $commonApi.title = (title) => {
-      send({ type: "title", content: title }); // Change the page title.
-    };
-
-    // Add host to the networking api.
-    $commonApi.net.host = host;
-
-    // Add web to the networking api.
-    $commonApi.net.web = (url) => {
-      send({ type: "web", content: url }); // Jump the browser to a new url.
-    };
-
-    // Automatically connect a socket server if we are in debug mode.
+  if (path)
     if (debug) {
-      let receiver;
-      socket = new Socket(
-        servers.local,
-        (id, type, content) => receiver?.(id, type, content),
-        $commonApi.reload
-      );
-
-      $commonApi.net.socket = function (receive) {
-        //console.log("📡 Mapping receiver.");
-        receiver = receive;
-        return socket;
-      };
+      console.log("🟡 Development");
     } else {
-      $commonApi.net.socket = function (
-        receive,
-        host = debug ? servers.local : servers.main
-      ) {
-        // TODO: Flesh out the rest of reload functionality here to extract it from
-        //       Socket. 21.1.5
-        socket = new Socket(host, receive);
-        return socket;
-      };
+      // console.log("🟢 Production");
     }
 
-    // Artificially imposed loading by at least 1/4 sec.
-    setTimeout(() => {
-      //console.clear();
-      paintCount = 0n;
-      simCount = 0n;
-      initialSim = true;
-      activeVideo = null; // reset activeVideo
-      bitmapPromises = {};
-      noPaint = false;
-      currentPath = path;
-      currentHost = host;
-      currentSearch = search;
-      currentParams = params;
-
-      // Redefine the default event functions if they exist in the module.
-      boot = module.boot || defaults.boot;
-      sim = module.sim || defaults.sim;
-      paint = module.paint || defaults.paint;
-      beat = module.beat || defaults.beat;
-      act = module.act || defaults.act;
-      $commonApi.query = search;
-      $commonApi.params = params || [];
-      $commonApi.load = load;
-      $commonApi.pieceCount += 1;
-      $commonApi.content = new Content();
-      cursorCode = "precise";
-      loading = false;
-      penX = undefined;
-      penY = undefined;
-      send({
-        type: "disk-loaded",
-        content: {
-          path,
-          params,
-          pieceCount: $commonApi.pieceCount,
-          firstPiece,
-          fromHistory,
-        },
-      });
-      if (firstLoad === false) {
-        // Send a message to the bios to unload this disk if it is not the first disk.
-        // This cleans up any bios state that is related to the disk and also
-        // takes care of nice transitions between disks of different resolutions.
-        send({ type: "disk-unload" });
-      } else {
-        firstLoad = false;
-        firstPiece = path;
-        firstParams = params;
-        firstSearch = search;
-      }
-    }, 100);
+  if (loading === false) {
+    loading = true;
+  } else {
+    // TODO: Implement some kind of loading screen system here?
+    console.warn("Already loading another disk:", path);
+    return;
   }
 
-  const isWorker = typeof importScripts === "function";
-  const noWorker = { onMessage: undefined, postMessage: undefined };
+  let fullUrl = "https://" + host + "/" + path + ".js";
+  // The hash `time` parameter busts the cache so that the environment is
+  // reset if a disk is re-entered while the system is running.
+  // Why a hash? See also: https://github.com/denoland/deno/issues/6946#issuecomment-668230727
+  fullUrl += "#" + Date.now();
 
-  // Start by responding to a load message, then change
-  // the message response to makeFrame.
-  if (isWorker) {
-    onmessage = async function (e) {
-      debug = e.data.debug;
-      await load(e.data.path, e.data.host, e.data.search, e.data.params);
-      onmessage = makeFrame;
-      send({ loaded: true });
+  // console.log("🕸", fullUrl);
+
+  // const moduleLoadTime = performance.now();
+  const module = await import(fullUrl).catch((err) => {
+    loading = false;
+    console.error(`😡 "${path}" load failure:`, err);
+    loadFailure = err;
+  });
+  // console.log(performance.now() - moduleLoadTime, module);
+
+  if (module === undefined) {
+    loading = false;
+    return;
+  }
+
+  // Add reload to the common api.
+  $commonApi.reload = (type) => {
+    if (type === "refresh") {
+      send({ type: "refresh" }); // Refresh the browser.
+    } else {
+      load(currentPath, currentHost, currentSearch, currentParams); // Reload the disk.
+    }
+  };
+
+  // Add title to the common api.
+  $commonApi.title = (title) => {
+    send({ type: "title", content: title }); // Change the page title.
+  };
+
+  // Add host to the networking api.
+  $commonApi.net.host = host;
+
+  // Add web to the networking api.
+  $commonApi.net.web = (url) => {
+    send({ type: "web", content: url }); // Jump the browser to a new url.
+  };
+
+  // Automatically connect a socket server if we are in debug mode.
+  if (debug) {
+    let receiver;
+    socket = new Socket(
+      servers.local,
+      (id, type, content) => receiver?.(id, type, content),
+      $commonApi.reload
+    );
+
+    $commonApi.net.socket = function (receive) {
+      //console.log("📡 Mapping receiver.");
+      receiver = receive;
+      return socket;
     };
   } else {
-    // TODO: Get firefox working again.
-    noWorker.onMessage = async (e) => {
-      e = { data: e };
-      debug = e.data.debug;
-      await load(e.data.path, e.data.host, e.data.search, e.data.params);
-      noWorker.onMessage = (d) => makeFrame({ data: d });
-      send({ loaded: true });
+    $commonApi.net.socket = function (
+      receive,
+      host = debug ? servers.local : servers.main
+    ) {
+      // TODO: Flesh out the rest of reload functionality here to extract it from
+      //       Socket. 21.1.5
+      socket = new Socket(host, receive);
+      return socket;
     };
   }
 
-  function send(data) {
-    if (isWorker) {
-      postMessage(data);
-    } else {
-      noWorker.postMessage({ data });
-    }
-  }
+  // Artificially imposed loading by at least 1/4 sec.
+  setTimeout(() => {
+    //console.clear();
+    paintCount = 0n;
+    simCount = 0n;
+    initialSim = true;
+    activeVideo = null; // reset activeVideo
+    bitmapPromises = {};
+    noPaint = false;
+    currentPath = path;
+    currentHost = host;
+    currentSearch = search;
+    currentParams = params;
 
-  return { load, send, noWorker };
-})();
+    // Redefine the default event functions if they exist in the module.
+    boot = module.boot || defaults.boot;
+    sim = module.sim || defaults.sim;
+    paint = module.paint || defaults.paint;
+    beat = module.beat || defaults.beat;
+    act = module.act || defaults.act;
+    $commonApi.query = search;
+    $commonApi.params = params || [];
+    $commonApi.load = load;
+    $commonApi.pieceCount += 1;
+    $commonApi.content = new Content();
+    cursorCode = "precise";
+    loading = false;
+    penX = undefined;
+    penY = undefined;
+    send({
+      type: "disk-loaded",
+      content: {
+        path,
+        params,
+        pieceCount: $commonApi.pieceCount,
+        firstPiece,
+        fromHistory,
+      },
+    });
+    if (firstLoad === false) {
+      // Send a message to the bios to unload this disk if it is not the first disk.
+      // This cleans up any bios state that is related to the disk and also
+      // takes care of nice transitions between disks of different resolutions.
+      send({ type: "disk-unload" });
+    } else {
+      firstLoad = false;
+      firstPiece = path;
+      firstParams = params;
+      firstSearch = search;
+    }
+  }, 100);
+}
+
+const isWorker = typeof importScripts === "function";
+
+// Start by responding to a load message, then change
+// the message response to makeFrame.
+if (isWorker) {
+  onmessage = async function (e) {
+    debug = e.data.debug;
+    await load(e.data.path, e.data.host, e.data.search, e.data.params);
+    onmessage = makeFrame;
+    send({ loaded: true });
+  };
+} else {
+  // TODO: Get firefox working again.
+  noWorker.onMessage = async (e) => {
+    e = { data: e };
+    debug = e.data.debug;
+    await load(e.data.path, e.data.host, e.data.search, e.data.params);
+    noWorker.onMessage = (d) => makeFrame({ data: d });
+    send({ loaded: true });
+  };
+}
+
+function send(data) {
+  if (isWorker) {
+    postMessage(data);
+  } else {
+    noWorker.postMessage({ data });
+  }
+}
 
 // 3. ✔ Add any APIs that require send.
 //      Just the `content` API for now.
@@ -503,8 +500,6 @@ class Content {
     send({ type: "content-update", content: { id, msg } });
   }
 }
-
-export { noWorker };
 
 // 4. ✔ Respond to incoming messages, and probably produce a frame.
 // Boot procedure:
