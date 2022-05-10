@@ -307,6 +307,8 @@ export async function on(w, h, rect, nativeWidth, nativeHeight, wrapper, type) {
   glaze = new Glaze(type);
 
   // Before any glaze loads, make sure that the passthrough shader is loaded.
+  // TODO: Technically this should load with the other shaders in parallel,
+  //       and it would be faster.
   passthrough = (await preloadShaders(["glazes/passthrough-vert"]))[
     "passthrough-vert"
   ];
