@@ -5,7 +5,8 @@
   "source": "./public/index.html",
   "scripts": {
     "dev": "http-server public -S -C ../ssl-dev/localhost.pem -K ../ssl-dev/localhost-key.pem -p 443 --cors -c-1",
-    "parcel-dev": "parcel --cert ../ssl-dev/localhost.pem --key ../ssl-dev/localhost-key.pem -p 443"
+    "parcel-dev": "parcel --cert ../ssl-dev/localhost.pem --key ../ssl-dev/localhost-key.pem -p 443",
+    "feral-file-rollup": "rollup public/aesthetic.computer/boot.js --file public/aesthetic.computer/feral-file-boot.js --no-treeshake --inlineDynamicImports && uglifyjs public/aesthetic.computer/feral-file-boot.js -o public/aesthetic.computer/feral-file-ugly-boot.js --compress && rm public/aesthetic.computer/feral-file-boot.js"
   },
   "staticFiles": {
     "staticPath": "./public/aesthetic.computer/disks",

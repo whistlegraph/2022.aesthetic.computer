@@ -159,7 +159,6 @@ deck.addEventListener("pointerup", (e) => {
   activeView.addEventListener(
     "animationend",
     () => {
-      //console.log("ANIMATION ONE ENDED");
       activeView.classList.remove("pressed");
       activeCard.classList.remove("animating");
     },
@@ -247,8 +246,6 @@ deck.addEventListener("pointerup", (e) => {
     activeView.addEventListener(
       "animationend",
       () => {
-        //console.log("ANIMATION TWO ENDED");
-
         const cardView = layers[layerOrder[0]];
         const card = cardView.querySelector(".card");
         layerOrder.push(layerOrder.shift()); // Move the 1st element to the end...
