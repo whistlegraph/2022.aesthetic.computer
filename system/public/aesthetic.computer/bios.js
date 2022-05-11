@@ -268,8 +268,7 @@ async function boot(
     }
 
     canvasRect = canvas.getBoundingClientRect();
-
-    Glaze.clear(); // TODO: Should this be here?
+    Glaze.clear();
 
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
@@ -280,10 +279,12 @@ async function boot(
         projectedWidth,
         projectedHeight,
         wrapper,
-        glaze.type
+        glaze.type,
+        () => {
+          send({ type: "needs-paint" }); // Once all the glaze shaders load, render a single frame.
+          canvas.style.opacity = 0;
+        }
       );
-
-      canvas.style.opacity = 0;
     } else {
       Glaze.off();
     }
@@ -808,8 +809,9 @@ async function boot(
     }
 
     if (type === "glaze") {
-      if (debug)
+      if (debug) {
         console.log("🪟 Glaze:", content, "Type:", content.type || "prompt");
+      }
       glaze = content;
       if (glaze.on === false) {
         Glaze.off();

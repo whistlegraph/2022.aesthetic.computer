@@ -28,15 +28,20 @@ class Glaze {
   }
 
   async load(callback) {
+    // Before any glaze loads, make sure that the passthrough shader is loaded.
+    // TODO: Technically this should load with the other shaders in parallel,
+    //       and it would be faster.
     const names = [
       `./glazes/${this.#type}/${this.#type}-frag`,
       `./glazes/${this.#type}/${this.#type}-compute`,
       `./glazes/${this.#type}/${this.#type}-display`,
+      `./glazes/passthrough-vert`,
     ];
     const shaders = await preloadShaders(names);
     this.frag = shaders[pathEnd(names[0])];
     this.compute = shaders[pathEnd(names[1])];
     this.display = shaders[pathEnd(names[2])];
+    passthrough = shaders["passthrough-vert"];
     this.shadersLoaded = true;
     callback();
   }
@@ -109,7 +114,6 @@ let offed = false;
 // Resizes the textures & re-initializes the necessary components for a resolution change.
 // See also: `frame` via window.resize in `bios.js`.
 export function frame(w, h, rect, nativeWidth, nativeHeight, wrapper) {
-  //console.log("🪟", glaze)
   if (glaze.shadersLoaded === false) return;
 
   // Run `init` if the canvas does not exist.
@@ -303,19 +307,22 @@ export function off() {
 }
 
 // Turn glaze on if it has already been turned off.
-export async function on(w, h, rect, nativeWidth, nativeHeight, wrapper, type) {
+export async function on(
+  w,
+  h,
+  rect,
+  nativeWidth,
+  nativeHeight,
+  wrapper,
+  type,
+  loaded
+) {
   glaze = new Glaze(type);
-
-  // Before any glaze loads, make sure that the passthrough shader is loaded.
-  // TODO: Technically this should load with the other shaders in parallel,
-  //       and it would be faster.
-  passthrough = (await preloadShaders(["glazes/passthrough-vert"]))[
-    "passthrough-vert"
-  ];
 
   await glaze.load(() => {
     frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
     offed = false;
+    loaded();
   });
   return glaze;
 }
