@@ -6,10 +6,6 @@
 
 🌟 Work In Progress 🌟
 
-***Post Feral File Launch (Hit these, plus all regressions before moving on!)
- - [] Try and roll-up my javascript in order to decrease page load.
- - [] Remove Quirks mode. (it breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
-
 ***Whistlegraph Recorder***
  * Recording the user's voice.
  * Record a video.
@@ -20,6 +16,12 @@
  - [] Make whistlegraph recorder disk / nail?
  - [] Global recording of user actions (what about application actions) and audio+video into one file?
  - [] Chalkboard / material simulation.
+
+***Post Feral File Launch (Hit these, plus all regressions before moving on!)
+ - [*] Try and roll-up *all* my javascript in order to decrease page load / set up
+       a grand build-system.
+ - [] Write a better static exporter script includes only the disks I want, plus resources.
+ - [] Remove Quirks mode. (it breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
 
 ***Feral File Whistlegraph Player***
 - [X] Make finished zip packages for each work.
