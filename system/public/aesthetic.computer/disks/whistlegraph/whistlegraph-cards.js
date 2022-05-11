@@ -85,6 +85,7 @@ deck.addEventListener("touchstart", (e) => {
   if (e.touches.length > 1) {
     multipleTouches = true;
     const card = deck.querySelector(".card-view.active .card");
+
     clearTimeout(deactivateTimeout);
     deactivateTimeout = setTimeout(() => {
       activated = false;
@@ -97,7 +98,7 @@ deck.addEventListener("touchend", (e) => {
   if (e.touches.length === 0) {
     multipleTouches = false;
     const card = deck.querySelector(".card-view.active .card");
-    card.classList.remove("touch");
+    card?.classList.remove("touch");
   }
 });
 
@@ -291,7 +292,9 @@ deck.addEventListener("pointerup", (e) => {
         const rotation = randIntRange(...rotRange) * lastTiltDir;
         lastTiltDir *= -1;
 
-        card.dataset.rotation = rotation;
+        rX = floor(rX);
+        rY = floor(rY);
+        card.dataset.rotation = floor(rotation);
 
         card.style.transition = "0.25s ease-out transform";
         card.style.transform = `rotate(${rotation}deg) translate(${rX}px, ${rY}px)`;
@@ -301,6 +304,15 @@ deck.addEventListener("pointerup", (e) => {
         const nextCard = nextCardView.querySelector(".card");
         nextCard.style.transition = "0.3s ease-out transform";
         nextCard.style.transform = "none";
+
+        nextCard.addEventListener(
+          "transitionend",
+          () => {
+            nextCardView.classList.add("active");
+            nextCard.style.transition = "";
+          },
+          { once: true }
+        );
 
         cardView.classList.remove("active");
         card.classList.remove("running");
@@ -315,7 +327,7 @@ deck.addEventListener("pointerup", (e) => {
               const zIndex = layerOrder.length - 1 - index;
               const el = layers[layer];
               el.style.zIndex = zIndex;
-              if (zIndex === 2) el.classList.add("active");
+              //if (zIndex === 2) el.classList.add("active");
             });
 
             // 5. Animate the top (now bottom) one back into the stack of cards.
@@ -327,6 +339,7 @@ deck.addEventListener("pointerup", (e) => {
               "transitionend",
               function secondEnd() {
                 card.classList.remove("animating");
+                card.style.transition = "";
               },
               { once: true }
             );
@@ -411,7 +424,9 @@ const rotRange = [6, 14];
       // Remember last rotation dir. of the bottom card, the first in this loop.
       lastTiltDir = Math.sin(tiltBag[tiltBag.length - 1]);
     }
-    card.style.transform = `scale(${initialCardScale}) rotate(${tiltBag.pop()}deg)`;
+    card.style.transform = `scale(${initialCardScale}) rotate(${floor(
+      tiltBag.pop()
+    )}deg)`;
   });
 }
 

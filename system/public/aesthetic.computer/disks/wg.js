@@ -496,7 +496,7 @@ function boot({ title, cursor, content, params, gap, density }) {
     }
     
     #content .card-view:not(.active):not(.running) {
-      transition: 1s ease-out transform;
+      /*transition: 1s ease-out transform;*/
     }
     
     #card-deck-loading {
@@ -565,7 +565,7 @@ function boot({ title, cursor, content, params, gap, density }) {
     #card-play img:nth-child(1) { filter: brightness(0); }
     #card-play img:nth-child(2) { filter: brightness(1); }
     
-    .card.touch #card-play {
+    .card.touch #card-play img {
       transform: scale(0.95);
     }
     
@@ -585,6 +585,12 @@ function boot({ title, cursor, content, params, gap, density }) {
       animation: bounce 0.15s ease-out;
       animation-fill-mode: forwards;
     }
+    
+    @keyframes bounce {
+      0% { transform: scale(0.99); }
+      50% { transform: scale(0.96); }
+      100% { transform: scale(0.99); }
+    } 
     
     .card-view.active.pressed .card {
       box-shadow: 0px 0px 48px rgba(0, 0, 0, 0.35),
@@ -636,12 +642,6 @@ function boot({ title, cursor, content, params, gap, density }) {
       display: none;
       pointer-events: none;
     }
-    
-    @keyframes bounce {
-      0% { transform: scale(0.99); }
-      50% { transform: scale(0.96); }
-      100% { transform: scale(0.99); }
-    } 
     
     .card-view .card-content { position: absolute; }
     
