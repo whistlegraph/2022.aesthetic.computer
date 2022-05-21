@@ -241,14 +241,14 @@ TODO: Ink types? ... can they be procedural using a buffer?
 🎃 SETUP 💾
 
 `aesthetic.computer` is virtual computer environment / interface designed for
- creative exploration. development requires nodejs, an up-to-date web browser,
+ creative exploration. development requires `nodejs`, `git-lfs`, an up-to-date web browser,
  and knowledge of javascript. if you're interested in learning how to do any of
  this, visit https://discord.gg/digitpain and i'll help you out - jeffrey 2022.04.24.05.05
 
-Clone, and then get set up for development:
-  0. Check `ssl-dev/readme.txt` to generate SSL certificates before running locally.
-  1. `cd` into `server` and run `npm install` and `npm run dev` to start the socket server
-  2. `cd` into `system` and run `npm install` and `npm run dev` to start the web server
+Make sure `git` and `git-lfs` is installed, (you can do that through `homebrew`) and then get set up for development:
+  0. Check `ssl-dev/readme.txt` to generate SSL certificates before running locally for all features to work.
+  1. `cd` into `server` and run `npm install` and `npm run dev` to start the socket server. (optional)
+  2. `cd` into `system` and run `npm install` and `npm run dev` to start the web server. (required)
 
 📖 This project originally began as two separate repositories with their own
 commit history: `digitpain0/system` and `digitpain0/disks`.
