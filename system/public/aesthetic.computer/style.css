@@ -67,6 +67,10 @@ canvas[data-type="ui"], canvas[data-type="glaze"] {
 
 canvas[data-type="freeze"] { pointer-events: none; }
 
+canvas[data-type="glaze"] {
+  /*transition: 0.5s opacity;*/
+}
+
 canvas[data-type="glaze"] { z-index: 1; }
 canvas[data-type="freeze"] { z-index: 2; }
 canvas[data-type="freeze"] { position: fixed; }

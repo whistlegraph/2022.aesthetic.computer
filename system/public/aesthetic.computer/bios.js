@@ -113,8 +113,10 @@ async function boot(
   let density = 1; // added to window.devicePixelRatio
 
   function frame(width, height) {
+    if (debug) console.log("Framing:", width, height);
+
     // Cache the current canvas if needed.
-    if (freezeFrame && imageData) {
+    if (freezeFrame && imageData && !document.body.contains(freezeFrameCan)) {
       console.log(
         "🥶 Freezing:",
         freezeFrame,
@@ -122,23 +124,26 @@ async function boot(
         imageData.height
       );
 
-      freezeFrameCan.width = imageData.width;
-      freezeFrameCan.height = imageData.height;
+      //freezeFrameCan.width = imageData.width;
+      //freezeFrameCan.height = imageData.height;
+
+      //console.log(freezeFrameCan.width, canvas.getBoundingClientRect());
 
       freezeFrameCan.style.width = canvas.getBoundingClientRect().width;
       freezeFrameCan.style.height = canvas.getBoundingClientRect().height;
 
+      //freezeFrameCan.style.width = canvas.style.width;
+      //freezeFrameCan.style.height = canvas.style.height;
+
       // TODO: Get margin of canvasRect or make freezeFrame work on top of everything...
       // Is this still relevant? 2022.4.09
 
-      /*
       console.log(
         "Freezeframe offset",
         wrapper.offsetLeft,
         canvasRect.x,
         canvasRect.width - canvasRect.x
       );
-       */
 
       freezeFrameCan.style.left = canvasRect.x + "px";
       freezeFrameCan.style.top = canvasRect.y + "px";
@@ -268,6 +273,7 @@ async function boot(
     }
 
     canvasRect = canvas.getBoundingClientRect();
+
     Glaze.clear();
 
     // A native resolution canvas for drawing cursors, system UI, and effects.
@@ -282,7 +288,7 @@ async function boot(
         glaze.type,
         () => {
           send({ type: "needs-paint" }); // Once all the glaze shaders load, render a single frame.
-          canvas.style.opacity = 0;
+          // canvas.style.opacity = 0;
         }
       );
     } else {
@@ -817,7 +823,7 @@ async function boot(
         Glaze.off();
         canvas.style.removeProperty("opacity");
       }
-      // Note: Glaze gets turned on only on a call to `resize` via a piece.
+      // Note: Glaze gets turned on only on a call to `resize` or `gap` via a piece.
       return;
     }
 
@@ -864,9 +870,13 @@ async function boot(
       // a customized resolution.
       // TODO: Do disks with custom resolutions need to be reset
       //       if they are being reloaded?
+
       if (fixedWidth && fixedHeight) {
         freezeFrame = true;
         freezeFrameGlaze = glaze.on;
+
+        freezeFrameCan.width = imageData.width;
+        freezeFrameCan.height = imageData.height;
 
         fixedWidth = undefined;
         fixedHeight = undefined;
@@ -875,6 +885,9 @@ async function boot(
 
       if (gap !== 0) {
         gap = 0;
+        freezeFrame = true;
+        freezeFrameCan.width = imageData.width;
+        freezeFrameCan.height = imageData.height;
         needsReframe = true;
       }
 
@@ -976,6 +989,7 @@ async function boot(
       } else if (pixelsDidChange) {
         ctx.putImageData(imageData, 0, 0); // Comment out for a `dirtyBox` visualization.
         if (glaze.on) Glaze.update(imageData);
+        // TODO: Is this actually updating with a blank image at first? How to prevent the glaze.clear flicker? 2022.6.8
       }
 
       if (glaze.on) {

@@ -56,7 +56,6 @@ const butterflyCosplayer = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
-
 const timeToGrow = {
   title: "Time To Grow",
   byline: "Composed by Alex Freundlich ⋅ March 4, 2020",
@@ -92,7 +91,6 @@ const timeToGrow = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
-
 const loner = {
   title: "Loner",
   byline: "Composed by Camille Klein ⋅ April 10, 2021",
@@ -128,7 +126,6 @@ const loner = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
-
 const iDontNeedAniPhone = {
   title: "I Don't Need an iPhone",
   byline: "Composed by Whistlegraph ⋅ December 9, 2020",
@@ -164,7 +161,6 @@ const iDontNeedAniPhone = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
-
 const latelyWhenIFly = {
   title: "Lately When I Fly",
   byline: "Composed by Jeffrey Alan Scudder ⋅ February 1, 2020",
@@ -200,7 +196,6 @@ const latelyWhenIFly = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
-
 const puzzle = {
   title: "Puzzle",
   byline: "Composed by Camille Klein ⋅ October 11, 2021",
@@ -236,7 +231,6 @@ const puzzle = {
     highlight: "rgba(200, 200, 200, 1)",
   },
 };
-
 const slinkyDog = {
   title: "Slinky Dog",
   byline: "Composed by Alex Freundlich ⋅ May 13, 2021",
@@ -272,7 +266,6 @@ const slinkyDog = {
     highlight: "rgba(190, 190, 190, 1)",
   },
 };
-
 const mommyWow = {
   title: "Mommy Wow",
   byline: "Composed by Whistlegraph ⋅ July 27, 2021",
@@ -308,7 +301,6 @@ const mommyWow = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
-
 const peoplePleaser = {
   title: "People Pleaser",
   byline: "Composed by Jeffrey Alan Scudder ⋅ January 14, 2021",
@@ -344,7 +336,6 @@ const peoplePleaser = {
     highlight: "rgba(180, 180, 180, 1)",
   },
 };
-
 const whatsInsideYourHeart = {
   title: "What's Inside Your Heat?",
   byline: "Composed by Whistlegraph ⋅ February 6, 2021",
@@ -380,7 +371,6 @@ const whatsInsideYourHeart = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
-
 const whistlegraphs = {
   "butterfly-cosplayer": butterflyCosplayer,
   "time-to-grow": timeToGrow,

@@ -622,7 +622,12 @@ function makeFrame({ data: { type, content } }) {
   if (type === "history-load") {
     // TODO: Inherit search and params when loading from history.
     if (debug)
-      console.log("Load from history:", content, currentSearch, currentParams);
+      console.log(
+        "Load from history. Params:",
+        content,
+        currentSearch,
+        currentParams
+      );
 
     const params = content.split(":");
     const program = params[0];

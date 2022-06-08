@@ -6,6 +6,19 @@
 
 🌟 Work In Progress 🌟
 
+⚠️ Regressions:
+ - [🌕] Flicker / held frame while moving between pieces. Right now it's just bright green.
+    ? Add glazeFreeze back. (Hmm...)
+    X Remove small gap flicker.
+    X Add freezeFrame again.
+ - [] DIGITPAIN: Can no longer scroll with one finger when the page loads...
+ - [] Fix finger touch drag not scrolling digitpain embeds. (Make sure whistlegraphs still work!)
+ - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
+ - [] Write a file editor for something crucial in aesthetic.computer, like a
+      TODO: Program, or produce media to store with GIT-LFS.
+      See also: https://web.dev/file-system-access
+      And: https://googlechromelabs.github.io/text-editor
+
 ***Whistlegraph Recorder***
  * Recording the user's voice.
  * Record a video.
@@ -14,7 +27,8 @@
  - [] Write and complete: `whistlegraph` / `thumb`.
  - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
  - [] Make whistlegraph recorder disk / nail?
- - [] Global recording of user actions (what about application actions) and audio+video into one file?
+ - [] Global recording of user actions (what about application actions) and
+      audio+video into one file?
  - [] Chalkboard / material simulation.
 
 ***Post Feral File Launch (Hit these, plus all regressions before moving on!)
@@ -32,16 +46,6 @@
 - [X] Rewrite visible logs.
 - [X] Inherit search and params when loading from history. See disk.js:607.
       (AKA) Make forward and back button work with query parameters.
-
-⚠️ Regressions:
- - [] DIGITPAIN: Can no longer scroll with one finger when the page loads...
- - [] Fix finger touch drag not scrolling digitpain embeds. (Make sure whistlegraphs still work!)
- - [] Flicker / held frame while moving between pieces. Right now it's just bright green.
- - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
- - [] Write a file editor for something crucial in aesthetic.computer, like a
-      TODO: Program, or produce media to store with GIT-LFS.
-      See also: https://web.dev/file-system-access
-      And: https://googlechromelabs.github.io/text-editor
 
 🪟 Browser Quirks
  - [] Development server only: videos don't load in Firefox (tested on Windows). 2022.05.07.00.01

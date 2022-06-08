@@ -500,8 +500,8 @@ export async function preloadShaders(pathArray) {
   return lib;
 }
 
-export function clear(r = 0, g = 1, b = 0) {
-  gl?.clearColor(r, g, b, 1);
+export function clear(r = 0, g = 0, b = 0) {
+  gl?.clearColor(r, g, b, 0);
   gl?.clear(gl.COLOR_BUFFER_BIT);
 }
 
