@@ -19,7 +19,12 @@
       See also: https://web.dev/file-system-access
       And: https://googlechromelabs.github.io/text-editor
 
-***Whistlegraph Recorder***
+***3D Spatial Co-present Drawing***
+- [] Clone the basic WebXR examples, run them and and read them.
+-    URL here: https://github.com/immersive-web/webxr-samples
+- [] Set up WebXR / 3D (Go through aesthetic.computer? or start as a side project...)
+
+***2D Whistlegraph Recorder***
  * Recording the user's voice.
  * Record a video.
  * Single-player.
