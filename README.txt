@@ -6,11 +6,10 @@
 
 🌟 Work In Progress 🌟
 
+🐞 Bugs
+ - [] Refreshing the page breaks the whole history graph!
+
 ⚠️ Regressions:
- - [🌕] Flicker / held frame while moving between pieces. Right now it's just bright green.
-    ? Add glazeFreeze back. (Hmm...)
-    X Remove small gap flicker.
-    X Add freezeFrame again.
  - [] DIGITPAIN: Can no longer scroll with one finger when the page loads...
  - [] Fix finger touch drag not scrolling digitpain embeds. (Make sure whistlegraphs still work!)
  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
