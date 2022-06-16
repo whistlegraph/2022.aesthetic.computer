@@ -113,8 +113,6 @@ async function boot(
   let density = 1; // added to window.devicePixelRatio
 
   function frame(width, height) {
-    if (debug) console.log("Framing:", width, height);
-
     // Cache the current canvas if needed.
     if (freezeFrame && imageData && !document.body.contains(freezeFrameCan)) {
       console.log(
@@ -124,26 +122,20 @@ async function boot(
         imageData.height
       );
 
-      //freezeFrameCan.width = imageData.width;
-      //freezeFrameCan.height = imageData.height;
-
-      //console.log(freezeFrameCan.width, canvas.getBoundingClientRect());
-
       freezeFrameCan.style.width = canvas.getBoundingClientRect().width;
       freezeFrameCan.style.height = canvas.getBoundingClientRect().height;
-
-      //freezeFrameCan.style.width = canvas.style.width;
-      //freezeFrameCan.style.height = canvas.style.height;
 
       // TODO: Get margin of canvasRect or make freezeFrame work on top of everything...
       // Is this still relevant? 2022.4.09
 
+      /*
       console.log(
         "Freezeframe offset",
         wrapper.offsetLeft,
         canvasRect.x,
         canvasRect.width - canvasRect.x
       );
+      */
 
       freezeFrameCan.style.left = canvasRect.x + "px";
       freezeFrameCan.style.top = canvasRect.y + "px";
@@ -187,8 +179,7 @@ async function boot(
       fixedHeight = height;
 
       const scale = min(window.innerWidth / width, window.innerHeight / height);
-
-      console.log(window.innerWidth, window.innerHeight);
+      // console.log(window.innerWidth, window.innerHeight);
 
       projectedWidth = floor(width * scale - gapSize);
       projectedHeight = floor(height * scale - gapSize);
@@ -196,7 +187,7 @@ async function boot(
 
     if (debug)
       console.info(
-        "🔭 View:",
+        "🖼 Frame:",
         width,
         height,
         "🖥 Window:",
@@ -433,7 +424,14 @@ async function boot(
   const params = path.split(":");
   const program = params[0];
   params.shift(); // Strip the program out of params.
-  const firstMessage = { path: program, params, host, search, debug };
+  const firstMessage = {
+    path: program,
+    params,
+    host,
+    search,
+    debug,
+    rootPiece: window.acSTARTING_PIECE,
+  };
 
   // Rewire things a bit if workers with modules are not supported (Firefox).
   worker.onerror = async (err) => {

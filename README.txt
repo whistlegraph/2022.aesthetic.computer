@@ -6,10 +6,7 @@
 
 🌟 Work In Progress 🌟
 
-🐞 Bugs
- - [] Refreshing the page breaks the whole history graph!
-
-⚠️ Regressions:
+⚠️ Major Bugs & Regressions 🐞
  - [] DIGITPAIN: Can no longer scroll with one finger when the page loads...
  - [] Fix finger touch drag not scrolling digitpain embeds. (Make sure whistlegraphs still work!)
  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types

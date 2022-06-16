@@ -19,6 +19,7 @@ const servers = {
   ashland_mbp: "192.168.1.18",
 };
 
+let ROOT_PIECE = "prompt"; // This gets set straight from the host html file for the ac.
 let debug = false; // This can be overwritten on boot.
 
 const defaults = {
@@ -57,8 +58,8 @@ let noPaint = false;
 let socket;
 let penX, penY;
 const store = {}; // This object is used to store and retrieve data across disks
-//                 during individual sessions. It doesn't get cleared
-//                 automatically unless the whole system refreshes.
+//                   during individual sessions. It doesn't get cleared
+//                   automatically unless the whole system refreshes.
 let upload;
 let activeVideo; // TODO: Eventually this can be a bank to store video textures.
 let bitmapPromises = {};
@@ -297,12 +298,12 @@ async function load(
   // Kill any existing socket that has remained open from a previous disk.
   socket?.kill();
 
-  // Set the empty path to whatever the first piece was, or choose the prompt as the default.
-  if (path === "") path = firstPiece || "prompt";
+  // Set the empty path to whatever the "/" route piece was.
+  if (path === "") path = ROOT_PIECE;
   if (path === firstPiece && params.length === 0) params = firstParams;
   // TODO: In larger multi-disk IPFS exports, a new root path should be defined.
 
-  if (debug) console.log("💾", path, "🌐", host);
+  if (debug) console.log("🧩", path, "🌐", host);
 
   // Set path to the first loaded disk if empty.
   if (path.indexOf("/") === -1) path = "aesthetic.computer/disks/" + path;
@@ -451,12 +452,12 @@ const isWorker = typeof importScripts === "function";
 if (isWorker) {
   onmessage = async function (e) {
     debug = e.data.debug;
+    ROOT_PIECE = e.data.rootPiece;
     await load(e.data.path, e.data.host, e.data.search, e.data.params);
     onmessage = makeFrame;
     send({ loaded: true });
   };
 } else {
-  // TODO: Get firefox working again.
   noWorker.onMessage = async (e) => {
     e = { data: e };
     debug = e.data.debug;
@@ -622,12 +623,7 @@ function makeFrame({ data: { type, content } }) {
   if (type === "history-load") {
     // TODO: Inherit search and params when loading from history.
     if (debug)
-      console.log(
-        "Load from history. Params:",
-        content,
-        currentSearch,
-        currentParams
-      );
+      console.log("⏳ History:", content, currentSearch, currentParams);
 
     const params = content.split(":");
     const program = params[0];
@@ -863,7 +859,7 @@ function makeFrame({ data: { type, content } }) {
         // Don't do anything if there is no change.
 
         console.log(
-          "🔭 Resize to:",
+          "🖼 Reframe to:",
           width,
           height,
           "from",

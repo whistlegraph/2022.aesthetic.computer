@@ -1,11 +1,9 @@
 import { boot } from "./bios.js";
 
-let host;
-let debug;
+let host, debug;
 
 if (window.acDEBUG === true || window.acDEBUG === false) {
-  // Check for the DEBUG constant in the index.
-  debug = window.acDEBUG;
+  debug = window.acDEBUG; // Check for the DEBUG constant in the index.
 } else {
   debug = true;
   window.acDEBUG = debug;
@@ -20,32 +18,34 @@ if (window.location.hostname === "aesthetic.computer") {
   // Hosts can also be remote domains. (HTTPS is assumed)
   host = window.location.hostname;
   if (window.location.pathname.length > 1) {
-    // TODO: Split the path into slashes, then remove the last one if it ends
-    //       with index.html, then concatenate them all.
     const pathSegments = window.location.pathname.split("/");
     if (pathSegments[pathSegments.length - 1].endsWith(".html")) {
       pathSegments.pop();
     }
-
     host += pathSegments.join("/");
   }
 }
 
-const bpm = 120;
+const bpm = 120; // Sets the starting bpm.
 
-if (window.location.hash.length > 0) {
-  boot(window.location.hash.slice(1), bpm, host, undefined, debug);
-} else {
-  if (window.acSTARTING_PIECE) {
-    boot(window.acSTARTING_PIECE, bpm, host, undefined, debug);
-  } else {
-    boot("prompt", bpm, host, undefined, debug);
-  }
-}
+// If the root starting piece was not defined in the host html file, then it defaults to "prompt" here.
+if (window.acSTARTING_PIECE === undefined) window.acSTARTING_PIECE = "prompt";
+
+// Boot the machine with the specified root piece, or a #piece route if one
+// is in the url.
+boot(
+  window.location.hash.length > 0
+    ? window.location.hash.slice(1)
+    : window.acSTARTING_PIECE,
+  bpm,
+  host,
+  undefined,
+  debug
+);
 
 // Incoming Message Responder
-// -- At the moment it is just for a work-in-progress figma widget but any
-//    window messages to be received here.
+// - At the moment it is just for a work-in-progress figma widget but any
+//   window messages to be received here.
 // TODO: Finish FigJam Widget with iframe message based input & output.
 //         See also: https://www.figma.com/plugin-docs/working-with-images/
 function receive(event) {
