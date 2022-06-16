@@ -7,13 +7,7 @@
 🌟 Work In Progress 🌟
 
 ⚠️ Major Bugs & Regressions 🐞
- - [] DIGITPAIN: Can no longer scroll with one finger when the page loads...
- - [] Fix finger touch drag not scrolling digitpain embeds. (Make sure whistlegraphs still work!)
- - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
- - [] Write a file editor for something crucial in aesthetic.computer, like a
-      TODO: Program, or produce media to store with GIT-LFS.
-      See also: https://web.dev/file-system-access
-      And: https://googlechromelabs.github.io/text-editor
+ - [] Remove Quirks mode. (it breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
 
 ***3D Spatial Co-present Drawing***
 - [] Clone the basic WebXR examples, run them and and read them.
@@ -31,12 +25,11 @@
  - [] Global recording of user actions (what about application actions) and
       audio+video into one file?
  - [] Chalkboard / material simulation.
+ - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
 
 ***Post Feral File Launch (Hit these, plus all regressions before moving on!)
  - [*] Try and roll-up *all* my javascript in order to decrease page load / set up
        a grand build-system.
- - [] Write a better static exporter script includes only the disks I want, plus resources.
- - [] Remove Quirks mode. (it breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
 
 ***Feral File Whistlegraph Player***
 - [X] Make finished zip packages for each work.
@@ -56,14 +49,15 @@
  - [] Mint the work and have the contract made.
  - [] Make a frame capture tool for generating webp images.
  - [] Add the work to the JSON and release digitpain.com.
- - [] Automate DIGITPAIN (Teia) exports:
-        1. Clone `public` directory.
-        2. Remove any `.html` files that aren't `digitpain-ipfs-index.html`.
-        3. Process `digitpain-ipfs-index.html`, inserting info for a new mint.
-        4. Rename `digitpain-ipfs-index.html` to `index.html`.
-        3. Remove all files other than `/digitpain` and `digitpain0.js` from `disks/`.
-        4. Zip the contents so there is a zip file with one directory called `public`,
-           and rename it to `DIGITPAIN #.zip`.
+ - [] Write a better static exporter script includes only the disks I want, plus resources.
+     - [] Automate DIGITPAIN (Teia) exports:
+            1. Clone `public` directory.
+            2. Remove any `.html` files that aren't `digitpain-ipfs-index.html`.
+            3. Process `digitpain-ipfs-index.html`, inserting info for a new mint.
+            4. Rename `digitpain-ipfs-index.html` to `index.html`.
+            3. Remove all files other than `/digitpain` and `digitpain0.js` from `disks/`.
+            4. Zip the contents so there is a zip file with one directory called `public`,
+               and rename it to `DIGITPAIN #.zip`.
 
 🌟 Next In Line 🌟
 
@@ -79,6 +73,10 @@
   - [] in `tracker.js`: Recenter boxes on line 174.
   - [] Multiplayer board reset in `spray` and `server`.
   - [] Prototype the dream I had about a system-wide, radial menu.
+  - [] Write a file editor for something crucial in aesthetic.computer, like a
+       TODO: Program, or produce media to store with GIT-LFS.
+       See also: https://web.dev/file-system-access
+       And: https://googlechromelabs.github.io/text-editor
 
 ⏳ Later On ⏳
   |

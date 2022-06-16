@@ -22,7 +22,7 @@ body.embed { background-color: transparent; }
 
 body.native-cursor {
   cursor: auto;
-  /*touch-action: manipulation;*/
+  touch-action: manipulation;
 }
 
 body.native-cursor canvas[data-type="ui"] { opacity: 0 !important; }

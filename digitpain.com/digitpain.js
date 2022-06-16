@@ -5,31 +5,35 @@ const timesig = document.querySelector("#timesig");
 const number = document.querySelector("#number");
 const footer = document.querySelector("footer");
 
+const debug = false;
+let baseURL = "https://aesthetic.computer/";
+if (debug) baseURL = "https://127.0.0.1/";
+
 const paintings = [
   {
     url: "",
-    img: "https://aesthetic.computer/#digitpain0",
+    img: baseURL + "#digitpain0",
     timesig: "2022.04.08.22.55",
     width: 1000,
     height: 1250,
   },
   {
     url: "",
-    img: "https://aesthetic.computer/#digitpain1",
+    img: baseURL + "#digitpain1",
     timesig: "2022.?",
     width: 800,
     height: 1145,
   },
   {
     url: "",
-    img: "https://aesthetic.computer/#digitpain2",
+    img: baseURL + "#digitpain2",
     timesig: "2022.?",
     width: 600,
     height: 859,
   },
   {
     url: "",
-    img: "https://aesthetic.computer/#digitpain3",
+    img: baseURL + "#wg",
     timesig: "2022.?",
     width: 1000,
     height: 1250,
