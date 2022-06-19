@@ -122,8 +122,9 @@ async function boot(
         imageData.height
       );
 
-      freezeFrameCan.style.width = canvas.getBoundingClientRect().width;
-      freezeFrameCan.style.height = canvas.getBoundingClientRect().height;
+      freezeFrameCan.style.width = canvas.getBoundingClientRect().width + "px";
+      freezeFrameCan.style.height =
+        canvas.getBoundingClientRect().height + "px";
 
       // TODO: Get margin of canvasRect or make freezeFrame work on top of everything...
       // Is this still relevant? 2022.4.09
@@ -163,6 +164,8 @@ async function boot(
     height = height || fixedHeight;
 
     const gapSize = gap * window.devicePixelRatio;
+
+    // console.log("INNER HEIGHT", window.innerHeight);
 
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
@@ -204,7 +207,18 @@ async function boot(
     uiCanvas.width = projectedWidth * window.devicePixelRatio;
     uiCanvas.height = projectedHeight * window.devicePixelRatio;
 
+    // Horizontal and vertical offsetting of the wrapper.
+    wrapper.style.top =
+      floor((window.innerHeight - projectedHeight) / 2) + "px";
+    wrapper.style.left = floor((window.innerWidth - projectedWidth) / 2) + "px";
+
+    canvas.style.width = projectedWidth + "px";
+    canvas.style.height = projectedHeight + "px";
+    uiCanvas.style.width = projectedWidth + "px";
+    uiCanvas.style.height = projectedHeight + "px";
+
     // Add some fancy ratios to the canvas and uiCanvas.
+    /*
     canvas.style.width = `calc(100vw - ${gapSize}px)`;
     canvas.style.height = `calc(calc(${
       height / width
@@ -218,10 +232,12 @@ async function boot(
     uiCanvas.style.height = `calc(calc(${
       height / width
     } * 100vw) - ${gapSize}px)`;
+
     uiCanvas.style.maxHeight = `calc(100vh - ${gapSize}px)`;
     uiCanvas.style.maxWidth = `calc(calc(${
       width / height
     } * 100vh) - ${gapSize}px)`;
+    */
 
     if (imageData) ctx.putImageData(imageData, 0, 0);
 

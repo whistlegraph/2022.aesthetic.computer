@@ -7,7 +7,10 @@
 🌟 Work In Progress 🌟
 
 ⚠️ Major Bugs & Regressions 🐞
- - [] Remove Quirks mode. (it breaks the borders...) https://www.quirksmode.org/css/quirksmode.html
+ - [] Implement a <model-viewer> for my 3d glb files so that when I share
+      them to Twitter they can be in 3D, and also so that they can be wrapped
+      as aesthetic.computer pieces.
+ - [] Figure out how to get the interactive card working for all of a.c?
 
 ***3D Spatial Co-present Drawing***
 - [] Clone the basic WebXR examples, run them and and read them.

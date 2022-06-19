@@ -2,13 +2,17 @@
   color-scheme: dark;
 }
 
+html {
+  height: 100%;
+}
+
 body {
   background-color: rgb(32, 32, 32);
   touch-action: pinch-zoom;
   overflow: hidden;
   margin: 0;
-  display: flex;
   cursor: none;
+  /*display: flex;*/
   height: 100%;
   user-select: none;
   -webkit-user-select: none;
@@ -34,7 +38,6 @@ canvas { touch-action: none; }
 input { pointer-events: none; }
 
 #aesthetic-computer {
-  margin: auto;
   position: relative;
   overflow: hidden;
 }
