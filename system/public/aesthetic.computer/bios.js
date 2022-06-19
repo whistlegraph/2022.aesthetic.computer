@@ -318,6 +318,8 @@ async function boot(
     attachMicrophone,
     audioContext;
 
+  let requestMicrophoneAmplitude, requestMicrophoneWaveform;
+
   function startSound() {
     audioContext = new AudioContext({
       latencyHint: "interactive",
@@ -339,7 +341,7 @@ async function boot(
     // Microphone Input Processor
     // (Gets attached via a message from the running disk.)
     attachMicrophone = async (data) => {
-      console.log("Attaching microphone:", data);
+      if (debug) console.log("🎙 Microphone:", data || { monitor: false });
 
       const micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -357,12 +359,36 @@ async function boot(
       await audioContext.audioWorklet.addModule(
         "aesthetic.computer/lib/microphone.js"
       );
+
       const playerNode = new AudioWorkletNode(audioContext, "microphone", {
         outputChannelCount: [2],
       });
 
       micNode.connect(playerNode);
-      playerNode.connect(audioContext.destination);
+
+      // Receive messages from the microphone processor thread.
+      playerNode.port.onmessage = (e) => {
+        const msg = e.data;
+        if (msg.type === "amplitude") {
+          send({ type: "microphone-amplitude", content: msg.content });
+        }
+
+        if (msg.type === "waveform") {
+          send({ type: "microphone-waveform", content: msg.content });
+        }
+      };
+
+      // Request data / send message to the mic processor thread.
+      requestMicrophoneAmplitude = () => {
+        playerNode.port.postMessage({ type: "get-amplitude" });
+      };
+
+      requestMicrophoneWaveform = () => {
+        playerNode.port.postMessage({ type: "get-waveform" });
+      };
+
+      // Connect to the speaker if we are monitoring audio.
+      if (data?.monitor === true) playerNode.connect(audioContext.destination);
     };
 
     // Sound Synthesis Processor
@@ -754,6 +780,16 @@ async function boot(
 
     if (type === "microphone") {
       receivedMicrophone(content);
+      return;
+    }
+
+    if (type === "get-microphone-amplitude") {
+      requestMicrophoneAmplitude?.();
+      return;
+    }
+
+    if (type === "get-microphone-waveform") {
+      requestMicrophoneWaveform?.();
       return;
     }
 

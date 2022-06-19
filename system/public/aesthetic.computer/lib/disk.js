@@ -278,6 +278,23 @@ class Painting {
 const painting = new Painting();
 let glazeAfterReframe;
 
+// Microphone State (Audio Input)
+class Microphone {
+  amplitude = 0;
+  waveform = [];
+
+  connect(options) {
+    send({ type: "microphone", content: options });
+  }
+
+  poll() {
+    send({ type: "get-microphone-amplitude" });
+    send({ type: "get-microphone-waveform" });
+  }
+}
+
+const microphone = new Microphone();
+
 // 2. ✔ Loading the disk.
 let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
 let firstLoad = true;
@@ -541,10 +558,18 @@ function makeFrame({ data: { type, content } }) {
       },
     };
 
+    $api.sound.microphone = microphone;
     // Attach the microphone.
+    /*
     $api.sound.microphone = function (options) {
       send({ type: "microphone", content: options });
+      return {
+        amplitude: (cb) => {
+          send({ type: "get-microphone-amplitude" });
+        },
+      };
     };
+    */
 
     // TODO: Generalize square and bubble calls.
     // TODO: Move this stuff to a "sound" module.
@@ -595,6 +620,16 @@ function makeFrame({ data: { type, content } }) {
     squares.length = 0;
     bubbles.length = 0;
 
+    return;
+  }
+
+  if (type === "microphone-amplitude") {
+    microphone.amplitude = content;
+    return;
+  }
+
+  if (type === "microphone-waveform") {
+    microphone.waveform = content;
     return;
   }
 

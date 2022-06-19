@@ -7,6 +7,20 @@
 🐞 Major Bugs & Regressions *None*
 
 🌟 Work In Progress 🌟
+***2D Whistlegraph Recorder***
+ * Recording the user's voice.
+ * Record a video.
+ * Single-player.
+ - [] https://webaudioapi.com/samples/
+ - [] Write and complete: `whistlegraph` / `thumb`.
+ - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
+ - [] Make whistlegraph recorder disk / nail?
+ - [] Global recording of user actions (what about application actions) and
+      audio+video into one file?
+ - [] Chalkboard / material simulation.
+ - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
+
+
  - [] Figure out how to get an interactive twitter card working for all of a.c?
      - [] Add some server-side rendering (via a serverless function?) for different
           start disks and pick up the urls and parse them in `bios.js`.
@@ -23,19 +37,6 @@
  - [] Clone the basic WebXR examples, run them and and read them.
  -    URL here: https://github.com/immersive-web/webxr-samples
  - [] Set up WebXR / 3D (Go through aesthetic.computer? or start as a side project...)
-
-***2D Whistlegraph Recorder***
- * Recording the user's voice.
- * Record a video.
- * Single-player.
- - [] https://webaudioapi.com/samples/
- - [] Write and complete: `whistlegraph` / `thumb`.
- - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
- - [] Make whistlegraph recorder disk / nail?
- - [] Global recording of user actions (what about application actions) and
-      audio+video into one file?
- - [] Chalkboard / material simulation.
- - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
 
 ***Post Feral File Launch (Hit these, plus all regressions before moving on!)
  - [*] Try and roll-up *all* my javascript in order to decrease page load / set up
@@ -77,6 +78,8 @@
   - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.
 
  ❤️Side Missions❤️
+  - [] How to limit the number of Frame's in the start of a disk?
+       Perhaps I could have a hidden meta-programming setup line at the top?
   - [] (disk.js:28) Make this a boot choice via the index.html file?
   - [] Fix skippy scale rendering of pixels on non-retina displays.
   - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]

@@ -129,8 +129,8 @@ function skip(...args) {
   else
     args.forEach((p) => {
       skips.push({
-        x: floor(p.x) + panTranslation.x,
-        y: floor(p.y) + panTranslation.y,
+        x: floor(p[0]) + panTranslation.x,
+        y: floor(p[1]) + panTranslation.y,
       });
     });
 }
@@ -337,8 +337,8 @@ function line() {
     if (Array.isArray(arguments[0])) {
       // assume [x, y], [x, y]
       x0 = arguments[0][0];
-      x1 = arguments[0][1];
-      y0 = arguments[1][0];
+      y0 = arguments[0][1];
+      x1 = arguments[1][0];
       y1 = arguments[1][1];
     } else {
       // assume {x, y}, {x, y}

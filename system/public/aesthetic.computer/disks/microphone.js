@@ -1,46 +1,48 @@
 // Microphone, 2022.1.11.0.26
-// A simple microphone feedback monitor test.
-
-// TODO: Also add video input here...
+// A simple audio + video feedback monitor test.
+// TODO: Add recording capability. 22.6.19.11.13
+// TODO: Fork off camera into a separate disk.
 
 const { floor } = Math;
-
-let vid;
-
-// 🥾 Boot (Runs once before first paint and sim)
-function boot({ video, screen }) {
-  vid = video("camera", {
-    width: screen.width,
-    height: floor(screen.width / (16 / 9)),
-  });
-  // const vid = video("youtube-link");
-  // const vid = video("tiktok:@whistlegraph");
-  // https://codepen.io/oceangermanique/pen/LqaPgO
-}
+let mic;
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, paste }) {
-  wipe(15, 20, 0);
+function paint({ wipe, ink, paste, screen: { width, height } }) {
+  mic?.poll(); // Query for updated amplitude and waveform samples from the mic.
 
-  const frame = vid();
-  if (frame) {
-    paste(frame, 0, 0);
+  wipe(15, 20, 0); // Clear the background.
+
+  if (mic?.amplitude) {
+    const y = height - mic.amplitude * height;
+    ink(255, 16).line(0, y, width, y); // Draw line to represent overall volume.
   }
-  // Try to draw the video here.
 
-  //return false;
+  if (mic?.waveform) {
+    const horizontalStep = width / mic.waveform.length + 1;
+    const yMid = height / 2;
+    const maxHeight = yMid;
+    let x = 0,
+      points = [];
+    // Calculate all the waveform points.
+    mic.waveform.forEach((value, i) => {
+      points.push([x, yMid + value * maxHeight]);
+      x += horizontalStep;
+    });
+    ink(255, 0, 0, 128).poly(points); // Draw the waveform.
+  }
+
+  ink(0, 255, 0, 96).line(0, height / 2, width, height / 2); // Lime horizontal line.
 }
 
-// ✒ Act (Runs once per user interaction)
-function act({ event }) {}
-
 // 💗 Beat (Runs once per bpm)
-function beat({ sound: { time, microphone } }) {
-  // Connect the microphone on the first beat.
-  if (time === 0) microphone("test-options");
+function beat({ sound: { beat, microphone } }) {
+  if (!mic) {
+    microphone.connect();
+    mic = microphone;
+  }
 }
 
 // 📚 Library (Useful functions used throughout the program)
 // ...
 
-export { boot, paint, act, beat };
+export { paint, beat };
