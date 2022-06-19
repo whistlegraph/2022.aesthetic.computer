@@ -4,18 +4,24 @@
 
 ⚠️ Are you here to clone & contribute code? Scroll to the bottom of this file!
 
+⚠️ Major Bugs & Regressions 🐞
+ - *None*
+
 🌟 Work In Progress 🌟
 
-⚠️ Major Bugs & Regressions 🐞
+ - [] Figure out how to get an interactive twitter card working for all of a.c?
+     - [] Add some server-side rendering (via a serverless function?) for different
+          start disks and pick up the urls and parse them in `bios.js`.
+     - [] Use prototype.
+
+***3D Spatial Co-present Drawing***
+ - [] Clone the basic WebXR examples, run them and and read them.
+ -    URL here: https://github.com/immersive-web/webxr-samples
+ - [] Set up WebXR / 3D (Go through aesthetic.computer? or start as a side project...)
+
  - [] Implement a <model-viewer> for my 3d glb files so that when I share
       them to Twitter they can be in 3D, and also so that they can be wrapped
       as aesthetic.computer pieces.
- - [] Figure out how to get the interactive card working for all of a.c?
-
-***3D Spatial Co-present Drawing***
-- [] Clone the basic WebXR examples, run them and and read them.
--    URL here: https://github.com/immersive-web/webxr-samples
-- [] Set up WebXR / 3D (Go through aesthetic.computer? or start as a side project...)
 
 ***2D Whistlegraph Recorder***
  * Recording the user's voice.
