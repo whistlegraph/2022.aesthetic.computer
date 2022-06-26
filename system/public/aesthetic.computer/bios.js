@@ -10,7 +10,7 @@ import { apiObject, extension } from "./lib/helpers.js";
 import { dist } from "./lib/num.js";
 
 const { assign } = Object;
-const { floor, min } = Math;
+const { ceil, round, floor, min } = Math;
 
 // 💾 Boot the system and load a disk.
 async function boot(
@@ -172,8 +172,8 @@ async function boot(
       // Or pull from density.
       if (window.devicePixelRatio === 1) density = 2; // Always force a screen density of 3 on non-retina displays.
       const subdivisions = density + window.devicePixelRatio;
-      width = floor(window.innerWidth / subdivisions);
-      height = floor(window.innerHeight / subdivisions);
+      width = round(window.innerWidth / subdivisions);
+      height = round(window.innerHeight / subdivisions);
       projectedWidth = width * subdivisions - gapSize;
       projectedHeight = height * subdivisions - gapSize;
     } else {
@@ -184,8 +184,8 @@ async function boot(
       const scale = min(window.innerWidth / width, window.innerHeight / height);
       // console.log(window.innerWidth, window.innerHeight);
 
-      projectedWidth = floor(width * scale - gapSize);
-      projectedHeight = floor(height * scale - gapSize);
+      projectedWidth = round(width * scale - gapSize);
+      projectedHeight = round(height * scale - gapSize);
     }
 
     if (debug)
@@ -209,8 +209,9 @@ async function boot(
 
     // Horizontal and vertical offsetting of the wrapper.
     wrapper.style.top =
-      floor((window.innerHeight - projectedHeight) / 2) + "px";
-    wrapper.style.left = floor((window.innerWidth - projectedWidth) / 2) + "px";
+      round((window.innerHeight - projectedHeight) / 2) + "px";
+
+    wrapper.style.left = round((window.innerWidth - projectedWidth) / 2) + "px";
 
     canvas.style.width = projectedWidth + "px";
     canvas.style.height = projectedHeight + "px";

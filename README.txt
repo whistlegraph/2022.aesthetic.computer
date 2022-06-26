@@ -7,10 +7,27 @@
 🐞 Major Bugs & Regressions *None*
 
 🌟 Work In Progress 🌟
+***A-Frame Integration***
+- Prototype:
+  1. iframe method:
+      Set cursor to none on the iframe.
+      Send events from the iframe back to the main window.
+      Use those events to update the a.c cursor.
+      Make sure the "escape" and "~" key is handled (see Whistlegraph).
+
+  2. Non-iframe method:
+      Get aframe script tag loading inside of the body then
+      inject the scene.
+
+- Either way:
+  [] Set up an orthographic camera and mouse-enabled drawing for desktop users
+     of the a-frame layer.
+
 ***2D Whistlegraph Recorder***
  * Recording the user's voice.
  * Record a video.
  * Single-player.
+ - [] Add voice and / or video recording to `microphone.js`;
  - [] https://webaudioapi.com/samples/
  - [] Write and complete: `whistlegraph` / `thumb`.
  - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
@@ -19,7 +36,6 @@
       audio+video into one file?
  - [] Chalkboard / material simulation.
  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
-
 
  - [] Figure out how to get an interactive twitter card working for all of a.c?
      - [] Add some server-side rendering (via a serverless function?) for different
@@ -42,16 +58,6 @@
  - [*] Try and roll-up *all* my javascript in order to decrease page load / set up
        a grand build-system.
 
-***Feral File Whistlegraph Player***
-- [X] Make finished zip packages for each work.
-- [X] Upload all the pieces to Feral File's website.
-- [X] Finish player
-- [X] Get forward and back button working so the tilde key makes sense, and so
-     that history works on disks, even if there is no hash on the first disk.
-- [X] Rewrite visible logs.
-- [X] Inherit search and params when loading from history. See disk.js:607.
-      (AKA) Make forward and back button work with query parameters.
-
 🪟 Browser Quirks
  - [] Development server only: videos don't load in Firefox (tested on Windows). 2022.05.07.00.01
 
@@ -71,6 +77,8 @@
                and rename it to `DIGITPAIN #.zip`.
 
 🌟 Next In Line 🌟
+ ***Transcribe the original Proce55ing typeface***
+
 
  ***Multi-player Drawing / Core Drawing***
   - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
