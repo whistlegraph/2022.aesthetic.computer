@@ -19,24 +19,37 @@ function boot({ resize, content }) {
 
   content.add(`
     <iframe id="vr" allowfullscreen allowvr allowtransparency="true"
-      style="border: none;"
+      style="cursor: none !important; border: none;"
       width="100%" height="100%" src="aframe.html"></iframe>
       
     <script>
      const vr = document.querySelector('#vr');
-     window.addEventListener('pointerdown', (e) => {
-         vr.contentWindow.postMessage({pointer: "down", pos: {x: e.x, y: e.y}}); 
-     });
      
-     window.addEventListener('pointerup', (e) => {
-         vr.contentWindow.postMessage({pointer: "up", pos: {x: e.x, y: e.y}}); 
-     });
-     
-     window.addEventListener('pointermove', (e) => {
-         vr.contentWindow.postMessage({pointer: "move", pos: {x: e.x, y: e.y}}); 
-     });
+     window.addEventListener('message', (e) => {
+       if (e.data?.pointer) {
+          ['down', 'move', 'up'].forEach((event) => {
+            if (e.data.pointer === event) {
+              window.dispatchEvent(
+                new PointerEvent(
+                  'pointer' + event,
+                  {
+                    isPrimary: true,
+                    screenX: e.data.pos.x,
+                    screenY: e.data.pos.y,
+                    clientX: e.data.pos.x,
+                    clientY: e.data.pos.y,
+                    x: e.data.pos.x,
+                    y: e.data.pos.y,
+                  },
+                ),
+              );
+            }
+          });
+         
+       }
+     })
     </script>
-    <div id="vr-overlay"></div>
+<!--    <div id="vr-overlay"></div>-->
     <style>
       #vr-overlay {
         pointer-events: none;
@@ -59,8 +72,8 @@ function sim($api) {
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ wipe }) {
-  wipe(0);
+function paint({ wipe, noiseTinted }) {
+  noiseTinted([0, 0, 0], 0.9, 0.1);
   return false;
 }
 
