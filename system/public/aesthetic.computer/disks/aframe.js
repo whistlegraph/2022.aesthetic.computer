@@ -24,8 +24,10 @@ function boot({ resize, content }) {
       
     <script>
      const vr = document.querySelector('#vr');
+   
+     // TODO: Remove this listener.
      
-     window.addEventListener('message', (e) => {
+     function message(e) {
        if (e.data?.pointer) {
           ['down', 'move', 'up'].forEach((event) => {
             if (e.data.pointer === event) {
@@ -45,9 +47,14 @@ function boot({ resize, content }) {
               );
             }
           });
-         
+       } else if (e.data?.key) {
+         console.log(e.data.key);
+         window.dispatchEvent(new KeyboardEvent("keydown", {key: e.data.key}));
        }
-     })
+     }
+     // Add the window event along with a function that gets run when this piece unloads.
+     window.addEventListener('message', message);
+     window.acCONTENT_EVENTS.push(() => window.removeEventListener('message', message));
     </script>
 <!--    <div id="vr-overlay"></div>-->
     <style>

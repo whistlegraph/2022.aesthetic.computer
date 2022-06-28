@@ -4,39 +4,37 @@
 
 ⚠️ Are you here to clone & contribute code? Scroll to the bottom of this file!
 
-🐞 Major Bugs & Regressions *None*
+🐞 Major Bugs & Regressions: None
 
 🌟 Work In Progress 🌟
-***A-Frame Integration***
-- Prototype:
-  1. iframe method:
-      Set cursor to none on the iframe.
-      Send events from the iframe back to the main window.
-      Use those events to update the a.c cursor.
-      Make sure the "escape" and "~" key is handled (see Whistlegraph).
-
-  2. Non-iframe method:
-      Get aframe script tag loading inside of the body then
-      inject the scene.
-
-- Either way:
-  [] Set up an orthographic camera and mouse-enabled drawing for desktop users
-     of the a-frame layer.
 
 ***2D Whistlegraph Recorder***
- * Recording the user's voice.
- * Record a video.
- * Single-player.
- - [] Add voice and / or video recording to `microphone.js`;
- - [] https://webaudioapi.com/samples/
- - [] Write and complete: `whistlegraph` / `thumb`.
- - [] Add `whistlegraph 16x9` ratio mode so it can be used by Alex & Camille.
- - [] Make whistlegraph recorder disk / nail?
- - [] Global recording of user actions (what about application actions) and
-      audio+video into one file?
- - [] Chalkboard / material simulation.
- - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
+ - [🌕] Record and playback the user's voice in `microphone`.
+ - [] https://webaudioapi.com/samples
+ - [] Record the content of `microphone` as a video.
 
+***3D Spatial Co-present Drawing***
+  ***A-Frame Integration***
+  - Prototype:
+    - Either way:
+      [] Set up an orthographic camera and mouse-enabled drawing for desktop users
+         of the a-frame layer.
+
+    -  iframe method:
+        [X] Make sure the "escape" and "~" key is handled (see Whistlegraph).
+        [X] Set cursor to none on the iframe.
+        [X] Send events from the iframe back to the main window.
+        [X] Use those events to update the a.c cursor.
+
+    -  Non-iframe method (why would this be better... maybe for recording?) [hold off for now]
+        [] Get aframe script tag loading inside of the body then
+           inject the scene.
+
+  ***Without A-Frame***
+   - [] Clone the basic WebXR examples, run them and and read them.
+        URL here: https://github.com/immersive-web/webxr-samples
+
+***Routing & Twitter Cards***
  - [] Figure out how to get an interactive twitter card working for all of a.c?
      - [] Add some server-side rendering (via a serverless function?) for different
           start disks and pick up the urls and parse them in `bios.js`.
@@ -44,19 +42,15 @@
      - Validator: https://cards-dev.twitter.com/validator
      - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
 
- - [] Implement a <model-viewer> for my 3d glb files so that when I share
+ - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
+
+ - [] Chalkboard / material simulation.
+
+***Model Viewer***
+ - [] Implement <model-viewer> for my 3d glb files so that when I share
       them to Twitter they can be in 3D, and also so that they can be wrapped
       as aesthetic.computer pieces.
       - https://modelviewer.dev/examples/twitter/generator.html
-
-***3D Spatial Co-present Drawing***
- - [] Clone the basic WebXR examples, run them and and read them.
- -    URL here: https://github.com/immersive-web/webxr-samples
- - [] Set up WebXR / 3D (Go through aesthetic.computer? or start as a side project...)
-
-***Post Feral File Launch (Hit these, plus all regressions before moving on!)
- - [*] Try and roll-up *all* my javascript in order to decrease page load / set up
-       a grand build-system.
 
 🪟 Browser Quirks
  - [] Development server only: videos don't load in Firefox (tested on Windows). 2022.05.07.00.01
@@ -79,7 +73,6 @@
 🌟 Next In Line 🌟
  ***Transcribe the original Proce55ing typeface***
 
-
  ***Multi-player Drawing / Core Drawing***
   - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
   - [] Add sound to `nail`.
@@ -93,6 +86,8 @@
   - [] Bake `wrap` and `pixel` into the api. 2022.02.01.02.46 (JAS) [via sage.js]
   - [] in `tracker.js`: Recenter boxes on line 174.
   - [] Multiplayer board reset in `spray` and `server`.
+  - [] Global recording of user actions (what about application actions) and
+       audio+video into one file?
   - [] Prototype the dream I had about a system-wide, radial menu.
   - [] Write a file editor for something crucial in aesthetic.computer, like a
        TODO: Program, or produce media to store with GIT-LFS.
@@ -112,9 +107,6 @@ the ability to clear (slide up / down / left / right), record and playback.
 
 UI - Make system UI icons resize along with the main screen... or hide them during a resize.
 - (This is kinda ugly rn.)
-
-- Adjust pixel density to be a bit better for iPhones / retina devices.
-  - Cross-reference on my Thinkpad and also my laptop.
 
 function act({ event: e }) { // Remove drawing api.
 
@@ -199,10 +191,6 @@ Refactor (screen.width -> screen.w & screen.height -> screen.h) across the board
   - To be more consistent with `graph.box`.
 
 📩 Future (Outdated)
-
-📅 End of January
-  - Shader situation. `const fragmentEffect = video('webgl', screen.width, screen.height)`
-  - Research software shaders.
 
 What would a build script for releasing a single disk or
 stack of disks look like?

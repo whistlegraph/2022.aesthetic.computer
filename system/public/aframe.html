@@ -6,15 +6,14 @@
       user-select: none;
       background: transparent;
     }
-    canvas {
-      cursor: none !important;
-    }
+    canvas, .rs-base, .rs-base h1 { cursor: none !important; }
   </style>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
   <script
     src="https://unpkg.com/aframe-environment-component/dist/aframe-environment-component.min.js"></script>
   <script>
     'use strict';
+    // A-Frame
     const list = [];
     let line = [];
     let bkp = null;
@@ -47,24 +46,29 @@
 
         const scene = document.querySelector('a-scene').canvas;
 
+        // Communicate keyboard navigation back to aesthetic.computer.
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            window.parent.postMessage({key: 'Escape'});
+          } else if (e.key === '~') {
+            window.parent.postMessage({key: '~'});
+          }
+        });
+
         window.addEventListener('pointerdown', (e) => {
           //vr.contentWindow.postMessage({pointer: "down", pos: {x: e.x, y: e.y}});
-          window.parent.postMessage({pointer: "down", pos: {x: e.x, y: e.y}});
+          window.parent.postMessage({pointer: 'down', pos: {x: e.x, y: e.y}});
         });
 
         window.addEventListener('pointerup', (e) => {
           //vr.contentWindow.postMessage({pointer: "up", pos: {x: e.x, y: e.y}});
-          window.parent.postMessage({pointer: "up", pos: {x: e.x, y: e.y}});
+          window.parent.postMessage({pointer: 'up', pos: {x: e.x, y: e.y}});
         });
 
         window.addEventListener('pointermove', (e) => {
           //vr.contentWindow.postMessage({pointer: "move", pos: {x: e.x, y: e.y}});
-          window.parent.postMessage({pointer: "move", pos: {x: e.x, y: e.y}});
+          window.parent.postMessage({pointer: 'move', pos: {x: e.x, y: e.y}});
         });
-
-        //window.addEventListener('mousedown', (e) => { console.log(e.type); });
-        //scene.addEventListener('mousemove', (e) => { console.log(e.type); });
-        //scene.addEventListener('mouseup', (e) => { console.log(e.type); });
 
         window.addEventListener('message', (e) => {
           // console.log("Message:", e.data);
@@ -112,9 +116,7 @@
   </script>
 </head>
 <body>
-<a-scene
-  loading-screen="enabled: false; backgroundColor: green; dotsColor: blue;"
-  stats>
+<a-scene loading-screen="enabled: false; backgroundColor: green; dotsColor: blue;">
   <a-camera>
     <a-entity cursor="fuse: true; fuseTimeout: 500"
               position="0 0 -1"
@@ -123,7 +125,7 @@
     </a-entity>
   </a-camera>
   <a-entity text="value: Hello World;"></a-entity>
-<!--  <a-sky transparent="true"></a-sky>-->
+  <!--<a-sky color="blue"></a-sky>-->
   <a-box color="red" position="0 2 -5" rotation="0 45 45" scale="2 2 2"></a-box>
   <a-entity
     id="handright"

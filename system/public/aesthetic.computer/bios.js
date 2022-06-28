@@ -60,6 +60,8 @@ async function boot(
     }
   }
 
+  window.acCONTENT_EVENTS = [];
+
   let pen, keyboard;
   let frameCount = 0;
   let timePassed = 0;
@@ -904,8 +906,12 @@ async function boot(
     }
 
     if (type === "disk-unload") {
+      // Clear any DOM content that was added by a piece.
       contentFrame?.remove(); // Remove the contentFrame if it exists.
       contentFrame = undefined;
+      // Remove any event listeners added by the content frame.
+      window?.acCONTENT_EVENTS.forEach((e) => e());
+      window.acCONTENT_EVENTS = []; // And clear all events from the list.
 
       // Remove existing video tags.
       videos.forEach(({ video, buffer, getAnimationRequest }) => {
