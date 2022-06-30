@@ -3,7 +3,8 @@
 // TODO: Add recording capability. 22.6.19.11.13
 
 const { floor } = Math;
-let mic;
+let mic,
+  recording = false;
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ wipe, ink, screen: { width, height } }) {
@@ -27,14 +28,38 @@ function paint({ wipe, ink, screen: { width, height } }) {
   }
 
   ink(0, 255, 0, 96).line(0, height / 2, width, height / 2); // Horizontal lime.
+
+  if (recording) {
+    ink(255, 0, 0).circle(16, 16, 8);
+  }
 }
 
 // 💗 Beat (Runs once per bpm)
 function beat({ sound: { beat, microphone } }) {
+  console.log("beat");
   if (!mic) {
     microphone.connect();
     mic = microphone;
   }
 }
 
-export { paint, beat };
+let keyDowned = false; // TODO: This is really ugly and the keyboard api
+//                              should be more beautiful.
+
+function act({ event: e, rec: { rolling, cut, print } }) {
+  if (e.is("keyboard:down") && e.key === "Enter" && keyDowned === false) {
+    keyDowned = true;
+    if (recording === false) {
+      rolling("audio");
+      recording = true;
+    } else {
+      cut();
+      print(); // TODO: Allow multiple clips to be strung together.
+      recording = false;
+    }
+  }
+
+  if (e.is("keyboard:up") && e.key === "Enter") keyDowned = false;
+}
+
+export { paint, beat, act };

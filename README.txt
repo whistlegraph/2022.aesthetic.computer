@@ -4,14 +4,19 @@
 
 ⚠️ Are you here to clone & contribute code? Scroll to the bottom of this file!
 
-🐞 Major Bugs & Regressions: None
+🐞 Major Bugs & Regressions
+ - [] Fix Firefox AudioWorklet Initialization Bug
+        `Error: Module resolve hook not set`
 
 🌟 Work In Progress 🌟
 
 ***2D Whistlegraph Recorder***
  - [🌕] Record and playback the user's voice in `microphone`.
- - [] https://webaudioapi.com/samples
  - [] Record the content of `microphone` as a video.
+ - [] Convert the video mp4 using ffmpeg.wasm if it is a webm - https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
+ - [] Store the video on a camera roll in a mobile browser.
+ - [] Add an "audio engine off" system overlay.
+
 
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***

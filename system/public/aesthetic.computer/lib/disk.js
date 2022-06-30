@@ -102,6 +102,11 @@ const $commonApi = {
     each: help.each,
   },
   gizmo: { Hourglass: gizmo.Hourglass },
+  rec: {
+    rolling: (opts) => send({ type: "recorder-rolling", content: opts }),
+    cut: () => send({ type: "recorder-cut" }),
+    print: () => send({ type: "recorder-print" }),
+  },
   net: {},
   needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
   store,

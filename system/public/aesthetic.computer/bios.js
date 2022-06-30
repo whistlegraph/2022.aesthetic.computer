@@ -69,6 +69,9 @@ async function boot(
   let diskSupervisor;
   let currentPiece = null; // Gets set to a path after `loaded`.
 
+  // Media Recorder
+  let mediaRecorder; // See "recorder-rolling" below.
+
   // 0. Video storage
   const videos = [];
 
@@ -319,7 +322,8 @@ async function boot(
     updateSquare,
     updateBubble,
     attachMicrophone,
-    audioContext;
+    audioContext,
+    audioStreamDest;
 
   let requestMicrophoneAmplitude, requestMicrophoneWaveform;
 
@@ -333,6 +337,8 @@ async function boot(
       // sampleRate: 96000,
       // sampleRate: 192000,
     });
+
+    audioStreamDest = audioContext.createMediaStreamDestination();
 
     if (audioContext.state === "running") {
       audioContext.suspend();
@@ -359,19 +365,28 @@ async function boot(
         mediaStream: micStream,
       });
 
+      // TODO: Why can't there be separate audioWorklet modules?
       await audioContext.audioWorklet.addModule(
         "aesthetic.computer/lib/microphone.js"
       );
 
-      const playerNode = new AudioWorkletNode(audioContext, "microphone", {
-        outputChannelCount: [2],
-      });
+      const playerNode = new AudioWorkletNode(
+        audioContext,
+        "microphone-processor",
+        {
+          outputChannelCount: [2],
+          processorOptions: { debug },
+        }
+      );
+
+      //console.log(playerNode);
 
       micNode.connect(playerNode);
 
       // Receive messages from the microphone processor thread.
       playerNode.port.onmessage = (e) => {
         const msg = e.data;
+
         if (msg.type === "amplitude") {
           send({ type: "microphone-amplitude", content: msg.content });
         }
@@ -390,6 +405,10 @@ async function boot(
         playerNode.port.postMessage({ type: "get-waveform" });
       };
 
+      // Connect mic to the mediaStream.
+      playerNode.connect(audioStreamDest);
+      //playerNode.connect(audioContext.destination);
+
       // Connect to the speaker if we are monitoring audio.
       if (data?.monitor === true) playerNode.connect(audioContext.destination);
     };
@@ -402,8 +421,13 @@ async function boot(
       const soundProcessor = new AudioWorkletNode(
         audioContext,
         "sound-processor",
-        { outputChannelCount: [2], processorOptions: { bpm: sound.bpm[0] } }
+        {
+          outputChannelCount: [2],
+          processorOptions: { bpm: sound.bpm[0], debug },
+        }
       );
+
+      console.log(soundProcessor);
 
       updateMetronome = function (newBPM) {
         soundProcessor.port.postMessage({
@@ -431,7 +455,12 @@ async function boot(
         diskSupervisor.requestBeat?.(time);
       };
 
+      // Connect soundProcessor to the mediaStream.
+      soundProcessor.connect(audioStreamDest);
+
       soundProcessor.connect(audioContext.destination);
+
+      audioContext.resume();
     })();
 
     window.addEventListener("pointerdown", async () => {
@@ -801,6 +830,74 @@ async function boot(
       return;
     }
 
+    if (type === "recorder-rolling") {
+      console.log("🔴 Recorder: Rolling", content);
+
+      // TODO: To add it to a canvas...
+      //       look into using "content" or options.
+
+      // cStream = canvas.captureStream(30);
+      // cStream.addTrack(aStream.getAudioTracks()[0]);
+      // recorder = new MediaRecorder(cStream);
+      // recorder.start();
+
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/captureStream
+      // console.log(content);
+      // let audioTrack = dest.stream.getAudioTracks()[0];
+      // add it to your canvas stream:
+      // canvasStream.addTrack(audioTrack);
+      // use your canvas stream like you would normally:
+      // let recorder = new MediaRecorder(canvasStream);
+
+      // TODO: Generalize this and options for `video/mp4` and `video/webm`.
+      let mimeType;
+
+      if (content === "audio") {
+        if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          mimeType = "audio/mp4"; // This is the setup for Safari.
+        } else if (MediaRecorder.isTypeSupported("audio/webm")) {
+          mimeType = "audio/webm"; // And for Chrome & Firefox.
+        }
+      }
+
+      const options = {
+        audioBitsPerSecond: 128000,
+        //videoBitsPerSecond : 2500000,
+        mimeType,
+      };
+
+      mediaRecorder = new MediaRecorder(audioStreamDest.stream, options);
+
+      const chunks = []; // Store chunks of the recording.
+      mediaRecorder.ondataavailable = (evt) => chunks.push(evt.data);
+
+      mediaRecorder.onstop = function (evt) {
+        const blob = new Blob(chunks, {
+          type: options.mimeType,
+        });
+        const audioEl = document.createElement("audio");
+        audioEl.src = URL.createObjectURL(blob);
+        audioEl.controls = true;
+        document.body.append(audioEl);
+        // TODO: Figure out what to do with these...
+        //audioEl.play();
+      };
+
+      mediaRecorder.start();
+      return;
+    }
+
+    if (type === "recorder-cut") {
+      console.log("✂️ Recorder: Cut");
+      mediaRecorder?.stop();
+      return;
+    }
+
+    if (type === "recorder-print") {
+      console.log("📼 Recorder: Printed");
+      return;
+    }
+
     if (type === "load-bitmap") {
       fetch(content).then(async (response) => {
         if (!response.ok) {
@@ -972,6 +1069,7 @@ async function boot(
       return;
     }
 
+    // BIOS:RENDER
     // 🌟 Assume that `type` is "render" from now on.
 
     // Check for a change in resolution.

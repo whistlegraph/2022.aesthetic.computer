@@ -31,7 +31,10 @@ class SoundProcessor extends AudioWorkletProcessor {
   #bubble;
 
   constructor(options) {
+    if (options.debug) console.log("🔊 Sound Synthesis Worklet Started");
+
     super();
+
     this.#lastTime = currentTime;
 
     this.#bpm = options.processorOptions.bpm;

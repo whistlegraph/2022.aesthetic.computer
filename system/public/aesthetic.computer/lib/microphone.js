@@ -14,7 +14,9 @@ class Microphone extends AudioWorkletProcessor {
   currentAmplitude = 0;
   currentWaveform = [];
 
-  constructor() {
+  constructor(options) {
+    if (options.debug) console.log("🔊 Sound Synthesis Worklet Started");
+
     super();
 
     this.port.onmessage = (e) => {
@@ -36,23 +38,20 @@ class Microphone extends AudioWorkletProcessor {
     };
   }
 
-  process(inputs, outputs, parameters) {
-    if (inputs[0].length === 2) {
-      let amp = 0;
-      let waveform = [];
-
-      const micChannel = inputs[0][0];
-      for (let s = 0; s < micChannel.length; s += 1) {
-        outputs[0][0][s] = micChannel[s];
-        outputs[0][1][s] = micChannel[s];
-        amp += abs(micChannel[s]);
-        if (s % 8 === 0) waveform.push(micChannel[s]); // Only capture every 8th value. (Usually 16)
-      }
-      this.currentAmplitude = amp / micChannel.length;
-      this.currentWaveform = waveform.slice(0); // Capture a quantized sample.
+  process(inputs, outputs) {
+    let amp = 0;
+    let waveform = [];
+    const micChannel = inputs[0][0];
+    for (let s = 0; s < micChannel.length; s += 1) {
+      outputs[0][0][s] = micChannel[s];
+      outputs[0][1][s] = micChannel[s];
+      amp += abs(micChannel[s]);
+      if (s % 8 === 0) waveform.push(micChannel[s]); // Only capture every 8th value. (Usually 16)
     }
+    this.currentAmplitude = amp / micChannel.length;
+    this.currentWaveform = waveform.slice(0); // Capture a quantized sample.
     return true;
   }
 }
 
-registerProcessor("microphone", Microphone);
+registerProcessor("microphone-processor", Microphone);
