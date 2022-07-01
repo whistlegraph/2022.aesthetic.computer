@@ -2,9 +2,16 @@
 // A simple audio + video feedback monitor test.
 // TODO: Add recording capability. 22.6.19.11.13
 
+let recBtn; // A button to records.
+
 const { floor } = Math;
 let mic,
   recording = false;
+
+function boot({ ui, screen, cursor }) {
+  cursor("native");
+  recBtn = new ui.Button(screen.width / 2 - 4, screen.height - 20, 8, 8);
+}
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ wipe, ink, screen: { width, height } }) {
@@ -30,13 +37,18 @@ function paint({ wipe, ink, screen: { width, height } }) {
   ink(0, 255, 0, 96).line(0, height / 2, width, height / 2); // Horizontal lime.
 
   if (recording) {
-    ink(255, 0, 0).circle(16, 16, 8);
+    //ink(255, 0, 0).circle(16, 16, 8);
   }
+
+  // Button
+  ink(recording ? [255, 0, 0] : 255).box(
+    recBtn.box,
+    recBtn.down ? "inline" : "outline"
+  ); // Border
 }
 
 // 💗 Beat (Runs once per bpm)
 function beat({ sound: { beat, microphone } }) {
-  console.log("beat");
   if (!mic) {
     microphone.connect();
     mic = microphone;
@@ -50,16 +62,34 @@ function act({ event: e, rec: { rolling, cut, print } }) {
   if (e.is("keyboard:down") && e.key === "Enter" && keyDowned === false) {
     keyDowned = true;
     if (recording === false) {
-      rolling("audio");
+      rolling("video");
       recording = true;
     } else {
       cut();
-      print(); // TODO: Allow multiple clips to be strung together.
       recording = false;
     }
   }
 
+  if (e.is("keyboard:down") && e.key == " ") {
+    console.log("space");
+    print(); // TODO: Allow multiple clips to be strung together.
+  }
+
+  // Relay event info to the save button.
+  //recBtn.act(e, () => download(encode(timestamp())));
+  recBtn.act(e, () => {
+    console.log(recBtn);
+    if (recording === false) {
+      rolling("video");
+      recording = true;
+    } else {
+      cut();
+      print();
+      recording === false;
+    }
+  });
+
   if (e.is("keyboard:up") && e.key === "Enter") keyDowned = false;
 }
 
-export { paint, beat, act };
+export { boot, paint, beat, act };

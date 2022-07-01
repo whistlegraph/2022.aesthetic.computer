@@ -1,4 +1,4 @@
-// Blank, 2021.11.28.03.04
+// Basic Line Pointer, 2022.11.28.03.04
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ resize }) {
@@ -12,14 +12,21 @@ function sim($api) {
   //console.log($api);
 }
 
+let x = 0,
+  y = 0;
+
 // 🎨 Paint (Executes every display frame)
 function paint({ wipe }) {
-  wipe(128); // Draw a gray background
-  return false; // Only once.
+  wipe(100, 0, 0).ink(0, 255, 0).line(x, y, 100, 100); // x1, y1, x2, y2
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event }) {}
+function act({ event }) {
+  if (event.name === "move") {
+    x = event.x;
+    y = event.y;
+  }
+}
 
 // 💗 Beat (Runs once per bpm)
 function beat($api) {

@@ -427,8 +427,6 @@ async function boot(
         }
       );
 
-      console.log(soundProcessor);
-
       updateMetronome = function (newBPM) {
         soundProcessor.port.postMessage({
           type: "new-bpm",
@@ -831,14 +829,16 @@ async function boot(
     }
 
     if (type === "recorder-rolling") {
-      console.log("🔴 Recorder: Rolling", content);
+      if (debug) console.log("🔴 Recorder: Rolling", content);
+
+      if (mediaRecorder && mediaRecorder.state === "paused") {
+        mediaRecorder.resume();
+        return;
+      }
 
       // TODO: To add it to a canvas...
       //       look into using "content" or options.
 
-      // cStream = canvas.captureStream(30);
-      // cStream.addTrack(aStream.getAudioTracks()[0]);
-      // recorder = new MediaRecorder(cStream);
       // recorder.start();
 
       // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/captureStream
@@ -849,24 +849,40 @@ async function boot(
       // use your canvas stream like you would normally:
       // let recorder = new MediaRecorder(canvasStream);
 
-      // TODO: Generalize this and options for `video/mp4` and `video/webm`.
       let mimeType;
 
-      if (content === "audio") {
-        if (MediaRecorder.isTypeSupported("audio/mp4")) {
-          mimeType = "audio/mp4"; // This is the setup for Safari.
-        } else if (MediaRecorder.isTypeSupported("audio/webm")) {
-          mimeType = "audio/webm"; // And for Chrome & Firefox.
+      if (content === "audio" || content === "video") {
+        if (MediaRecorder.isTypeSupported(content + "/mp4")) {
+          mimeType = content + "/mp4"; // This is the setup for Safari.
+        } else if (MediaRecorder.isTypeSupported(content + "/webm")) {
+          mimeType = content + "/webm"; // And for Chrome & Firefox.
+        } else {
+          console.error("🔴 Mimetypes mp4 and webm are unsupported.");
         }
+      } else {
+        console.error("🔴 Option must be 'audio' or 'video'.");
       }
 
-      const options = {
-        audioBitsPerSecond: 128000,
-        //videoBitsPerSecond : 2500000,
-        mimeType,
-      };
+      let options;
 
-      mediaRecorder = new MediaRecorder(audioStreamDest.stream, options);
+      if (content === "audio") {
+        options = {
+          audioBitsPerSecond: 128000,
+          mimeType,
+        };
+        mediaRecorder = new MediaRecorder(audioStreamDest.stream, options);
+      } else if (content === "video") {
+        // Currently always includes an audio track by default.
+        options = {
+          audioBitsPerSecond: 128000,
+          videoBitsPerSecond: 2500000,
+          mimeType,
+        };
+
+        const canvasStream = canvas.captureStream(30);
+        canvasStream.addTrack(audioStreamDest.stream.getAudioTracks()[0]);
+        mediaRecorder = new MediaRecorder(canvasStream, options);
+      }
 
       const chunks = []; // Store chunks of the recording.
       mediaRecorder.ondataavailable = (evt) => chunks.push(evt.data);
@@ -875,12 +891,35 @@ async function boot(
         const blob = new Blob(chunks, {
           type: options.mimeType,
         });
-        const audioEl = document.createElement("audio");
-        audioEl.src = URL.createObjectURL(blob);
-        audioEl.controls = true;
-        document.body.append(audioEl);
+
+        // Make an appropriate element to store the recording.
+        const el = document.createElement(content); // "audio" or "video"
+        el.src = URL.createObjectURL(blob);
+        el.controls = true;
+
+        // Add the recording to the dom, among other recordings that may exist.
+        const recordings = wrapper.querySelector("#recordings");
+
+        if (recordings) {
+          recordings.append(el);
+        } else {
+          const recordingsEl = document.createElement("div");
+          recordingsEl.id = "recordings";
+          recordingsEl.append(el);
+
+          const download = document.createElement("a");
+          download.href = el.src;
+          download.innerText = "Download Video";
+          download.download = "test.mp4";
+          recordingsEl.append(download);
+
+          wrapper.append(recordingsEl);
+        }
+
         // TODO: Figure out what to do with these...
-        //audioEl.play();
+        el.play();
+
+        if (debug) console.log("📼 Recorder: Printed");
       };
 
       mediaRecorder.start();
@@ -888,13 +927,14 @@ async function boot(
     }
 
     if (type === "recorder-cut") {
-      console.log("✂️ Recorder: Cut");
-      mediaRecorder?.stop();
+      if (debug) console.log("✂️ Recorder: Cut");
+      mediaRecorder?.pause();
       return;
     }
 
     if (type === "recorder-print") {
-      console.log("📼 Recorder: Printed");
+      mediaRecorder?.stop();
+      mediaRecorder = undefined;
       return;
     }
 

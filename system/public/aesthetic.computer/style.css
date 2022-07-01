@@ -31,8 +31,6 @@ body.native-cursor {
 
 body.native-cursor canvas[data-type="ui"] { opacity: 0 !important; }
 
-/* body.native-cursor canvas { touch-action: pan-x pan-y; } */
-
 canvas { touch-action: none; }
 
 input { pointer-events: none; }
@@ -50,10 +48,19 @@ input { pointer-events: none; }
   left: 0;
   width: 100%;
   height: 100%;
-  /*background: rgba(255, 255, 0, 0.5);*/
   z-index: 3;
   pointer-events: all;
   touch-action: manipulation;
+}
+
+#recordings {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  pointer-events: all;
+  touch-action: manipulation;
+  background: white;
 }
 
 canvas {
@@ -79,6 +86,6 @@ canvas[data-type="freeze"] { z-index: 2; }
 canvas[data-type="freeze"] { position: fixed; }
 
 canvas[data-type="ui"] {
-  z-index: 4;
+  z-index: 5;
   filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
 }

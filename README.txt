@@ -17,7 +17,6 @@
  - [] Store the video on a camera roll in a mobile browser.
  - [] Add an "audio engine off" system overlay.
 
-
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***
   - Prototype:
