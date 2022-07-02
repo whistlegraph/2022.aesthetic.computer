@@ -13,7 +13,7 @@
 ***Routing & Twitter Cards***
  - [] Figure out how to get an interactive twitter card working for all of a.c?
      - [] Add some server-side rendering (via a serverless function?) for different
-          start disks and pick up the urls and parse them in `bios.js`.
+          start disks to pick up the urls and parse them in `bios.js`?
      - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
      - Validator: https://cards-dev.twitter.com/validator
      - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
