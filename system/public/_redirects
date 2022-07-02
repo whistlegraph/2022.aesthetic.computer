@@ -1,5 +1,4 @@
-# Redirects from what the browser requests to what netlify serves
-/*/:file /:splat/:file
-
-# This will redirect all paths under /jobs except the path above
-/*       /:splat
+# Redirects from what the browser requests to what netlify serves.
+# Use clean urls that I can route via the client.
+# See: https://www.netlify.com/blog/2019/01/16/redirect-rules-for-all-how-to-configure-redirects-for-your-static-site
+/* /index.html 200
