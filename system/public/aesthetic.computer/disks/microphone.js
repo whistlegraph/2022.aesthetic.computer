@@ -18,7 +18,7 @@ function paint({ wipe, ink, screen: { width, height } }) {
   wipe(15, 20, 0); // Dark green background.
 
   // Waveform & Amplitude Line
-  if (mic?.waveform.length > 0 && mic?.amplitude) {
+  if (mic?.waveform.length > 0 && mic?.amplitude !== undefined) {
     const xStep = width / mic.waveform.length + 1;
     const yMid = height / 2,
       yMax = yMid;
@@ -53,6 +53,8 @@ let keyDowned = false; // TODO: This is really ugly and the keyboard api
 function act({ event: e, rec: { rolling, cut, print } }) {
   if (!mic) return; // Disable all events until the microphone is working.
 
+  // TODO: Multiple clips can be string together with keyboard shortcuts.
+  //       How can I use this to do cut or continuous recording?
   if (e.is("keyboard:down") && e.key === "Enter" && keyDowned === false) {
     keyDowned = true;
     if (rec === false) {
@@ -63,14 +65,9 @@ function act({ event: e, rec: { rolling, cut, print } }) {
       rec = false;
     }
   }
-
-  if (e.is("keyboard:down") && e.key == " ") {
-    console.log("space");
-    print(); // TODO: Allow multiple clips to be strung together.
-  }
+  if (e.is("keyboard:down") && e.key == " ") print();
 
   // Relay event info to the save button.
-  //recBtn.act(e, () => download(encode(timestamp())));
   btn.act(e, () => {
     if (rec === false) {
       rolling("video");

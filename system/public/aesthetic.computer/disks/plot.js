@@ -84,10 +84,12 @@ function boot({
   needsPaint();
   // preload("drawings/default.json").then(decode); // Preload drawing.
   // Preload save button icon.
-  preload("./aesthetic.computer/disks/drawings/save_open_icon.json").then((r) => {
-    plots.icon = r;
-    needsPaint();
-  });
+  preload("./aesthetic.computer/disks/drawings/save_open_icon.json").then(
+    (r) => {
+      plots.icon = r;
+      needsPaint();
+    }
+  );
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
@@ -169,11 +171,11 @@ function paint({
   }
 
   // B. 🌟 Open Button
-  ink(colors.open).box(open.box, open.down ? "inline" : "outline"); // Border
+  ink(colors.open).box(open.box, open.down ? "in" : "out"); // Border
   ink(colors.open).draw(plots.icon, open.box.x + 13, open.box.y + 6, 3, 180); // Icon
 
   // C. 🌟 Save Button
-  ink(colors.save).box(save.box, save.down ? "inline" : "outline"); // Border
+  ink(colors.save).box(save.box, save.down ? "in" : "out"); // Border
   ink(colors.save).draw(plots.icon, save.box.x + 1, save.box.y, 3); // Icon
 
   return false;
@@ -274,7 +276,7 @@ function encode(filename) {
   // Or I could use turtle graphics?
 
   // TODO: Save this somehow on the network? 2021.12.11.17.01
-  // - To clipboard? (Get general cliboard access working.)
+  // - To clipboard? (Get general clipboard access working.)
   // - Directly on-chain?
   // - On my own server via or Pinata / DO Spaces using web3.eth as auth?
 
