@@ -545,12 +545,12 @@ function box() {
     mode = mode.slice(0, -BOX_CENTER.length); // Remove it.
   }
 
-  if (mode === "outline") {
+  if (mode === "outline" || mode === "out") {
     line(x - 1, y - 1, x + w, y - 1); // Top
     line(x - 1, y + h, x + w, y + h); // Bottom
     line(x - 1, y, x - 1, y + h - 1); // Left
     line(x + w, y, x + w, y + h - 1); // Right
-  } else if (mode === "inline") {
+  } else if (mode === "inline" || mode === "in") {
     line(x, y, x + w - 1, y); // Top
     line(x, y + h - 1, x + w - 1, y + h - 1); // Bottom
     line(x, y + 1, x, y + h - 2); // Left

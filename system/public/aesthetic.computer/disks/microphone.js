@@ -1,54 +1,45 @@
 // Microphone, 2022.1.11.0.26
 // A simple audio + video feedback monitor test.
 
-let recBtn; // A button to records.
-
 const { floor } = Math;
+
 let mic,
-  recording = false;
+  btn,
+  rec = false;
 
 function boot({ ui, screen, cursor }) {
   // cursor("native");
-  recBtn = new ui.Button(screen.width / 2 - 4, screen.height - 24, 12, 12);
-  recBtn.disabled = true;
+  btn = new ui.Button(screen.width / 2 - 4, screen.height - 24, 12, 12);
+  btn.disabled = true;
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ wipe, ink, screen: { width, height } }) {
-  mic?.poll(); // Query for updated amplitude and waveform samples from the mic.
+  wipe(15, 20, 0); // Dark green background.
 
-  // Background
-  wipe(15, 20, 0);
-
-  // Amplitude Line
-  if (mic?.amplitude) {
-    const y = height - mic.amplitude * height;
-    ink(255, 16).line(0, y, width, y); // Horiz. line to represent total volume.
-  }
-
-  // Waveform Line
-  if (mic?.waveform.length > 0) {
+  // Waveform & Amplitude Line
+  if (mic?.waveform.length > 0 && mic?.amplitude) {
     const xStep = width / mic.waveform.length + 1;
     const yMid = height / 2,
       yMax = yMid;
     ink(255, 0, 0, 128).poly(
       mic.waveform.map((v, i) => [i * xStep, yMid + v * yMax])
     );
+    const y = height - mic.amplitude * height;
+    ink(255, 16).line(0, y, width, y); // Horiz. line for amplitude.
   }
 
   ink(0, 255, 0, 16).line(0, height / 2, width, height / 2); // Center line.
 
   // Record Button
-  recBtn.paint((btn) => {
-    ink(recording ? [255, 0, 0] : [80, 80, 80]).box(
-      btn.box,
-      btn.down ? "inline" : "outline"
-    );
+  btn.paint((btn) => {
+    ink(rec ? [255, 0, 0] : [80, 80, 80]).box(btn.box, btn.down ? "in" : "out");
   });
 }
 
 function sim() {
-  recBtn.enableIf(mic?.waveform.length > 0);
+  btn.enableIf(mic?.waveform.length > 0);
+  mic?.poll(); // Query for updated amplitude and waveform samples from the mic.
 }
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
@@ -64,12 +55,12 @@ function act({ event: e, rec: { rolling, cut, print } }) {
 
   if (e.is("keyboard:down") && e.key === "Enter" && keyDowned === false) {
     keyDowned = true;
-    if (recording === false) {
+    if (rec === false) {
       rolling("video");
-      recording = true;
+      rec = true;
     } else {
       cut();
-      recording = false;
+      rec = false;
     }
   }
 
@@ -80,14 +71,14 @@ function act({ event: e, rec: { rolling, cut, print } }) {
 
   // Relay event info to the save button.
   //recBtn.act(e, () => download(encode(timestamp())));
-  recBtn.act(e, () => {
-    if (recording === false) {
+  btn.act(e, () => {
+    if (rec === false) {
       rolling("video");
-      recording = true;
+      rec = true;
     } else {
       cut();
       print();
-      recording = false;
+      rec = false;
     }
   });
 
