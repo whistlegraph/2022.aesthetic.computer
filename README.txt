@@ -10,9 +10,17 @@
 
 🌟 Work In Progress 🌟
 
+***Routing & Twitter Cards***
+ - [] Figure out how to get an interactive twitter card working for all of a.c?
+     - [] Add some server-side rendering (via a serverless function?) for different
+          start disks and pick up the urls and parse them in `bios.js`.
+     - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
+     - Validator: https://cards-dev.twitter.com/validator
+     - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
+
 ***2D Whistlegraph Recorder***
 
- - [] Add an "audio engine off" system overlay / call to action
+ - [🟡] Add an "audio engine off" system overlay / call to action
       that uses the DOM.
  - [] Only record frames that are not part of the interface.
       Does this mean making the interface use the DOM too?
@@ -68,14 +76,6 @@
   ***Without A-Frame***
    - [] Clone the basic WebXR examples, run them and and read them.
         URL here: https://github.com/immersive-web/webxr-samples
-
-***Routing & Twitter Cards***
- - [] Figure out how to get an interactive twitter card working for all of a.c?
-     - [] Add some server-side rendering (via a serverless function?) for different
-          start disks and pick up the urls and parse them in `bios.js`.
-     - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
-     - Validator: https://cards-dev.twitter.com/validator
-     - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
 
  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
 

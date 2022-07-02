@@ -1,6 +1,9 @@
 // Microphone, 2022.1.11.0.26
 // A simple audio + video feedback monitor test.
 
+// Note: Multiple clips can be string together with keyboard shortcuts.
+//       How can I use this to do cut or continuous recording?
+
 const { floor } = Math;
 
 let mic,
@@ -13,7 +16,6 @@ function boot({ ui, screen, cursor }) {
   btn.disabled = true;
 }
 
-// 🎨 Paint (Runs once per display refresh rate)
 function paint({ wipe, ink, screen: { width, height } }) {
   wipe(15, 20, 0); // Dark green background.
 
@@ -38,36 +40,32 @@ function paint({ wipe, ink, screen: { width, height } }) {
 }
 
 function sim() {
+  mic?.poll(); // Query for updated amplitude and waveform data.
   btn.enableIf(mic?.waveform.length > 0);
-  mic?.poll(); // Query for updated amplitude and waveform samples from the mic.
 }
 
-// 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
 function beat({ sound: { time, microphone } }) {
   if (!mic) mic = microphone.connect();
 }
 
-let keyDowned = false; // TODO: This is really ugly and the keyboard api
-//                              should be more beautiful.
-
 function act({ event: e, rec: { rolling, cut, print } }) {
   if (!mic) return; // Disable all events until the microphone is working.
 
-  // TODO: Multiple clips can be string together with keyboard shortcuts.
-  //       How can I use this to do cut or continuous recording?
-  if (e.is("keyboard:down") && e.key === "Enter" && keyDowned === false) {
-    keyDowned = true;
-    if (rec === false) {
-      rolling("video");
-      rec = true;
-    } else {
-      cut();
-      rec = false;
+  // Keyboard Events
+  if (e.is("keyboard:down") && e.repeat === false) {
+    if (e.key === "Enter") {
+      if (rec === false) {
+        rolling("video");
+        rec = true;
+      } else {
+        cut();
+        rec = false;
+      }
     }
+    if (e.key == " ") print();
   }
-  if (e.is("keyboard:down") && e.key == " ") print();
 
-  // Relay event info to the save button.
+  // Record Button
   btn.act(e, () => {
     if (rec === false) {
       rolling("video");
@@ -78,8 +76,6 @@ function act({ event: e, rec: { rolling, cut, print } }) {
       rec = false;
     }
   });
-
-  if (e.is("keyboard:up") && e.key === "Enter") keyDowned = false;
 }
 
 export { boot, sim, paint, beat, act };

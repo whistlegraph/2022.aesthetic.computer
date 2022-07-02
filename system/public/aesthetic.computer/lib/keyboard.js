@@ -11,6 +11,7 @@ export class Keyboard {
       this.events.push({
         name: "keyboard:down",
         key: e.key,
+        repeat: e.repeat,
         shift: e.shiftKey,
         alt: e.altKey,
         ctrl: e.ctrlKey,

@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8">
     <title>aesthetic.computer</title>
     <script src="aesthetic.computer/boot.js" type="module" defer></script>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <link rel="stylesheet" href="aesthetic.computer/style.css" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="twitter:card" content="player" />
+    <meta name="twitter:site" content="aesthetic.computer" />
+    <meta name="twitter:title" content="Prompt" />
+    <meta name="twitter:description"
+          content="The main aesthetic.computer prompt." />
+    <meta name="twitter:image" content="https://digitpain.com/profile.jpg" />
+    <meta name="twitter:player" content="https://aesthetic.computer" />
+    <meta name="twitter:player:width" content="320" />
+    <meta name="twitter:player:height" content="240" />
   </head>
-  <body class="native-cursor">
+  <body class="native-cursor"> <!-- Hides the 2D UI on first boot. -->
   <script>
     if (window.self !== window.top) document.body.classList.add("embed");
   </script>
