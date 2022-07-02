@@ -109,15 +109,21 @@ function everyone(string) {
 // File watching uses: https://github.com/paulmillr/chokidar
 // TODO: Stop logging every file and instead count them up and report a number.
 if (process.env.NODE_ENV === "development") {
-  // 1. Watch for local file changes in disk or system directories.
-  chokidar.watch("../system/public/disks").on("all", (event, path) => {
-    console.log("Disk:", event, path);
-    if (event === "change") everyone(pack("reload", "disk"));
-  });
-
-  // TODO: Finish implementing this on the client.
+  // 1. Watch for local file changes in pieces.
   chokidar
-    .watch(["../system/public/computer", "../system/public/boot.js"])
+    .watch("../system/public/aesthetic.computer/disks")
+    .on("all", (event, path) => {
+      console.log("Disk:", event, path);
+      if (event === "change") everyone(pack("reload", "disk"));
+    });
+
+  // 2. Watch base system files.
+  chokidar
+    .watch([
+      "../system/public/aesthetic.computer/lib",
+      "../system/public/aesthetic.computer/boot.js",
+      "../system/public/aesthetic.computer/bios.js",
+    ])
     .on("all", (event, path) => {
       console.log("System:", event, path);
       if (event === "change") everyone(pack("reload", "system"));

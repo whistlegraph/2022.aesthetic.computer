@@ -1024,12 +1024,13 @@ async function boot(
         let url =
           content.path === content.firstPiece
             ? ""
-            : // Set hash to be the last segment of the currentPiece path.
-              "#" + content.path.substring(content.path.lastIndexOf("/") + 1);
+            : // Set piece to be the last segment of the currentPiece path.
+              "/" + content.path.substring(content.path.lastIndexOf("/") + 1);
         if (content.params.length > 0) {
           url += ":" + content.params.join(" ");
         }
         if (content.fromHistory === false) {
+          console.log(url);
           history.pushState("", document.title, url);
         }
       }

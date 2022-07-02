@@ -14,9 +14,15 @@ if (window.location.hostname === "aesthetic.computer") {
   debug = false;
   window.acDEBUG = debug;
 } else {
-  // Build a hostname (with a path if one exists) from the current location.
+  // Build a hostname from the current location.
   // Hosts can also be remote domains. (HTTPS is assumed)
   host = window.location.hostname;
+
+  // TODO: This code is leftover from IPFS exporting... but shouldn't be adding on
+  //       to anything called "host" from this point on.
+  //       It might need to be revisited / refactored when new static
+  //       builds become necessary.
+  /*
   if (window.location.pathname.length > 1) {
     const pathSegments = window.location.pathname.split("/");
     if (pathSegments[pathSegments.length - 1].endsWith(".html")) {
@@ -24,6 +30,7 @@ if (window.location.hostname === "aesthetic.computer") {
     }
     host += pathSegments.join("/");
   }
+  */
 }
 
 const bpm = 120; // Sets the starting bpm.
@@ -31,17 +38,20 @@ const bpm = 120; // Sets the starting bpm.
 // If the root starting piece was not defined in the host html file, then it defaults to "prompt" here.
 if (window.acSTARTING_PIECE === undefined) window.acSTARTING_PIECE = "prompt";
 
+// Set the default starting piece.
+let piece = window.acSTARTING_PIECE;
+
+if (window.location.pathname.length > 1) {
+  // Replace it if a pathname '/piece' exists.
+  piece = window.location.pathname.slice(1); // '/piece' -> 'piece'
+} else if (window.location.hash.length > 0) {
+  // Or if the url is '/#piece'.
+  piece = window.location.hash.slice(1);
+}
+
 // Boot the machine with the specified root piece, or a #piece route if one
 // is in the url.
-boot(
-  window.location.hash.length > 0
-    ? window.location.hash.slice(1)
-    : window.acSTARTING_PIECE,
-  bpm,
-  host,
-  undefined,
-  debug
-);
+boot(piece, bpm, host, undefined, debug);
 
 // Incoming Message Responder
 // - At the moment it is just for a work-in-progress figma widget but any

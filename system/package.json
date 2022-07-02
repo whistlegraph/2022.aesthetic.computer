@@ -4,7 +4,9 @@
   "description": "My virtual computer system for loading and running disks.",
   "source": "./public/index.html",
   "scripts": {
-    "dev": "http-server public -S -C ../ssl-dev/localhost.pem -K ../ssl-dev/localhost-key.pem -p 443 --cors -c-1",
+    "dev": "BROWSER=none netlify dev",
+    "local-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P https://localhost:443? --silent",
+    "local-dev-ssl": "http-server public -S -C ../ssl-dev/localhost.pem -K ../ssl-dev/localhost-key.pem -p 443 --cors -c-1",
     "parcel-dev": "parcel --cert ../ssl-dev/localhost.pem --key ../ssl-dev/localhost-key.pem -p 443",
     "feral-file-rollup": "rollup public/aesthetic.computer/boot.js --file public/aesthetic.computer/feral-file-boot.js --no-treeshake --inlineDynamicImports && uglifyjs public/aesthetic.computer/feral-file-boot.js -o public/aesthetic.computer/feral-file-ugly-boot.js --compress && rm public/aesthetic.computer/feral-file-boot.js"
   },
