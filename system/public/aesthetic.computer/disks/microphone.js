@@ -1,6 +1,5 @@
 // Microphone, 2022.1.11.0.26
 // A simple audio + video feedback monitor test.
-// TODO: Add recording capability. 22.6.19.11.13
 
 let recBtn; // A button to records.
 
@@ -9,56 +8,60 @@ let mic,
   recording = false;
 
 function boot({ ui, screen, cursor }) {
-  cursor("native");
-  recBtn = new ui.Button(screen.width / 2 - 4, screen.height - 20, 8, 8);
+  // cursor("native");
+  recBtn = new ui.Button(screen.width / 2 - 4, screen.height - 24, 12, 12);
+  recBtn.disabled = true;
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ wipe, ink, screen: { width, height } }) {
   mic?.poll(); // Query for updated amplitude and waveform samples from the mic.
-  wipe(15, 20, 0); // Clear background to green.
 
+  // Background
+  wipe(15, 20, 0);
+
+  // Amplitude Line
   if (mic?.amplitude) {
     const y = height - mic.amplitude * height;
     ink(255, 16).line(0, y, width, y); // Horiz. line to represent total volume.
   }
 
-  if (mic?.waveform) {
-    const horizontalStep = width / mic.waveform.length + 1;
+  // Waveform Line
+  if (mic?.waveform.length > 0) {
+    const xStep = width / mic.waveform.length + 1;
     const yMid = height / 2,
-      maxHeight = yMid;
-    let points = [];
-    mic.waveform.forEach((value, i) => {
-      points.push([i * horizontalStep, yMid + value * maxHeight]); // Get points.
-    });
-    ink(255, 0, 0, 128).poly(points); // Plot the waveform as a polyline.
+      yMax = yMid;
+    ink(255, 0, 0, 128).poly(
+      mic.waveform.map((v, i) => [i * xStep, yMid + v * yMax])
+    );
   }
 
-  ink(0, 255, 0, 96).line(0, height / 2, width, height / 2); // Horizontal lime.
+  ink(0, 255, 0, 16).line(0, height / 2, width, height / 2); // Center line.
 
-  if (recording) {
-    //ink(255, 0, 0).circle(16, 16, 8);
-  }
-
-  // Button
-  ink(recording ? [255, 0, 0] : 255).box(
-    recBtn.box,
-    recBtn.down ? "inline" : "outline"
-  ); // Border
+  // Record Button
+  recBtn.paint((btn) => {
+    ink(recording ? [255, 0, 0] : [80, 80, 80]).box(
+      btn.box,
+      btn.down ? "inline" : "outline"
+    );
+  });
 }
 
-// 💗 Beat (Runs once per bpm)
-function beat({ sound: { beat, microphone } }) {
-  if (!mic) {
-    microphone.connect();
-    mic = microphone;
-  }
+function sim() {
+  recBtn.enableIf(mic?.waveform.length > 0);
+}
+
+// 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
+function beat({ sound: { time, microphone } }) {
+  if (!mic) mic = microphone.connect();
 }
 
 let keyDowned = false; // TODO: This is really ugly and the keyboard api
 //                              should be more beautiful.
 
 function act({ event: e, rec: { rolling, cut, print } }) {
+  if (!mic) return; // Disable all events until the microphone is working.
+
   if (e.is("keyboard:down") && e.key === "Enter" && keyDowned === false) {
     keyDowned = true;
     if (recording === false) {
@@ -78,18 +81,17 @@ function act({ event: e, rec: { rolling, cut, print } }) {
   // Relay event info to the save button.
   //recBtn.act(e, () => download(encode(timestamp())));
   recBtn.act(e, () => {
-    console.log(recBtn);
     if (recording === false) {
       rolling("video");
       recording = true;
     } else {
       cut();
       print();
-      recording === false;
+      recording = false;
     }
   });
 
   if (e.is("keyboard:up") && e.key === "Enter") keyDowned = false;
 }
 
-export { boot, paint, beat, act };
+export { boot, sim, paint, beat, act };

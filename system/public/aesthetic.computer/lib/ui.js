@@ -51,6 +51,7 @@ function cached(ctx) {
 class Button {
   box;
   down = false;
+  disabled = false;
   icon;
 
   constructor() {
@@ -61,6 +62,8 @@ class Button {
   }
 
   act(e, pushCb) {
+    if (this.disabled) return;
+
     // 1. Down: Enable the button if we touched over it.
     if (e.is("touch") && this.box.contains(e)) this.down = true;
 
@@ -72,6 +75,15 @@ class Button {
       if (this.box.contains(e)) pushCb(); // TODO: Params for the cb? 2021.12.11.16.56
       this.down = false;
     }
+  }
+
+  // Draws a callback if the button is not disabled.
+  paint(fn) {
+    if (!this.disabled) fn(this);
+  }
+
+  enableIf(flag) {
+    this.disabled = !flag;
   }
 }
 

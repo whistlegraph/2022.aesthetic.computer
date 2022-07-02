@@ -11,11 +11,42 @@
 🌟 Work In Progress 🌟
 
 ***2D Whistlegraph Recorder***
- - [🌕] Record and playback the user's voice in `microphone`.
- - [] Record the content of `microphone` as a video.
- - [] Convert the video mp4 using ffmpeg.wasm if it is a webm - https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
+
+ - [] Add an "audio engine off" system overlay / call to action
+      that uses the DOM.
+ - [] Only record frames that are not part of the interface.
+      Does this mean making the interface use the DOM too?
+ - [] Record frames at a multiplied resolution over the original canvas.
+ - [] Make sure that the audio and video are synchronized across devices.
+      (Video seems delayed on iOS right now.)
+
+ After a recording is made...
+
+ - Inside of TikTok
+   - 1. Show a download button
+   - tell the user their video is ready and they can visit
+     aesthetic.computer/CODE in a browser
+     to download their video, which expires after 5 minutes.
+
+ - Mobile Browser
+ - Show a download button.
+
+ - In the iOS app
+   - let the user download the video immediately to their camera roll
+
+ - Where do recordings / files get stored? What is the userflow...
+   - Do they get stored at a special code, then users can
+     go to the website / open another window and mint from the code
+     or download it?
+
+ - [] TikTok API Integration : https://developers.tiktok.com/apps/
+  - This should allow users to save / post? their video directly to TikTok from the web.
+
  - [] Store the video on a camera roll in a mobile browser.
- - [] Add an "audio engine off" system overlay.
+ - [] Convert the video mp4 using ffmpeg.wasm if it is a webm - https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
+ - [] Two finger twist and zoom while recording... use vector data.
+ - [X] Record and playback the user's voice in `microphone`.
+ - [X] Record the content of `microphone` as a video.
 
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***
@@ -78,6 +109,7 @@
  ***Transcribe the original Proce55ing typeface***
 
  ***Multi-player Drawing / Core Drawing***
+  - [] Allow users to join / create rooms with codes (QR codes esp.)
   - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
   - [] Add sound to `nail`.
   - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.

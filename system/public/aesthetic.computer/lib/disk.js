@@ -290,6 +290,7 @@ class Microphone {
 
   connect(options) {
     send({ type: "microphone", content: options });
+    return this;
   }
 
   poll() {

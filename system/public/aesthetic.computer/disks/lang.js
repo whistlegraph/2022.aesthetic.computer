@@ -1,7 +1,29 @@
-// Blank, 2021.11.28.03.04
+// Lang, 2022.6.2.1.55
+// Experimental JavaScript syntax for DSL building and learning.
+
+class Lang {
+  constructor() {
+    console.log("Lang initialized!");
+  }
+
+  get o() {
+    console.log("LINE");
+    return this;
+  }
+
+  get x() {
+    console.log("DOT");
+    return this;
+  }
+}
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ resize }) {
+  const l = new Lang();
+
+  l.o.x.o.o.o;
+  l.o.o.x.x.x;
+
   // TODO: Runs only once!
   // resize(50, 20);
 }
