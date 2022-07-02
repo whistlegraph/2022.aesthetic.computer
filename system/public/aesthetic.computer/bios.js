@@ -1030,7 +1030,6 @@ async function boot(
           url += ":" + content.params.join(" ");
         }
         if (content.fromHistory === false) {
-          console.log(url);
           history.pushState("", document.title, url);
         }
       }
@@ -1441,7 +1440,9 @@ async function boot(
   window.onpopstate = function (e) {
     send({
       type: "history-load",
-      content: document.location.hash.substring(1),
+      content:
+        document.location.pathname.substring(1) ||
+        document.location.hash.substring(1),
     });
   };
 
