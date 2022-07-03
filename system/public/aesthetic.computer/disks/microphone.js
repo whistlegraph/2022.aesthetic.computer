@@ -10,7 +10,10 @@ let mic,
   btn,
   rec = false;
 
-function boot({ ui, screen, cursor }) {
+function boot({ title, ui, screen, cursor }) {
+  title("Microphone");
+  // TODO: Read the top two lines of a piece for page metadata!
+  // description("Blah blah...");
   // cursor("native");
   btn = new ui.Button(screen.width / 2 - 4, screen.height - 24, 12, 12);
   btn.disabled = true;

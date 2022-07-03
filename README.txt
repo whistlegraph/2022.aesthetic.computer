@@ -10,18 +10,13 @@
 
 🌟 Work In Progress 🌟
 
-***Routing & Twitter Cards***
- - [] Figure out how to get an interactive twitter card working for all of a.c?
-     - [] Add some server-side rendering (via a serverless function?) for different
-          start disks to pick up the urls and parse them in `bios.js`?
-     - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
-     - Validator: https://cards-dev.twitter.com/validator
-     - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
-
 ***2D Whistlegraph Recorder***
 
  - [🟡] Add an "audio engine off" system overlay / call to action
-      that uses the DOM.
+      that uses the DOM?
+      - [] Add new Typeface.
+      - [] Throw up the html if the audio engine is off and the beat function
+           has been exported.
  - [] Only record frames that are not part of the interface.
       Does this mean making the interface use the DOM too?
  - [] Record frames at a multiplied resolution over the original canvas.
@@ -30,16 +25,31 @@
 
  After a recording is made...
 
+ Show the video in a div overlay with a "Retry" or "Done" button.
+
  - Inside of TikTok
-   - 1. Show a download button
-   - tell the user their video is ready and they can visit
+   - Tell the user their video is ready and they can visit
      aesthetic.computer/CODE in a browser
      to download their video, which expires after 5 minutes.
 
- - Mobile Browser
- - Show a download button.
+     aesthetic.computer/microphone -> aesthetic.computer/dl.bn67gff5
+     aesthetic.computer/get.dfcx4
 
- - In the iOS app
+     After recording in the microphone, you get this...
+
+     aesthetic.computer/mic -> aesthetic.codes/bn67gff5
+     ... or
+     aesthetic.computer/mic -> codes.ac/bn67gff5
+       (where codes.ac/bn67gff5 -> aesthetic.computer/codes.bn67gff5)
+
+     A pop-up that shows a QR code / a code to enter into aesthetic.codes.
+
+     Upon visiting aesthetic.codes...
+
+ - iOS or Android Mobile Browser or Desktop Browser
+   - 1. Show a download button
+
+ - in a native iOS app
    - let the user download the video immediately to their camera roll
 
  - Where do recordings / files get stored? What is the userflow...
@@ -55,6 +65,53 @@
  - [] Two finger twist and zoom while recording... use vector data.
  - [X] Record and playback the user's voice in `microphone`.
  - [X] Record the content of `microphone` as a video.
+
+***Routing & Twitter Cards***
+ - [] Figure out how to get interactive twitter cards / open-graph info working for all of a.c?
+     - [🟡] Add meta-tags and title etc. set by JavaScript in the metatags.
+     - [🔴] Test Netlify pre-rendering to see if it functions.
+     - [X] Enable Netlify pre-rendering.
+     - [] Add some server-side rendering (via a serverless function?) for different
+          start disks to pick up the urls and parse them in `bios.js`?
+     - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
+     - Validator: https://cards-dev.twitter.com/validator
+     - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
+ - [X] Implement path based routing for pieces via netlify and on a local dev server.
+
+***Basic Server Work / Rooms / Synchronized Metronome***
+  - [] How to get metronomes syncing across a network?
+       aesthetic.computer/metronome.180.red
+       aesthetic.computer/metronome_300.yellow
+       aesthetic.computer/metronome-180.black
+       aesthetic.computer/metronome~180.blue
+
+  Option 1: Visit rooms.ac to get a roomID which can be added to a command.
+  Option 2: Automatically get a room with every new tab.
+            - Join another room using `room roomID`.
+            - Entering an activity is part of the room.
+            - There should be a basic "shout" program for rooms.
+
+***Routing Longtail***
+- [] Do away with hashtag routes entirely.
+- [] Refactor ":" parameter encoding (see `wg`) into using classic url parameters.
+  - [] Or just use one of these special characters: `. _ ~ -`
+
+      aesthetic.computer/wg.fuzz
+      aesthetic.computer/wg_fuzz
+      aesthetic.computer/wg-fuzz
+      aesthetic.computer/wg~fuzz
+
+      // Maybe the special characters could be default parameters, or represent
+      // types of some kind?
+
+      Available domains:
+        - prompt.ac
+        - wgr.ac (whistlegraph recorder)
+        - wgl.ac (whistlegraph live)
+        - jas.ac (my new homepage)
+        - aesthetic.run
+        - aesthetic.codes
+        - aesthetic.cx
 
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***
@@ -78,7 +135,6 @@
         URL here: https://github.com/immersive-web/webxr-samples
 
  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
-
  - [] Chalkboard / material simulation.
 
 ***Model Viewer***
@@ -113,6 +169,10 @@
   - [] Abstract `line` and `spline` into `nail`. See also: `gesture`.
   - [] Add sound to `nail`.
   - [] Use https://wicg.github.io/video-rvfc/ for video frame updates.
+
+ ***No Paint***
+  - [] Should the old nopaint.art be reachable from within aesthetic.computer
+  - [] Should a new nopaint be built from scratch?
 
  ❤️Side Missions❤️
   - [] How to limit the number of Frame's in the start of a disk?
