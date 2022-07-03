@@ -11,14 +11,17 @@
 🌟 Work In Progress 🌟
 
 ***2D Whistlegraph Recorder***
-
  - [🟡] Add an "audio engine off" system overlay / call to action
       that uses the DOM?
       - [] Add new Typeface.
       - [] Throw up the html if the audio engine is off and the beat function
            has been exported.
  - [] Only record frames that are not part of the interface.
-      Does this mean making the interface use the DOM too?
+   - [] Make a DOM based button.
+   ... OR
+   - [] Dump frames before painting the interface on top... via a pixel buffer
+        being sent over the worker.
+        (This might be slow)
  - [] Record frames at a multiplied resolution over the original canvas.
  - [] Make sure that the audio and video are synchronized across devices.
       (Video seems delayed on iOS right now.)
@@ -69,13 +72,15 @@
 ***Routing & Twitter Cards***
  - [] Figure out how to get interactive twitter cards / open-graph info working for all of a.c?
      - [🟡] Add meta-tags and title etc. set by JavaScript in the metatags.
+       - [] Use the info at the top of the piece files to preload / cache any data
+            (which will keep the yellow spinner running)
      - [🔴] Test Netlify pre-rendering to see if it functions.
-     - [X] Enable Netlify pre-rendering.
      - [] Add some server-side rendering (via a serverless function?) for different
           start disks to pick up the urls and parse them in `bios.js`?
      - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
-     - Validator: https://cards-dev.twitter.com/validator
-     - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
+       - Validator: https://cards-dev.twitter.com/validator
+       - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
+     - [X] Enable Netlify pre-rendering.
  - [X] Implement path based routing for pieces via netlify and on a local dev server.
 
 ***Basic Server Work / Rooms / Synchronized Metronome***
@@ -136,6 +141,11 @@
 
  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
  - [] Chalkboard / material simulation.
+
+**Image Viewer / Media Viewer**
+ - [] Write a great image-viewer that implements the `rdp` piece.
+ - [] Also implement `tumpin`, `ten-minute-painting`, and `basedballz`.
+ - [] Add my small series of Tezos 1of1s as well: `emokidpix` and `1bits`.
 
 ***Model Viewer***
  - [] Implement <model-viewer> for my 3d glb files so that when I share
