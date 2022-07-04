@@ -8,66 +8,93 @@
  - [] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
 
-🌟 Work In Progress 🌟
+🌟 Projects In Progress 🌟
 
-***2D Whistlegraph Recorder***
- - [🟡] Add an "audio engine off" system overlay / call to action
-      that uses the DOM?
-      - [] Add new Typeface.
-      - [] Throw up the html if the audio engine is off and the beat function
-           has been exported.
- - [] Only record frames that are not part of the interface.
+***2D Whistlegraph Recorder*** (August 1st - Launch)
+ - [🟢] Only record frames that are not part of the interface.
    - [] Make a DOM based button.
    ... OR
    - [] Dump frames before painting the interface on top... via a pixel buffer
         being sent over the worker.
         (This might be slow)
  - [] Record frames at a multiplied resolution over the original canvas.
- - [] Make sure that the audio and video are synchronized across devices.
-      (Video seems delayed on iOS right now.)
-
- After a recording is made...
-
- Show the video in a div overlay with a "Retry" or "Done" button.
-
- - Inside of TikTok
-   - Tell the user their video is ready and they can visit
-     aesthetic.computer/CODE in a browser
-     to download their video, which expires after 5 minutes.
-
-     aesthetic.computer/microphone -> aesthetic.computer/dl.bn67gff5
-     aesthetic.computer/get.dfcx4
-
-     After recording in the microphone, you get this...
-
-     aesthetic.computer/mic -> aesthetic.codes/bn67gff5
-     ... or
-     aesthetic.computer/mic -> codes.ac/bn67gff5
-       (where codes.ac/bn67gff5 -> aesthetic.computer/codes.bn67gff5)
-
-     A pop-up that shows a QR code / a code to enter into aesthetic.codes.
-
-     Upon visiting aesthetic.codes...
-
- - iOS or Android Mobile Browser or Desktop Browser
-   - 1. Show a download button
-
- - in a native iOS app
-   - let the user download the video immediately to their camera roll
-
- - Where do recordings / files get stored? What is the userflow...
-   - Do they get stored at a special code, then users can
-     go to the website / open another window and mint from the code
-     or download it?
-
- - [] TikTok API Integration : https://developers.tiktok.com/apps/
-  - This should allow users to save / post? their video directly to TikTok from the web.
-
- - [] Store the video on a camera roll in a mobile browser.
  - [] Convert the video mp4 using ffmpeg.wasm if it is a webm - https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
+ - [] Complete ***Upload Server***
+ - [] Store the video on a camera roll in a mobile browser.
+ - [] Explore using the TikTok API Integration : https://developers.tiktok.com/apps
+  - This should allow users to save / post? their video directly to TikTok from the web.
  - [] Two finger twist and zoom while recording... use vector data.
+ - [X] Make sure that the audio and video are synchronized across devices.
+      (Video seems delayed on iOS right now.)
  - [X] Record and playback the user's voice in `microphone`.
  - [X] Record the content of `microphone` as a video.
+ - [Commented Out] Add an "audio engine off" system overlay / call to action
+      that uses the DOM?
+      - [X] It should be removed... each program should handle this on its own...
+      - [X] Throw up the html if the audio engine is off and the beat function
+            has not been exported.
+      - [X] Add all the new Typefaces to CSS. (Berkeley Mono Variable, and Proce55ing)
+
+***Editor***
+- [] Get the project working in GitHub codespaces.
+
+***Readme***
+- [] Directly load the GitHub readme in a scrollable content window.
+
+***Notion***
+- [] Make `manual` and `hq` load the notion (separate places) in a new tab.
+- [] Should the manual be a super.so site using one of the chosen typefaces?
+
+***Prompt Start**
+- [] Make the prompt start message easily editable by Niki.
+  What would it mean for this message to use the ***Upload Server*** and merit
+  a text editor.
+
+ ***Upload Server***
+ [] 1. Show the media (video) in a div overlay with a "Retry" or "Done" button.
+   A. Retry - Removes the modal div and lets you re-record again.
+   B. Done - Allows you to download the file immediately (if possible),
+             and uploads it, giving you the code no matter what.
+                             (The code page layout could be shared here.)
+
+ [] 2. After the file uploads...
+   A. You can also have the option to "Post" or "Publish?" which
+   will make the work available as part of an ever-growing collection.
+     - Idea: Posts are automatically minted to our wallet, but can optionally
+             be minted to a poster's wallet if they decide to connect.
+   B. Regardless, the file stored at the code will be deleted in 24 hours.
+     - [] Setting expiration policies on DO spaces: https://www.howtogeek.com/devops/how-to-set-an-expiration-policy-on-digitalocean-spaces-buckets
+     - [] Follow along with – https://www.digitalocean.com/community/tutorials/how-to-upload-a-file-to-object-storage-with-node-js
+                            - Using multipart-form-data
+          Using             - https://www.npmjs.com/package/fastify-multer
+          Get code via      - https://glitch.com/edit/#!/nopaint-server?path=server.js
+     - Inside of TikTok
+       - Tell the user their video is ready and they can visit
+         aesthetic.computer/CODE in a browser
+         to download their video, which expires after 5 minutes.
+
+         aesthetic.computer/microphone -> aesthetic.computer/dl.bn67gff5
+         aesthetic.computer/get.dfcx4
+
+         After recording in the microphone, you get this...
+
+         aesthetic.computer/mic -> aesthetic.codes/bn67gff5
+         ... or
+         aesthetic.computer/mic -> codes.ac/bn67gff5
+           (where codes.ac/bn67gff5 -> aesthetic.computer/codes.bn67gff5)
+           (and the resource is stored at -> bin.aesthetic.computer/bn67gff5.ext)
+                                             art.aesthetic.computer/...
+
+         A pop-up that shows a QR code / a code to enter into aesthetic.codes.
+         Upon visiting aesthetic.codes...
+     - iOS or Android Mobile Browser or Desktop Browser
+       - 1. Show a download button
+     - in a native iOS app
+       - let the user download the video immediately to their camera roll
+     - Where do recordings / files get stored? What is the userflow...
+       - Do they get stored at a special code, then users can
+         go to the website / open another window and mint from the code
+         or download it?
 
 ***Routing & Twitter Cards***
  - [] Figure out how to get interactive twitter cards / open-graph info working for all of a.c?
@@ -155,6 +182,7 @@
 
 🪟 Browser Quirks
  - [] Development server only: videos don't load in Firefox (tested on Windows). 2022.05.07.00.01
+ - [] Make the cursor faster / match the speed of the native cursor.
 
 *** 🎃 DIGITPAIN ***
  - [] Complete DIGITPAIN 0-5.

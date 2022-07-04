@@ -15,7 +15,7 @@ let bubbleRadii = [];
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ resize, screen, cursor, glaze }) {
-  cursor("none");
+  // cursor("none");
   // TODO: Runs only once!
   // resize(50, 20);
   originalRadius = screen.width / 3;

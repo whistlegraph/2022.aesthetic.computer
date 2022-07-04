@@ -444,6 +444,7 @@ async function load(
     loading = false;
     penX = undefined;
     penY = undefined;
+
     send({
       type: "disk-loaded",
       content: {
@@ -452,6 +453,7 @@ async function load(
         pieceCount: $commonApi.pieceCount,
         firstPiece,
         fromHistory,
+        // noBeat: beat === defaults.beat,
       },
     });
     if (firstLoad === false) {
@@ -516,13 +518,19 @@ class Content {
     return this.nodes[this.nodes.length - 1];
   }
 
+  remove() {
+    send({ type: "content-remove" });
+    this.nodes = [];
+    this.#id = 0;
+  }
+
   receive({ id, response }) {
     this.nodes[id].response = response;
   }
 
-  update({ id, msg }) {
-    send({ type: "content-update", content: { id, msg } });
-  }
+  //update({ id, msg }) {
+  //  send({ type: "content-update", content: { id, msg } });
+  //}
 }
 
 // 4. ✔ Respond to incoming messages, and probably produce a frame.

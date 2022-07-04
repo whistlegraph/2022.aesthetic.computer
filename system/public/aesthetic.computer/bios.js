@@ -85,6 +85,10 @@ async function boot(
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
+  // A layer for modal messages such as "audio engine is off".
+  const modal = document.createElement("div");
+  modal.id = "modal";
+
   // A ui canvas for rendering a native resolution ui on top of everything.
   const uiCanvas = document.createElement("canvas");
   const uiCtx = uiCanvas.getContext("2d");
@@ -251,9 +255,15 @@ async function boot(
 
     assign(screen, { pixels: imageData.data, width, height });
 
-    // Add the canvas & uiCanvas when we first boot up.
+    // Add the canvas, modal, and uiCanvas when we first boot up.
     if (!wrapper.contains(canvas)) {
       wrapper.append(canvas);
+      wrapper.append(modal);
+
+      const bumper = document.createElement("div");
+      bumper.id = "bumper";
+      modal.append(bumper);
+
       wrapper.append(uiCanvas);
       document.body.append(wrapper);
 
@@ -459,6 +469,9 @@ async function boot(
       soundProcessor.connect(audioContext.destination);
 
       audioContext.resume();
+
+      modal.classList.remove("on");
+      bumper.innerText = "";
     })();
 
     window.addEventListener("pointerdown", async () => {
@@ -755,7 +768,7 @@ async function boot(
         // TODO: This should only evaluate new scripts, as they are added...
         const script = contentFrame.querySelector("script");
 
-        if (script.src) {
+        if (script?.src) {
           const s = document.createElement("script");
           s.type = "module";
           // s.onload = callback; // s.onerror = callback;
@@ -766,7 +779,7 @@ async function boot(
           s.src = script.src + "#" + Date.now();
           contentFrame.appendChild(s); // Re-insert the new script tag.
           script.remove(); // Remove old script element.
-        } else {
+        } else if (script?.innerText.length > 0) {
           window.eval(script.innerText);
         }
       }
@@ -776,6 +789,15 @@ async function boot(
         content: { id: content.id, response: "Content was made!" }, // TODO: Return an API / better object?
       });
       return;
+    }
+
+    if (type === "content-remove") {
+      // Clear any DOM content that was added by a piece.
+      contentFrame?.remove(); // Remove the contentFrame if it exists.
+      contentFrame = undefined;
+      // Remove any event listeners added by the content frame.
+      window?.acCONTENT_EVENTS.forEach((e) => e());
+      window.acCONTENT_EVENTS = []; // And clear all events from the list.
     }
 
     if (type === "title") {
@@ -1018,6 +1040,13 @@ async function boot(
     }
 
     if (type === "disk-loaded") {
+      // Show an "audio engine: off" message.
+
+      //if (content.noBeat === false && audioContext?.state !== "running") {
+      //bumper.innerText = "audio engine off";
+      //modal.classList.add("on");
+      //}
+
       // Emit a push state for the old disk if it was not the first. This is so
       // a user can use browser history to switch between disks.
       if (content.pieceCount > 0) {

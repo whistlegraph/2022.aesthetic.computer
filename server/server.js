@@ -123,6 +123,7 @@ if (process.env.NODE_ENV === "development") {
       "../system/public/aesthetic.computer/lib",
       "../system/public/aesthetic.computer/boot.js",
       "../system/public/aesthetic.computer/bios.js",
+      "../system/public/aesthetic.computer/style.css",
     ])
     .on("all", (event, path) => {
       console.log("System:", event, path);
