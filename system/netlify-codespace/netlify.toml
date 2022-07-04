@@ -1,0 +1,7 @@
+[build]
+  publish = "public"
+[dev]
+  framework = "#custom"
+  command = "npm run spaces-dev-netlify"
+  targetPort = 8080
+  port = 8000

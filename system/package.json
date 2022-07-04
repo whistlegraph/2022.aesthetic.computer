@@ -5,6 +5,8 @@
   "source": "./public/index.html",
   "scripts": {
     "dev": "BROWSER=none netlify dev",
+    "codespaces-dev": "cd netlify-codespace; BROWSER=none netlify dev",
+    "spaces-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P http://localhost:8000? --silent",
     "local-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P https://localhost:443? --silent",
     "local-dev-ssl": "http-server public -S -C ../ssl-dev/localhost.pem -K ../ssl-dev/localhost-key.pem -p 443 --cors -c-1",
     "parcel-dev": "parcel --cert ../ssl-dev/localhost.pem --key ../ssl-dev/localhost-key.pem -p 443",
@@ -25,10 +27,11 @@
   },
   "homepage": "https://github.com/whistlegraph/system#readme",
   "dependencies": {
-    "gl-matrix": "^3.4.3",
-    "http-server": "^14.1.0"
+    "gl-matrix": "^3.4.3"
   },
   "devDependencies": {
+    "http-server": "^14.1.1",
+    "netlify-cli": "^10.7.1",
     "parcel": "^2.5.0",
     "parcel-reporter-static-files-copy": "^1.3.4",
     "prettier": "^2.4.1",
