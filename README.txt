@@ -10,6 +10,10 @@
 
 🌟 Projects In Progress 🌟
 
+***Editor***
+- [] Get socket server running under GitHub codespaces as well.
+- [X] Get the project working in GitHub codespaces.
+
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [🟢] Only record frames that are not part of the interface.
    - [] Make a DOM based button.
@@ -34,9 +38,6 @@
       - [X] Throw up the html if the audio engine is off and the beat function
             has not been exported.
       - [X] Add all the new Typefaces to CSS. (Berkeley Mono Variable, and Proce55ing)
-
-***Editor***
-- [] Get the project working in GitHub codespaces.
 
 ***Readme***
 - [] Directly load the GitHub readme in a scrollable content window.

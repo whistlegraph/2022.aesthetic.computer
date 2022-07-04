@@ -11,7 +11,7 @@ Try AceJump, Use thinkpad more often, Try: https://github.com/machakann/vim-swap
 Figure out how to swap vim panes with one another in neovim: https://github.com/wesQ3/vim-windowswap,
 
 -> GitHub Codespaces (Manual Setup):
-  For running the frontend:
+  A. For running the frontend:
     1. `cd` into `system` and then `npm install`
     2. login to netlify via `npx netlify login`
     3. install git lfs to get media files: `git lfs install; git lfs pull`
@@ -23,5 +23,9 @@ Figure out how to swap vim panes with one another in neovim: https://github.com/
     5. now you can run `npm run codespaces-dev` to start the frontend,
        fully simulating the netlify production environment
        (with exception to the automatic https tunneling in spaces)
+  B. For running the server backend:
+    1. `cd` into `server` and then `npm install`
+    2.  add `NODE_ENV=development` to a `.env` file in `server`
+    3.  Note: websockets (wss) cannot be port forwarded by codespaces atm 
 
-2022.05.07.02.56
+2022.06.04.19.47
