@@ -1,4 +1,3 @@
-
         Welcome to
     AESTHETIC.COMPUTER 🎃
 
@@ -10,17 +9,22 @@
 
 🌟 Projects In Progress 🌟
 
-***Editor***
-- [] Get socket server running under GitHub codespaces as well.
-- [X] Get the project working in GitHub codespaces.
+***Server Re-organization***
+ - [] Should the websocket server run as a separate process from the http api? 
+  - Yes.
+ - [] Should it run on a separate machine as of now?
+  - No.
+ - How to run two server processes from one npm command?
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
- - [🟢] Only record frames that are not part of the interface.
-   - [] Make a DOM based button.
-   ... OR
+ - [] Only record frames that are not part of the interface.
+   - [🟢] Make a DOM based button.
+     - [] Attach events to it... figure out the smartest way to have it connect to `function act`?
+   OR ...
    - [] Dump frames before painting the interface on top... via a pixel buffer
         being sent over the worker.
         (This might be slow)
+        (Could be useful eventually... to selectively record video of certain pixel buffers, or render frame by frame.)
  - [] Record frames at a multiplied resolution over the original canvas.
  - [] Convert the video mp4 using ffmpeg.wasm if it is a webm - https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
  - [] Complete ***Upload Server***
@@ -199,6 +203,14 @@
             3. Remove all files other than `/digitpain` and `digitpain0.js` from `disks/`.
             4. Zip the contents so there is a zip file with one directory called `public`,
                and rename it to `DIGITPAIN #.zip`.
+
+
+*Recently Completer*
+
+***Editor***
+- [-] Get socket server running under GitHub codespaces as well.
+  (wss:// is currently unsupported)
+- [X] Get the project working in GitHub codespaces.
 
 🌟 Next In Line 🌟
  ***Transcribe the original Proce55ing typeface***
