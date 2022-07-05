@@ -10,7 +10,7 @@
 
 🌟 Projects In Progress 🌟
 
-***Storage**
+***Storage***
  - [🟢] Write a netlify serverless function and call it from the microphone
         piece... so the file can be uploaded.
  - [] Refer to ***Uploader Server*** below.
