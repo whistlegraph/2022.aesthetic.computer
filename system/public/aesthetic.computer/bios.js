@@ -1052,9 +1052,10 @@ async function boot(
       if (content.pieceCount > 0) {
         let url =
           content.path === content.firstPiece
-            ? ""
+            ? "/"
             : // Set piece to be the last segment of the currentPiece path.
               "/" + content.path.substring(content.path.lastIndexOf("/") + 1);
+
         if (content.params.length > 0) {
           url += ":" + content.params.join(" ");
         }

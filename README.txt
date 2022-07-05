@@ -1,25 +1,29 @@
-        Welcome to
-    AESTHETIC.COMPUTER 🎃
+⚠️ Are you here to contribute? Scroll to the bottom of this file!
 
-⚠️ Are you here to clone & contribute code? Scroll to the bottom of this file!
+  Welcome to...
+  🧩 AESTHETIC.COMPUTER 🧩
 
 🐞 Major Bugs & Regressions
  - [] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
+ - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
 🌟 Projects In Progress 🌟
 
-***Server Re-organization***
- - [] Should the websocket server run as a separate process from the http api? 
-  - Yes.
- - [] Should it run on a separate machine as of now?
-  - No.
- - How to run two server processes from one npm command?
+***Storage**
+ - [🟢] Write a netlify serverless function and call it from the microphone
+        piece... so the file can be uploaded.
+ - [] Refer to ***Uploader Server*** below.
+ - [] Is there a way for a local server to still use codes? How would this be
+      proxied and tested? Maybe with an environment variable and a separate
+      upload server that has no expiration?
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [] Only record frames that are not part of the interface.
    - [🟢] Make a DOM based button.
      - [] Attach events to it... figure out the smartest way to have it connect to `function act`?
+     - [] Should I use a ShadowDOM for this or is it overkill...
+          - https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM
    OR ...
    - [] Dump frames before painting the interface on top... via a pixel buffer
         being sent over the worker.
@@ -68,7 +72,7 @@
      - Idea: Posts are automatically minted to our wallet, but can optionally
              be minted to a poster's wallet if they decide to connect.
    B. Regardless, the file stored at the code will be deleted in 24 hours.
-     - [] Setting expiration policies on DO spaces: https://www.howtogeek.com/devops/how-to-set-an-expiration-policy-on-digitalocean-spaces-buckets
+     - [X] Setting expiration policies on DO spaces: https://www.howtogeek.com/devops/how-to-set-an-expiration-policy-on-digitalocean-spaces-buckets
      - [] Follow along with – https://www.digitalocean.com/community/tutorials/how-to-upload-a-file-to-object-storage-with-node-js
                             - Using multipart-form-data
           Using             - https://www.npmjs.com/package/fastify-multer
@@ -206,6 +210,15 @@
 
 
 *Recently Completer*
+
+***Server Re-organization***
+ - [X] Should the uploader be a serverless function? Yes!
+      (This would prevent the need for a load balancer if file uploading was a bottleneck.)
+      (Would it run locally?)
+ - [X] Set netlify environment variables for the digital ocean space.
+ - [X] How to run two server processes from one npm command?
+ - [X] Should the websocket server run as a separate process from the http api?
+ - [X] Should it run on a separate machine as of now?
 
 ***Editor***
 - [-] Get socket server running under GitHub codespaces as well.

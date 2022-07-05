@@ -324,6 +324,7 @@ async function load(
   // Set the empty path to whatever the "/" route piece was.
   if (path === "") path = ROOT_PIECE;
   if (path === firstPiece && params.length === 0) params = firstParams;
+
   // TODO: In larger multi-disk IPFS exports, a new root path should be defined.
 
   if (debug) console.log("🧩", path, "🌐", host);
@@ -457,7 +458,7 @@ async function load(
       },
     });
     if (firstLoad === false) {
-      // Send a message to the bios to unload this disk if it is not the first disk.
+      // Send a message to the bios to unload the last disk if it is not the first load.
       // This cleans up any bios state that is related to the disk and also
       // takes care of nice transitions between disks of different resolutions.
       send({ type: "disk-unload" });
@@ -843,7 +844,8 @@ function makeFrame({ data: { type, content } }) {
 
           if (data.key === "~") {
             // Load prompt when typing tilde.
-            $api.load("prompt");
+            // TODO: This needs to send a message to change the hashtag.
+            $api.load("aesthetic.computer/disks/prompt");
           }
 
           // [Ctrl + X]
