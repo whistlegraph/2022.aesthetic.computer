@@ -4,6 +4,7 @@
   🧩 AESTHETIC.COMPUTER 🧩
 
 🐞 Major Bugs & Regressions
+ - [🔴] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
@@ -13,6 +14,7 @@
 ***Storage**
  - [🟢] Write a netlify serverless function and call it from the microphone
         piece... so the file can be uploaded.
+        - [] Netlify Serverless Hello World
  - [] Refer to ***Uploader Server*** below.
  - [] Is there a way for a local server to still use codes? How would this be
       proxied and tested? Maybe with an environment variable and a separate

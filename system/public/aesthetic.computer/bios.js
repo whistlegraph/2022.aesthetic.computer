@@ -935,6 +935,14 @@ async function boot(
           download.download = "test.mp4";
           recordingsEl.append(download);
 
+          fetch("/.netlify/functions/upload-background")
+            .then((res) => {
+              console.log(res);
+            })
+            .catch((err) => {
+              console.error(err);
+            });
+
           wrapper.append(recordingsEl);
         }
 
