@@ -5,6 +5,7 @@
   "source": "./public/index.html",
   "scripts": {
     "dev": "BROWSER=none netlify dev",
+    "watch": "netlify watch",
     "codespaces-dev": "cd netlify-codespace; BROWSER=none netlify dev",
     "spaces-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P http://localhost:8000? --silent",
     "local-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P https://localhost:443? --silent",

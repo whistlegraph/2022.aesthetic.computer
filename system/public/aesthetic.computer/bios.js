@@ -509,7 +509,7 @@ async function boot(
     worker = new Worker(url, { type: "module", });
   } catch (e) {
     console.warn("Wrapping the worker in a local URL...", e);
-    const blob = new Blob(["importScripts('" + url.href + "');"], { "type": 'application/javascript' });
+    const blob = new Blob(["import('" + url.href + "');"], { "type": 'application/javascript' });
     const blobUrl = (window.URL || window.webkitURL).createObjectURL(blob);
     worker = new Worker(blobUrl);
   }
