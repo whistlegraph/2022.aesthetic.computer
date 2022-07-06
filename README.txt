@@ -10,8 +10,9 @@
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
 🌟 Projects In Progress 🌟
+- [🟢] Get a prototype of Niki's piece working that she can actually edit as the first user.
 
-***Storage**
+***Storage***
  - [🟢] Write a netlify serverless function and call it from the microphone
         piece... so the file can be uploaded.
         - [] Netlify Serverless Hello World
