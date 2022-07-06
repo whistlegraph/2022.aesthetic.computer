@@ -5,3 +5,8 @@
   command = "npm run spaces-dev-netlify"
   targetPort = 8080
   port = 8000
+[[headers]]
+# Define which paths this specific [[headers]] block will cover.
+for = "/*"
+  [headers.values]
+  Access-Control-Allow-Origin = "*"

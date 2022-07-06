@@ -10,6 +10,7 @@
 
 🌟 Projects In Progress 🌟
 - [🟢] Get a prototype of Niki's piece working that she can actually edit as the first user.
+  - Workers need to be wrapped in this... https://benohead.com/blog/2017/12/06/cross-domain-cross-browser-web-workers/
 
 ***Storage***
  - [🟢] Write a netlify serverless function and call it from the microphone

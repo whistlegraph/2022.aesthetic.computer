@@ -502,9 +502,17 @@ async function boot(
   //  type: "module",
   //});
 
-  const worker = new Worker(new URL("./lib/disk.js", import.meta.url), {
-    type: "module",
-  });
+  let worker;
+  let url = new URL("./lib/disk.js", import.meta.url);
+
+  try {
+    worker = new Worker(url, { type: "module", });
+  } catch (e) {
+    console.warn("Wrapping the worker in a local URL...", e);
+    const blob = new Blob(["importScripts('" + url.href + "');"], { "type": 'application/javascript' });
+    const blobUrl = (window.URL || window.webkitURL).createObjectURL(blob);
+    worker = new Worker(blobUrl);
+  }
 
   const params = path.split(":");
   const program = params[0];
