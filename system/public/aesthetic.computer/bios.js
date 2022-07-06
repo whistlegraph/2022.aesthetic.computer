@@ -514,7 +514,7 @@ async function boot(
     // worker = new Worker(blobUrl);
 
     const worker_url = getWorkerURL( url.href );
-    worker = new Worker( worker_url );
+    worker = new Worker( worker_url, {type: "module"} );
     worker.onmessage = (evt) => console.log( evt.data );
     URL.revokeObjectURL( worker_url );
   }
