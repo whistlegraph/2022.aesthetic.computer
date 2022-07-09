@@ -8,10 +8,17 @@
  - [] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
+ - Note: workers can be wrapped in this... https://benohead.com/blog/2017/12/06/cross-domain-cross-browser-web-workers/
 
 🌟 Projects In Progress 🌟
-- [🟢] Get a prototype of Niki's piece working that she can actually edit as the first user.
-  - Workers need to be wrapped in this... https://benohead.com/blog/2017/12/06/cross-domain-cross-browser-web-workers/
+
+***User Pieces***
+- [] History breaks right now across domains, because some parsing goes through the `prompt`.
+- [] Also, the page can't refresh and the path gets rewritten improperly. 
+  - Just start routing from boot instead of only in prompt?
+  - Does the code need to be duplicated?
+- [X] Get `niki.aesthetic.computer` running.
+- [X] Get a prototype of Niki's piece working that she can actually edit as the first user.
 
 ***Storage***
  - [🟢] Write a netlify serverless function and call it from the microphone

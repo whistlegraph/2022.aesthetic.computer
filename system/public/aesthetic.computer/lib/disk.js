@@ -302,20 +302,27 @@ class Microphone {
 const microphone = new Microphone();
 
 // 2. ✔ Loading the disk.
-let loadHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
+let originalHost;
+let lastHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
 let firstLoad = true;
 let firstPiece, firstParams, firstSearch;
 
+// TODO: Give load function a labeled options parameter.
 async function load(
   path,
-  host = loadHost,
+  host = lastHost,
   search = "",
   params = [],
   fromHistory = false
 ) {
+
+  if (host === "") {
+    host = originalHost;
+  }
+
   loadFailure = undefined;
   host = host.replace(/\/$/, ""); // Remove any trailing slash from host. Note: This fixes a preview bug on teia.art. 2022.04.07.03.00
-  loadHost = host; // Memoize the host.
+  lastHost = host; // Memoize the host.
   pieceHistoryIndex += fromHistory === true ? -1 : 1;
 
   // Kill any existing socket that has remained open from a previous disk.
@@ -329,14 +336,13 @@ async function load(
 
   if (debug) console.log("🧩", path, "🌐", host);
 
-  // Set path to the first loaded disk if empty.
-  if (path.indexOf("/") === -1) path = "aesthetic.computer/disks/" + path;
+  //if (path.indexOf("/") === -1) path = "aesthetic.computer/disks/" + path;
 
   if (path)
     if (debug) {
       console.log("🟡 Development");
     } else {
-      // console.log("🟢 Production");
+      console.log("🟢 Production");
     }
 
   if (loading === false) {
@@ -473,12 +479,14 @@ async function load(
 
 const isWorker = typeof importScripts === "function";
 
+// ***Bootstrap***
 // Start by responding to a load message, then change
 // the message response to makeFrame.
 if (isWorker) {
   onmessage = async function (e) {
     debug = e.data.debug;
     ROOT_PIECE = e.data.rootPiece;
+    originalHost = e.data.host;
     await load(e.data.path, e.data.host, e.data.search, e.data.params);
     onmessage = makeFrame;
     send({ loaded: true });
@@ -487,6 +495,8 @@ if (isWorker) {
   noWorker.onMessage = async (e) => {
     e = { data: e };
     debug = e.data.debug;
+    ROOT_PIECE = e.data.rootPiece;
+    originalHost = e.data.host;
     await load(e.data.path, e.data.host, e.data.search, e.data.params);
     noWorker.onMessage = (d) => makeFrame({ data: d });
     send({ loaded: true });
@@ -678,6 +688,7 @@ function makeFrame({ data: { type, content } }) {
     const params = content.split(":");
     const program = params[0];
     params.shift(); // Strip the program out of params.
+    // TODO: History breaks right now across domains, because some parsing goes through the `prompt`.
     $commonApi.load(program, undefined, undefined, params, true);
     return;
   }
@@ -832,7 +843,7 @@ function makeFrame({ data: { type, content } }) {
           // previously loaded pieces in a session.
           if (
             data.key === "Escape" &&
-            currentPath !== "computer/disks/prompt"
+            currentPath !== "aesthetic.computer/disks/prompt"
           ) {
             if (pieceHistoryIndex > 0) {
               send({ type: "back-to-piece" });
@@ -842,7 +853,7 @@ function makeFrame({ data: { type, content } }) {
             }
           }
 
-          if (data.key === "~") {
+          if (data.key === "~" && currentPath !== "aesthetic.computer/disks/prompt") {
             // Load prompt when typing tilde.
             // TODO: This needs to send a message to change the hashtag.
             $api.load("aesthetic.computer/disks/prompt");

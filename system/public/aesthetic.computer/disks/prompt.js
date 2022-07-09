@@ -152,13 +152,26 @@ function act({ event: e, needsPaint, load }) {
         //
         //}
 
-        // TODO: Give load function a labeled options parameter.
-        load(
-          "aesthetic.computer/disks/" + tokens[0],
-          undefined,
-          "",
-          params.length ? params : undefined
-        );
+        // Load from user path / external server.
+        if (tokens[0].indexOf("~") === 0) {
+          const split = tokens[0].split("/");
+          const user = split[0].slice(1); // Remove the ~
+          const path = split[1]; // Grab the piece name.
+          load(
+            path,
+            user + ".aesthetic.computer",
+            "",
+            params.length ? params : undefined
+          );
+        } else {
+          load(
+            "aesthetic.computer/disks/" + tokens[0],
+            "",
+            "",
+            params.length ? params : undefined
+          );
+        }
+
       }
 
       if (e.key === "Escape") {

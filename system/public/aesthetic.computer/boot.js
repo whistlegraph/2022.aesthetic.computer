@@ -36,7 +36,7 @@ if (window.location.hostname === "aesthetic.computer") {
 const bpm = 120; // Sets the starting bpm.
 
 // If the root starting piece was not defined in the host html file, then it defaults to "prompt" here.
-if (window.acSTARTING_PIECE === undefined) window.acSTARTING_PIECE = "prompt";
+if (window.acSTARTING_PIECE === undefined) window.acSTARTING_PIECE = "aesthetic.computer/disks/prompt";
 
 // Set the default starting piece.
 let piece = window.acSTARTING_PIECE;
