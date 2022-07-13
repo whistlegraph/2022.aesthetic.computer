@@ -1,19 +1,21 @@
 // Plot, 2021.12.05.13.27
 // A tool for editing pixel-perfect vector art / glyphs, and icons.
 
-// TODO
-// * Draw and store all the glyphs for a typeable font.
-//   -- Use this font as a reference: https://github.com/slavfox/Cozette/blob/master/img/characters.png
-
-// -- Add anchor point to be used for the initial pan and also rotation.
-
-// * Add hotkeys / alt etc. for drawing straight lines on one axis, tabbing and
-//   clicking buttons, with global hotkeys for quitting and returning to the prompt.
-
-// *Remarks*
-// This software is written in layers of APIs... what's the layer that comes
-// out of a disk... could I write a scripting language / DSL layer on top here?
-// 2021.12.14.13.08
+// TODO for July, 2022 version...
+// 1. Fix `aesthetic.computer/plot`
+// 2. Allow plot to have a custom grid size both from prompt and in url.
+// 3. Labels for save and load buttons.
+// 4. Make the mouse cursor appear.
+// 5. Make the layout flexible.
+//    - Center the grid.
+// 6. Make an animation preview. 
+// 7. Add exporter for drawings in common format.
+//    - Vector option (.SVG)
+//    - Raster option (.PNG)
+//    - Animation (.GIF or .APNG or .WEBP)
+// TODO next version...
+// 1. Add freehand / drag mode for making larger drawings?
+// 2. Add anchor point to be used for the initial pan and also rotation.
 
 const { min, floor } = Math;
 
