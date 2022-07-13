@@ -12,6 +12,7 @@
 const { entries } = Object;
 const { floor } = Math;
 
+import { loadFromPrompt } from "../lib/parse.js";
 import { font1 } from "./common/fonts.js";
 
 let glyphs = {};
@@ -136,42 +137,8 @@ function act({ event: e, needsPaint, load }) {
       if (e.key === "Backspace") text = text.slice(0, -1);
 
       if (e.key === "Enter") {
-        // TODO: Should I allow named parameters when running disks?
-        //       What about switches?
-
-        // Tokenize text.
-        const tokens = text.split(" ");
-        const params = tokens.slice(1);
-
-        // TODO: Check a whitelist for special aliases, otherwise load
-        //       `tokens[0]` as a disk.
-
-        // TODO: Finish handling disk loads from remote URLs.
-
-        //if (tokens[0] === "wg-player") {
-        //
-        //}
-
-        // Load from user path / external server.
-        if (tokens[0].indexOf("~") === 0) {
-          const split = tokens[0].split("/");
-          const user = split[0].slice(1); // Remove the ~
-          const path = split[1]; // Grab the piece name.
-          load(
-            path,
-            user + ".aesthetic.computer",
-            "",
-            params.length ? params : undefined
-          );
-        } else {
-          load(
-            "aesthetic.computer/disks/" + tokens[0],
-            "",
-            "",
-            params.length ? params : undefined
-          );
-        }
-
+        const parsed = loadFromPrompt(text)
+        load(parsed.path, parsed.host, "", parsed.params);
       }
 
       if (e.key === "Escape") {

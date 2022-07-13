@@ -12,11 +12,16 @@
 
 🌟 Projects In Progress 🌟
 
-***User Pieces***
+***User Pieces (niki.aesthetic.computer)***
 - [] History breaks right now across domains, because some parsing goes through the `prompt`.
+  - [-] Start remote routing from boot instead of only in prompt?
+      - [] Make a `parse.js` library file that can be used in `prompt`, then `boot`, and 
+           it might even be necessary in disk?
+      - [] Copy the code from prompt and replicate it in boot, then
+      - [] follow the logic through to check for inconsistencies.
+        - Remove `search` from `disk.js` load. (Deprecrate reading queryParams
+        at the disk level... they should only be reserved for system settings?)
 - [] Also, the page can't refresh and the path gets rewritten improperly. 
-  - Just start routing from boot instead of only in prompt?
-  - Does the code need to be duplicated?
 - [X] Get `niki.aesthetic.computer` running.
 - [X] Get a prototype of Niki's piece working that she can actually edit as the first user.
 
