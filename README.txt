@@ -1,4 +1,4 @@
-⚠️ Are you here to contribute? Scroll to the bottom of this file!
+️ Are you here to contribute? Scroll to the bottom of this file!
 
   Welcome to...
   🧩 AESTHETIC.COMPUTER 🧩
@@ -11,16 +11,22 @@
  - Note: workers can be wrapped in this... https://benohead.com/blog/2017/12/06/cross-domain-cross-browser-web-workers/
 
 🌟 Projects In Progress 🌟
+- [] Pressing 'Ctrl + `' should open the source code.
+- [] Typing `src` plus the `piece` should jump you to the github source page.
+- [] Try and get fullscreen on iOS / iPadOS again... maybe sideload the app shim?
 
 ***User Pieces (niki.aesthetic.computer)***
+
+
 - [] History breaks right now across domains, because some parsing goes through the `prompt`.
+  - [] Make sure loading using the `tilde` key works across hosts.
   - [-] Start remote routing from boot instead of only in prompt?
-      - [] Make a `parse.js` library file that can be used in `prompt`, then `boot`, and 
-           it might even be necessary in disk?
-      - [] Copy the code from prompt and replicate it in boot, then
-      - [] follow the logic through to check for inconsistencies.
+      - [x] Make a `parse.js` library file that can be used in `prompt`, then `boot`.
+      - [x] Copy the code from prompt and replicate it in boot, then
+      - [x] follow the logic through to check for inconsistencies.
         - Remove `search` from `disk.js` load. (Deprecrate reading queryParams
         at the disk level... they should only be reserved for system settings?)
+        
 - [] Also, the page can't refresh and the path gets rewritten improperly. 
 - [X] Get `niki.aesthetic.computer` running.
 - [X] Get a prototype of Niki's piece working that she can actually edit as the first user.
@@ -157,6 +163,10 @@
       aesthetic.computer/wg_fuzz
       aesthetic.computer/wg-fuzz
       aesthetic.computer/wg~fuzz
+      aesthetic.computer/metronome~80~100
+
+      aesthetic.computer/~niki/plot~40~50
+      aesthetic.computer/~niki/plot~40~50
 
       // Maybe the special characters could be default parameters, or represent
       // types of some kind?
@@ -255,6 +265,7 @@
   - [] Should a new nopaint be built from scratch?
 
  ❤️Side Missions❤️
+  - [] Add `every("1s", () => {})` shortcut to the `sim` api. 
   - [] How to limit the number of Frame's in the start of a disk?
        Perhaps I could have a hidden meta-programming setup line at the top?
   - [] (disk.js:28) Make this a boot choice via the index.html file?

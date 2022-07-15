@@ -8,15 +8,21 @@ import * as UI from "./lib/ui.js";
 import * as Glaze from "./lib/glaze.js";
 import { apiObject, extension } from "./lib/helpers.js";
 import { dist } from "./lib/num.js";
+import { parse, slug } from "./lib/parse.mjs";
 
 const { assign } = Object;
 const { ceil, round, floor, min } = Math;
 
 // 💾 Boot the system and load a disk.
 async function boot(
-  path = "index",
+  path,
+  host,
+  search,
+  params,
+  hash,
+  text,
+
   bpm = 60,
-  host = window.location.host,
   resolution,
   debug
 ) {
@@ -42,7 +48,7 @@ async function boot(
      border-right: 0.75px solid rgb(60, 60, 60);`
   );
 
-  // What words to type in?
+  // Source code URL.
   console.log(
     "%cgithub.com/digitpain/aesthetic.computer",
     `color: rgb(100, 100, 100);
@@ -51,6 +57,9 @@ async function boot(
      border-left: 0.75px solid rgb(60, 60, 60);
      border-right: 0.75px solid rgb(60, 60, 60);`
   );
+
+  // TODO: What words to type in?
+  // console.log();
 
   if (debug) {
     if (window.isSecureContext) {
@@ -493,9 +502,6 @@ async function boot(
   //   // Or... audioContext.resume();
   // }
 
-  // Grab query parameters.
-  const search = new URL(self.location).search;
-
   // Try to load the disk boilerplate as a worker first.
   // Safari and FF support is coming for worker module imports: https://bugs.webkit.org/show_bug.cgi?id=164860
   //const worker = new Worker("./aesthetic.computer/lib/disk.js", {
@@ -506,14 +512,13 @@ async function boot(
     type: "module",
   });
 
-  const params = path.split(":");
-  const program = params[0];
-  params.shift(); // Strip the program out of params.
   const firstMessage = {
-    path: program,
-    params,
+    path,
     host,
     search,
+    params,
+    hash,
+    text,
     debug,
     rootPiece: window.acSTARTING_PIECE,
   };
@@ -1058,17 +1063,13 @@ async function boot(
       // Emit a push state for the old disk if it was not the first. This is so
       // a user can use browser history to switch between disks.
       if (content.pieceCount > 0) {
-        let url =
-          content.path === content.firstPiece
-            ? "/"
-            : // Set piece to be the last segment of the currentPiece path.
-              "/" + content.path.substring(content.path.lastIndexOf("/") + 1);
-
-        if (content.params.length > 0) {
-          url += ":" + content.params.join(" ");
-        }
+        console.log("HISTORY PUSH", content);
         if (content.fromHistory === false) {
-          history.pushState("", document.title, url);
+          history.pushState(
+            "",
+            document.title,
+            content.text
+          );
         }
       }
       currentPiece = content.path;
@@ -1478,9 +1479,7 @@ async function boot(
   window.onpopstate = function (e) {
     send({
       type: "history-load",
-      content:
-        document.location.pathname.substring(1) ||
-        document.location.hash.substring(1),
+      content: parse(slug(document.location.href) || window.acSTARTING_PIECE),
     });
   };
 

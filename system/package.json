@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "BROWSER=none netlify dev",
     "watch": "netlify watch",
-    "codespaces-dev": "cd netlify-codespace; BROWSER=none netlify dev",
+    "test": "NODE_OPTIONS='--experimental-vm-modules --es-module-specifier-resolution=node' jest",
+    "codespaces-dev": "BROWSER=none kill-port 8080 8000; cd netlify-codespace; netlify dev",
     "spaces-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P http://localhost:8000? --silent",
     "local-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P https://localhost:443? --silent",
     "local-dev-ssl": "http-server public -S -C ../ssl-dev/localhost.pem -K ../ssl-dev/localhost-key.pem -p 443 --cors -c-1",
@@ -33,6 +34,8 @@
   },
   "devDependencies": {
     "http-server": "^14.1.1",
+    "jest": "^28.1.3",
+    "kill-port": "^2.0.1",
     "netlify-cli": "^10.7.1",
     "parcel": "^2.5.0",
     "parcel-reporter-static-files-copy": "^1.3.4",

@@ -12,11 +12,11 @@
 const { entries } = Object;
 const { floor } = Math;
 
-import { loadFromPrompt } from "../lib/parse.js";
+import { parse } from "../lib/parse.mjs";
 import { font1 } from "./common/fonts.js";
 
 let glyphs = {};
-let text = "aesthetic.computer";
+let input = "aesthetic.computer";
 
 let blink; // block cursor blink timer
 let flash; // error flash timer
@@ -51,7 +51,7 @@ function boot({
 
   if (pieceCount > 0) {
     canType = true;
-    text = "";
+    input = "";
   }
 }
 
@@ -93,7 +93,7 @@ function paint({ wipe, screen, ink }) {
   const prompt = new Prompt(6, 6);
 
   // Print `text` to the prompt one letter at time.
-  for (const char of text) {
+  for (const char of input) {
     ink(255, 255, 0, 20).box(prompt.pos); // Paint a highlight background.
     // And the letter if it is present.
     const pic = glyphs[char];
@@ -127,22 +127,22 @@ function act({ event: e, needsPaint, load }) {
   if (e.is("keyboard:down")) {
     if (canType === false) {
       canType = true;
-      text = "";
+      input = "";
     }
 
     // Printable keys.
-    else if (e.key.length === 1 && e.ctrl === false) text += e.key;
+    else if (e.key.length === 1 && e.ctrl === false) input += e.key;
     // Other keys.
     else {
-      if (e.key === "Backspace") text = text.slice(0, -1);
+      if (e.key === "Backspace") input = input.slice(0, -1);
 
       if (e.key === "Enter") {
-        const parsed = loadFromPrompt(text)
-        load(parsed.path, parsed.host, "", parsed.params);
+        const {path, host, search, params, hash, text } = parse(input)
+        load(path, host, search, params, hash, text);
       }
 
       if (e.key === "Escape") {
-        text = "";
+        input = "";
       }
     }
 
@@ -151,7 +151,7 @@ function act({ event: e, needsPaint, load }) {
 
   if (e.is("typing-input-ready")) {
     canType = true;
-    text = "";
+    input = "";
     blink.flip(true);
   }
 
@@ -171,7 +171,7 @@ function act({ event: e, needsPaint, load }) {
   if (e.is("load-error")) {
     errorPresent = true;
     showFlash = true;
-    text = "";
+    input = "";
     needsPaint();
   }
 }

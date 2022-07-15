@@ -44,7 +44,7 @@ let paint = defaults.paint;
 let beat = defaults.beat;
 let act = defaults.act;
 
-let currentPath, currentHost, currentSearch, currentParams;
+let currentPath, currentHost, currentSearch, currentParams, currentHash, currentText;
 let loading = false;
 let reframe;
 let screen;
@@ -313,6 +313,8 @@ async function load(
   host = lastHost,
   search = "",
   params = [],
+  hash,
+  text,
   fromHistory = false
 ) {
 
@@ -379,7 +381,8 @@ async function load(
     if (type === "refresh") {
       send({ type: "refresh" }); // Refresh the browser.
     } else {
-      load(currentPath, currentHost, currentSearch, currentParams); // Reload the disk.
+      // Reload the disk.
+      load(currentPath, currentHost, currentSearch, currentParams, currentHash, currentText);
     }
   };
 
@@ -435,6 +438,8 @@ async function load(
     currentHost = host;
     currentSearch = search;
     currentParams = params;
+    currentHash = hash;
+    currentText = text;
 
     // Redefine the default event functions if they exist in the module.
     boot = module.boot || defaults.boot;
@@ -456,9 +461,12 @@ async function load(
       type: "disk-loaded",
       content: {
         path,
+        host,
+        search,
         params,
+        hash,
+        text,
         pieceCount: $commonApi.pieceCount,
-        firstPiece,
         fromHistory,
         // noBeat: beat === defaults.beat,
       },
@@ -487,7 +495,7 @@ if (isWorker) {
     debug = e.data.debug;
     ROOT_PIECE = e.data.rootPiece;
     originalHost = e.data.host;
-    await load(e.data.path, e.data.host, e.data.search, e.data.params);
+    await load(e.data.path, e.data.host, e.data.search, e.data.params, e.data.hash, e.data.text);
     onmessage = makeFrame;
     send({ loaded: true });
   };
@@ -497,7 +505,7 @@ if (isWorker) {
     debug = e.data.debug;
     ROOT_PIECE = e.data.rootPiece;
     originalHost = e.data.host;
-    await load(e.data.path, e.data.host, e.data.search, e.data.params);
+    await load(e.data.path, e.data.host, e.data.search, e.data.params, e.data.hash, e.data.text);
     noWorker.onMessage = (d) => makeFrame({ data: d });
     send({ loaded: true });
   };
@@ -681,15 +689,10 @@ function makeFrame({ data: { type, content } }) {
 
   // 1c. Loading from History
   if (type === "history-load") {
-    // TODO: Inherit search and params when loading from history.
     if (debug)
       console.log("⏳ History:", content, currentSearch, currentParams);
-
-    const params = content.split(":");
-    const program = params[0];
-    params.shift(); // Strip the program out of params.
-    // TODO: History breaks right now across domains, because some parsing goes through the `prompt`.
-    $commonApi.load(program, undefined, undefined, params, true);
+    const { path, host, params, search, hash, text } = content;
+    $commonApi.load(path, host, search, params, hash, text, true);
     return;
   }
 
@@ -856,6 +859,7 @@ function makeFrame({ data: { type, content } }) {
           if (data.key === "~" && currentPath !== "aesthetic.computer/disks/prompt") {
             // Load prompt when typing tilde.
             // TODO: This needs to send a message to change the hashtag.
+            // TODO: Make sure loading works across hosts.
             $api.load("aesthetic.computer/disks/prompt");
           }
 
