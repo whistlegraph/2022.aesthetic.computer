@@ -16,15 +16,14 @@
 - [] Try and get fullscreen on iOS / iPadOS again... maybe sideload the app shim?
 
 ***User Pieces (niki.aesthetic.computer)***
-
-
 - [] History breaks right now across domains, because some parsing goes through the `prompt`.
-  - [] Make sure loading using the `tilde` key works across hosts.
-  - [-] Start remote routing from boot instead of only in prompt?
+  - [🔴] Clean up the use of "aesthetic.computer/disks/prompt" across the whole project.
+  - [x] Make sure loading using the `tilde` key works across hosts.
+  - [x] Start remote routing from boot instead of only in prompt?
       - [x] Make a `parse.js` library file that can be used in `prompt`, then `boot`.
       - [x] Copy the code from prompt and replicate it in boot, then
       - [x] follow the logic through to check for inconsistencies.
-        - Remove `search` from `disk.js` load. (Deprecrate reading queryParams
+      - [x] Remove `search` from `disk.js` load. (Deprecrate reading queryParams
         at the disk level... they should only be reserved for system settings?)
         
 - [] Also, the page can't refresh and the path gets rewritten improperly. 

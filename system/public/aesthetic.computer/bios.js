@@ -15,13 +15,7 @@ const { ceil, round, floor, min } = Math;
 
 // 💾 Boot the system and load a disk.
 async function boot(
-  path,
-  host,
-  search,
-  params,
-  hash,
-  text,
-
+  parsed,
   bpm = 60,
   resolution,
   debug
@@ -513,12 +507,7 @@ async function boot(
   });
 
   const firstMessage = {
-    path,
-    host,
-    search,
-    params,
-    hash,
-    text,
+    parsed,
     debug,
     rootPiece: window.acSTARTING_PIECE,
   };
@@ -1063,7 +1052,6 @@ async function boot(
       // Emit a push state for the old disk if it was not the first. This is so
       // a user can use browser history to switch between disks.
       if (content.pieceCount > 0) {
-        console.log("HISTORY PUSH", content);
         if (content.fromHistory === false) {
           history.pushState(
             "",

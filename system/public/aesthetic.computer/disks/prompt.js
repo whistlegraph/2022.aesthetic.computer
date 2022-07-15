@@ -137,8 +137,7 @@ function act({ event: e, needsPaint, load }) {
       if (e.key === "Backspace") input = input.slice(0, -1);
 
       if (e.key === "Enter") {
-        const {path, host, search, params, hash, text } = parse(input)
-        load(path, host, search, params, hash, text);
+        load(parse(input.replaceAll(" ", "~")));
       }
 
       if (e.key === "Escape") {

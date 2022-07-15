@@ -44,7 +44,12 @@ let paint = defaults.paint;
 let beat = defaults.beat;
 let act = defaults.act;
 
-let currentPath, currentHost, currentSearch, currentParams, currentHash, currentText;
+let currentPath,
+  currentHost,
+  currentSearch,
+  currentParams,
+  currentHash,
+  currentText;
 let loading = false;
 let reframe;
 let screen;
@@ -309,15 +314,9 @@ let firstPiece, firstParams, firstSearch;
 
 // TODO: Give load function a labeled options parameter.
 async function load(
-  path,
-  host = lastHost,
-  search = "",
-  params = [],
-  hash,
-  text,
+  { path, host, search, params, hash, text },
   fromHistory = false
 ) {
-
   if (host === "") {
     host = originalHost;
   }
@@ -382,7 +381,14 @@ async function load(
       send({ type: "refresh" }); // Refresh the browser.
     } else {
       // Reload the disk.
-      load(currentPath, currentHost, currentSearch, currentParams, currentHash, currentText);
+      load({
+        path: currentPath,
+        host: currentHost,
+        search: currentSearch,
+        params: currentParams,
+        hash: currentHash,
+        text: currentText,
+      });
     }
   };
 
@@ -495,7 +501,7 @@ if (isWorker) {
     debug = e.data.debug;
     ROOT_PIECE = e.data.rootPiece;
     originalHost = e.data.host;
-    await load(e.data.path, e.data.host, e.data.search, e.data.params, e.data.hash, e.data.text);
+    await load(e.data.parsed);
     onmessage = makeFrame;
     send({ loaded: true });
   };
@@ -505,7 +511,7 @@ if (isWorker) {
     debug = e.data.debug;
     ROOT_PIECE = e.data.rootPiece;
     originalHost = e.data.host;
-    await load(e.data.path, e.data.host, e.data.search, e.data.params, e.data.hash, e.data.text);
+    await load(e.data.parsed);
     noWorker.onMessage = (d) => makeFrame({ data: d });
     send({ loaded: true });
   };
@@ -689,10 +695,8 @@ function makeFrame({ data: { type, content } }) {
 
   // 1c. Loading from History
   if (type === "history-load") {
-    if (debug)
-      console.log("⏳ History:", content, currentSearch, currentParams);
-    const { path, host, params, search, hash, text } = content;
-    $commonApi.load(path, host, search, params, hash, text, true);
+    if (debug) console.log("⏳ History:", content);
+    $commonApi.load(content, true);
     return;
   }
 
@@ -856,11 +860,19 @@ function makeFrame({ data: { type, content } }) {
             }
           }
 
-          if (data.key === "~" && currentPath !== "aesthetic.computer/disks/prompt") {
-            // Load prompt when typing tilde.
-            // TODO: This needs to send a message to change the hashtag.
-            // TODO: Make sure loading works across hosts.
-            $api.load("aesthetic.computer/disks/prompt");
+          if (
+            data.key === "~" &&
+            currentPath !== "aesthetic.computer/disks/prompt"
+          ) {
+            // Load prompt if the tilde is pressed.
+            $api.load({
+              host: location.hostname, 
+              path: "aesthetic.computer/disks/prompt",
+              params: [],
+              search: "",
+              hash: "",
+              text: "/"
+            });
           }
 
           // [Ctrl + X]

@@ -45,14 +45,14 @@ if (debug)
     parse(slug(window.location.href) || window.acSTARTING_PIECE)
   );
 
-const { path, host, params, search, hash, text } = parse(
+const parsed = parse(
   slug(window.location.href) || window.acSTARTING_PIECE
 );
 
 const bpm = 120; // Set the starting bpm. Is this still necessary?
 
 // TODO: Add params, search, and hash in here. 22.07.15.00.46
-boot(path, host, search, params, hash, text, bpm, undefined, debug);
+boot(parsed, bpm, undefined, debug);
 
 // ***Incoming Message Responder***
 
