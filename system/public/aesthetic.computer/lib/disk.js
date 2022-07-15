@@ -298,6 +298,10 @@ class Microphone {
     return this;
   }
 
+  disconnect() {
+    send({ type: "microphone", content: {detach: true} });
+  }
+
   poll() {
     send({ type: "get-microphone-amplitude" });
     send({ type: "get-microphone-waveform" });

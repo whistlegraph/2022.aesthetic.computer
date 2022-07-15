@@ -335,6 +335,7 @@ async function boot(
     updateSquare,
     updateBubble,
     attachMicrophone,
+    detachMicrophone,
     audioContext,
     audioStreamDest;
 
@@ -424,6 +425,14 @@ async function boot(
 
       // Connect to the speaker if we are monitoring audio.
       if (data?.monitor === true) playerNode.connect(audioContext.destination);
+
+      // Setup microphone detachment function.
+      detachMicrophone = () => {
+        playerNode.disconnect();
+        micNode.disconnect();
+        micStream.getTracks().forEach((t) => t.stop());
+        if (debug) console.log("🎙💀 Microphone:", "Detached");
+      }
     };
 
     // Sound Synthesis Processor
@@ -795,7 +804,10 @@ async function boot(
     }
 
     if (type === "title") {
-      document.title = content; // Change the page title.
+      const title = content + " - aesthetic.computer"
+      // Change the tab and opengraph title.
+      document.title = title;
+      document.querySelector('meta[name="og:title"]').content = title;
       return;
     }
 
@@ -1070,6 +1082,10 @@ async function boot(
     }
 
     if (type === "disk-unload") {
+
+      // Remove any attached microphone.
+      detachMicrophone?.();
+
       // Clear any DOM content that was added by a piece.
       contentFrame?.remove(); // Remove the contentFrame if it exists.
       contentFrame = undefined;
@@ -1358,8 +1374,12 @@ async function boot(
   }
 
   // Connects the Microphone to the current audioContext.
-  function receivedMicrophone(data) {
-    attachMicrophone?.(data);
+  function receivedMicrophone(data = {}) {
+    if (data.detach) {
+      detachMicrophone?.();
+    } else {
+      attachMicrophone?.(data);
+    }
   }
 
   // Takes a request for a video and then either uses a media query (for a camera)

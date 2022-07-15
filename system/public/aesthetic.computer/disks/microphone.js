@@ -11,7 +11,7 @@ let mic,
   rec = false;
 
 function boot({ title, ui, screen, cursor, content }) {
-  title("Microphone");
+  title("Microphone"); // TODO: Overrides the default title change.
   // TODO: Read the top two lines of a piece for page metadata!
   // description("Blah blah...");
   // cursor("native");

@@ -4,31 +4,38 @@
   🧩 AESTHETIC.COMPUTER 🧩
 
 🐞 Major Bugs & Regressions
- - [🔴] Kill any microphone (or video) connection after leaving a piece it's connected to.
+ - [🔴] Clean up the use of "aesthetic.computer/disks/" across the whole project.
+ - [] Why are the disks located there in the first place?
  - [] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
+ - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
  - Note: workers can be wrapped in this... https://benohead.com/blog/2017/12/06/cross-domain-cross-browser-web-workers/
 
 🌟 Projects In Progress 🌟
-- [] Pressing 'Ctrl + `' should open the source code.
-- [] Typing `src` plus the `piece` should jump you to the github source page.
-- [] Try and get fullscreen on iOS / iPadOS again... maybe sideload the app shim?
 
-***User Pieces (niki.aesthetic.computer)***
-- [] History breaks right now across domains, because some parsing goes through the `prompt`.
-  - [🔴] Clean up the use of "aesthetic.computer/disks/prompt" across the whole project.
-  - [x] Make sure loading using the `tilde` key works across hosts.
-  - [x] Start remote routing from boot instead of only in prompt?
-      - [x] Make a `parse.js` library file that can be used in `prompt`, then `boot`.
-      - [x] Copy the code from prompt and replicate it in boot, then
-      - [x] follow the logic through to check for inconsistencies.
-      - [x] Remove `search` from `disk.js` load. (Deprecrate reading queryParams
-        at the disk level... they should only be reserved for system settings?)
-        
-- [] Also, the page can't refresh and the path gets rewritten improperly. 
-- [X] Get `niki.aesthetic.computer` running.
-- [X] Get a prototype of Niki's piece working that she can actually edit as the first user.
+**Little Things***
+- [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
+- [] Typing `src` plus the `piece` should jump you to the github source page.
+- [] Make a VSCode extension that opens an official aesthetic.computer pane?
+
+***Routing & Twitter Cards***
+ - [] Figure out how to get open-graph info and twitter cards working for all of a.c?
+     - [] Use netlify's pre-rendering and (it's already turned on... and change the og:title)
+     - [] How should the og:images be made? Perhaps a special tool is needed or screenshots
+          can be taken automatically?
+     - [🟡] Add meta-tags and title etc. set by JavaScript in the metatags.
+       - [] Use the info at the top of the piece files to preload / cache any data
+            (which will keep the yellow spinner running)
+     - [🔴] Test Netlify pre-rendering to see if it functions.
+     - [] Add some server-side rendering (via a serverless function?) for different
+          start disks to pick up the urls and parse them in `bios.js`?
+     - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
+       - Validator: https://cards-dev.twitter.com/validator
+       - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
+     - [X] Enable Netlify pre-rendering.
+ - [X] Implement path based routing for pieces via netlify and on a local dev server.
+
 
 ***Storage***
  - [🟢] Write a netlify serverless function and call it from the microphone
@@ -126,20 +133,6 @@
          go to the website / open another window and mint from the code
          or download it?
 
-***Routing & Twitter Cards***
- - [] Figure out how to get interactive twitter cards / open-graph info working for all of a.c?
-     - [🟡] Add meta-tags and title etc. set by JavaScript in the metatags.
-       - [] Use the info at the top of the piece files to preload / cache any data
-            (which will keep the yellow spinner running)
-     - [🔴] Test Netlify pre-rendering to see if it functions.
-     - [] Add some server-side rendering (via a serverless function?) for different
-          start disks to pick up the urls and parse them in `bios.js`?
-     - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
-       - Validator: https://cards-dev.twitter.com/validator
-       - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
-     - [X] Enable Netlify pre-rendering.
- - [X] Implement path based routing for pieces via netlify and on a local dev server.
-
 ***Basic Server Work / Rooms / Synchronized Metronome***
   - [] How to get metronomes syncing across a network?
        aesthetic.computer/metronome.180.red
@@ -233,23 +226,6 @@
             4. Zip the contents so there is a zip file with one directory called `public`,
                and rename it to `DIGITPAIN #.zip`.
 
-
-*Recently Completer*
-
-***Server Re-organization***
- - [X] Should the uploader be a serverless function? Yes!
-      (This would prevent the need for a load balancer if file uploading was a bottleneck.)
-      (Would it run locally?)
- - [X] Set netlify environment variables for the digital ocean space.
- - [X] How to run two server processes from one npm command?
- - [X] Should the websocket server run as a separate process from the http api?
- - [X] Should it run on a separate machine as of now?
-
-***Editor***
-- [-] Get socket server running under GitHub codespaces as well.
-  (wss:// is currently unsupported)
-- [X] Get the project working in GitHub codespaces.
-
 🌟 Next In Line 🌟
  ***Transcribe the original Proce55ing typeface***
 
@@ -264,6 +240,7 @@
   - [] Should a new nopaint be built from scratch?
 
  ❤️Side Missions❤️
+  - [] Try and get fullscreen on iOS / iPadOS again... maybe sideload the app shim?
   - [] Add `every("1s", () => {})` shortcut to the `sim` api. 
   - [] How to limit the number of Frame's in the start of a disk?
        Perhaps I could have a hidden meta-programming setup line at the top?
@@ -280,161 +257,164 @@
        See also: https://web.dev/file-system-access
        And: https://googlechromelabs.github.io/text-editor
 
-⏳ Later On ⏳
-  |
-  |
-  (Careful, it's messy!) 🥟
+*Recently Completed*
 
-There seems to be a bug in Safari on my MacBook (while wearing AirPods) that slows
-down the audio?
+***User Pieces (niki.aesthetic.computer)***
+- [x] History breaks right now across domains, because some parsing goes through the `prompt`.
+  - [x] Make sure loading using the `tilde` key works across hosts.
+  - [x] Start remote routing from boot instead of only in prompt?
+      - [x] Make a `parse.js` library file that can be used in `prompt`, then `boot`.
+      - [x] Copy the code from prompt and replicate it in boot, then
+      - [x] follow the logic through to check for inconsistencies.
+      - [x] Remove `search` from `disk.js` load. (Deprecrate reading queryParams
+        at the disk level... they should only be reserved for system settings?)
+- [x] Also, the page can't refresh and the path gets rewritten improperly. 
+- [x] Get `niki.aesthetic.computer` running.
+- [x] Get a prototype of Niki's piece working that she can actually edit as the first user.
 
-Surface with simulated chalk that can have multiple users, sound synthesis,
-the ability to clear (slide up / down / left / right), record and playback.
+***Server Re-organization***
+ - [x] Should the uploader be a serverless function? Yes!
+      (This would prevent the need for a load balancer if file uploading was a bottleneck.)
+      (Would it run locally?)
+ - [x] Set netlify environment variables for the digital ocean space.
+ - [x] How to run two server processes from one npm command?
+ - [x] Should the websocket server run as a separate process from the http api?
+ - [x] Should it run on a separate machine as of now?
 
-UI - Make system UI icons resize along with the main screen... or hide them during a resize.
-- (This is kinda ugly rn.)
+***Editor***
+- [-] Get socket server running under GitHub codespaces as well.
+  (wss:// is currently unsupported)
+- [x] Get the project working in GitHub codespaces.
 
-function act({ event: e }) { // Remove drawing api.
 
-resize(64, 64); // Check if resizing to the same resolution just cancels it out silently.
+⏳ Investigate ⏳
 
-Natural window zooming no longer works with the high resolution canvas buffer...
-(Should I just implement / hijack and zoom on my own?)
+* Bugs / Improvements
 
-Stop sending duplicate event data for "draw" and "touch" in `pen`.
-  - e.is("draw") && e.is("touch") should not send duplicate event {x, y} data
+  Stop sending duplicate event data for "draw" and "touch" in `pen`.
+    - e.is("draw") && e.is("touch") should not send duplicate event {x, y} data
+    
+  Explore: removing: send({ type: "update", content: { didntRender: true, loading } });
+  From the bottom of `disk.js`.
 
-Explore: removing: send({ type: "update", content: { didntRender: true, loading } });
-From the bottom of `disk.js`.
+  Add blockchain integration for identity: https://docs.moralis.io/introduction/readme
+  
+  Re-work the depth buffer (in the rasterizer) before making a simple 3D environment?
 
-- Find and fix out of memory error.
-  - bios.js:307 Uncaught DOMException: Failed to execute 'postMessage' on 'Worker': Data cannot be cloned, out of memory.
-        at Worker.postMessage (<anonymous>)
-        at send (https://192.168.1.3/computer/bios.js:307:28)
-        at Object.requestFrame (https://192.168.1.3/computer/bios.js:470:5)
-        at https://192.168.1.3/computer/bios.js:416:40
-        at loop (https://192.168.1.3/computer/lib/loop.js:43:3)
-  - Could not reproduce...
-  * Try and reproduce?
+  Pass 'diskTime' global into the api.
 
-- Rewrite my old Python `Diary` program.
-  - Mint diary entries.
+  Add $api.sound.beatCount counter to `beat`.
 
-- Add blockchain integration for identity: https://docs.moralis.io/introduction/readme
+  Add scriptProcessorNode fallback so audio can run within insecure contexts. (FigJam)
 
-- Add loading spinner that works outside of debug mode.
-  - Make an arc / circle function and draw a pie spinner.
+  Stop tracks in all mediaStreams: https://stackoverflow.com/a/12436772
+  (Video and Microphone)
 
-Put this in a budget / progress bar system, related to the current refresh rate.
-  - via `bios.js`
+  Refactor (screen.width -> screen.w & screen.height -> screen.h) across the board?
+    - To be more consistent with `graph.box`.
 
-Re-work the depth buffer before making a simple 3D environment.
 
-- Improve documentation.
-  - In console when the whole thing opens.
-  - Have a global keyboard shortcut to spit documentation to console... for each
-    function!
-  - Get jsDocs working: https://jsdoc.app/about-configuring-jsdoc.html
+* Ideas
 
-Make a camera-based chalk drawing pad tool.
-  - Use a naive approach similar to my old software from the Oberlin lecture.
-  - Also research ML based object tracking with latency.
+  Sidelight
+    - A light you can set the color off.
+    - Make it flicker.
+    - Have presets.
+    - Very useful for making videos with an extra device!
 
-Add tool for drawing on lucia's face during our dates.
+  Generative tone matrix.
+    - Make microtonal grids of different sizes that can be easily played on
+      any device. Use options to specify or control the parameters of the
+      instrument.
+    - Sliding your finger across notes is different from tapping.
+    - It should be easy to record a video and/or audio.
 
-Make Shrub.
+  Rewrite my old Python `Diary` program.
+    - Mint diary entries.
 
-Add "load URL" command to the prompt so any disk can be loaded from any URL.
-    Then disk development can begin. (Once prompt actually generates docs.)
-        - Would the best way to produce a scripting language be by making a fully
-          curry-able system or some domain specific languages using `` then
-          combining them?
+  Remake Shrub
+
+  Improve documentation.
+    - In console when the whole thing opens.
+    - Have a global keyboard shortcut to spit documentation to console... for each
+      function!
+    - Get jsDocs working: https://jsdoc.app/about-configuring-jsdoc.html
+
+  Make Shrub.
+
+  Development Improvements
+    Would the best way to produce a scripting language be by making a fully
+    curry-able system or some domain specific languages using `` then
+    combining them?
+    -- See here for a notation example of inline s-expressions: https://hag.codes
+
     Could an editing session or new disk be started from the prompt? Maybe it
     could load a GitHub codespace?
+
     - How to make use of xterm.js? Could it be used for this project or not...
 
-Implement drawing / gesture based disk launchers from the prompt.
+  Implement drawing / gesture based disk launchers from the prompt.
 
-Take over right click so no context menu shows up.
+  Take over right click so no context menu shows up.
 
-Pass 'diskTime' global into the api.
+  Ink types? ... can they be procedural using a buffer?
 
-Add scriptProcessorNode fallback so audio can run within insecure contexts. (FigJam)
+  What would a build script for releasing a single disk or
+  stack of disks look like?
 
-Stop tracks in all mediaStreams: https://stackoverflow.com/a/12436772
-(Video and Microphone)
+    1. Make a new directory D for the build.
+    2. Copy a subset of /disks/public to D/disks
+    3. Copy index.html, style.css, boot-rolled.js and /computer to D.
+    4. Modify boot-rolled.js to start loading from the first listed disk.
+    5. Generate metadata.json for the work.
+    6. Zip and upload to fxHash or put whole directory into Pinata.
+    7. Test to make sure everything works.
+    8. Mint on a contract (or Cancel and remove files from IPFS).
 
-Add recording: https://stackoverflow.com/questions/19235286/convert-html5-canvas-sequence-to-a-video-file
+  What would a full system / suite release look like?
 
-Add pixels via: https://codepen.io/oceangermanique/pen/LqaPgO.
+    Using the build script with a set of chosen disks where the main
+    disk is a shell interface.
 
-Adjust pixel scaling / `frame` algorithm so that pixels are always the same size
-at different scale levels.
+    Document the API by generating the commands inside a disk and print
+    them to the console using keyboard shortcuts.
 
-Add $api.sound.beatCount counter to `beat`.
+    - [] Generate full API docs in the prompt disk.
 
-Refactor (screen.width -> screen.w & screen.height -> screen.h) across the board?
-  - To be more consistent with `graph.box`.
+  Make my first generative disk / piece and mint it.
+    - Test it in Chrome / Safari / and Firefox.
+    - In larger multi-disk IPFS exports, a new root path must be defined other
+      than `prompt`. See disk.js `load` function.
 
-📩 Future (Outdated)
+  Make a quick fullscreen button (make a new keyboard input module).
 
-What would a build script for releasing a single disk or
-stack of disks look like?
+  Fix Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
 
-  1. Make a new directory D for the build.
-  2. Copy a subset of /disks/public to D/disks
-  3. Copy index.html, style.css, boot-rolled.js and /computer to D.
-  4. Modify boot-rolled.js to start loading from the first listed disk.
-  5. Generate metadata.json for the work.
-  6. Zip and upload to fxHash or put whole directory into Pinata.
-  7. Test to make sure everything works.
-  8. Mint on a contract (or Cancel and remove files from IPFS).
+  Add a new deployment scheme that actually allows my websocket server to
+  function... this might mean leaving behind Vercel or configuring it
+  for different directories in my repository, running separate server code
+  for sockets.
 
-What would a full system / suite release look like?
+  Add syntax notification of some kind for disk files, using a comment at
+  the top. This would eventually allow me to completely
+  change from JavaScript.
 
-1. Using the build script with a set of chosen disks where the main
-  disk is a shell interface.
+  Add stochastic syntax / DSL for basic drawing?
+  Example: wipe.ink.line.line.line.ink("red").box;
 
-TODO: Document the API by generating the commands inside a disk and print
-      them to the console using keyboard shortcuts.
+  What cryptocurrency / web3.js lib would I hook an editor up to
+  for minting, uploading edition data, etc?
 
-      - Generate full API docs in the prompt disk.
+  Make a video-recording app that generates 3 letter codes? - to augment
+  my hand-written notes and pages.
 
-TODO: Make my first generative disk / piece and mint it.
-      - Test it in Chrome / Safari / and Firefox.
-      - In larger multi-disk IPFS exports, a new root path must be defined other
-        than `prompt`. See disk.js `load` function.
+  Add ability to define the logical / simulation framerate.
 
-TODO: Make a quick fullscreen button (make a new keyboard input module).
+  Give myself the ability to automate testing of system using "robot".
 
-TODO: Fix Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
+  Write a simple note taking program with saving and loading of drawings
+  and also recording and playback?
 
-TODO: Add a new deployment scheme that actually allows my websocket server to
-      function... this might mean leaving behind Vercel or configuring it
-      for different directories in my repository, running separate server code
-      for sockets.
-
-TODO: Add syntax notification of some kind for disk files, using a comment at
-      the top. This would eventually allow me to completely
-      change from JavaScript.
-
-TODO: Add stochastic syntax / DSL for basic drawing?
-      Example: wipe.ink.line.line.line.ink("red").box;
-
-TODO: What cryptocurrency / web3.js lib would I hook an editor up to
-      for minting, uploading edition data, etc?
-
-TODO: Make a video-recording app that generates 3 letter codes? - to augment
-      my hand-written notes and pages.
-
-TODO: Add ability to define the logical / simulation framerate.
-
-TODO: Give myself the ability to automate testing of system using "robot".
-
-TODO: Write a simple note taking program with saving and loading of drawings
- and also recording and playback?
-
-TODO: Ink types? ... can they be procedural using a buffer?
 
 🎃 SETUP 💾
 

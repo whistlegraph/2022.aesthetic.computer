@@ -41,7 +41,7 @@ class Microphone extends AudioWorkletProcessor {
   process(inputs, outputs) {
     let amp = 0;
     let waveform = [];
-    const micChannel = inputs[0][0];
+    const micChannel = inputs[0][0] || [];
     for (let s = 0; s < micChannel.length; s += 1) {
       outputs[0][0][s] = micChannel[s];
       outputs[0][1][s] = micChannel[s];
