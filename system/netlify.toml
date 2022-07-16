@@ -1,5 +1,6 @@
 [build]
   publish = "public"
+  command = "npm rebuild"
 [dev]
   framework = "#custom"
   command = "npm run spaces-dev-netlify"
