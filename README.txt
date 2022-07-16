@@ -7,12 +7,17 @@
 
 🐞 Major Bugs & Regressions
  - [🍎] TODO: How should I generate favicons for each page or treat favicons in general?
+ - [] Refactor `wg` to make better use of thumbnails... what should the new structure be?
+   - [] How to have a default or custom thumbnail... even though things are randomly routed?
  - [🔴] Clean up the use of "aesthetic.computer/disks/" across the whole project.
   - [] Why are the disks located there in the first place?
  - [] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
+
+***2D Drawing Primitives for Niki***
+ - [] line from point... at angle with distance
 
 ***Storage***
  - [🟢] Write a netlify serverless function and call it from the microphone
@@ -26,6 +31,18 @@
 ***View-Source***
 - [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
 - [] Typing `src` plus the `piece` should jump you to the github source page and these should also be url addressable.
+
+***Readme***
+- [] Directly load the GitHub readme in a scrollable content window.
+
+***Notion***
+- [] Make `manual` and `hq` load the notion (separate places) in a new tab.
+- [] Should the manual be a super.so site using one of the chosen typefaces?
+
+***Prompt Start**
+- [] Make the prompt start message easily editable by Niki.
+  What would it mean for this message to use the ***Upload Server*** and merit
+  a text editor.
 
 ***Bleep***
 - [] Make a basic bleep box that makes a tone when you tap on it.
@@ -64,18 +81,6 @@
       - [X] Throw up the html if the audio engine is off and the beat function
             has not been exported.
       - [X] Add all the new Typefaces to CSS. (Berkeley Mono Variable, and Proce55ing)
-
-***Readme***
-- [] Directly load the GitHub readme in a scrollable content window.
-
-***Notion***
-- [] Make `manual` and `hq` load the notion (separate places) in a new tab.
-- [] Should the manual be a super.so site using one of the chosen typefaces?
-
-***Prompt Start**
-- [] Make the prompt start message easily editable by Niki.
-  What would it mean for this message to use the ***Upload Server*** and merit
-  a text editor.
 
  ***Upload Server***
  [] 1. Show the media (video) in a div overlay with a "Retry" or "Done" button.
