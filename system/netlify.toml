@@ -2,12 +2,9 @@
   publish = "public"
 [dev]
   framework = "#custom"
-  command = "npm run local-dev-netlify"
+  command = "npm run spaces-dev-netlify"
   targetPort = 8080
-  port = 443
-[dev.https]
-  certFile = "../ssl-dev/localhost.pem"
-  keyFile = "../ssl-dev/localhost-key.pem"
+  port = 8000
 [[headers]]
 # Define which paths this specific [[headers]] block will cover.
 for = "/*"

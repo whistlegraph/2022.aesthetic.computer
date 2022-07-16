@@ -14,12 +14,7 @@ const { assign } = Object;
 const { ceil, round, floor, min } = Math;
 
 // 💾 Boot the system and load a disk.
-async function boot(
-  parsed,
-  bpm = 60,
-  resolution,
-  debug
-) {
+async function boot(parsed, bpm = 60, resolution, debug) {
   // Title
   console.log(
     "%caesthetic.computer",
@@ -393,8 +388,6 @@ async function boot(
         }
       );
 
-      //console.log(playerNode);
-
       micNode.connect(playerNode);
 
       // Receive messages from the microphone processor thread.
@@ -421,7 +414,6 @@ async function boot(
 
       // Connect mic to the mediaStream.
       playerNode.connect(audioStreamDest);
-      //playerNode.connect(audioContext.destination);
 
       // Connect to the speaker if we are monitoring audio.
       if (data?.monitor === true) playerNode.connect(audioContext.destination);
@@ -432,7 +424,7 @@ async function boot(
         micNode.disconnect();
         micStream.getTracks().forEach((t) => t.stop());
         if (debug) console.log("🎙💀 Microphone:", "Detached");
-      }
+      };
     };
 
     // Sound Synthesis Processor
@@ -803,11 +795,35 @@ async function boot(
       window.acCONTENT_EVENTS = []; // And clear all events from the list.
     }
 
+    // TODO: Is this obsolete now?
     if (type === "title") {
-      const title = content + " - aesthetic.computer"
+      const title = content + " - aesthetic.computer";
       // Change the tab and opengraph title.
       document.title = title;
       document.querySelector('meta[name="og:title"]').content = title;
+      return;
+    }
+
+    if (type === "meta") {
+      if (content.title) {
+        document.title = content.title;
+        document.querySelector('meta[name="og:title"]').content = content.title;
+      }
+      if (content.desc) {
+        document.querySelector('meta[name="og:description"]').content =
+          content.desc;
+      }
+      if (content.img?.og) {
+        document.querySelector('meta[name="og:image"]').content =
+          content.img.og;
+      }
+      if (content.img?.twitter) {
+        document.querySelector('meta[name="twitter:image"]').content =
+          content.img.twitter;
+      }
+      if (content.url) {
+        document.querySelector('meta[name="twitter:player"').content = content.url;
+      }
       return;
     }
 
@@ -1068,7 +1084,7 @@ async function boot(
           history.pushState(
             "",
             document.title,
-            content.text
+            content.text === "prompt" ? "" : content.text // Replace "prompt" with "/".
           );
         }
       }
@@ -1082,7 +1098,6 @@ async function boot(
     }
 
     if (type === "disk-unload") {
-
       // Remove any attached microphone.
       detachMicrophone?.();
 

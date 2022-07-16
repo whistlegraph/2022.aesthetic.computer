@@ -299,7 +299,7 @@ class Microphone {
   }
 
   disconnect() {
-    send({ type: "microphone", content: {detach: true} });
+    send({ type: "microphone", content: { detach: true } });
   }
 
   poll() {
@@ -366,6 +366,7 @@ async function load(
 
   if (debug) console.log("🕸", fullUrl);
 
+  // TODO: What happens if source is undefined?
   // const moduleLoadTime = performance.now();
   const module = await import(fullUrl).catch((err) => {
     loading = false;
@@ -378,6 +379,38 @@ async function load(
     loading = false;
     return;
   }
+
+  // This would also get the source code, in case meta-programming is needed.
+  // const source = await (await fetch(fullUrl)).text();
+
+  // 🔥
+  // TODO: Should metadata fields be held until after boot runs so that
+  //       they can only be set once on the DOM? 22.07.16.18.42
+
+  // Set default metadata fields for SEO and sharing, (requires serverside prerendering).
+  {
+    let title = text + " - aesthetic.computer";
+    if (text === "prompt" || text === "/") title = "aesthetic.computer";
+    const desc = "A valid aesthetic.computer command.";
+    const img = "https://aesthetic/profile.jpg";
+    send({
+      type: "meta",
+      content: {
+        title,
+        desc,
+        img: {
+          og: "https://aesthetic.computer/thumbnail/1200x630/" + text,
+          twitter: "https://aesthetic.computer/thumbnail/800x800/" + text,
+        },
+        url: "https://aesthetic.computer/" + text,
+      },
+    });
+  }
+
+  // Add meta to the common api so the data can be overridden.
+  $commonApi.meta = (data) => {
+    send({ type: "meta", content: data }); // Change the page title.
+  };
 
   // Add reload to the common api.
   $commonApi.reload = (type) => {
@@ -394,11 +427,6 @@ async function load(
         text: currentText,
       });
     }
-  };
-
-  // Add title to the common api.
-  $commonApi.title = (title) => {
-    send({ type: "title", content: title }); // Change the page title.
   };
 
   // Add host to the networking api.
@@ -870,12 +898,12 @@ function makeFrame({ data: { type, content } }) {
           ) {
             // Load prompt if the tilde is pressed.
             $api.load({
-              host: location.hostname, 
+              host: location.hostname,
               path: "aesthetic.computer/disks/prompt",
               params: [],
               search: "",
               hash: "",
-              text: "/"
+              text: "/",
             });
           }
 

@@ -7,8 +7,8 @@
     "dev": "BROWSER=none netlify dev",
     "watch": "netlify watch",
     "test": "NODE_OPTIONS='--experimental-vm-modules --es-module-specifier-resolution=node' jest",
-    "codespaces-dev": "BROWSER=none kill-port 8080 8000; cd netlify-codespace; netlify dev",
-    "spaces-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P http://localhost:8000? --silent",
+    "codespaces-dev": "kill-port 8080 8000; BROWSER=none netlify dev",
+    "spaces-dev-netlify": "http-server public -a localhost -p 8080 --cors -c60 -i --P http://localhost:8000? --silent",
     "local-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P https://localhost:443? --silent",
     "local-dev-ssl": "http-server public -S -C ../ssl-dev/localhost.pem -K ../ssl-dev/localhost-key.pem -p 443 --cors -c-1",
     "parcel-dev": "parcel --cert ../ssl-dev/localhost.pem --key ../ssl-dev/localhost-key.pem -p 443",
@@ -33,6 +33,8 @@
     "gl-matrix": "^3.4.3"
   },
   "devDependencies": {
+    "@netlify/functions": "^1.0.0",
+    "chrome-aws-lambda": "^10.1.0",
     "http-server": "^14.1.1",
     "jest": "^28.1.3",
     "kill-port": "^2.0.1",
@@ -40,6 +42,7 @@
     "parcel": "^2.5.0",
     "parcel-reporter-static-files-copy": "^1.3.4",
     "prettier": "^2.4.1",
+    "puppeteer-core": "^10.4.0",
     "typescript": "^4.5.4"
   }
 }

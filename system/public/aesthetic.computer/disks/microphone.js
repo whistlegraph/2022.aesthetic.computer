@@ -1,5 +1,6 @@
-// Microphone, 2022.1.11.0.26
-// A simple audio + video feedback monitor test.
+//^ Microphone, 2022.1.11.0.26
+//^ A simple audio + video feedback monitor test.
+//^ https://digitpain.com/profile.jpg
 
 // Note: Multiple clips can be string together with keyboard shortcuts.
 //       How can I use this to do cut or continuous recording?
@@ -10,8 +11,8 @@ let mic,
   interfaceDisabled = true,
   rec = false;
 
-function boot({ title, ui, screen, cursor, content }) {
-  title("Microphone"); // TODO: Overrides the default title change.
+function boot({ meta, ui, screen, cursor, content }) {
+  meta({desc: "A simple microphone recorder test."}); // TODO: Overrides the default title change.
   // TODO: Read the top two lines of a piece for page metadata!
   // description("Blah blah...");
   // cursor("native");

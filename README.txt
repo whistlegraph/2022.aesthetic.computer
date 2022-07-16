@@ -3,39 +3,16 @@
   Welcome to...
   🧩 AESTHETIC.COMPUTER 🧩
 
+🌟 Projects In Progress 🌟
+
 🐞 Major Bugs & Regressions
+ - [🍎] TODO: How should I generate favicons for each page or treat favicons in general?
  - [🔴] Clean up the use of "aesthetic.computer/disks/" across the whole project.
- - [] Why are the disks located there in the first place?
+  - [] Why are the disks located there in the first place?
  - [] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
- - Note: workers can be wrapped in this... https://benohead.com/blog/2017/12/06/cross-domain-cross-browser-web-workers/
-
-🌟 Projects In Progress 🌟
-
-**Little Things***
-- [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
-- [] Typing `src` plus the `piece` should jump you to the github source page.
-- [] Make a VSCode extension that opens an official aesthetic.computer pane?
-
-***Routing & Twitter Cards***
- - [] Figure out how to get open-graph info and twitter cards working for all of a.c?
-     - [] Use netlify's pre-rendering and (it's already turned on... and change the og:title)
-     - [] How should the og:images be made? Perhaps a special tool is needed or screenshots
-          can be taken automatically?
-     - [🟡] Add meta-tags and title etc. set by JavaScript in the metatags.
-       - [] Use the info at the top of the piece files to preload / cache any data
-            (which will keep the yellow spinner running)
-     - [🔴] Test Netlify pre-rendering to see if it functions.
-     - [] Add some server-side rendering (via a serverless function?) for different
-          start disks to pick up the urls and parse them in `bios.js`?
-     - [] https://explorers.netlify.com/learn/up-and-running-with-serverless-functions/introduction-with-serverless-functions
-       - Validator: https://cards-dev.twitter.com/validator
-       - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
-     - [X] Enable Netlify pre-rendering.
- - [X] Implement path based routing for pieces via netlify and on a local dev server.
-
 
 ***Storage***
  - [🟢] Write a netlify serverless function and call it from the microphone
@@ -45,6 +22,19 @@
  - [] Is there a way for a local server to still use codes? How would this be
       proxied and tested? Maybe with an environment variable and a separate
       upload server that has no expiration?
+
+***View-Source***
+- [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
+- [] Typing `src` plus the `piece` should jump you to the github source page and these should also be url addressable.
+
+***Bleep***
+- [] Make a basic bleep box that makes a tone when you tap on it.
+- [] Support multi-touch on bleep.
+- [] Support different wave types.
+
+***Cursors***
+- [] Replace Canvas 2D cursors with SVGs (or DIVs?).
+- [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [] Only record frames that are not part of the interface.
@@ -256,8 +246,22 @@
        TODO: Program, or produce media to store with GIT-LFS.
        See also: https://web.dev/file-system-access
        And: https://googlechromelabs.github.io/text-editor
+  - [] Make a VSCode extension that opens an official aesthetic.computer pane?
+
 
 *Recently Completed*
+
+***Routing & Twitter Cards***
+ - [X] Figure out how to get open-graph info and twitter cards working for all of a.c?
+      - [X] How should the og:images be made? Perhaps a special tool is needed or screenshots
+           can be taken automatically?
+      - [x] Set defaults if the info isn't there...
+- [x] Test Netlify pre-rendering to see if it functions.
+- [x] Use netlify's pre-rendering and (it's already turned on... and change the og:title)
+- [X] Enable Netlify pre-rendering.
+       - Validator: https://cards-dev.twitter.com/validator
+       - Prototype: https://glitch.com/edit/#!/pepper-efficacious-yellowhorn?path=index.html
+ - [X] Implement path based routing for pieces via netlify and on a local dev server.
 
 ***User Pieces (niki.aesthetic.computer)***
 - [x] History breaks right now across domains, because some parsing goes through the `prompt`.
@@ -312,6 +316,8 @@
 
   Refactor (screen.width -> screen.w & screen.height -> screen.h) across the board?
     - To be more consistent with `graph.box`.
+
+  Workers can be wrapped in this... https://benohead.com/blog/2017/12/06/cross-domain-cross-browser-web-workers/
 
 
 * Ideas
@@ -429,4 +435,4 @@ Make sure `git` and `git-lfs` is installed, (you can do that through `homebrew`)
   2. `cd` into `system` and run `npm install` and `npm run dev` to start the web server. (required)
 
 📖 This project originally began as two separate repositories with their own
-commit history: `digitpain0/system` and `digitpain0/disks`.
+commit history: `digitpain/system` and `digitpain/disks`.

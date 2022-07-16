@@ -1,4 +1,3 @@
-// Whistlegraph Index 😮‍💨 Created on: 2022.04.19, Release 1: 2022.05.07.02.24
 
 // 📖 Parameter 1: imab, grow, idni, l8ly, lonr, w0w, ppl, slink, puzz, wiyh
 
@@ -391,7 +390,7 @@ let whistlegraph;
 let fuzzy = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ title, cursor, content, params, gap, density }) {
+function boot({ meta, cursor, content, params, gap, density }) {
   cursor("native");
   gap(0);
   density(1);
@@ -402,7 +401,7 @@ function boot({ title, cursor, content, params, gap, density }) {
     wg = shortcuts[wg] || defaultWhistlegraph;
   whistlegraph = whistlegraphs[wg] || defaultWhistlegraph;
 
-  title(whistlegraph.title);
+  meta({title: whistlegraph.title});
 
   console.log(
     `%cWhistlegraph → ${whistlegraph.title}`,
