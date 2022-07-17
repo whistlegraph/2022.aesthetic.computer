@@ -45,6 +45,9 @@ async function handler(event, context) {
   await page.waitForTimeout(4000);
 
   const buffer = await page.screenshot();
+
+  await browser.close();
+
   return {
     statusCode: 200,
     headers: {
