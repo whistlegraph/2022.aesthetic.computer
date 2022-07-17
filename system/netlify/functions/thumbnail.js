@@ -27,7 +27,7 @@ async function handler(event, context) {
 
   const browser = await chromium.puppeteer.launch({
     args: chromium.args,
-    defaultViewport: { width: Math.ceil(width / 2), height: Math.ceil(height / 2), deviceScaleFactor: 2 },
+    defaultViewport: { width: Math.ceil(width / 2), height: Math.ceil(height / 2), deviceScaleFactor: 1 },
     executablePath: await chromium.executablePath,
     headless: chromium.headless,
   });
@@ -43,10 +43,11 @@ async function handler(event, context) {
   // TODO: Depending on the route here I could adjust for pages that need to load
   //       more data like `wg` 22.07.16.22.41
 
+  console.log("COMMAND", command);
+
   // Happens after first call to boot from a piece. 
   await page.waitForFunction("window.preloadReady === true");
-
-  await page.waitForTimeout(100);
+  //await page.waitForTimeout(4000);
 
   // TODO: Generalize the preloading hooks so they work with digitpain0-n
   // Add something like net.needsPreload along with a hook, so that any
@@ -57,10 +58,13 @@ async function handler(event, context) {
   //if (command[0] === "wg") {
   //  await page.waitForFunction("window.preloadReady === true");
   //}
+  //console.log("6 seconds passed")
 
   const buffer = await page.screenshot();
 
-  await browser.close();
+  //console.log("took screenshot")
+
+  //await browser.close();
 
   return {
     statusCode: 200,
@@ -68,6 +72,7 @@ async function handler(event, context) {
       "Content-Type": "image/png",
     },
     body: buffer.toString("base64"),
+    ttl: 60,
     isBase64Encoded: true,
   };
 }

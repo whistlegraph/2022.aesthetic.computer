@@ -47,7 +47,7 @@ async function boot({
     if (img1 && img2) preloadReady();
   });
 
-  glaze({ on: true, type: "digitpain0" });
+  //glaze({ on: true, type: "digitpain0" });
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
