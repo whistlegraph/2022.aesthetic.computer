@@ -3,7 +3,9 @@ const { builder } = require("@netlify/functions");
 // const playwright = require('playwright-aws-lambda');
 
 const chromium = require("chrome-aws-lambda");
-const puppeteer = require("puppeteer-core");
+// const puppeteer = require("puppeteer-core");
+
+const playwright = require('playwright-core');
 
 // Generates an image thumbnail of the starting screen of a piece.
 // (After 4 seconds)
@@ -28,7 +30,7 @@ async function handler(event, context) {
   const [width, height] = resolution.split("x").map((n) => parseInt(n));
 
   // Puppeteer Version
-
+  /*
   const browser = await puppeteer.launch({
     args: chromium.args,
     defaultViewport: {
@@ -67,10 +69,15 @@ async function handler(event, context) {
     ttl: 60,
     isBase64Encoded: true,
   };
+  */
 
   // Playwright Version
-  /*
-  const chrome = await playwright.launchChromium();
+  const chrome = await playwright.chromium.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath,
+    headless: chromium.headless
+  });
+
   const browser = await chrome.newContext({
     viewport: {
       width: Math.ceil(width / 2),
@@ -101,7 +108,6 @@ async function handler(event, context) {
     ttl: 60,
     isBase64Encoded: true,
   };
-  */
 
 }
 
