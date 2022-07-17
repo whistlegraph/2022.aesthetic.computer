@@ -16,11 +16,12 @@
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
-***2D Drawing Primitives for Niki***
- - [x] line from point... at angle with distance
+ ***Meta***
+  - [🟢] Write a new netlify function that returns the proper html for every page,
+       so that prerendering can be turned off (get imessage previews working).
 
 ***Storage***
- - [🟢] Write a netlify serverless function and call it from the microphone
+ - [] Write a netlify serverless function and call it from the microphone
         piece... so the file can be uploaded.
         - [] Netlify Serverless Hello World
  - [] Refer to ***Uploader Server*** below.
@@ -257,6 +258,8 @@
 *Recently Completed*
 
 ***Routing & Twitter Cards***
+***2D Drawing Primitives for Niki***
+ - [x] line from point... at angle with distance
  - [X] Figure out how to get open-graph info and twitter cards working for all of a.c?
       - [X] How should the og:images be made? Perhaps a special tool is needed or screenshots
            can be taken automatically?

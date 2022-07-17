@@ -14,5 +14,8 @@
   "bugs": {
     "url": "https://github.com/digitpain/aesthetic.computer/issues"
   },
-  "homepage": "https://github.com/digitpain/aesthetic.computer#readme"
+  "homepage": "https://github.com/digitpain/aesthetic.computer#readme",
+  "devDependencies": {
+    "playwright-aws-lambda": "^0.8.0"
+  }
 }

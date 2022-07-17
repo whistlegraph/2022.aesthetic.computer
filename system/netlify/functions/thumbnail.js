@@ -1,7 +1,9 @@
 const { builder } = require("@netlify/functions");
 
-const chromium = require("chrome-aws-lambda");
-const puppeteer = require("puppeteer-core");
+// const chromium = require("chrome-aws-lambda");
+// const puppeteer = require("puppeteer-core");
+
+const playwright = require('playwright-aws-lambda');
 
 // Generates an image thumbnail of the starting screen of a piece.
 // (After 4 seconds)
@@ -25,7 +27,32 @@ async function handler(event, context) {
   // Parse "IntxInt" to get the correct resolution to take a screenshot by.
   const [width, height] = resolution.split("x").map((n) => parseInt(n));
 
-  const browser = await puppeteer.launch({
+  const chrome = await playwright.launchChromium();
+  console.log(chrome);
+  const browser = await chrome.newContext();
+  const page = await browser.newPage();
+
+  await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`, {
+    waitUntil: "networkidle",
+  });
+
+  const buffer = await page.screenshot();
+
+  await browser.close();
+
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "image/png",
+      "Content-Length": buffer.length.toString()
+    },
+    body: buffer.toString("base64"),
+    ttl: 60,
+    isBase64Encoded: true,
+  };
+
+  /*
+  const browser = await chromium.puppeteer.launch({
     args: chromium.args,
     defaultViewport: {
       width: Math.ceil(width / 2),
@@ -35,48 +62,43 @@ async function handler(event, context) {
     executablePath: await chromium.executablePath,
     headless: chromium.headless,
   });
+  */
 
-  const page = await browser.newPage();
+  // const page = await browser.newPage();
 
   // TODO: Divide the screen density using a query parameter or zoom in using puppeteer?
   // TODO: Rewrite the URL below so that I can test locally if custom thumbnails are needed.
   // await page.goto(`https://${event.headers['x-forwarded-host']}/${command || ""}`); // Local? Codespaces?
 
-  await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`, {waitUntil: 'networkidle2'});
+  //await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`, {
+  //  waitUntil: "networkidle2",
+  //});
 
-  // TODO: Depending on the route here I could adjust for pages that need to load
-  //       more data like `wg` 22.07.16.22.41
+  // Generally happens after first call to boot from a piece.
+  // So there is a built-in delay (to wait for a few frames to render).
+  //await page.waitForFunction("window.preloadReady === true", { timeout: 5000 });
+  //await page.waitForTimeout(1000); // TODO: Try to make this an explicit signal for
+  //                                        after something gets painted.
 
-  // Happens after first call to boot from a piece.
-  await page.waitForFunction("window.preloadReady === true", {timeout: 6000});
-  await page.waitForTimeout(1000); // TODO: Try to make this an explicit signal for
-                                   //       after something gets painted.
+  //const buffer = await page.screenshot({
+  //  type: "jpeg",
+  //  quality: 80,
+  //});
 
-  // TODO: Generalize the preloading hooks so they work with digitpain0-n
-  // Add something like net.needsPreload along with a hook, so that any
-  // piece can make use of this.
+  //await browser.close();
 
-  // An exception for the whistlegraphs, which have spinners and should wait
-  // until the videos are loaded to have screenshots taken.
-  //if (command[0] === "wg") {
-  //  await page.waitForFunction("window.preloadReady === true");
-  //}
-  //console.log("6 seconds passed")
-
-  const buffer = await page.screenshot({
-    type: "jpeg",
-    quality: 80
-  });
-
+  /*
   return {
     statusCode: 200,
     headers: {
       "Content-Type": "image/jpeg",
+      "Content-Length": buffer.length.toString()
     },
     body: buffer.toString("base64"),
     ttl: 60,
     isBase64Encoded: true,
   };
+  */
 }
 
 exports.handler = builder(handler);

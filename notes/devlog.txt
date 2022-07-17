@@ -15,14 +15,9 @@ Figure out how to swap vim panes with one another in neovim: https://github.com/
     1. `cd` into `system` and then `npm install`
     2. login to netlify via `npx netlify login`
     3. install git lfs to get media files: `git lfs install; git lfs pull`
-    4. install mkcert
-    - sudo apt install libnss3-tools
-    - install homebrew for linux: https://brew.sh
-    - install mkcert with `brew install mkcert` 
-    - generate certificates and place them in `/ssl-dev`
-    5. now you can run `npm run codespaces-dev` to start the frontend,
-       fully simulating the netlify production environment
-       (with exception to the automatic https tunneling in spaces)
+    5. now you can run `npm run codespaces-dev` (or `npm run code` from the root dir)
+       to start the frontend, fully simulating the netlify production environment
+       (with exception to the automatic https tunneling via nginx in the codespaces container)
   B. For running the server backend:
     1. `cd` into `server` and then `npm install`
     2.  add `NODE_ENV=development` to a `.env` file in `server`
