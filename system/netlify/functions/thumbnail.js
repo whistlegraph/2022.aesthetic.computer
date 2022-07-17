@@ -13,7 +13,7 @@ const chromium = require("chrome-aws-lambda");
 const acceptedResolutions = ["1200x630", "800x800"]; // og:image, twitter:image
 
 async function handler(event, context) {
-  const [resolution, command] = event.path
+  const [resolution, ...command] = event.path
     .replace("/thumbnail/", "")
     .split("/"); // yields nxn and the command, if it exists
 
@@ -38,7 +38,7 @@ async function handler(event, context) {
   // TODO: Rewrite the URL below so that I can test locally if custom thumbnails are needed.
   // await page.goto(`https://${event.headers['x-forwarded-host']}/${command || ""}`); // Local? Codespaces?
 
-  await page.goto(`https://aesthetic.computer/${command || ""}`);
+  await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`);
 
   // TODO: Depending on the route here I could adjust for pages that need to load
   //       more data like `wg` 22.07.16.22.41

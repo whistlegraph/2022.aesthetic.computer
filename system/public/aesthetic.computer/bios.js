@@ -795,15 +795,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       window.acCONTENT_EVENTS = []; // And clear all events from the list.
     }
 
-    // TODO: Is this obsolete now?
-    if (type === "title") {
-      const title = content + " - aesthetic.computer";
-      // Change the tab and opengraph title.
-      document.title = title;
-      document.querySelector('meta[name="og:title"]').content = title;
-      return;
-    }
-
     if (type === "meta") {
       if (content.title) {
         document.title = content.title;
@@ -824,6 +815,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (content.url) {
         document.querySelector('meta[name="twitter:player"').content = content.url;
       }
+      return;
+    }
+
+    if (type === "booted-piece") {
+      setTimeout(() => {
+        window.prerenderReady = true;
+      }, 500)
       return;
     }
 

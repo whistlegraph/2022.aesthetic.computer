@@ -1093,6 +1093,7 @@ function makeFrame({ data: { type, content } }) {
       if (paintCount === 0n) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
         boot($api);
+        send({type: "booted-piece"});
       }
 
       // We no longer need the preload api for painting.
