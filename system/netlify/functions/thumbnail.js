@@ -42,17 +42,14 @@ async function handler(event, context) {
     waitUntil: "networkidle",
   });
 
-  const buffer = await page.screenshot({
-    type: "jpeg",
-    quality: 80,
-  });
+  const buffer = await page.screenshot();
 
   await browser.close();
 
   return {
     statusCode: 200,
     headers: {
-      "Content-Type": "image/jpeg",
+      "Content-Type": "image/png",
       "Content-Length": buffer.length.toString()
     },
     body: buffer.toString("base64"),
