@@ -42,15 +42,15 @@ async function handler(event, context) {
   // TODO: Rewrite the URL below so that I can test locally if custom thumbnails are needed.
   // await page.goto(`https://${event.headers['x-forwarded-host']}/${command || ""}`); // Local? Codespaces?
 
-  await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`);
+  await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`, {waitUntil: 'networkidle2'});
 
   // TODO: Depending on the route here I could adjust for pages that need to load
   //       more data like `wg` 22.07.16.22.41
 
   // Happens after first call to boot from a piece.
   await page.waitForFunction("window.preloadReady === true", {timeout: 6000});
-
-  await page.waitForTimeout(1500); // TODO: Make this an explicit signal.
+  await page.waitForTimeout(1000); // TODO: Try to make this an explicit signal for
+                                   //       after something gets painted.
 
   // TODO: Generalize the preloading hooks so they work with digitpain0-n
   // Add something like net.needsPreload along with a hook, so that any
