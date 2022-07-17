@@ -212,6 +212,7 @@ const $paintApiUnwrapped = {
   }, // TODO: Should this be renamed to set?
   point: graph.point,
   line: graph.line,
+  lineAngle: graph.lineAngle,
   circle: graph.circle,
   poly: graph.poly,
   box: graph.box,

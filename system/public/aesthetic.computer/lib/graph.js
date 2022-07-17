@@ -369,6 +369,12 @@ function line() {
   bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
 }
 
+function lineAngle(x1, y1, dist, radians) {
+  const x2 = x1 + dist * Math.cos(radians);
+  const y2 = y1 + dist * Math.sin(radians);
+  return line(x1, y1, x2, y2);
+}
+
 // Draws a 1px aliased circle: http://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#C
 function circle(x0, y0, radius) {
   x0 = floor(x0);
@@ -773,6 +779,7 @@ export {
   copy,
   paste,
   line,
+  lineAngle,
   circle,
   poly,
   bresenham, // This function is under "abstract" because it doesn't render.
