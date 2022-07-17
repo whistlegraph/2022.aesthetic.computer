@@ -2,7 +2,9 @@ import { boot } from "./bios.js";
 import { parse, slug } from "./lib/parse.mjs";
 
 let debug;
+
 window.prerenderReady = false;
+window.preloadReady = false;
 
 // Check for the debug constant in index.html which overrides all defaults.
 if (window.acDEBUG === true || window.acDEBUG === false) {

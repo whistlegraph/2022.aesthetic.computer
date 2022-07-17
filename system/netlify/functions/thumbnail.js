@@ -27,7 +27,7 @@ async function handler(event, context) {
 
   const browser = await chromium.puppeteer.launch({
     args: chromium.args,
-    defaultViewport: { width, height },
+    defaultViewport: { width: Math.ceil(width / 2), height: Math.ceil(height / 2), deviceScaleFactor: 2 },
     executablePath: await chromium.executablePath,
     headless: chromium.headless,
   });
@@ -42,7 +42,15 @@ async function handler(event, context) {
 
   // TODO: Depending on the route here I could adjust for pages that need to load
   //       more data like `wg` 22.07.16.22.41
-  await page.waitForTimeout(4000);
+
+  // Happens after first call to boot from a piece. 
+  await page.waitForFunction("window.prerenderReady === true");
+
+  // An exception for the whistlegraphs, which have spinners and should wait
+  // until the videos are loaded to have screenshots taken.
+  if (command[0] === "wg") {
+    await page.waitForFunction("window.preloadReady === true");
+  }
 
   const buffer = await page.screenshot();
 

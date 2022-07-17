@@ -393,10 +393,10 @@ async function load(
   if (text === "prompt" || text === "/") title = "aesthetic.computer";
   const meta = {
     title,
-    desc: "A valid aesthetic.computer command.",
+    desc: "...",
     img: {
       og: "https://aesthetic.computer/thumbnail/1200x630/" + text,
-      twitter: "https://aesthetic.computer/thumbnail/800x800/" + text,
+      twitter: "https://aesthetic.computer/thumbnail/1200x630/" + text,
     },
     url: "https://aesthetic.computer/" + text,
   };

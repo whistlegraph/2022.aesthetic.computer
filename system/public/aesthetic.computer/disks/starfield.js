@@ -7,6 +7,10 @@ export function sim({ screen }) {
   starfield.update();
 }
 
+export function boot($) {
+  $.meta({desc: "A simple display of zooming, colored points."})
+}
+
 // 🎨 Paint
 export function paint($) {
   $.wipe(0);
@@ -87,6 +91,7 @@ class Starfield {
 }
 
 const starfield = new Starfield();
+
 // 💗 Beat
 //export function beat($api) {
 //  const { num, help, sound } = $api;

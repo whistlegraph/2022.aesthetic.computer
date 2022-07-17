@@ -35,6 +35,7 @@ videos.forEach((video) => {
       setTimeout(() => {
         deck.classList.remove("loading");
         spinnerCtx.drawImage(spinnerImg, 0, 0);
+        window.preloadReady = true;
       }, 500);
     }
   });
