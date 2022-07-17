@@ -1,6 +1,9 @@
 const { builder } = require("@netlify/functions");
 
-const playwright = require('playwright-aws-lambda');
+// const playwright = require('playwright-aws-lambda');
+
+const chromium = require("chrome-aws-lambda");
+const puppeteer = require("puppeteer-core");
 
 // Generates an image thumbnail of the starting screen of a piece.
 // (After 4 seconds)
@@ -24,6 +27,49 @@ async function handler(event, context) {
   // Parse "IntxInt" to get the correct resolution to take a screenshot by.
   const [width, height] = resolution.split("x").map((n) => parseInt(n));
 
+  // Puppeteer Version
+
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: {
+      width: Math.ceil(width / 2),
+      height: Math.ceil(height / 2),
+      deviceScaleFactor: 2,
+    },
+    executablePath: await chromium.executablePath,
+    headless: chromium.headless,
+  });
+
+  const page = await browser.newPage();
+
+  // TODO: Rewrite the URL below so that I can test locally without hitting
+  //       aesthetic.computer's production deployment. 22.07.17.22.30
+  //       - `https://${event.headers['x-forwarded-host']}/${command || ""}`
+  await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`, {
+    waitUntil: "networkidle2",
+  });
+
+  await page.waitForFunction("window.preloadReady === true", {
+    timeout: 6000,
+  });
+
+  const buffer = await page.screenshot();
+
+  await browser.close();
+
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "image/png",
+      "Content-Length": buffer.length.toString()
+    },
+    body: buffer.toString("base64"),
+    ttl: 60,
+    isBase64Encoded: true,
+  };
+
+  // Playwright Version
+  /*
   const chrome = await playwright.launchChromium();
   const browser = await chrome.newContext({
     viewport: {
@@ -37,7 +83,6 @@ async function handler(event, context) {
   // TODO: Rewrite the URL below so that I can test locally without hitting
   //       aesthetic.computer's production deployment. 22.07.17.22.30
   //       - `https://${event.headers['x-forwarded-host']}/${command || ""}`
-
   await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`, {
     waitUntil: "networkidle",
   });
@@ -56,6 +101,7 @@ async function handler(event, context) {
     ttl: 60,
     isBase64Encoded: true,
   };
+  */
 
 }
 
