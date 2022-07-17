@@ -130,7 +130,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (meta.desc) {
       document.querySelector('meta[name="og:description"]').content = meta.desc;
     }
-    console.log(meta.img);
     if (meta.img?.og) {
       document.querySelector('meta[name="og:image"]').content = meta.img.og;
     }

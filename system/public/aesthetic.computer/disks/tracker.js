@@ -11,6 +11,8 @@
 
 const { max, min } = Math;
 
+import { parse } from "../lib/parse.mjs";
+
 // Data
 import { noteList, colors } from "./common/music.js";
 
@@ -86,12 +88,12 @@ function boot({
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
-    preload(`./aesthetic.computer/disks/drawings/font-1/${location}.json`).then((res) => {
+    preload(`/aesthetic.computer/disks/drawings/font-1/${location}.json`).then((res) => {
       glyphs[glyph] = res;
     });
   });
 
-  preload("./aesthetic.computer/disks/drawings/arrow-up-3x6 2022.1.18.21.59.35.json").then((r) => {
+  preload("/aesthetic.computer/disks/drawings/arrow-up-3x6 2022.1.18.21.59.35.json").then((r) => {
     buttons.save.icon = r;
     buttons.load.icon = r;
   });
@@ -292,7 +294,7 @@ function act({ event: e, store, load, download, upload, num: { timestamp } }) {
       //       during playback. 2022.01.16.16.31
       //       (Rather than just sending stopRow here.)
       store["tracker:score"] = { data: scoreData, stopRow: score.box.h };
-      load("./aesthetic.computer/disks/melody");
+      load(parse("melody"));
     }
     // 3. Check for scoreData in system RAM and play it immediately if present.
   });

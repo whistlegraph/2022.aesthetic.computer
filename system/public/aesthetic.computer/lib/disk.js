@@ -527,7 +527,7 @@ if (isWorker) {
   onmessage = async function (e) {
     debug = e.data.debug;
     ROOT_PIECE = e.data.rootPiece;
-    originalHost = e.data.host;
+    originalHost = e.data.parsed.host;
     await load(e.data.parsed);
     onmessage = makeFrame;
     send({ loaded: true });
@@ -537,7 +537,7 @@ if (isWorker) {
     e = { data: e };
     debug = e.data.debug;
     ROOT_PIECE = e.data.rootPiece;
-    originalHost = e.data.host;
+    originalHost = e.data.parsed.host;
     await load(e.data.parsed);
     noWorker.onMessage = (d) => makeFrame({ data: d });
     send({ loaded: true });
