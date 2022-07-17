@@ -42,8 +42,6 @@ async function handler(event, context) {
     waitUntil: "networkidle",
   });
 
-  const buffer = await page.screenshot();
-
   const buffer = await page.screenshot({
     type: "jpeg",
     quality: 80,
