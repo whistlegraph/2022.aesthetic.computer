@@ -138,9 +138,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       document.querySelector('meta[name="twitter:image"]').content =
         meta.img.twitter;
     }
-    if (meta.url) {
-      document.querySelector('meta[name="twitter:player"').content = meta.url;
-    }
+    //if (meta.url) {
+      //document.querySelector('meta[name="twitter:player"').content = meta.url;
+    //}
   }
 
   function frame(width, height) {
