@@ -125,6 +125,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (meta.title) {
       document.title = meta.title;
       document.querySelector('meta[name="og:title"]').content = meta.title;
+      document.querySelector('meta[name="twitter:title"]').content = meta.title;
     }
     if (meta.desc) {
       document.querySelector('meta[name="og:description"]').content = meta.desc;
