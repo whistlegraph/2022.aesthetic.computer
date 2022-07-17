@@ -1,7 +1,7 @@
 const { builder } = require("@netlify/functions");
 
 const chromium = require("chrome-aws-lambda");
-const puppeteer = require("puppeteer-core");
+//const puppeteer = require("puppeteer-core");
 
 // Generates an image thumbnail of the starting screen of a piece.
 // (After 4 seconds)
@@ -25,7 +25,7 @@ async function handler(event, context) {
   // Parse "IntxInt" to get the correct resolution to take a screenshot by.
   const [width, height] = resolution.split("x").map((n) => parseInt(n));
 
-  const browser = await puppeteer.launch({
+  const browser = await chromium.puppeteer.launch({
     args: chromium.args,
     defaultViewport: { width, height },
     executablePath: await chromium.executablePath,
