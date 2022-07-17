@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "The header package for the whole aesthetic.computer codebase.",
   "scripts": {
-    "code": "cd system; npm run codespaces-dev"
+    "code": "cd system; npm run codespaces-dev",
+    "watch": "cd system; npm run watch"
   },
   "repository": {
     "type": "git",
@@ -14,8 +15,5 @@
   "bugs": {
     "url": "https://github.com/digitpain/aesthetic.computer/issues"
   },
-  "homepage": "https://github.com/digitpain/aesthetic.computer#readme",
-  "devDependencies": {
-    "playwright-aws-lambda": "^0.8.0"
-  }
+  "homepage": "https://github.com/digitpain/aesthetic.computer#readme"
 }
