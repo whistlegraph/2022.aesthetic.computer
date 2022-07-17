@@ -49,7 +49,8 @@ async function handler(event, context) {
 
   // Happens after first call to boot from a piece.
   await page.waitForFunction("window.preloadReady === true", {timeout: 6000});
-  await page.waitForTimeout(500);
+
+  await page.waitForTimeout(1500); // TODO: Make this an explicit signal.
 
   // TODO: Generalize the preloading hooks so they work with digitpain0-n
   // Add something like net.needsPreload along with a hook, so that any
