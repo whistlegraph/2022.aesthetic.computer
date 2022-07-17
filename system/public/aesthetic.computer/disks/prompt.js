@@ -40,7 +40,7 @@ function boot({
   meta({desc: "Run any piece by typing its name..."});
 
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
-  gap(8); // TODO: Why does adding `gap` cause flickering and result in two calls to `frame`?
+  //gap(8); // TODO: Why does adding `gap` cause flickering and result in two calls to `frame`?
   //density(1);
 
   // Preload all glyphs.

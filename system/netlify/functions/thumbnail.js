@@ -44,13 +44,19 @@ async function handler(event, context) {
   //       more data like `wg` 22.07.16.22.41
 
   // Happens after first call to boot from a piece. 
-  await page.waitForFunction("window.prerenderReady === true");
+  await page.waitForFunction("window.preloadReady === true");
+
+  await page.waitForTimeout(100);
+
+  // TODO: Generalize the preloading hooks so they work with digitpain0-n
+  // Add something like net.needsPreload along with a hook, so that any
+  // piece can make use of this.
 
   // An exception for the whistlegraphs, which have spinners and should wait
   // until the videos are loaded to have screenshots taken.
-  if (command[0] === "wg") {
-    await page.waitForFunction("window.preloadReady === true");
-  }
+  //if (command[0] === "wg") {
+  //  await page.waitForFunction("window.preloadReady === true");
+  //}
 
   const buffer = await page.screenshot();
 

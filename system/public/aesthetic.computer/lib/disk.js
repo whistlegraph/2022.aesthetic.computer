@@ -431,6 +431,14 @@ async function load(
     send({ type: "web", content: url }); // Jump the browser to a new url.
   };
 
+  $commonApi.net.preloadReady = () => {
+    send({ type: "preload-ready", content: true }); // Tell the browser that all preloading is done.  
+  } 
+
+  $commonApi.net.waitForPreload = () => {
+    send({ type: "wait-for-preload", content: true }); // Tell the browser that all preloading is done.  
+  } 
+
   // Automatically connect a socket server if we are in debug mode.
   if (debug) {
     let receiver;
@@ -600,6 +608,8 @@ class Content {
 let signal;
 
 function makeFrame({ data: { type, content } }) {
+  // console.log("Frame:", type);
+
   if (type === "signal") {
     signal = content;
     return;
@@ -1084,10 +1094,13 @@ function makeFrame({ data: { type, content } }) {
        */
 
       // Run boot only once before painting for the first time.
+
+      // TODO: Why is boot running twice? 22.07.17.17.26
+
       if (paintCount === 0n) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
         boot($api);
-        send({ type: "booted-piece" });
+        if (loading === false) send({type: "disk-loaded-and-booted"});
       }
 
       // We no longer need the preload api for painting.

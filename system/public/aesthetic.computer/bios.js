@@ -824,13 +824,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       return;
     }
 
-    if (type === "booted-piece") {
-      setTimeout(() => {
-        window.prerenderReady = true;
-      }, 500);
-      return;
-    }
-
     if (type === "refresh") {
       window.location.reload();
       return;
@@ -838,6 +831,17 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     if (type === "web") {
       window.location.href = content;
+      return;
+    }
+
+    if (type === "preload-ready") {
+      window.preloadReady = true;
+      if (debug) console.log("⏳ Preloaded:", window.preloadReady);
+      return;
+    }
+
+    if (type === "wait-for-preload") {
+      window.waitForPreload = true;
       return;
     }
 
@@ -1043,8 +1047,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "gap-change") {
-      if (debug) console.log("🕳️ Gap:", content);
       if (gap !== content) {
+        if (debug) console.log("🕳️ Gap:", content);
         gap = content;
         needsReframe = true;
       }
@@ -1098,6 +1102,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       return;
     }
 
+    if (type === "disk-loaded-and-booted") {
+      if (!window.waitForPreload) window.preloadReady = true;
+      if (debug) console.log("⏳ Preloaded:", window.preloadReady);
+      return;
+    }
+
     if (type === "back-to-piece") {
       history.back();
       return false;
@@ -1106,6 +1116,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (type === "disk-unload") {
       // Remove any attached microphone.
       detachMicrophone?.();
+
+      // Reset preloading.
+      window.waitForPreload = false;
+      window.preloadReady = false;
 
       // Clear any DOM content that was added by a piece.
       contentFrame?.remove(); // Remove the contentFrame if it exists.

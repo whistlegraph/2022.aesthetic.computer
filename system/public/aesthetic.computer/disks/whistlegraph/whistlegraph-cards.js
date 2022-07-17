@@ -44,7 +44,8 @@ loadingScreen.addEventListener(
   "transitionend",
   () => {
     loadingScreen.style.display = "none";
-    window.preloadReady = true;
+    signal("whistlegraph:preloaded");
+
   },
   { once: true }
 );

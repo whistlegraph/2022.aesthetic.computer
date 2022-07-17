@@ -1,4 +1,3 @@
-
 // 📖 Parameter 1: imab, grow, idni, l8ly, lonr, w0w, ppl, slink, puzz, wiyh
 
 // ❓ Made on occasion of Whistlegraph's Feral File exhibition.
@@ -390,7 +389,16 @@ let whistlegraph;
 let fuzzy = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ meta, cursor, content, params, gap, density }) {
+function boot({
+  meta,
+  cursor,
+  content,
+  params,
+  gap,
+  net: { waitForPreload },
+  density,
+}) {
+  waitForPreload();
   cursor("native");
   gap(0);
   density(1);
@@ -401,7 +409,7 @@ function boot({ meta, cursor, content, params, gap, density }) {
     wg = shortcuts[wg] || defaultWhistlegraph;
   whistlegraph = whistlegraphs[wg] || defaultWhistlegraph;
 
-  meta({title: whistlegraph.title});
+  meta({ title: whistlegraph.title });
 
   console.log(
     `%cWhistlegraph → ${whistlegraph.title}`,
@@ -689,8 +697,9 @@ function paint({ noiseTinted }) {
   return false;
 }
 
-function act({ event: e }) {
+function act({ event: e, net: { preloadReady } }) {
   if (e.is("signal") && e.signal === "whistlegraph:started") fuzzy = true;
+  if (e.is("signal") && e.signal === "whistlegraph:preloaded") preloadReady();
 }
 
 export { boot, sim, paint, act };
