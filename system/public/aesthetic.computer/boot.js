@@ -40,11 +40,13 @@ if (window.acSTARTING_PIECE === undefined) window.acSTARTING_PIECE = "prompt";
 
 // Boot the machine with the specified root piece, or a #piece route if one
 // is in the url.
+/*
 if (debug)
   console.log(
     "Parsed:",
     parse(slug(window.location.href) || window.acSTARTING_PIECE)
   );
+*/
 
 const parsed = parse(
   slug(window.location.href) || window.acSTARTING_PIECE

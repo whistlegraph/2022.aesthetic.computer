@@ -389,28 +389,21 @@ async function load(
   //       they can only be set once on the DOM? 22.07.16.18.42
 
   // Set default metadata fields for SEO and sharing, (requires serverside prerendering).
-  {
-    let title = text + " - aesthetic.computer";
-    if (text === "prompt" || text === "/") title = "aesthetic.computer";
-    const desc = "A valid aesthetic.computer command.";
-    const img = "https://aesthetic/profile.jpg";
-    send({
-      type: "meta",
-      content: {
-        title,
-        desc,
-        img: {
-          og: "https://aesthetic.computer/thumbnail/1200x630/" + text,
-          twitter: "https://aesthetic.computer/thumbnail/800x800/" + text,
-        },
-        url: "https://aesthetic.computer/" + text,
-      },
-    });
-  }
+  let title = text + " - aesthetic.computer";
+  if (text === "prompt" || text === "/") title = "aesthetic.computer";
+  const meta = {
+    title,
+    desc: "A valid aesthetic.computer command.",
+    img: {
+      og: "https://aesthetic.computer/thumbnail/1200x630/" + text,
+      twitter: "https://aesthetic.computer/thumbnail/800x800/" + text,
+    },
+    url: "https://aesthetic.computer/" + text,
+  };
 
-  // Add meta to the common api so the data can be overridden.
+  // Add meta to the common api so the data can be overridden as needed.
   $commonApi.meta = (data) => {
-    send({ type: "meta", content: data }); // Change the page title.
+    send({ type: "meta", content: data });
   };
 
   // Add reload to the common api.
@@ -507,6 +500,7 @@ async function load(
         text,
         pieceCount: $commonApi.pieceCount,
         fromHistory,
+        meta
         // noBeat: beat === defaults.beat,
       },
     });
@@ -1093,7 +1087,7 @@ function makeFrame({ data: { type, content } }) {
       if (paintCount === 0n) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
         boot($api);
-        send({type: "booted-piece"});
+        send({ type: "booted-piece" });
       }
 
       // We no longer need the preload api for painting.

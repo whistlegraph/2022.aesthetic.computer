@@ -8,7 +8,7 @@
     "watch": "netlify watch",
     "test": "NODE_OPTIONS='--experimental-vm-modules --es-module-specifier-resolution=node' jest",
     "codespaces-dev": "kill-port 8080 8000; BROWSER=none netlify dev",
-    "spaces-dev-netlify": "http-server public -a localhost -p 8080 --cors -c60 -i --P http://localhost:8000? --silent",
+    "spaces-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P http://localhost:8000? --silent",
     "local-dev-netlify": "http-server public -a localhost -p 8080 --cors -c-1 -i --P https://localhost:443? --silent",
     "local-dev-ssl": "http-server public -S -C ../ssl-dev/localhost.pem -K ../ssl-dev/localhost-key.pem -p 443 --cors -c-1",
     "parcel-dev": "parcel --cert ../ssl-dev/localhost.pem --key ../ssl-dev/localhost-key.pem -p 443",

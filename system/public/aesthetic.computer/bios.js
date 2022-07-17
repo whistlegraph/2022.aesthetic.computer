@@ -119,6 +119,29 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let gap = 0;
   let density = 1; // added to window.devicePixelRatio
 
+  // Used by `disk` to set the metatags by default when a piece loads. It can
+  // be overridden using `meta` inside of `boot` for any given piece.
+  function setMetatags(meta) {
+    if (meta.title) {
+      document.title = meta.title;
+      document.querySelector('meta[name="og:title"]').content = meta.title;
+    }
+    if (meta.desc) {
+      document.querySelector('meta[name="og:description"]').content = meta.desc;
+    }
+    console.log(meta.img);
+    if (meta.img?.og) {
+      document.querySelector('meta[name="og:image"]').content = meta.img.og;
+    }
+    if (meta.img?.twitter) {
+      document.querySelector('meta[name="twitter:image"]').content =
+        meta.img.twitter;
+    }
+    if (meta.url) {
+      document.querySelector('meta[name="twitter:player"').content = meta.url;
+    }
+  }
+
   function frame(width, height) {
     // Cache the current canvas if needed.
     if (freezeFrame && imageData && !document.body.contains(freezeFrameCan)) {
@@ -793,35 +816,18 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Remove any event listeners added by the content frame.
       window?.acCONTENT_EVENTS.forEach((e) => e());
       window.acCONTENT_EVENTS = []; // And clear all events from the list.
+      return;
     }
 
     if (type === "meta") {
-      if (content.title) {
-        document.title = content.title;
-        document.querySelector('meta[name="og:title"]').content = content.title;
-      }
-      if (content.desc) {
-        document.querySelector('meta[name="og:description"]').content =
-          content.desc;
-      }
-      if (content.img?.og) {
-        document.querySelector('meta[name="og:image"]').content =
-          content.img.og;
-      }
-      if (content.img?.twitter) {
-        document.querySelector('meta[name="twitter:image"]').content =
-          content.img.twitter;
-      }
-      if (content.url) {
-        document.querySelector('meta[name="twitter:player"').content = content.url;
-      }
+      setMetatags(content);
       return;
     }
 
     if (type === "booted-piece") {
       setTimeout(() => {
         window.prerenderReady = true;
-      }, 500)
+      }, 500);
       return;
     }
 
@@ -1069,6 +1075,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     if (type === "disk-loaded") {
       // Show an "audio engine: off" message.
+
+      setMetatags(content.meta);
 
       //if (content.noBeat === false && audioContext?.state !== "running") {
       //bumper.innerText = "audio engine off";
