@@ -17,7 +17,7 @@
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
 ***2D Drawing Primitives for Niki***
- - [] line from point... at angle with distance
+ - [x] line from point... at angle with distance
 
 ***Storage***
  - [🟢] Write a netlify serverless function and call it from the microphone

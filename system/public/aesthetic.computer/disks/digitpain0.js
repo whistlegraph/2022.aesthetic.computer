@@ -35,13 +35,13 @@ async function boot({
 
   waitForPreload();
 
-  preload("./aesthetic.computer/disks/digitpain/0/0.webp").then((img) => {
+  preload("/aesthetic.computer/disks/digitpain/0/0.webp").then((img) => {
     img1 = img;
     img1OriginalPixels = img.pixels.slice();
     if (img1 && img2) preloadReady();
   });
 
-  preload("./aesthetic.computer/disks/digitpain/0/1.webp").then((img) => {
+  preload("/aesthetic.computer/disks/digitpain/0/1.webp").then((img) => {
     img2 = img;
     img2OriginalPixels = img.pixels.slice();
     if (img1 && img2) preloadReady();
