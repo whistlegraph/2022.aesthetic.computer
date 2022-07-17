@@ -1,7 +1,7 @@
 const { builder } = require("@netlify/functions");
 
 const chromium = require("chrome-aws-lambda");
-//const puppeteer = require("puppeteer-core");
+const puppeteer = require("puppeteer-core");
 
 // Generates an image thumbnail of the starting screen of a piece.
 // (After 4 seconds)
@@ -25,9 +25,13 @@ async function handler(event, context) {
   // Parse "IntxInt" to get the correct resolution to take a screenshot by.
   const [width, height] = resolution.split("x").map((n) => parseInt(n));
 
-  const browser = await chromium.puppeteer.launch({
+  const browser = await puppeteer.launch({
     args: chromium.args,
-    defaultViewport: { width: Math.ceil(width / 2), height: Math.ceil(height / 2), deviceScaleFactor: 1 },
+    defaultViewport: {
+      width: Math.ceil(width / 2),
+      height: Math.ceil(height / 2),
+      deviceScaleFactor: 2,
+    },
     executablePath: await chromium.executablePath,
     headless: chromium.headless,
   });
@@ -43,11 +47,9 @@ async function handler(event, context) {
   // TODO: Depending on the route here I could adjust for pages that need to load
   //       more data like `wg` 22.07.16.22.41
 
-  console.log("COMMAND", command);
-
-  // Happens after first call to boot from a piece. 
-  await page.waitForFunction("window.preloadReady === true");
-  //await page.waitForTimeout(4000);
+  // Happens after first call to boot from a piece.
+  await page.waitForFunction("window.preloadReady === true", {timeout: 6000});
+  await page.waitForTimeout(500);
 
   // TODO: Generalize the preloading hooks so they work with digitpain0-n
   // Add something like net.needsPreload along with a hook, so that any
@@ -60,16 +62,15 @@ async function handler(event, context) {
   //}
   //console.log("6 seconds passed")
 
-  const buffer = await page.screenshot();
-
-  //console.log("took screenshot")
-
-  //await browser.close();
+  const buffer = await page.screenshot({
+    type: "jpeg",
+    quality: 80
+  });
 
   return {
     statusCode: 200,
     headers: {
-      "Content-Type": "image/png",
+      "Content-Type": "image/jpeg",
     },
     body: buffer.toString("base64"),
     ttl: 60,
