@@ -369,9 +369,9 @@ function line() {
   bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
 }
 
-function lineAngle(x1, y1, dist, radians) {
-  const x2 = x1 + dist * Math.cos(radians);
-  const y2 = y1 + dist * Math.sin(radians);
+function lineAngle(x1, y1, dist, degrees) {
+  const x2 = x1 + dist * Math.cos(radians(degrees));
+  const y2 = y1 + dist * Math.sin(radians(degrees));
   return line(x1, y1, x2, y2);
 }
 
