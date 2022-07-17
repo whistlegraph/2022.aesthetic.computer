@@ -30,7 +30,8 @@
   "homepage": "https://github.com/whistlegraph/system#readme",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.121.0",
-    "gl-matrix": "^3.4.3"
+    "gl-matrix": "^3.4.3",
+    "playwright-core": "^1.23.4"
   },
   "devDependencies": {
     "@netlify/functions": "^1.0.0",
