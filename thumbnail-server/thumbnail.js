@@ -48,9 +48,9 @@ fastify.get('/thumbnail/:resolution/:command', async (request, reply) => {
     waitUntil: "networkidle2"
   });
 
-  //await page.waitForFunction("window.preloadReady === true", {
-  //  timeout: 6000,
-  //});
+  await page.waitForFunction("window.preloadReady === true", {
+    timeout: 6000,
+  });
 
   // Option 2: Playwright
   /*

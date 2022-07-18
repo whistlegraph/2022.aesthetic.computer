@@ -3,9 +3,8 @@ const { builder } = require("@netlify/functions");
 // const playwright = require('playwright-aws-lambda');
 
 const chromium = require("chrome-aws-lambda");
-//const puppeteer = require("puppeteer-core");
-
-const playwright = require("playwright-core");
+// const puppeteer = require("puppeteer-core");
+// const playwright = require("playwright-core");
 
 // Generates an image thumbnail of the starting screen of a piece.
 // (After 4 seconds)
@@ -30,7 +29,6 @@ async function handler(event, context) {
   const [width, height] = resolution.split("x").map((n) => parseInt(n));
 
   // Puppeteer Version
-  /*
   const browser = await chromium.puppeteer.launch({
     args: chromium.args,
     defaultViewport: {
@@ -48,13 +46,31 @@ async function handler(event, context) {
   // TODO: Rewrite the URL below so that I can test locally without hitting
   //       aesthetic.computer's production deployment. 22.07.17.22.30
   //       - `https://${event.headers['x-forwarded-host']}/${command || ""}`
-  await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`, {
-    waitUntil: "networkidle2",
-  });
 
-  await page.waitForFunction("window.preloadReady === true", {
-    timeout: 6000,
-  });
+  let url;
+
+  if (process.env.CONTEXT === "dev") {
+    console.log("🟡 Development");
+    url = "http://localhost:8000";
+  } else {
+    url = "https://aesthetic.computer";
+  }
+
+  try {
+    await page.goto(`${url}/${command.join("/") || ""}`, {
+      waitUntil: "networkidle2",
+    });
+  } catch {
+    console.log("🔴 Failed to stop networking.");
+  }
+
+  try {
+    await page.waitForFunction("window.preloadReady === true", {
+      timeout: 6000,
+    });
+  } catch {
+    console.log("🔴 Failed window.preloadReady timer.");
+  }
 
   const buffer = await page.screenshot();
 
@@ -64,15 +80,15 @@ async function handler(event, context) {
     statusCode: 200,
     headers: {
       "Content-Type": "image/png",
-      "Content-Length": buffer.length.toString()
+      "Content-Length": buffer.length.toString(),
     },
     body: buffer.toString("base64"),
     ttl: 60,
     isBase64Encoded: true,
   };
-  */
 
   // Playwright Version
+  /*
   const chrome = await playwright.chromium.launch({
     args: chromium.args,
     executablePath: await chromium.executablePath,
@@ -117,6 +133,7 @@ async function handler(event, context) {
     ttl: 60,
     isBase64Encoded: true,
   };
+  */
 }
 
 exports.handler = builder(handler);

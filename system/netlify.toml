@@ -4,10 +4,13 @@
   node_bundler = "esbuild"
   external_node_modules = ["playwright-core", "chrome-aws-lambda"]
 [dev]
+  NODE_ENV = "development"
   framework = "#custom"
   command = "npm run spaces-dev-netlify"
   targetPort = 8080
   port = 8000
+[context.production]
+  NODE_ENV= "production"
 [[headers]]
 # Define which paths this specific [[headers]] block will cover.
 for = "/*"
