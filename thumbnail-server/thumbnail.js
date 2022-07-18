@@ -10,10 +10,9 @@ const fastify = Fastify({
   logger: true
 })
 
-//import { chromium } from 'playwright-chromium';
-import puppeteer from 'puppeteer';
-// import chrome from 'chrome-aws-lambda';
-// import * as playwright from 'playwright-core'; // Option 2
+import { chromium } from 'playwright';
+
+// console.log(chromium.args, await chromium.executablePath);
 
 const acceptedResolutions = ["1200x630", "800x800"]; // og:image, twitter:image
 
@@ -30,36 +29,8 @@ fastify.get('/thumbnail/:resolution/:command', async (request, reply) => {
     reply.send("error");
   }
 
-  // Option 1: Puppeteer
-  const browser = await puppeteer.launch({
-    defaultViewport: {
-      width: Math.ceil(width / 2),
-      height: Math.ceil(height / 2),
-      deviceScaleFactor: 2,
-    }
-  });
-
-  const page = await browser.newPage();
-
-  // TODO: Rewrite the URL below so that I can test locally without hitting
-  //       aesthetic.computer's production deployment. 22.07.17.22.30
-  //       - `https://${event.headers['x-forwarded-host']}/${command || ""}`
-  // await page.goto(`http://localhost:8000/${command || ""}`, {
-  await page.goto(`https://aesthetic.computer/${command || ""}`, {
-    waitUntil: "networkidle2"
-  });
-
-  await page.waitForFunction("window.preloadReady === true", {
-    timeout: 6000,
-  });
-
   // Option 2: Playwright
-  /*
-  const browser = await playwright.chromium.launch({
-    args: chrome.args,
-    executablePath: await chrome.executablePath,
-    headless: chrome.headless,
-  });
+  const browser = await chromium.launch({ channel: "chrome" });
 
   const context = await browser.newContext({
     viewport: {
@@ -82,16 +53,25 @@ fastify.get('/thumbnail/:resolution/:command', async (request, reply) => {
   // TODO: Rewrite the URL below so that I can test locally without hitting
   //       aesthetic.computer's production deployment. 22.07.17.22.30
   //       - `https://${event.headers['x-forwarded-host']}/${command || ""}`
-  await page.goto(`http://localhost:8000/${command || ""}`, {
-    waitUntil: "networkidle"
-  });
+ 
+  try {
+    await page.goto(`https://aesthetic.computer/${command || ""}`, {
+      waitUntil: "networkidle",
+      timeout: 3000
+    });
+  } catch {
+    console.log("Failed idle network...");
+  }
 
   // Add a potential extra 2 seconds until preloading is ready.
-  await page.waitForFunction(() => preloadReady === true);
+  try {
+    await page.waitForFunction(() => preloadReady === true, {timeout: 3000});
+  } catch {
+    console.log("Failed preloadReady check...");
+  }
 
-  //await page.waitForTimeout(12000); // A bit of extra time.
-
-  */
+  console.log("Waiting for 1s...");
+  await page.waitForTimeout(1000); // A bit of extra time.
 
   const buffer = await page.screenshot();
 
