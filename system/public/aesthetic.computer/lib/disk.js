@@ -393,14 +393,15 @@ async function load(
   //       they can only be set once on the DOM? 22.07.16.18.42
 
   // Set default metadata fields for SEO and sharing, (requires serverside prerendering).
-  let title = text + " - aesthetic.computer";
+  let title = text + " · aesthetic.computer";
   if (text === "prompt" || text === "/") title = "aesthetic.computer";
   const meta = {
     title,
+    path: text, 
     desc: "...",
     img: {
-      og: "https://aesthetic.computer/thumbnail/1200x630/" + text,
-      twitter: "https://aesthetic.computer/thumbnail/1200x630/" + text,
+      og: "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
+      twitter: "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
     },
     url: "https://aesthetic.computer/" + text,
   };

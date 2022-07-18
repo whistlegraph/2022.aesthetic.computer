@@ -124,8 +124,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   function setMetatags(meta) {
     if (meta.title) {
       document.title = meta.title;
-      document.querySelector('meta[name="og:title"]').content = meta.title;
-      document.querySelector('meta[name="twitter:title"]').content = meta.title;
+      document.querySelector('meta[name="og:title"]').content = meta.path;
+      document.querySelector('meta[name="twitter:title"]').content = meta.path;
     }
     if (meta.desc) {
       document.querySelector('meta[name="og:description"]').content = meta.desc;
@@ -820,7 +820,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "meta") {
-      // setMetatags(content);
+      setMetatags(content);
       return;
     }
 
@@ -1080,7 +1080,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (type === "disk-loaded") {
       // Show an "audio engine: off" message.
 
-      // setMetatags(content.meta);
+      setMetatags(content.meta);
 
       //if (content.noBeat === false && audioContext?.state !== "running") {
       //bumper.innerText = "audio engine off";

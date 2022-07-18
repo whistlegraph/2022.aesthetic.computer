@@ -15,16 +15,17 @@
 [context.production]
   NODE_ENV= "production"
 [[headers]]
-# Define which paths this specific [[headers]] block will cover.
-for = "/*"
-  [headers.values]
+  # Define which paths this specific [[headers]] block will cover.
+  for = "/*"
+[headers.values]
   Access-Control-Allow-Origin = "*"
 [[redirects]]
-from = "/thumbnail/*"
-to = "/.netlify/builders/thumbnail"
-status = 200
-force = true
+  from = "/thumbnail/*"
+  to = "/.netlify/builders/thumbnail"
+  status = 200
+  force = true
 [[redirects]]
-from = "/*"
-to = "/.netlify/builders/index"
-status = 200
+  from = "/*"
+  to = "/.netlify/builders/index"
+  status = 200
+  force = true

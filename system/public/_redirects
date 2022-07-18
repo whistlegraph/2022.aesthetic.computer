@@ -3,6 +3,5 @@
 # See: https://www.netlify.com/blog/2019/01/16/redirect-rules-for-all-how-to-configure-redirects-for-your-static-site
 
 # *            /split.html     200
-# /thumbnail/* /.netlify/builders/thumbnail 200
-# /*           /.netlify/builders/index     200
-# /* /index.html 200
+/thumbnail/* /.netlify/builders/thumbnail 200
+/*           /.netlify/builders/index     200

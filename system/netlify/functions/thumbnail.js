@@ -2,13 +2,13 @@
 // See also: `/thumbnail-server` for an alternate implementation.
 
 // Usage:
-// https://aesthetic.computer/thumbnail/widthxheight/command
+// https://aesthetic.computer/thumbnail/widthxheight/command~any~params.jpg
 
 const { builder } = require("@netlify/functions");
 const chromium = require("chrome-aws-lambda");
 
 // Only allow a few given resolutions to prevent spam.
-const acceptedResolutions = ["1200x630", "800x800"]; // og:image, twitter:image
+const acceptedResolutions = ["1200x630"]; // og:image, twitter:image
 
 async function handler(event, context) {
   const [resolution, ...filepath] = event.path
@@ -16,7 +16,7 @@ async function handler(event, context) {
     .split("/"); // yields nxn and the command, if it exists
 
   // Ditch if we don't hit the accepted resolution whitelist.
-  if (acceptedResolutions.indexOf(resolution) === -1 || !filepath[filepath.length - 1].endsWith(".png")) {
+  if (acceptedResolutions.indexOf(resolution) === -1 || !filepath[filepath.length - 1].endsWith(".jpg")) {
     return { statusCode: 500 };
   }
 
@@ -48,7 +48,7 @@ async function handler(event, context) {
   }
 
   try {
-    await page.goto(`${url}/${filepath.join("/").replace(".png", "") || ""}`, {
+    await page.goto(`${url}/${filepath.join("/").replace(".jpg", "") || ""}`, {
       waitUntil: "networkidle2",
       timeout: 3000
     });
@@ -66,15 +66,17 @@ async function handler(event, context) {
 
   await page.waitForTimeout(500); // A bit of extra time.
 
-  // TODO: Switch to jpegs to see if this can get any faster?
-  const buffer = await page.screenshot();
+  const buffer = await page.screenshot({
+    type: "jpeg",
+    quality: 80
+  });
 
   await browser.close();
 
   return {
     statusCode: 200,
     headers: {
-      "Content-Type": "image/png",
+      "Content-Type": "image/jpeg",
       "Content-Length": buffer.length.toString(),
     },
     body: buffer.toString("base64"),

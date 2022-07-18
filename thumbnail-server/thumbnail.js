@@ -3,6 +3,8 @@
 
 // Fastify docs: https://www.fastify.io/docs/latest/Guides/Getting-Started
 
+// https://aesthetic.computer/thumbnail/widthxheight/command~any~params.jpg
+
 import Fastify from 'fastify'
 
 const fastify = Fastify({
@@ -10,9 +12,9 @@ const fastify = Fastify({
 })
 
 import { chromium } from 'playwright';
-const acceptedResolutions = ["1200x630", "800x800"]; // og:image, twitter:image
+const acceptedResolutions = ["1200x630"]; // og:image, twitter:image
 
-fastify.get('/thumbnail/:resolution/:command.png', async (request, reply) => {
+fastify.get('/thumbnail/:resolution/:command.jpg', async (request, reply) => {
 
   const { resolution, command } = request.params;
 
@@ -71,10 +73,15 @@ fastify.get('/thumbnail/:resolution/:command.png', async (request, reply) => {
 
   const buffer = await page.screenshot();
 
+  const buffer = await page.screenshot({
+    type: "jpeg",
+    quality: 80
+  });
+
   await browser.close();
 
   reply.headers({
-      "Content-Type": "image/png",
+      "Content-Type": "image/jpeg",
       "Content-Length": buffer.length.toString(),
   });
 
