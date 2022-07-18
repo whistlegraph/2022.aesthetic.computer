@@ -10,7 +10,7 @@ const fs = require("fs").promises;
 const path = require("path");
 
 async function handler(event, context) {
-  let html = await fs.readFile(path.resolve("templates/index.html"), "utf8");
+  let html = await fs.readFile(path.resolve("./templates/index.html"), "utf8");
 
   let piece = event.path.slice(1);
     
