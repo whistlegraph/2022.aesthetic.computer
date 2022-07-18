@@ -11,12 +11,12 @@ const chromium = require("chrome-aws-lambda");
 const acceptedResolutions = ["1200x630", "800x800"]; // og:image, twitter:image
 
 async function handler(event, context) {
-  const [resolution, ...command] = event.path
+  const [resolution, ...filepath] = event.path
     .replace("/thumbnail/", "")
     .split("/"); // yields nxn and the command, if it exists
 
   // Ditch if we don't hit the accepted resolution whitelist.
-  if (acceptedResolutions.indexOf(resolution) === -1) {
+  if (acceptedResolutions.indexOf(resolution) === -1 || !filepath[filepath.length - 1].endsWith(".png")) {
     return { statusCode: 500 };
   }
 
@@ -48,7 +48,7 @@ async function handler(event, context) {
   }
 
   try {
-    await page.goto(`${url}/${command.join("/") || ""}`, {
+    await page.goto(`${url}/${filepath.join("/").replace(".png", "") || ""}`, {
       waitUntil: "networkidle2",
       timeout: 3000
     });

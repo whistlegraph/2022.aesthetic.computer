@@ -23,11 +23,11 @@ async function handler(event, context) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="og:title" content="aesthetic.computer" />
         <meta name="og:description" content="Run any piece by typing its name..." />
-        <meta name="og:image" content="https://aesthetic.computer/thumbnail/1200x630" />
+        <meta name="og:image" content="https://aesthetic.computer/thumbnail/1200x630/prompt.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="aesthetic.computer" />
         <meta name="twitter:site" content="aesthetic.computer" />
-        <meta name="twitter:image" content="https://aesthetic.computer/thumbnail/800x800"/>
+        <meta name="twitter:image" content="https://aesthetic.computer/thumbnail/800x800/prompt.png"/>
       </head>
       <body class="native-cursor"> <!-- Hides the 2D UI on first boot. -->
       <script>
@@ -37,10 +37,10 @@ async function handler(event, context) {
     </html>
   `;
 
-  let path = event.path.slice(1);
+  let path = event.path.slice(1) || "prompt";
 
-  html = html.replace("1200x630", "1200x630/" + path);
-  html = html.replace("800x800", "800x800/" + path);
+  html = html.replace("1200x630/prompt.png", "1200x630/" + path + ".png");
+  html = html.replace("800x800/prompt.png", "800x800/" + path + ".png");
 
   if (path.length) {
     let title = path + " - aesthetic.computer";

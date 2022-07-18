@@ -22,6 +22,8 @@
   - [] Clean up netlify cruft.
   - [] TOML
   - [] templates directory
+  - [] Make them work on iOS
+  - [x] Should og:image and twitter:image have file extensions?
 
 ***Thumbnail Longtail***
   - [] Get the external thumbnail server running on a VPS to see how fast it is
