@@ -1,8 +1,7 @@
-// Follow along with: https://www.fastify.io/docs/latest/Guides/Getting-Started/
+// Generates an image thumbnail of the starting screen of a piece.
+// See also: `/thumbnail-server` for an alternate implementation.
 
-// TODO: Consider writing the files to Digital Ocean Spaces using a netlify
-//       serverless function... possibly with the "-background" mode enabled.
-// https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
+// Fastify docs: https://www.fastify.io/docs/latest/Guides/Getting-Started
 
 import Fastify from 'fastify'
 

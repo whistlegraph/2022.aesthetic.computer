@@ -16,6 +16,9 @@
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
+***External Thumbnail Server***
+  - [] Get the external thumbnail server running on a VPS.
+
  ***Meta***
   - [🟢] Write a new netlify function that returns the proper html for every page,
        so that prerendering can be turned off (get imessage previews working).
@@ -24,6 +27,7 @@
  - [] Write a netlify serverless function and call it from the microphone
         piece... so the file can be uploaded.
         - [] Netlify Serverless Hello World
+        - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
  - [] Refer to ***Uploader Server*** below.
  - [] Is there a way for a local server to still use codes? How would this be
       proxied and tested? Maybe with an environment variable and a separate
