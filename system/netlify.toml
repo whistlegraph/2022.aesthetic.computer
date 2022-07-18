@@ -2,6 +2,9 @@
   publish = "public"
 [functions]
   node_bundler = "esbuild"
+[functions."index"]
+  included_files = ["templates/*.html"]
+[functions."thumbnail"]
   external_node_modules = ["chrome-aws-lambda"]
 [dev]
   NODE_ENV = "development"
@@ -16,3 +19,12 @@
 for = "/*"
   [headers.values]
   Access-Control-Allow-Origin = "*"
+[[redirects]]
+from = "/thumbnail/*"
+to = "/.netlify/builders/thumbnail"
+status = 200
+force = true
+[[redirects]]
+from = "/*"
+to = "/.netlify/builders/index"
+status = 200

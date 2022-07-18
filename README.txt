@@ -16,12 +16,18 @@
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
-***External Thumbnail Server***
-  - [] Get the external thumbnail server running on a VPS.
-
  ***Meta***
   - [🟢] Write a new netlify function that returns the proper html for every page,
        so that prerendering can be turned off (get imessage previews working).
+
+***Thumbnail Longtail***
+  - [] Get the external thumbnail server running on a VPS to see how fast it is
+       compared to the netlify function.
+  - Provision a machine that can actually execute `npx playwright install chrome`.
+  - [] Optimize netlify function... switch to jpeg to see if it's any faster? 
+
+ ***Socket Server*** 
+  - [] Fix server.aesthetic.computer... maybe just take it offline for now?
 
 ***Storage***
  - [] Write a netlify serverless function and call it from the microphone

@@ -66,6 +66,7 @@ async function handler(event, context) {
 
   await page.waitForTimeout(500); // A bit of extra time.
 
+  // TODO: Switch to jpegs to see if this can get any faster?
   const buffer = await page.screenshot();
 
   await browser.close();

@@ -820,7 +820,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "meta") {
-      setMetatags(content);
+      // setMetatags(content);
       return;
     }
 
@@ -1080,7 +1080,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (type === "disk-loaded") {
       // Show an "audio engine: off" message.
 
-      setMetatags(content.meta);
+      // setMetatags(content.meta);
 
       //if (content.noBeat === false && audioContext?.state !== "running") {
       //bumper.innerText = "audio engine off";
