@@ -50,6 +50,7 @@ async function handler(event, context) {
   try {
     await page.goto(`${url}/${command.join("/") || ""}`, {
       waitUntil: "networkidle2",
+      timeout: 3000
     });
   } catch {
     console.log("🔴 Failed to stop networking.");
@@ -62,6 +63,8 @@ async function handler(event, context) {
   } catch {
     console.log("🔴 Failed window.preloadReady timer.");
   }
+
+  await page.waitForTimeout(500); // A bit of extra time.
 
   const buffer = await page.screenshot();
 
