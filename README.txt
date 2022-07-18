@@ -19,6 +19,9 @@
  ***Meta***
   - [🟢] Write a new netlify function that returns the proper html for every page,
        so that prerendering can be turned off (get imessage previews working).
+  - [] Clean up netlify cruft.
+  - [] TOML
+  - [] templates directory
 
 ***Thumbnail Longtail***
   - [] Get the external thumbnail server running on a VPS to see how fast it is
