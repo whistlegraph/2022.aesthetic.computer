@@ -3,7 +3,7 @@
 [functions]
   node_bundler = "esbuild"
 [functions."index"]
-  included_files = ["templates/*.html"]
+  # included_files = ["templates/*.html"]
 [functions."thumbnail"]
   external_node_modules = ["chrome-aws-lambda"]
 [dev]
