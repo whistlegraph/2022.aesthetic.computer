@@ -436,7 +436,7 @@ function boot({
       <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline disablepictureinpicture src="./aesthetic.computer/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4" type="video/mp4"></video>
+           playsinline disablepictureinpicture src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4" type="video/mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline" style="border-color: ${whistlegraph.compilation.highlight}"></div>
         </div>
@@ -444,7 +444,7 @@ function boot({
     
       <div class="card-view" data-type="score" data-outer-radius="${whistlegraph.score.outerRadius}" data-inner-radius="${whistlegraph.score.innerRadius}" data-border-setting="${whistlegraph.score.border}" style="z-index: 1">
         <div class="card" data-type="score" data-ratio="8.5x11">
-          <img class="card-content" src="./aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png">
+          <img class="card-content" src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png">
            <div class="card-outline" style="border-color: ${whistlegraph.score.highlight}"></div>
         </div>
       </div>
@@ -452,23 +452,23 @@ function boot({
       <div class="card-view active" data-type="video" data-outer-radius="${whistlegraph.video.outerRadius}" data-inner-radius="${whistlegraph.video.innerRadius}" data-border-setting="${whistlegraph.video.border}" style="z-index: 2">
         <div class="card" data-type="video" data-ratio="4x5">
           <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline disablepictureinpicture src="./aesthetic.computer/disks/whistlegraph/${wg}/${wg}-web.mp4"></video>
+           playsinline disablepictureinpicture src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-web.mp4"></video>
            <div class="card-cover"></div>
            <div class="card-outline" style="border-color: ${whistlegraph.video.highlight}"></div>
            <div id="card-play">
-             <img src="./aesthetic.computer/disks/whistlegraph/play-circle.svg"> 
-             <img src="./aesthetic.computer/disks/whistlegraph/play-triangle.svg"> 
+             <img src="/aesthetic.computer/disks/whistlegraph/play-circle.svg"> 
+             <img src="/aesthetic.computer/disks/whistlegraph/play-triangle.svg"> 
            </div>
         </div>
       </div>
     <div id="card-deck-loading">
       <div id="spinner" style="filter: brightness(0.9) drop-shadow(0 0 1vmin ${whistlegraph.glow})">
-        <img width="1000" height="1000" src="./aesthetic.computer/disks/whistlegraph/${wg}/${wg}.webp">
+        <img width="1000" height="1000" src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}.webp">
         <canvas width="1000" height="1000" id="spinner-canvas"></canvas>
       </div>
     </div>
     </div>
-    <script src="./aesthetic.computer/disks/whistlegraph/whistlegraph-cards.js" type="module" defer></script>
+    <script src="/aesthetic.computer/disks/whistlegraph/whistlegraph-cards.js" type="module" defer></script>
     <style>  
     #content .card-deck {
       width: 100%;

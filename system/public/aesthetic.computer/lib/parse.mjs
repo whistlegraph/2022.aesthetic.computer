@@ -20,6 +20,8 @@
 function parse(text) {
   let path, host, params, search, hash;
 
+  console.log(text);
+
   // 1. Pull off any "search" from `text`.
   [text, search] = text.split("?");
   [search, hash] = (search || "").split("#"); // And any "hash" from `search`.
@@ -53,6 +55,8 @@ function parse(text) {
     host = location.hostname; // TODO: Will this allow jumping from one disk to
     //                                 another on a different host just by
     //                                 typing the name? 22.07.15.00.12
+
+    if (location.port) host += ":" + location.port;
     path = "aesthetic.computer/disks/" + tokens[0];
   }
 
@@ -67,6 +71,7 @@ function slug(url) {
 // Remove http protocol and host from current url before feeding it to parser.
   return url
     .replace(/^http(s?):\/\//i, "")
+    .replace(window.location.hostname + ":" + window.location.port + "/", "")
     .replace(window.location.hostname + "/", "");
 }
 

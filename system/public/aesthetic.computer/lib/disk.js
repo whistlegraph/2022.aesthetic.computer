@@ -322,6 +322,7 @@ async function load(
   { path, host, search, params, hash, text },
   fromHistory = false
 ) {
+
   if (host === "") {
     host = originalHost;
   }
@@ -359,7 +360,10 @@ async function load(
     return;
   }
 
-  let fullUrl = "https://" + host + "/" + path + ".js";
+  // TODO: Get proper protocol here...
+  let fullUrl = location.protocol + "//" + host + "/" + path + ".js";
+
+  // let fullUrl = "https://" + host + "/" + path + ".js";
   // The hash `time` parameter busts the cache so that the environment is
   // reset if a disk is re-entered while the system is running.
   // Why a hash? See also: https://github.com/denoland/deno/issues/6946#issuecomment-668230727
@@ -1052,7 +1056,7 @@ function makeFrame({ data: { type, content } }) {
           }
         } catch {
           // Not a valid URL so assume local file on disk server.
-          path = `https://${$api.net.host}/${path}`;
+          path = `${location.protocol}//${$api.net.host}/${path}`;
         }
 
         // If we are loading a .json file then we can do it here.
