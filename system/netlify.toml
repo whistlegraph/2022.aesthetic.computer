@@ -2,7 +2,7 @@
   publish = "public"
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["playwright-core", "chrome-aws-lambda"]
+  external_node_modules = ["chrome-aws-lambda"]
 [dev]
   NODE_ENV = "development"
   framework = "#custom"
