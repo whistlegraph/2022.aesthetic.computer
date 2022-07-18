@@ -50,11 +50,11 @@ async function handler(event, context) {
     );
     html = html.replace(
       'og:title" content="aesthetic.computer"',
-      'og:title" content=' + path + ' - aesthetic.computer"'
+      'og:title" content="' + path + ' - aesthetic.computer"'
     );
     html = html.replace(
       'twitter:title" content="aesthetic.computer"',
-      'twitter:title" content=' + path + ' - aesthetic.computer"'
+      'twitter:title" content="' + path + ' - aesthetic.computer"'
     );
     /*
     html = html.replace(
