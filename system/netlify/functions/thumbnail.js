@@ -5,7 +5,7 @@ const { builder } = require("@netlify/functions");
 const chromium = require("chrome-aws-lambda");
 // const puppeteer = require("puppeteer-core");
 
-const playwright = require('playwright-core');
+//const playwright = require("playwright-core");
 
 // Generates an image thumbnail of the starting screen of a piece.
 // (After 4 seconds)
@@ -30,8 +30,7 @@ async function handler(event, context) {
   const [width, height] = resolution.split("x").map((n) => parseInt(n));
 
   // Puppeteer Version
-  /*
-  const browser = await puppeteer.launch({
+  const browser = await chromium.puppeteer.launch({
     args: chromium.args,
     defaultViewport: {
       width: Math.ceil(width / 2),
@@ -69,13 +68,13 @@ async function handler(event, context) {
     ttl: 60,
     isBase64Encoded: true,
   };
-  */
 
   // Playwright Version
+  /*
   const chrome = await playwright.chromium.launch({
     args: chromium.args,
     executablePath: await chromium.executablePath,
-    headless: chromium.headless
+    headless: chromium.headless,
   });
 
   const browser = await chrome.newContext({
@@ -83,7 +82,7 @@ async function handler(event, context) {
       width: Math.ceil(width / 2),
       height: Math.ceil(height / 2),
     },
-    deviceScaleFactor: 2
+    deviceScaleFactor: 2,
   });
   const page = await browser.newPage();
 
@@ -92,23 +91,31 @@ async function handler(event, context) {
   //       - `https://${event.headers['x-forwarded-host']}/${command || ""}`
   await page.goto(`https://aesthetic.computer/${command.join("/") || ""}`, {
     waitUntil: "networkidle",
+    timeout: 8000
   });
+
+  // Add a potential extra 2 seconds until preloading is ready.
+  //await page.waitForFunction(() => window.preloadReady === true, {
+  //  timeout: 2000,
+  //});
+
+  // await page.waitForTimeout(250); // A bit of extra time.
 
   const buffer = await page.screenshot();
 
-  await browser.close();
+  await chrome.close();
 
   return {
     statusCode: 200,
     headers: {
       "Content-Type": "image/png",
-      "Content-Length": buffer.length.toString()
+      "Content-Length": buffer.length.toString(),
     },
     body: buffer.toString("base64"),
     ttl: 60,
     isBase64Encoded: true,
   };
-
+  */
 }
 
 exports.handler = builder(handler);

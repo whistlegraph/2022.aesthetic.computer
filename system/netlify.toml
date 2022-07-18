@@ -1,6 +1,8 @@
 [build]
   publish = "public"
-  command = "npm rebuild"
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["chrome-aws-lambda"]
 [dev]
   framework = "#custom"
   command = "npm run spaces-dev-netlify"
