@@ -33,7 +33,6 @@ videos.forEach((video) => {
       // console.log("📹 Whistlegraph videos are ready to play!");
       allVideosReady = true;
       setTimeout(() => {
-        console.log("DONE LOADING");
         deck.classList.remove("loading");
         spinnerCtx.drawImage(spinnerImg, 0, 0);
       }, 500);
