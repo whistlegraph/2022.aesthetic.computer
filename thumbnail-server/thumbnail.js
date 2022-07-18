@@ -44,7 +44,8 @@ fastify.get('/thumbnail/:resolution/:command', async (request, reply) => {
   // TODO: Rewrite the URL below so that I can test locally without hitting
   //       aesthetic.computer's production deployment. 22.07.17.22.30
   //       - `https://${event.headers['x-forwarded-host']}/${command || ""}`
-  await page.goto(`http://localhost:8000/${command || ""}`, {
+  // await page.goto(`http://localhost:8000/${command || ""}`, {
+  await page.goto(`https://aesthetic.computer/${command || ""}`, {
     waitUntil: "networkidle2"
   });
 
