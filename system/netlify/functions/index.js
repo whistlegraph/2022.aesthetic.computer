@@ -7,17 +7,18 @@
 
 const { builder } = require("@netlify/functions");
 const fs = require("fs").promises;
+const path = require("path");
 
 async function handler(event, context) {
-  let html = await fs.readFile("./templates/index.html", "utf8");
+  let html = await fs.readFile(path.resolve("templates/index.html"), "utf8");
 
-  let path = event.path.slice(1);
+  let piece = event.path.slice(1);
     
-  html = html.replace("1200x630", "1200x630/" + path);
-  html = html.replace("800x800", "800x800/" + path);
+  html = html.replace("1200x630", "1200x630/" + piece);
+  html = html.replace("800x800", "800x800/" + piece);
 
-  if (path.length) {
-    let title = path + " - aesthetic.computer";
+  if (piece.length) {
+    let title = piece + " - aesthetic.computer";
     html = html.replace(
       "<title>aesthetic.computer</title>",
       "<title>" + title + "</title>"
