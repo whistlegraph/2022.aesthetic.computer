@@ -2,9 +2,10 @@
   publish = "public"
 [functions]
   node_bundler = "esbuild"
-[functions."index"]
-  # included_files = ["templates/*.html"]
-[functions."thumbnail"]
+[functions.index]
+  included_files = ["public/aesthetic.computer/disks/**/*.mjs",
+                    "public/aesthetic.computer/lib/**/*.mjs"]
+[functions.thumbnail]
   external_node_modules = ["chrome-aws-lambda"]
 [dev]
   NODE_ENV = "development"
@@ -28,4 +29,3 @@
   from = "/*"
   to = "/.netlify/builders/index"
   status = 200
-  force = true

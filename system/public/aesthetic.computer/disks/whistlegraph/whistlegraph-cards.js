@@ -1,5 +1,5 @@
-import { randIntRange } from "../../lib/num.js";
-import { shuffleInPlace, choose } from "../../lib/help.js";
+import { randIntRange } from "../../lib/num.mjs";
+import { shuffleInPlace, choose } from "../../lib/help.mjs";
 
 const { min, random, floor } = Math;
 const iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);

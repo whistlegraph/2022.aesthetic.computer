@@ -8,7 +8,7 @@ const s3Client = new S3({
   },
 });
 
-module.exports.handler = async (event, context) => {
+export async function handler(event, context) {
   console.log(s3Client);
 };
 

@@ -2,6 +2,7 @@
   "name": "aesthetic.computer",
   "version": "1.0.0",
   "description": "The header package for the whole aesthetic.computer codebase.",
+  "type": "module",
   "scripts": {
     "code": "cd system; npm run codespaces-dev",
     "watch": "cd system; npm run watch"

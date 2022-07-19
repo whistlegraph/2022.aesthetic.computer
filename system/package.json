@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "My virtual computer system for loading and running disks.",
   "source": "./public/index.html",
+  "type": "module",
   "scripts": {
     "dev": "BROWSER=none netlify dev",
     "watch": "netlify watch",

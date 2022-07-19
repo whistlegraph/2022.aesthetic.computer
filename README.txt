@@ -17,12 +17,11 @@
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
  ***Meta***
-  - [🟢] Write a new netlify function that returns the proper html for every page,
-       so that prerendering can be turned off (get imessage previews working).
+  - [🟢] Make them work on iOS
   - [] Clean up netlify cruft.
   - [] TOML
-  - [] templates directory
-  - [] Make them work on iOS
+  - [x] Write a new netlify function that returns the proper html for every page,
+        so that prerendering can be turned off (get imessage previews working).
   - [x] Should og:image and twitter:image have file extensions?
 
 ***Thumbnail Longtail***
