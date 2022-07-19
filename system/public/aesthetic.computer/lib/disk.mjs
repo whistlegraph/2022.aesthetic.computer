@@ -322,7 +322,6 @@ async function load(
   { path, host, search, params, hash, text },
   fromHistory = false
 ) {
-
   if (host === "") {
     host = originalHost;
   }
@@ -388,17 +387,15 @@ async function load(
   // This would also get the source code, in case meta-programming is needed.
   // const source = await (await fetch(fullUrl)).text();
 
-  // 🔥
-  // TODO: Should metadata fields be held until after boot runs so that
-  //       they can only be set once on the DOM? 22.07.16.18.42
-
+  // ***Client Metadata Fields***
   // Set default metadata fields for SEO and sharing, (requires serverside prerendering).
+  // See also: `index.js` which prefills metadata on page load from the server.
   let title = text + " · aesthetic.computer";
   if (text === "prompt" || text === "/") title = "aesthetic.computer";
   const meta = {
     title,
-    path: text, 
-    desc: "...",
+    path: text,
+    desc: module.desc, // Note: This doesn't auto-update externally hosted module descriptions, and may never need to? 22.07.19.06.00
     img: {
       og: "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
       twitter: "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
@@ -437,12 +434,12 @@ async function load(
   };
 
   $commonApi.net.preloadReady = () => {
-    send({ type: "preload-ready", content: true }); // Tell the browser that all preloading is done.  
-  } 
+    send({ type: "preload-ready", content: true }); // Tell the browser that all preloading is done.
+  };
 
   $commonApi.net.waitForPreload = () => {
-    send({ type: "wait-for-preload", content: true }); // Tell the browser that all preloading is done.  
-  } 
+    send({ type: "wait-for-preload", content: true }); // Tell the browser that all preloading is done.
+  };
 
   // Automatically connect a socket server if we are in debug mode.
   if (debug) {
@@ -513,7 +510,7 @@ async function load(
         text,
         pieceCount: $commonApi.pieceCount,
         fromHistory,
-        meta
+        meta,
         // noBeat: beat === defaults.beat,
       },
     });
@@ -1105,7 +1102,7 @@ function makeFrame({ data: { type, content } }) {
       if (paintCount === 0n) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
         boot($api);
-        if (loading === false) send({type: "disk-loaded-and-booted"});
+        if (loading === false) send({ type: "disk-loaded-and-booted" });
       }
 
       // We no longer need the preload api for painting.

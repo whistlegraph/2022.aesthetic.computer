@@ -17,10 +17,8 @@
 //          ~niki/bpm~180
 //          ~game.jas.life/bpm~180?mute=true
 //          ~niki
-function parse(text) {
+function parse(text, location = window.location) {
   let path, host, params, search, hash;
-
-  console.log(text);
 
   // 1. Pull off any "search" from `text`.
   [text, search] = text.split("?");
@@ -52,11 +50,12 @@ function parse(text) {
       host += ".aesthetic.computer";
     }
   } else {
-    host = location.hostname; // TODO: Will this allow jumping from one disk to
-    //                                 another on a different host just by
-    //                                 typing the name? 22.07.15.00.12
-
+    host = location.hostname
     if (location.port) host += ":" + location.port;
+    // TODO: Will this allow jumping from one disk to
+    //       another on a different host just by
+    //       typing the name? 22.07.15.00.12
+
     path = "aesthetic.computer/disks/" + tokens[0];
   }
 

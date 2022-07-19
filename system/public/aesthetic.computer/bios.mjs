@@ -399,7 +399,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       // TODO: Why can't there be separate audioWorklet modules?
       await audioContext.audioWorklet.addModule(
-        "aesthetic.computer/lib/microphone.mjs"
+        "/aesthetic.computer/lib/microphone.mjs"
       );
 
       const playerNode = new AudioWorkletNode(
@@ -453,7 +453,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     // Sound Synthesis Processor
     (async () => {
       await audioContext.audioWorklet.addModule(
-        "aesthetic.computer/lib/speaker.mjs"
+        "/aesthetic.computer/lib/speaker.mjs"
       );
       const soundProcessor = new AudioWorkletNode(
         audioContext,

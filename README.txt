@@ -17,12 +17,22 @@
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
  ***Meta***
-  - [🟢] Make them work on iOS
+  - [🟢] Serve a 404 page for anything else that breaks.
   - [] Clean up netlify cruft.
-  - [] TOML
+  - [] Do the TOML routes actually matter?
+
+  - [x] Get ~/niki/blank working again.
+  - [x] Separate out / parse the text before loading a disk serverside so that
+        parameterized disks work again.
+  - [x] Make them work on iOS
   - [x] Write a new netlify function that returns the proper html for every page,
         so that prerendering can be turned off (get imessage previews working).
   - [x] Should og:image and twitter:image have file extensions?
+
+***World***
+ - [] Make an interconnected series of pieces that players can walk between, and
+      maintain a server connection throughout.
+ - [] Players should be able to wave or point their arm.
 
 ***Thumbnail Longtail***
   - [] Get the external thumbnail server running on a VPS to see how fast it is
@@ -46,6 +56,12 @@
 ***View-Source***
 - [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
 - [] Typing `src` plus the `piece` should jump you to the github source page and these should also be url addressable.
+
+***Developer / User Login***
+- [] Change the contents of user.aesthetic.computer/login.mjs to  ...
+   - This would prompt the author to edit a string in login.mjs to match, which
+     would grant them a javascript web token?.
+   - Look up netlify identity... https://docs.netlify.com/visitor-access/identity
 
 ***Readme***
 - [] Directly load the GitHub readme in a scrollable content window.

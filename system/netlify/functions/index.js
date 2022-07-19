@@ -9,22 +9,57 @@
 
 import { builder } from "@netlify/functions";
 // import { readFile } from "fs/promises";
+import https from "https";
+
+import { parse } from "../../public/aesthetic.computer/lib/parse.mjs";
 
 async function fun(event, context) {
-  // TODO: Return a 500 or 404 for something that does not exist...
+  if (process.env.CONTEXT === "dev")
+    console.log("Node version:", process.version);
 
-  if (event.path === "/favicon.ico") return { statusCode: 500 }
+  // TODO: Return a 500 or 404 for everything that does not exist...
+  //       - [] Like for example if the below import fails...
+  if (event.path === "/favicon.ico") return { statusCode: 500 };
 
-  console.log("Version:", process.version);
+  let slug = event.path.slice(1) || "prompt";
 
-  console.log("Path:", event.path);
+  const parsed = parse(slug, { hostname: event.headers["x-forwarded-host"] });
 
-  let path = event.path.slice(1) || "prompt";
+  if (process.env.CONTEXT === "dev") console.log(slug, parsed);
+
   let title = "aesthetic.computer";
-  if (path.length && path !== "prompt") title = path + " · aesthetic.computer";
+  if (slug !== "prompt") title = slug + " · aesthetic.computer";
 
+  // Remote host.
+  // TODO: Node currently doesn't support dynamic imports from http/s - 22.07.19.05.25
+  //       - Implementation below.
+  /*
+  let importPath;
+  if (slug.startsWith('~')) {
+    importPath = `https://${parsed.host}/${parsed.path}.mjs`;
+  } else {
+    importPath = `../../public/${parsed.path}.mjs`;
+  }
   // TODO: Check to see if the path is on this server.
-  const { desc } = await import("../../public/aesthetic.computer/disks/" + path + ".mjs");
+  const { desc } = await import(importPath);
+  */
+
+  let desc;
+
+  // Externally hosted piece.
+  if (slug.startsWith("~")) {
+    const externalPiece = await get_page(
+      `https://${parsed.host}/${parsed.path}.mjs`
+    );
+    if (externalPiece) {
+      desc = externalPiece.split(/\r?\n/)[0].replace("//", "").trim();
+    } else {
+      desc = `A piece by ${slug.split("/")[0].replace("~", "")}.`;
+    }
+  } else {
+    // Locally hosted piece.
+    desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
+  }
 
   const html = `
     <!DOCTYPE html>
@@ -36,13 +71,15 @@ async function fun(event, context) {
         <link rel="icon" href="data:;base64,iVBORw0KGgo=">
         <link rel="stylesheet" href="/aesthetic.computer/style.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <meta name="og:title" content="${path}" />
-        <meta name="og:description" content="${desc || "An aesthetic.computer piece."}" />
-        <meta name="og:image" content="https://aesthetic.computer/thumbnail/1200x630/${path}.jpg" />
+        <meta name="og:title" content="${slug}" />
+        <meta name="og:description" content="${
+          desc || "An aesthetic.computer piece."
+        }" />
+        <meta name="og:image" content="https://aesthetic.computer/thumbnail/1200x630/${slug}.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="${path}" />
+        <meta name="twitter:title" content="${slug}" />
         <meta name="twitter:site" content="aesthetic.computer" />
-        <meta name="twitter:image" content="https://aesthetic.computer/thumbnail/1800x900/${path}.jpg"/>
+        <meta name="twitter:image" content="https://aesthetic.computer/thumbnail/1800x900/${slug}.jpg"/>
       </head>
       <body class="native-cursor">
       <script>
@@ -61,6 +98,18 @@ async function fun(event, context) {
   };
 }
 
-export const handler = builder(fun)
+async function get_page(url) {
+  return new Promise((resolve) => {
+    let data = "";
+    https.get(url, (res) => {
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+      res.on("end", () => {
+        resolve(data);
+      });
+    });
+  });
+}
 
-//exports.handler = builder(handler);
+export const handler = builder(fun);
