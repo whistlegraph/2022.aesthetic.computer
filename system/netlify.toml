@@ -4,6 +4,7 @@
   node_bundler = "esbuild"
 [functions.index]
   included_files = ["public/aesthetic.computer/disks/**/*.mjs",
+                    "public/aesthetic.computer/dep/**/*.mjs",
                     "public/aesthetic.computer/lib/**/*.mjs"]
 [functions.thumbnail]
   external_node_modules = ["chrome-aws-lambda"]
