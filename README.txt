@@ -18,9 +18,9 @@
 
  ***Meta***
   - [🟢] Serve a 404 page for anything else that breaks.
-  - [] Clean up netlify cruft.
-  - [] Do the TOML routes actually matter?
-
+    - [] Right now it just says: https://aesthetic.computer/okok
+  - [ ] Add support for custom / locally generated thumbnail overrides.
+  - [x] Do the TOML routes actually matter? No.
   - [x] Get ~/niki/blank working again.
   - [x] Separate out / parse the text before loading a disk serverside so that
         parameterized disks work again.
@@ -29,19 +29,27 @@
         so that prerendering can be turned off (get imessage previews working).
   - [x] Should og:image and twitter:image have file extensions?
 
-***World***
- - [] Make an interconnected series of pieces that players can walk between, and
-      maintain a server connection throughout.
- - [] Players should be able to wave or point their arm.
+***Developers***
+  - [] Add developer console log / catch errors and show them to users
+       directly on the screen. Maybe this should be available all the time,
+       even in production?
+  - [] Get it working on: https://glitch.com/edit/#!/niki-aesthetic-computer
+  
+***View-Source***
+  - [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
+  - [] Typing `src` plus the `piece` should jump you to the github source page and these should also be url addressable.
 
-***Thumbnail Longtail***
-  - [] Get the external thumbnail server running on a VPS to see how fast it is
-       compared to the netlify function.
-  - Provision a machine that can actually execute `npx playwright install chrome`.
-  - [] Optimize netlify function... switch to jpeg to see if it's any faster? 
+***Readme***
+  - [] Directly load the GitHub readme in a scrollable content window.
 
- ***Socket Server*** 
-  - [] Fix server.aesthetic.computer... maybe just take it offline for now?
+***Notion***
+  - [] Make `manual` and `hq` load the notion (separate places) in a new tab.
+  - [] Should the manual be a super.so site using one of the chosen typefaces?
+
+***Prompt Start**
+  - [] Make the prompt start message easily editable by Niki.
+    What would it mean for this message to use the ***Upload Server*** and merit
+    a text editor.
 
 ***Storage***
  - [] Write a netlify serverless function and call it from the microphone
@@ -52,28 +60,6 @@
  - [] Is there a way for a local server to still use codes? How would this be
       proxied and tested? Maybe with an environment variable and a separate
       upload server that has no expiration?
-
-***View-Source***
-- [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
-- [] Typing `src` plus the `piece` should jump you to the github source page and these should also be url addressable.
-
-***Developer / User Login***
-- [] Change the contents of user.aesthetic.computer/login.mjs to  ...
-   - This would prompt the author to edit a string in login.mjs to match, which
-     would grant them a javascript web token?.
-   - Look up netlify identity... https://docs.netlify.com/visitor-access/identity
-
-***Readme***
-- [] Directly load the GitHub readme in a scrollable content window.
-
-***Notion***
-- [] Make `manual` and `hq` load the notion (separate places) in a new tab.
-- [] Should the manual be a super.so site using one of the chosen typefaces?
-
-***Prompt Start**
-- [] Make the prompt start message easily editable by Niki.
-  What would it mean for this message to use the ***Upload Server*** and merit
-  a text editor.
 
 ***Bleep***
 - [] Make a basic bleep box that makes a tone when you tap on it.
@@ -158,6 +144,29 @@
        - Do they get stored at a special code, then users can
          go to the website / open another window and mint from the code
          or download it?
+         
+***3D Spatial Co-present Drawing***
+  ***A-Frame Integration***
+  - Prototype:
+    - Either way:
+      [] Set up an orthographic camera and mouse-enabled drawing for desktop users
+         of the a-frame layer.
+      [] Read source code of a-painter: https://aframe.io/a-painter/
+
+    -  iframe method:
+        [X] Make sure the "escape" and "~" key is handled (see Whistlegraph).
+        [X] Set cursor to none on the iframe.
+        [X] Send events from the iframe back to the main window.
+        [X] Use those events to update the a.c cursor.
+
+    -  Non-iframe method (why would this be better... maybe for recording?) [hold off for now]
+        [] Get aframe script tag loading inside of the body then
+           inject the scene.
+***Explore VR without A-Frame***
+  ***Without A-Frame***
+   - [] Clone the basic WebXR examples, run them and and read them.
+        URL here: https://github.com/immersive-web/webxr-samples
+
 
 ***Basic Server Work / Rooms / Synchronized Metronome***
   - [] How to get metronomes syncing across a network?
@@ -171,6 +180,26 @@
             - Join another room using `room roomID`.
             - Entering an activity is part of the room.
             - There should be a basic "shout" program for rooms.
+
+ ***Socket Server*** 
+  - [] Fix server.aesthetic.computer... maybe just take it offline for now?
+
+***World***
+ - [] Make an interconnected series of pieces that players can walk between, and
+      maintain a server connection throughout.
+ - [] Players should be able to wave or point their arm.
+
+***Developer / User Login***
+- [] Change the contents of user.aesthetic.computer/login.mjs to  ...
+   - This would prompt the author to edit a string in login.mjs to match, which
+     would grant them a javascript web token?.
+   - Look up netlify identity... https://docs.netlify.com/visitor-access/identity
+
+***Thumbnail Longtail***
+  - [] Get the external thumbnail server running on a VPS to see how fast it is
+       compared to the netlify function.
+  - Provision a machine that can actually execute `npx playwright install chrome`.
+  - [] Optimize netlify function... switch to jpeg to see if it's any faster? 
 
 ***Routing Longtail***
 - [] Do away with hashtag routes entirely.
@@ -197,30 +226,6 @@
         - aesthetic.run
         - aesthetic.codes
         - aesthetic.cx
-
-***3D Spatial Co-present Drawing***
-  ***A-Frame Integration***
-  - Prototype:
-    - Either way:
-      [] Set up an orthographic camera and mouse-enabled drawing for desktop users
-         of the a-frame layer.
-
-    -  iframe method:
-        [X] Make sure the "escape" and "~" key is handled (see Whistlegraph).
-        [X] Set cursor to none on the iframe.
-        [X] Send events from the iframe back to the main window.
-        [X] Use those events to update the a.c cursor.
-
-    -  Non-iframe method (why would this be better... maybe for recording?) [hold off for now]
-        [] Get aframe script tag loading inside of the body then
-           inject the scene.
-
-  ***Without A-Frame***
-   - [] Clone the basic WebXR examples, run them and and read them.
-        URL here: https://github.com/immersive-web/webxr-samples
-
- - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
- - [] Chalkboard / material simulation.
 
 **Image Viewer / Media Viewer**
  - [] Write a great image-viewer that implements the `rdp` piece.
@@ -266,6 +271,8 @@
   - [] Should a new nopaint be built from scratch?
 
  ❤️Side Missions❤️
+  - [] Finish learning about Tezos, LIGO: https://academy.ligolang.org/pascal/chapter-types
+  - [] Chalkboard / material simulation.
   - [] Try and get fullscreen on iOS / iPadOS again... maybe sideload the app shim?
   - [] Add `every("1s", () => {})` shortcut to the `sim` api. 
   - [] How to limit the number of Frame's in the start of a disk?
