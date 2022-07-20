@@ -20,7 +20,8 @@
   - [🟢] Serve a 404 page for anything else that breaks.
     - [] Right now it just crashes here: https://aesthetic.computer/okok
     - [] Right now it just is black here: https://aesthetic.computer/~niki/whatever
-  - [ ] Add support for custom / locally generated thumbnail overrides.
+  - [] Add support for custom / locally generated thumbnail overrides.
+    - [] Test override for some specific route... maybe blank?
     - [] Come up with cover image in Figma?
   - [x] Do the TOML routes actually matter? No.
   - [x] Get ~/niki/blank working again.
@@ -35,12 +36,10 @@
   - [] Add developer console log / catch errors and show them to users
        directly on the screen. Maybe this should be available all the time,
        even in production?
+  - [] Catch errors better in the modules, so they can be easily deciphered
+       from console messages.
   - [] Get it working on: https://glitch.com/edit/#!/niki-aesthetic-computer
 
-***Prompt Updates***
-  - [] “search bar” any letter typed shows “ghost” letters of all possible options
-  - [] Also make the commands case insensitive!
-  
 ***View-Source***
   - [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
   - [] Typing `src` plus the `piece` should jump you to the github source page and these should also be url addressable.
@@ -54,7 +53,7 @@
   - [] Make `manual` and `hq` load the notion (separate places) in a new tab.
   - [] Should the manual be a super.so site using one of the chosen typefaces?
 
-***Prompt Start**
+***Prompt Start***
   - [] What info goes on the starting prompt page?
        Given that it can change every 60 seconds.
        And anyone who shares the link will see a preview image.
@@ -62,6 +61,10 @@
   - [] Make the prompt start message easily editable by Niki.
     What would it mean for this message to use the ***Upload Server*** and merit
     a text editor.
+
+***Prompt Updates***
+  - [] “search bar” any letter typed shows “ghost” letters of all possible options
+  - [] Also make the commands case insensitive!
 
 ***Storage***
  - [] Write a netlify serverless function and call it from the microphone

@@ -10,6 +10,7 @@
 import { builder } from "@netlify/functions";
 // import { readFile } from "fs/promises";
 import https from "https";
+import { URLSearchParams } from "url";
 
 import { parse } from "../../public/aesthetic.computer/lib/parse.mjs";
 
@@ -47,18 +48,28 @@ async function fun(event, context) {
   let desc;
 
   // Externally hosted piece.
-  if (slug.startsWith("~")) {
-    const externalPiece = await get_page(
-      `https://${parsed.host}/${parsed.path}.mjs`
-    );
-    if (externalPiece) {
-      desc = externalPiece.split(/\r?\n/)[0].replace("//", "").trim();
+  try {
+    if (slug.startsWith("~")) {
+      const externalPiece = await get_page(
+        `https://${parsed.host}/${parsed.path}.mjs`
+      );
+      if (externalPiece) {
+        desc = externalPiece.split(/\r?\n/)[0].replace("//", "").trim();
+      } else {
+        desc = `A piece by ${slug.split("/")[0].replace("~", "")}.`;
+      }
     } else {
-      desc = `A piece by ${slug.split("/")[0].replace("~", "")}.`;
+      // Locally hosted piece.
+      desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
     }
-  } else {
-    // Locally hosted piece.
-    desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
+  } catch {
+    // If either module doesn't load, then we know we won't be able to load
+    // the piece, so we can fallback to the main route. 
+    console.log('caught')
+    return {
+      statusCode: 404,
+      body: "Not Found"
+    }
   }
 
   const html = `
