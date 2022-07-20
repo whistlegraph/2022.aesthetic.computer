@@ -26,6 +26,8 @@ Welcome to...
 
 🐞 Major Bugs & Regressions
  - [🍎] TODO: How should I generate favicons for each page or treat favicons in general?
+  - Maybe just design a favicon? Should each piece also be able to have an icon?
+  - Maybe the system could use these icons if pieces defined them...
  - [] Refactor `wg` to make better use of thumbnails... what should the new structure be?
    - [] How to have a default or custom thumbnail... even though things are randomly routed?
  - [🔴] Clean up the use of "aesthetic.computer/disks/" across the whole project.
@@ -38,12 +40,12 @@ Welcome to...
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
  ***Meta***
-  - [🟢] Serve a 404 page for anything else that breaks.
-    - [] Right now it just crashes here: https://aesthetic.computer/okok
-    - [] Right now it just is black here: https://aesthetic.computer/~niki/whatever
   - [] Add support for custom / locally generated thumbnail overrides.
     - [] Test override for some specific route... maybe blank?
     - [] Come up with cover image in Figma?
+  - [x] Serve a 404 page for anything else that breaks.
+    - [x] Right now it just crashes here: https://aesthetic.computer/okok
+    - [x] Right now it just is black here: https://aesthetic.computer/~niki/whatever
   - [x] Do the TOML routes actually matter? No.
   - [x] Get ~/niki/blank working again.
   - [x] Separate out / parse the text before loading a disk serverside so that
