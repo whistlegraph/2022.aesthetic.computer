@@ -63,15 +63,17 @@ async function fun(event, context) {
       desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
     }
   } catch {
-    // If either module doesn't load, then we know we won't be able to load
+    // If either module doesn't load, then we KNOW we won't be able to load
     // the piece, so we can fallback to the main route. 
-    return {
-      statusCode: 302,
-      headers: {
-        "Content-Type": "text/html",
-        "Location": "/" + new URLSearchParams(event.queryStringParameters)
-      },
-      body: '<a href="https://aesthetic.computer">https://aesthetic.computer</a>'
+    if (externalPiece === undefined && desc === undefined) {
+      return {
+        statusCode: 302,
+        headers: {
+          "Content-Type": "text/html",
+          "Location": "/" + new URLSearchParams(event.queryStringParameters)
+        },
+        body: '<a href="https://aesthetic.computer">https://aesthetic.computer</a>'
+      }
     }
   }
 

@@ -1,7 +1,26 @@
-️ Are you here to contribute? Scroll to the bottom of this file!
 
-  Welcome to...
+Welcome to...
+
   🧩 AESTHETIC.COMPUTER 🧩
+
+  A general interface / computer toy that...
+
+  - Has "pieces" instead of "apps" or "programs".
+  - Works in updated web browsers on all major devices, including VR headsets! 
+  - Comes with a processing-inspired API that's fun to learn
+    and write interactive, audio-visual pieces for in JavaScript. 
+  - Defaults to an accessible resolution and pixel density, great for learning
+    and counting pixels with.
+
+  (More technical)
+  - Threaded logic, audio, and rendering.
+    - Via a low overhead hypervisor that runs one piece at a time.
+      (like a disk based operating system)
+    - Pieces can transition from one to another (instantly) without refreshing
+      the page or losing context. 
+    - Pieces can load remotely of any `https://` url and link to other pieces via the API.
+    - Pieces that stick to software-rendering are guaranteed accurate results on
+      future runtimes, given that Math in JavaScript doesn't change.
 
 🌟 Projects In Progress 🌟
 
