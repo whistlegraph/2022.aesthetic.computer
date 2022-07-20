@@ -8,7 +8,7 @@ const { builder } = require("@netlify/functions");
 const chromium = require("chrome-aws-lambda");
 
 // Only allow a few given resolutions to prevent spam.
-const acceptedResolutions = ["1200x630"]; // og:image, twitter:image
+const acceptedResolutions = ["1200x630", "1800x900"]; // og:image, twitter:image
 
 async function fun(event, context) {
   const [resolution, ...filepath] = event.path

@@ -12,7 +12,7 @@ const fastify = Fastify({
 })
 
 import { chromium } from 'playwright';
-const acceptedResolutions = ["1200x630"]; // og:image, twitter:image
+const acceptedResolutions = ["1200x630", "1800x900"]; // og:image, twitter:image
 
 fastify.get('/thumbnail/:resolution/:command.jpg', async (request, reply) => {
 

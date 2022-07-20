@@ -17,7 +17,8 @@
 //          ~niki/bpm~180
 //          ~game.jas.life/bpm~180?mute=true
 //          ~niki
-function parse(text, location = window.location) {
+
+function parse(text, location = self?.location) {
   let path, host, params, search, hash;
 
   // 1. Pull off any "search" from `text`.
@@ -50,6 +51,7 @@ function parse(text, location = window.location) {
       host += ".aesthetic.computer";
     }
   } else {
+    console.log(location)
     host = location.hostname
     if (location.port) host += ":" + location.port;
     // TODO: Will this allow jumping from one disk to

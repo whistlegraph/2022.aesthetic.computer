@@ -18,8 +18,10 @@
 
  ***Meta***
   - [🟢] Serve a 404 page for anything else that breaks.
-    - [] Right now it just says: https://aesthetic.computer/okok
+    - [] Right now it just crashes here: https://aesthetic.computer/okok
+    - [] Right now it just is black here: https://aesthetic.computer/~niki/whatever
   - [ ] Add support for custom / locally generated thumbnail overrides.
+    - [] Come up with cover image in Figma?
   - [x] Do the TOML routes actually matter? No.
   - [x] Get ~/niki/blank working again.
   - [x] Separate out / parse the text before loading a disk serverside so that
@@ -34,6 +36,10 @@
        directly on the screen. Maybe this should be available all the time,
        even in production?
   - [] Get it working on: https://glitch.com/edit/#!/niki-aesthetic-computer
+
+***Prompt Updates***
+  - [] “search bar” any letter typed shows “ghost” letters of all possible options
+  - [] Also make the commands case insensitive!
   
 ***View-Source***
   - [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
@@ -42,11 +48,17 @@
 ***Readme***
   - [] Directly load the GitHub readme in a scrollable content window.
 
-***Notion***
+***Shortcuts / open a new URL ***
+  - [] Figure out notation: ~user/piece, piece~param1, #notion
+    - [] Should this only be for `prompt` or should it also route URLs?
   - [] Make `manual` and `hq` load the notion (separate places) in a new tab.
   - [] Should the manual be a super.so site using one of the chosen typefaces?
 
 ***Prompt Start**
+  - [] What info goes on the starting prompt page?
+       Given that it can change every 60 seconds.
+       And anyone who shares the link will see a preview image.
+  - [] Short poem? Weekly poem?
   - [] Make the prompt start message easily editable by Niki.
     What would it mean for this message to use the ***Upload Server*** and merit
     a text editor.
@@ -294,9 +306,10 @@
 
 *Recently Completed*
 
-***Routing & Twitter Cards***
 ***2D Drawing Primitives for Niki***
  - [x] line from point... at angle with distance
+ 
+***Routing & Twitter Cards***
  - [X] Figure out how to get open-graph info and twitter cards working for all of a.c?
       - [X] How should the og:images be made? Perhaps a special tool is needed or screenshots
            can be taken automatically?
