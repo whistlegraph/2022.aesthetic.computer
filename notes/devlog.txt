@@ -8,6 +8,13 @@ platform?
 
 TODO
 - [] Get my dotfiles working (especially get fish running) in github codespaces.
+  - [] Wipe dotfiles repository.
+  - [] Start a fresh set from this codespace that simply symlinks a few things,
+       like my fish settings, and installs anything I need via an install.sh script.
+  - [] Can this script actually be written in fish scripting language?
+
+- Start over with my dotfiles...
+
   - [] Follow along here: https://bea.stollnitz.com/blog/codespaces-terminal
 
 🧑‍💻 Text Editor
