@@ -65,10 +65,13 @@ async function fun(event, context) {
   } catch {
     // If either module doesn't load, then we know we won't be able to load
     // the piece, so we can fallback to the main route. 
-    console.log('caught')
     return {
-      statusCode: 404,
-      body: "Not Found"
+      statusCode: 302,
+      headers: {
+        "Content-Type": "text/html",
+        "Location": "/" + new URLSearchParams(event.queryStringParameters)
+      },
+      body: '<a href="https://aesthetic.computer">https://aesthetic.computer</a>'
     }
   }
 
@@ -86,11 +89,11 @@ async function fun(event, context) {
         <meta name="og:description" content="${
           desc || "An aesthetic.computer piece."
         }" />
-        <meta name="og:image" content="https://aesthetic.computer/thumbnail/1200x630/${slug}.jpg" />
+        <meta name="og:image" content="https://${parsed.host}/thumbnail/1200x630/${slug}.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="${slug}" />
         <meta name="twitter:site" content="aesthetic.computer" />
-        <meta name="twitter:image" content="https://aesthetic.computer/thumbnail/1800x900/${slug}.jpg"/>
+        <meta name="twitter:image" content="https://${parsed.host}/thumbnail/1800x900/${slug}.jpg"/>
       </head>
       <body class="native-cursor">
       <script>

@@ -10,6 +10,8 @@
  - [] Refactor `wg` to make better use of thumbnails... what should the new structure be?
    - [] How to have a default or custom thumbnail... even though things are randomly routed?
  - [🔴] Clean up the use of "aesthetic.computer/disks/" across the whole project.
+ - [] Each page should print out its own description in the console.
+  - [] Then all descriptions of existing pieces can be written.
   - [] Why are the disks located there in the first place?
  - [] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
