@@ -3,9 +3,9 @@ Welcome to...
 
   🧩 AESTHETIC.COMPUTER 🧩
 
-  A general interface / computer toy that...
+  A general interface / computer toy / art machine that...
 
-  - Has "pieces" instead of "apps" or "programs".
+  - Runs "pieces" instead of "apps" or "programs".
   - Works in updated web browsers on all major devices, including VR headsets! 
   - Comes with a processing-inspired API that's fun to learn
     and write interactive, audio-visual pieces for in JavaScript. 
@@ -14,8 +14,8 @@ Welcome to...
 
   (More technical)
   - Threaded logic, audio, and rendering.
-    - Via a low overhead hypervisor that runs one piece at a time.
-      (like a disk based operating system)
+    - Low overhead hypervisor that runs one piece at a time.
+      (similar to a disk based operating system)
     - Pieces can transition from one to another (instantly) without refreshing
       the page or losing context. 
     - Pieces can load remotely of any `https://` url and link to other pieces via the API.
@@ -203,6 +203,12 @@ Welcome to...
    - [] Clone the basic WebXR examples, run them and and read them.
         URL here: https://github.com/immersive-web/webxr-samples
 
+***Rooms***
+  (WIP Notes)
+  - Pieces can either be singleplayer or multiplayer, but rooms work everywhere!
+  - All piece changes are global. People can only be in one piece at a time together.
+  - Start a room with other people and their mouse cursors / fingers appear as pixels.
+  - People can join rooms different devices simultaneously.
 
 ***Basic Server Work / Rooms / Synchronized Metronome***
   - [] How to get metronomes syncing across a network?

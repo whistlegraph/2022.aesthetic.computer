@@ -47,16 +47,26 @@ async function fun(event, context) {
 
   let desc;
 
+  const redirect = {
+    statusCode: 302,
+    headers: {
+      "Content-Type": "text/html",
+      Location: "/" + new URLSearchParams(event.queryStringParameters),
+    },
+    body: '<a href="https://aesthetic.computer">https://aesthetic.computer</a>',
+  };
+
   // Externally hosted piece.
   try {
     if (slug.startsWith("~")) {
-      const externalPiece = await get_page(
+      const externalPiece = await getPage(
         `https://${parsed.host}/${parsed.path}.mjs`
       );
-      if (externalPiece) {
-        desc = externalPiece.split(/\r?\n/)[0].replace("//", "").trim();
+      if (externalPiece.code === 200) {
+        desc = externalPiece.split(/\r?\n/)[0].replace("//", "").trim() ||
+        `A piece by ${slug.split("/")[0].replace("~", "")}.`;
       } else {
-        desc = `A piece by ${slug.split("/")[0].replace("~", "")}.`;
+        return redirect;
       }
     } else {
       // Locally hosted piece.
@@ -65,16 +75,7 @@ async function fun(event, context) {
   } catch {
     // If either module doesn't load, then we KNOW we won't be able to load
     // the piece, so we can fallback to the main route. 
-    if (externalPiece === undefined && desc === undefined) {
-      return {
-        statusCode: 302,
-        headers: {
-          "Content-Type": "text/html",
-          "Location": "/" + new URLSearchParams(event.queryStringParameters)
-        },
-        body: '<a href="https://aesthetic.computer">https://aesthetic.computer</a>'
-      }
-    }
+    return redirect;
   }
 
   const html = `
@@ -114,7 +115,7 @@ async function fun(event, context) {
   };
 }
 
-async function get_page(url) {
+async function getPage(url) {
   return new Promise((resolve) => {
     let data = "";
     https.get(url, (res) => {
@@ -122,7 +123,7 @@ async function get_page(url) {
         data += chunk;
       });
       res.on("end", () => {
-        resolve(data);
+        resolve({data, code: res.statusCode});
       });
     });
   });
