@@ -6,9 +6,13 @@ Maybe aesthetic.computer is more of an interface project
 or search engine or *branded* prompt than it is a creative
 platform?
 
+TODO
+- [] Get my dotfiles working (especially get fish running) in github codespaces.
+  - [] Follow along here: https://bea.stollnitz.com/blog/codespaces-terminal
+
 🧑‍💻 Text Editor
-Try AceJump, Use thinkpad more often, Try: https://github.com/machakann/vim-swap
-Figure out how to swap vim panes with one another in neovim: https://github.com/wesQ3/vim-windowswap,
+- [] Try AceJump, Use thinkpad more often, Try: https://github.com/machakann/vim-swap
+- [] Figure out how to swap vim panes with one another in neovim: https://github.com/wesQ3/vim-windowswap,
 
 -> GitHub Codespaces (Manual Setup):
   A. Clone my dotfiles repo and install chezmoi via the chezmoi/dotfiles install.sh script.
