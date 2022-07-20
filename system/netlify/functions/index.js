@@ -59,12 +59,15 @@ async function fun(event, context) {
   // Externally hosted piece.
   try {
     if (slug.startsWith("~")) {
+      console.log("Getting page...");
       const externalPiece = await getPage(
         `https://${parsed.host}/${parsed.path}.mjs`
       );
-      if (externalPiece.code === 200) {
-        desc = externalPiece.split(/\r?\n/)[0].replace("//", "").trim() ||
-        `A piece by ${slug.split("/")[0].replace("~", "")}.`;
+      console.log("got page...");
+      if (externalPiece?.code === 200) {
+        desc =
+          externalPiece.data.split(/\r?\n/)[0].replace("//", "").trim() ||
+          `A piece by ${slug.split("/")[0].replace("~", "")}.`;
       } else {
         return redirect;
       }
@@ -74,7 +77,7 @@ async function fun(event, context) {
     }
   } catch {
     // If either module doesn't load, then we KNOW we won't be able to load
-    // the piece, so we can fallback to the main route. 
+    // the piece, so we can fallback to the main route.
     return redirect;
   }
 
@@ -92,11 +95,15 @@ async function fun(event, context) {
         <meta name="og:description" content="${
           desc || "An aesthetic.computer piece."
         }" />
-        <meta name="og:image" content="https://${parsed.host}/thumbnail/1200x630/${slug}.jpg" />
+        <meta name="og:image" content="https://${
+          parsed.host
+        }/thumbnail/1200x630/${slug}.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="${slug}" />
         <meta name="twitter:site" content="aesthetic.computer" />
-        <meta name="twitter:image" content="https://${parsed.host}/thumbnail/1800x900/${slug}.jpg"/>
+        <meta name="twitter:image" content="https://${
+          parsed.host
+        }/thumbnail/1800x900/${slug}.jpg"/>
       </head>
       <body class="native-cursor">
       <script>
@@ -118,14 +125,19 @@ async function fun(event, context) {
 async function getPage(url) {
   return new Promise((resolve) => {
     let data = "";
-    https.get(url, (res) => {
-      res.on("data", (chunk) => {
-        data += chunk;
+    https
+      .get(url, (res) => {
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+        res.on("end", () => {
+          resolve({ data, code: res.statusCode });
+        });
+      })
+      .on("error", (e) => {
+        console.log("Error:", e);
+        resolve();
       });
-      res.on("end", () => {
-        resolve({data, code: res.statusCode});
-      });
-    });
   });
 }
 
