@@ -9,6 +9,7 @@ platform?
 🧑‍💻 Text Editor / Shell Notes
 - [] Start a blog or journal of some kind - that is sourced from
      this repository?
+- [] Add hybrid bindings to fish: https://github.com/fish-shell/fish-shell/blob/master/share/functions/fish_hybrid_key_bindings.fish
 
 💻 Docs
 -> GitHub Codespaces (Manual Setup):

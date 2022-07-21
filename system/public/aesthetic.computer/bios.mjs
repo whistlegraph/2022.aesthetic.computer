@@ -965,13 +965,21 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           download.download = "test.mp4";
           recordingsEl.append(download);
 
-          fetch("/.netlify/functions/upload-background")
-            .then((res) => {
-              console.log(res);
+          fetch("/presigned-upload-url/" + "mp4")
+            .then(async (res) => {
+              const presignedUrl = await res.text()
+              if (debug) console.log("🔐 Presigned URL:", presignedUrl);
+
+              // TODO
+              // - [] Try to just upload the file directly here. 
+              // - [] Add some UI for uploading the file so it's a choice.
+
             })
             .catch((err) => {
-              console.error(err);
+              if (debug) console.log("⚠️ Failed to get presigned URL:", res);
             });
+
+          // TODO: Add UI for downloading the file.
 
           wrapper.append(recordingsEl);
         }
