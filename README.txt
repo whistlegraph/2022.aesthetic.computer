@@ -1,4 +1,3 @@
-
 Welcome to...
 
   🧩 AESTHETIC.COMPUTER 🧩
