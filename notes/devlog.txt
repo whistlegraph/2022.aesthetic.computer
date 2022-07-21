@@ -14,13 +14,13 @@ platform?
 -> GitHub Codespaces (Manual Setup):
   A. Clone my dotfiles repo and install chezmoi via the chezmoi/dotfiles install.sh script.
   B. For running the frontend:
-    1. `cd` into `system` and then `npm install`
-    2. login to netlify via `npx netlify login`
-    3. install git lfs to get media files: `git lfs install; git lfs pull`
-    5. now you can run `npm run codespaces-dev` (or `npm run code` from the root dir)
+    1. install git lfs to get media files: `git lfs install; git lfs pull`
+    2. `cd` into `system` and then `npm install`
+    3. login to netlify via `npx netlify login` and link the site with `npx netlify link`
+    4. now you can `cd -` and then run `npm run code`
        to start the frontend, fully simulating the netlify production environment
        (with exception to the automatic https tunneling via nginx in the codespaces container)
-  C. For running the server backend:
+  (Outdated) C. For running the server backend:
     1. `cd` into `server` and then `npm install`
     2.  add `NODE_ENV=development` to a `.env` file in `server`
     3.  Note: websockets (wss) cannot be port forwarded by codespaces atm 
