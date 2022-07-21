@@ -1,26 +1,16 @@
 🧪 Dev Log
-Practical and conceptual notes, weaved together.
+Practical and conceptual notes weaved together.
 
 ☁️ Ideas
 Maybe aesthetic.computer is more of an interface project
 or search engine or *branded* prompt than it is a creative
 platform?
 
-TODO
-- [] Get my dotfiles working (especially get fish running) in github codespaces.
-  - [] Wipe dotfiles repository.
-  - [] Start a fresh set from this codespace that simply symlinks a few things,
-       like my fish settings, and installs anything I need via an install.sh script.
-  - [] Can this script actually be written in fish scripting language?
+🧑‍💻 Text Editor / Shell Notes
+- [] Start a blog or journal of some kind - that is sourced from
+     this repository?
 
-- Start over with my dotfiles...
-
-  - [] Follow along here: https://bea.stollnitz.com/blog/codespaces-terminal
-
-🧑‍💻 Text Editor
-- [] Try AceJump, Use thinkpad more often, Try: https://github.com/machakann/vim-swap
-- [] Figure out how to swap vim panes with one another in neovim: https://github.com/wesQ3/vim-windowswap,
-
+💻 Docs
 -> GitHub Codespaces (Manual Setup):
   A. Clone my dotfiles repo and install chezmoi via the chezmoi/dotfiles install.sh script.
   B. For running the frontend:
@@ -36,3 +26,12 @@ TODO
     3.  Note: websockets (wss) cannot be port forwarded by codespaces atm 
 
 2022.06.04.19.47
+
+***Recently Done***
+
+* Start over with my dotfiles
+  - [x] Get my dotfiles working (especially get fish running) in github codespaces.
+  - [x] Wipe dotfiles repository.
+  - [x] Start a fresh set from this codespace that simply symlinks a few things,
+      like my fish settings, and installs anything I need via an install.sh script.
+  - [x] Follow along here: https://bea.stollnitz.com/blog/codespaces-terminal
