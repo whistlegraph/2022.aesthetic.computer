@@ -51,7 +51,6 @@ function parse(text, location = self?.location) {
       host += ".aesthetic.computer";
     }
   } else {
-    console.log(location)
     host = location.hostname
     if (location.port) host += ":" + location.port;
     // TODO: Will this allow jumping from one disk to
