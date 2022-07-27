@@ -24,17 +24,17 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 🐞 Major Bugs & Regressions
- - [🍎] TODO: How should I generate favicons for each page or treat favicons in general?
+ - [🔴] Fix Firefox AudioWorklet Initialization Bug
+        `Error: Module resolve hook not set`
+ - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
+ - [] TODO: How should I generate favicons for each page or treat favicons in general?
   - Maybe just design a favicon? Should each piece also be able to have an icon?
   - Maybe the system could use these icons if pieces defined them...
  - [] Refactor `wg` to make better use of thumbnails... what should the new structure be?
    - [] How to have a default or custom thumbnail... even though things are randomly routed?
- - [🔴] Clean up the use of "aesthetic.computer/disks/" across the whole project.
  - [] Each page should print out its own description in the console.
   - [] Then all descriptions of existing pieces can be written.
   - [] Why are the disks located there in the first place?
- - [] Fix Firefox AudioWorklet Initialization Bug
-        `Error: Module resolve hook not set`
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 

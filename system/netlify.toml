@@ -36,3 +36,4 @@
   from = "/*"
   to = "/.netlify/builders/index"
   status = 200
+  force = false

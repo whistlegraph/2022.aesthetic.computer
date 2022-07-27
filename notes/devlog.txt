@@ -26,7 +26,11 @@ platform?
     2.  add `NODE_ENV=development` to a `.env` file in `server`
     3.  Note: websockets (wss) cannot be port forwarded by codespaces atm 
 
-2022.06.04.19.47
+-> Local Server (Notes):
+  Use `fnm` (https://github.com/Schniz/fnm) and the .node-version file under
+  `system` to manage node versions (currently the project is on lts/gallium [16])
+
+22.07.26.20.19
 
 ***Recently Done***
 
