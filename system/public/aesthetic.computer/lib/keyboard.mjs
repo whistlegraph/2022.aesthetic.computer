@@ -5,13 +5,19 @@
 
 export class Keyboard {
   events = [];
+  #lastKeyDown;
 
   constructor() {
     window.addEventListener("keydown", (e) => {
+      // Firefox "repeat" seems to be broken on linux, so here is 
+      // some redundancy. 22.07.29.17.43
+      const repeat = e.key === this.#lastKeyDown;
+      this.#lastKeyDown = e.key;
+
       this.events.push({
         name: "keyboard:down",
         key: e.key,
-        repeat: e.repeat,
+        repeat: e.repeat || repeat,
         shift: e.shiftKey,
         alt: e.altKey,
         ctrl: e.ctrlKey,
@@ -20,6 +26,7 @@ export class Keyboard {
 
     window.addEventListener("keyup", (e) => {
       this.events.push({ name: "keyboard:up", key: e.key });
+      this.#lastKeyDown = null;
     });
   }
 }
