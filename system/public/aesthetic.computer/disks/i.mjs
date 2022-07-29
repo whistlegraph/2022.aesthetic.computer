@@ -1,15 +1,12 @@
 // i, 22.07.29.16.42
 // An environment / game where the player character looks like an i
 
-const { sign, min } = Math;
+// TODO: Resarch
+// [] Add 2d physics engine.
+// [] Look at old `flower eater` / `mood` engine C source and videos.
+// [] Add a portal / doorway to another piece / room for this piece.
 
-class I {
-  pos = { x: 15, y: 10 };
-  dir = { x: 0, y: 0 };
-  vel = { x: 0, y: 0 };
-  len = 3;
-  constructor() {}
-}
+const { sign, min } = Math;
 
 const i = new I();
 
@@ -88,6 +85,13 @@ function beat($api) {
 }
 
 // 📚 Library (Useful classes & functions used throughout the piece)
-// ...
+
+class I {
+  pos = { x: 15, y: 10 };
+  dir = { x: 0, y: 0 };
+  vel = { x: 0, y: 0 };
+  len = 3;
+  constructor() {}
+}
 
 export { boot, sim, paint, act, beat };
