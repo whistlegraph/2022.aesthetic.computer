@@ -39,17 +39,26 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 ***Video Storage (Microphone)***
- - [] Check to see what type of encoding mobile safari uses.
+ - [⭐] Check to see what type of encoding mobile safari uses.
+ - [] Sidetrack: Hack in an SVG cursor really quick.
+ - [] Make microphone recording button a bit nicer.
  - [] If not possible to change container quickly, then
  -    transcode everything into h264 mp4 files?
       https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
  - [] Aside: Research scaling and other ffmpeg.wasm features.
  - [] Add some UI for uploading the file, so it's a choice.
+ - [x] Fix microphone record button.
  - [x] Try to just upload the file directly here.
  - [x] Write a netlify serverless function and call it from the microphone
        piece... so the file can be uploaded.
    - [x] Netlify Serverless Hello World
    - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
+ - [] Look into categorizing objects with tags...
+ https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-tagging.html
+ - [] And making use of user defined metadata in s3.
+      These would be great for custom file properties likw
+      what piece was used to make the art / object and what git commit
+      of the project was used or something like that...
 
 ***Developers***
   - [] Add developer console log / catch errors and show them to users

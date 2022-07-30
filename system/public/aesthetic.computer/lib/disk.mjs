@@ -494,6 +494,12 @@ async function load(
     $commonApi.load = load;
     $commonApi.pieceCount += 1;
     $commonApi.content = new Content();
+
+    $commonApi.dom = {}
+    $commonApi.dom.html = (src) => { $commonApi.content.add(src); }
+    $commonApi.dom.css = (src) => { $commonApi.content.add(`<style>${src}</style>`); }
+    $commonApi.dom.javascript = (src) => { $commonApi.content.add(`<script>${src}</script>`); }
+
     cursorCode = "precise";
     loading = false;
     penX = undefined;
@@ -607,13 +613,13 @@ class Content {
 //       receives every message from the main thread, one of which renders a
 //       frame.
 
-let signal;
+const signals = [];
 
 function makeFrame({ data: { type, content } }) {
   // console.log("Frame:", type);
 
   if (type === "signal") {
-    signal = content;
+    signals.push(content);
     return;
   }
 
@@ -801,6 +807,11 @@ function makeFrame({ data: { type, content } }) {
         }
       }
 
+      // 📻 Signalling
+      $api.signal = (content) => {
+        send({ type: "signal", content});
+      }
+
       // 💾 Uploading + Downloading
       // Add download event to trigger a file download from the main thread.
       $api.download = (dl) => send({ type: "download", content: dl });
@@ -837,15 +848,15 @@ function makeFrame({ data: { type, content } }) {
       }
 
       // Signaling
-      if (signal) {
-        const data = { signal };
+      if (signals.length) {
+        const data = { signal: signals };
         Object.assign(data, {
           device: "none",
           is: (e) => e === "signal",
         });
         $api.event = data;
         act($api);
-        signal = undefined;
+        signals.length = 0;
       }
 
       // Window Events

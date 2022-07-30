@@ -70,6 +70,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // Media Recorder
   let mediaRecorder; // See "recorder-rolling" below.
 
+  // Events
+  let whens = {};
+
   // 0. Video storage
   const videos = [];
 
@@ -779,13 +782,17 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         contentFrame = document.createElement("div");
         contentFrame.id = "content";
         wrapper.appendChild(contentFrame);
-
         contentFrame.innerHTML += content.content; // Add content to contentFrame.
+      } else {
+        contentFrame.innerHTML += content.content; // Add content to contentFrame.
+      }
 
-        // Evaluate the first script inside of contentFrame.
-        // TODO: This should only evaluate new scripts, as they are added...
-        const script = contentFrame.querySelector("script");
+      // Evaluate any added scripts inside of contentFrame.
+      // TODO: This should only evaluate new scripts, as they are added...
+      // It should also run if new scripts are added with the `html` function.
+      const script = contentFrame.querySelector("script");
 
+      if (script && !script.dataset.evaluated) {
         if (script?.src) {
           const s = document.createElement("script");
           s.type = "module";
@@ -797,8 +804,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           s.src = script.src + "#" + Date.now();
           contentFrame.appendChild(s); // Re-insert the new script tag.
           script.remove(); // Remove old script element.
+          s.dataset.evaluated = true;
         } else if (script?.innerText.length > 0) {
           window.eval(script.innerText);
+          script.dataset.evaluated = true;
         }
       }
 
@@ -817,6 +826,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       window?.acCONTENT_EVENTS.forEach((e) => e());
       window.acCONTENT_EVENTS = []; // And clear all events from the list.
       return;
+    }
+
+    if (type === "signal") {
+      if (debug) console.log("📻 Signal received:", content);
+      if (whens[content]) {
+        whens[content]();
+        delete whens[content];
+      }
     }
 
     if (type === "meta") {
@@ -1195,6 +1212,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Clear keyboard events.
       keyboard.events.length = 0;
 
+      // Clear when events.
+      whens = {};
+
       // Close (defocus) software keyboard if it exists.
       document.querySelector("#software-keyboard-input")?.blur();
 
@@ -1527,12 +1547,20 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // 🚨 Signal (Used to pass messages via window... important for embedded HTML
   //           `content` used within pieces that needs communication with the
   //           main system)
+
+  // Send signals to the running piece.
   window.signal = function (message) {
-    if (debug) console.log("🚨 Signal:", message);
+    if (debug) console.log("🚨 Signal sent:", message);
     send({
       type: "signal",
       content: message,
     });
+  };
+
+  // Receive signals from the piece & assign callbacks.
+  // These get flushed between pieces.
+  window.when = function (message, callback) {
+    whens[message] = callback;
   };
 
   // 📚 History

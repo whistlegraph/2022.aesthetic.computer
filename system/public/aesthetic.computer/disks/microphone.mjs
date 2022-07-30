@@ -1,10 +1,5 @@
-//^ Microphone, 2022.1.11.0.26
-//^ A simple audio + video feedback monitor test.
-//^ https://digitpain.com/profile.jpg
-
-// Note: Multiple clips can be string together with keyboard shortcuts.
-//       How can I use this to do cut or continuous recording?
-export const dec = "A simple microphone recorder test";
+// Microphone, 2022.1.11.0.26
+// A simple audio + video feedback monitor test.
 
 const { floor } = Math;
 
@@ -36,49 +31,65 @@ function paint({ wipe, ink, screen: { width, height } }) {
   }
 
   ink(0, 255, 0, 16).line(0, height / 2, width, height / 2); // Center line.
-
-  // Record Button
-  //btn.paint((btn) => {
-  //  ink(rec ? [255, 0, 0] : [80, 80, 80]).box(btn.box, btn.down ? "in" : "out");
-  //});
 }
 
-function sim({ content }) {
+function sim({ dom: { html, css, javascript } }) {
   mic?.poll(); // Query for updated amplitude and waveform data.
   if (mic && interfaceDisabled) {
     interfaceDisabled = false;
-    content.add(`
-      <button id="rec-btn">record</button>
-      <style>
-        button {
-          border-radius: 100%;
-          border: none;
-          width: 6em;
-          height: 6em;
-          margin: auto auto 3em auto;
-          background-color: rgb(255, 100, 100);
-        }
-      </style>
-      <script>
-        // TODO: Use shadowDom for this.
-        const recBtn = document.body.querySelector('#rec-btn'); 
-        console.log(recBtn);
-      </script>
-    `);
+
+    // TODO: Use shadowDom for these?
+    html`<button tabindex="1" id="rec-btn"></button>`;
+
+    css`
+      button {
+        border-radius: 100%;
+        border: none;
+        width: 6em;
+        height: 6em;
+        margin: auto auto 3em auto;
+        background-color: rgb(200, 0, 0);
+        border: 0.45em solid rgb(28, 59, 34);
+        cursor: none;
+        transition: .25s border-radius, .25s background-color;
+      }
+      button.recording {
+        border: 0.85em solid rgb(28, 59, 34);
+        background-color: rgb(100, 100, 100);
+        border-radius: 15%;
+      }
+    `;
+
+    javascript`
+      const recBtn = document.body.querySelector('#rec-btn'); 
+      console.log(recBtn);
+
+      // TODO: Add more events to make a better button.
+      recBtn.addEventListener("pointerdown", () => {
+        signal("microphone:record-btn-pressed");
+      });
+
+      when("microphone:recording", () => {
+        recBtn.classList.add('recording');
+      });
+
+      when("microphone:recording-done", () => {
+        recBtn.classList.remove('recording');
+      });
+    `;
   }
 }
 
 function beat({ sound: { time, microphone }, content }) {
-  if (!mic) {
-    mic = microphone.connect();
-  }
+  if (!mic) mic = microphone.connect();
 }
 
-function act({ event: e, rec: { rolling, cut, print } }) {
+function act({ signal, event: e, rec: { rolling, cut, print } }) {
   if (!mic) return; // Disable all events until the microphone is working.
 
   // Keyboard Events
   if (e.is("keyboard:down") && e.repeat === false) {
+    // These shortcuts allow for pausing and starting a recording.
     if (e.key === "Enter") {
       if (rec === false) {
         rolling("video");
@@ -91,20 +102,19 @@ function act({ event: e, rec: { rolling, cut, print } }) {
     if (e.key == " ") print();
   }
 
-  // Record Button
-  // TODO: Wire up a DOM button to this.
-  /*
-  btn.act(e, () => {
+  // And this UI button just stops and saves single takes.
+  if (e.is("signal") && e.signal.includes("microphone:record-btn-pressed")) {
     if (rec === false) {
       rolling("video");
       rec = true;
+      signal("microphone:recording");
     } else {
       cut();
       print();
       rec = false;
+      signal("microphone:recording-done");
     }
-  });
-  */
+  }
 }
 
 export { boot, sim, paint, beat, act };

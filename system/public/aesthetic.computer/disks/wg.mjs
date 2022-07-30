@@ -6,6 +6,8 @@
 
 import { anyKey } from "../lib/help.mjs";
 
+const html = (src) => src; // TODO: Add this to the main API.
+
 const shortcuts = {
   imab: "butterfly-cosplayer",
   grow: "time-to-grow",
@@ -431,7 +433,7 @@ function boot({
    border-right: 0.75px solid rgb(120, 120, 0);`
   );
 
-  content.add(`
+  content.add(html`
     <div class="card-deck loading">
       <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">
         <div class="card" data-type="compilation" data-ratio="720x1280">
@@ -486,7 +488,7 @@ function boot({
     
     #content .card-view {
       width: 100%;
-      height: 100%:
+      height: 100%;
       box-sizing: border-box;
       position: absolute;
       pointer-events: none;
@@ -698,8 +700,8 @@ function paint({ noiseTinted }) {
 }
 
 function act({ event: e, net: { preloadReady } }) {
-  if (e.is("signal") && e.signal === "whistlegraph:started") fuzzy = true;
-  if (e.is("signal") && e.signal === "whistlegraph:preloaded") preloadReady();
+  if (e.is("signal") && e.signal.includes("whistlegraph:started")) fuzzy = true;
+  if (e.is("signal") && e.signal.includes("whistlegraph:preloaded")) preloadReady();
 }
 
 export { boot, sim, paint, act };

@@ -73,10 +73,6 @@ export async function handler(event, context) {
     Key: fileName,
     ContentType: mimeType,
     ACL: "public-read",
-    // Metadata: {
-    //   foo: 'bar',
-    //   lol: 'hi'
-    // }
   };
 
   const command = new PutObjectCommand(putObjectParams);
