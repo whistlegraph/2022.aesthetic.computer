@@ -38,16 +38,13 @@ Welcome to...
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
-***Storage***
- - [] Write a netlify serverless function and call it from the microphone
-        piece... so the file can be uploaded.
-        - [] Netlify Serverless Hello World
-        - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
+***Video Storage (Microphone)***
+ - [🟢] Convert the video mp4 using ffmpeg.wasm if it is a webm - https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
+ - [x] Write a netlify serverless function and call it from the microphone
+       piece... so the file can be uploaded.
+   - [x] Netlify Serverless Hello World
+   - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
         
- - [] Refer to ***Uploader Server*** below.
- - [] Is there a way for a local server to still use codes? How would this be
-      proxied and tested? Maybe with an environment variable and a separate
-      upload server that has no expiration?
 
 ***Developers***
   - [] Add developer console log / catch errors and show them to users
@@ -63,6 +60,9 @@ Welcome to...
 
 ***Readme***
   - [] Directly load the GitHub readme in a scrollable content window.
+
+***i***
+  - [] See `disks/i.mjs` 
 
 ***Shortcuts / open a new URL ***
   - [] Figure out notation: ~user/piece, piece~param1, #notion
@@ -104,8 +104,10 @@ Welcome to...
         (This might be slow)
         (Could be useful eventually... to selectively record video of certain pixel buffers, or render frame by frame.)
  - [] Record frames at a multiplied resolution over the original canvas.
- - [] Convert the video mp4 using ffmpeg.wasm if it is a webm - https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
  - [] Complete ***Upload Server***
+ - [] Is there a way for a local install to still use codes? How would this be
+      proxied and tested? Maybe with an environment variable and a separate
+      upload server that has no expiration?
  - [] Store the video on a camera roll in a mobile browser.
  - [] Explore using the TikTok API Integration : https://developers.tiktok.com/apps
   - This should allow users to save / post? their video directly to TikTok from the web.
@@ -135,7 +137,7 @@ Welcome to...
              be minted to a poster's wallet if they decide to connect.
    B. Regardless, the file stored at the code will be deleted in 24 hours.
      - [X] Setting expiration policies on DO spaces: https://www.howtogeek.com/devops/how-to-set-an-expiration-policy-on-digitalocean-spaces-buckets
-     - [] Follow along with – https://www.digitalocean.com/community/tutorials/how-to-upload-a-file-to-object-storage-with-node-js
+     - [X] Follow along with – https://www.digitalocean.com/community/tutorials/how-to-upload-a-file-to-object-storage-with-node-js
                             - Using multipart-form-data
           Using             - https://www.npmjs.com/package/fastify-multer
           Get code via      - https://glitch.com/edit/#!/nopaint-server?path=server.js

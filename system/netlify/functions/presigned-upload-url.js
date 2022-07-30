@@ -59,7 +59,7 @@ export async function handler(event, context) {
   }
 
   let loadCode = nanoid();
-  let fileName = loadCode + ".png";
+  let fileName = loadCode + "." + extension;
 
   // Check to see if this code has already been uploaded to blockStorage and if it has,
   // generate a new code. (This should almost never repeat.) See also: https://zelark.github.io/nano-id-cc

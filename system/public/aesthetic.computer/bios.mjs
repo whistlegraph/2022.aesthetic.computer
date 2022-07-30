@@ -138,7 +138,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         meta.img.twitter;
     }
     //if (meta.url) {
-      //document.querySelector('meta[name="twitter:player"').content = meta.url;
+    //document.querySelector('meta[name="twitter:player"').content = meta.url;
     //}
   }
 
@@ -967,16 +967,32 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
           fetch("/presigned-upload-url/" + "mp4")
             .then(async (res) => {
-              const presignedUrl = await res.text()
+              const presignedUrl = (await res.json()).uploadURL;
               if (debug) console.log("🔐 Presigned URL:", presignedUrl);
 
-              // TODO
-              // - [] Try to just upload the file directly here. 
-              // - [] Add some UI for uploading the file so it's a choice.
+              const requestOptions = {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title: "Fetch PUT Request Example" }),
+              };
 
+              const response = await fetch(presignedUrl, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "video/mp4",
+                  "x-amz-acl": "public-read",
+                },
+                body: blob,
+              });
+
+              if (debug) console.log("📼 Video uploaded:", response);
+
+              // TODO
+              // - [] Try to just upload the file directly here.
+              // - [] Add some UI for uploading the file so it's a choice.
             })
             .catch((err) => {
-              if (debug) console.log("⚠️ Failed to get presigned URL:", res);
+              if (debug) console.log("⚠️ Failed to get presigned URL:", err);
             });
 
           // TODO: Add UI for downloading the file.
