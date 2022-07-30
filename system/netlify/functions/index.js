@@ -24,7 +24,7 @@ async function fun(event, context) {
 
   let slug = event.path.slice(1) || "prompt";
 
-  const parsed = parse(slug, { hostname: event.headers["x-forwarded-host"] });
+  const parsed = parse(slug, { hostname: event.headers["host"] });
 
   if (process.env.CONTEXT === "dev") console.log(slug, parsed);
 
