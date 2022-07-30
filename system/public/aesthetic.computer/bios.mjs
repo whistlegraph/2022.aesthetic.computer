@@ -908,6 +908,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           mimeType = content + "/mp4"; // This is the setup for Safari.
         } else if (MediaRecorder.isTypeSupported(content + "/webm")) {
           mimeType = content + "/webm"; // And for Chrome & Firefox.
+          // mimeType = content + "/webm; codecs=h264"; // Possible optimization to change the container to mp4 without re-encoding.
         } else {
           console.error("🔴 Mimetypes mp4 and webm are unsupported.");
         }
@@ -986,10 +987,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               });
 
               if (debug) console.log("📼 Video uploaded:", response);
-
-              // TODO
-              // - [] Try to just upload the file directly here.
-              // - [] Add some UI for uploading the file so it's a choice.
             })
             .catch((err) => {
               if (debug) console.log("⚠️ Failed to get presigned URL:", err);

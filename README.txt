@@ -21,8 +21,6 @@ Welcome to...
     - Pieces that stick to software-rendering are guaranteed accurate results on
       future runtimes, given that Math in JavaScript doesn't change.
 
-🌟 Projects In Progress 🌟
-
 🐞 Major Bugs & Regressions
  - [🔴] Fix Firefox AudioWorklet Initialization Bug
         `Error: Module resolve hook not set`
@@ -38,13 +36,20 @@ Welcome to...
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
+🌟 Projects In Progress 🌟
+
 ***Video Storage (Microphone)***
- - [🟢] Convert the video mp4 using ffmpeg.wasm if it is a webm - https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
+ - [] Check to see what type of encoding mobile safari uses.
+ - [] If not possible to change container quickly, then
+ -    transcode everything into h264 mp4 files?
+      https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
+ - [] Aside: Research scaling and other ffmpeg.wasm features.
+ - [] Add some UI for uploading the file, so it's a choice.
+ - [x] Try to just upload the file directly here.
  - [x] Write a netlify serverless function and call it from the microphone
        piece... so the file can be uploaded.
    - [x] Netlify Serverless Hello World
    - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
-        
 
 ***Developers***
   - [] Add developer console log / catch errors and show them to users
