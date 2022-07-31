@@ -408,8 +408,6 @@ function boot({
     wg = shortcuts[wg] || defaultWhistlegraph;
   whistlegraph = whistlegraphs[wg] || defaultWhistlegraph;
 
-  console.log(whistlegraph, wg);
-
   // meta({ title: whistlegraph.title });
 
   console.log(

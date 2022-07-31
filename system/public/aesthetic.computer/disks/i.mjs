@@ -8,6 +8,14 @@
 
 const { sign, min } = Math;
 
+class I {
+  pos = { x: 15, y: 10 };
+  dir = { x: 0, y: 0 };
+  vel = { x: 0, y: 0 };
+  len = 3;
+  constructor() {}
+}
+
 const i = new I();
 
 // 🥾 Boot (Runs once before first paint and sim)
@@ -84,14 +92,6 @@ function beat($api) {
   // TODO: Play a sound here!
 }
 
-// 📚 Library (Useful classes & functions used throughout the piece)
-
-class I {
-  pos = { x: 15, y: 10 };
-  dir = { x: 0, y: 0 };
-  vel = { x: 0, y: 0 };
-  len = 3;
-  constructor() {}
-}
+// 📚 Library (Useful functions used throughout the piece)
 
 export { boot, sim, paint, act, beat };

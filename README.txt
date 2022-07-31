@@ -22,7 +22,6 @@ Welcome to...
       future runtimes, given that Math in JavaScript doesn't change.
 
 🐞 Major Bugs & Regressions
- - [🔴] `wg` disks no longer work 
  - [] Fix Firefox AudioWorklet Initialization Bug
       `Error: Module resolve hook not set`
  - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
@@ -34,6 +33,7 @@ Welcome to...
  - [] Each page should print out its own description in the console.
   - [] Then all descriptions of existing pieces can be written.
   - [] Why are the disks located there in the first place?
+ - [X] `wg` disks no longer work 
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
