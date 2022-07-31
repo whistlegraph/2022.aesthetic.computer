@@ -6,8 +6,6 @@
 
 import { anyKey } from "../lib/help.mjs";
 
-const html = (src) => src; // TODO: Add this to the main API.
-
 const shortcuts = {
   imab: "butterfly-cosplayer",
   grow: "time-to-grow",
@@ -393,12 +391,11 @@ let fuzzy = false;
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
   cursor,
-  content,
   params,
   gap,
+  dom: { html },
   net: { waitForPreload },
   density,
-  // meta
 }) {
   waitForPreload();
   cursor("native");
@@ -410,6 +407,8 @@ function boot({
   if (whistlegraphs[wg] === undefined)
     wg = shortcuts[wg] || defaultWhistlegraph;
   whistlegraph = whistlegraphs[wg] || defaultWhistlegraph;
+
+  console.log(whistlegraph, wg);
 
   // meta({ title: whistlegraph.title });
 
@@ -433,255 +432,344 @@ function boot({
    border-right: 0.75px solid rgb(120, 120, 0);`
   );
 
-  content.add(html`
+  html`
     <div class="card-deck loading">
-      <div class="card-view" data-type="compilation" data-outer-radius="${whistlegraph.compilation.outerRadius}" data-inner-radius="${whistlegraph.compilation.innerRadius}" data-border-setting="${whistlegraph.compilation.border}" style="z-index: 0">
+      <div
+        class="card-view"
+        data-type="compilation"
+        data-outer-radius="${whistlegraph.compilation.outerRadius}"
+        data-inner-radius="${whistlegraph.compilation.innerRadius}"
+        data-border-setting="${whistlegraph.compilation.border}"
+        style="z-index: 0"
+      >
         <div class="card" data-type="compilation" data-ratio="720x1280">
-          <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline disablepictureinpicture src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4" type="video/mp4"></video>
-           <div class="card-cover"></div>
-           <div class="card-outline" style="border-color: ${whistlegraph.compilation.highlight}"></div>
+          <video
+            class="card-content"
+            width="100%"
+            height="100%"
+            preload="auto"
+            playsinline
+            disablepictureinpicture
+            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4"
+            type="video/mp4"
+          ></video>
+          <div class="card-cover"></div>
+          <div
+            class="card-outline"
+            style="border-color: ${whistlegraph.compilation.highlight}"
+          ></div>
         </div>
       </div>
-    
-      <div class="card-view" data-type="score" data-outer-radius="${whistlegraph.score.outerRadius}" data-inner-radius="${whistlegraph.score.innerRadius}" data-border-setting="${whistlegraph.score.border}" style="z-index: 1">
+
+      <div
+        class="card-view"
+        data-type="score"
+        data-outer-radius="${whistlegraph.score.outerRadius}"
+        data-inner-radius="${whistlegraph.score.innerRadius}"
+        data-border-setting="${whistlegraph.score.border}"
+        style="z-index: 1"
+      >
         <div class="card" data-type="score" data-ratio="8.5x11">
-          <img class="card-content" src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png">
-           <div class="card-outline" style="border-color: ${whistlegraph.score.highlight}"></div>
+          <img
+            class="card-content"
+            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png"
+          />
+          <div
+            class="card-outline"
+            style="border-color: ${whistlegraph.score.highlight}"
+          ></div>
         </div>
       </div>
-      
-      <div class="card-view active" data-type="video" data-outer-radius="${whistlegraph.video.outerRadius}" data-inner-radius="${whistlegraph.video.innerRadius}" data-border-setting="${whistlegraph.video.border}" style="z-index: 2">
+
+      <div
+        class="card-view active"
+        data-type="video"
+        data-outer-radius="${whistlegraph.video.outerRadius}"
+        data-inner-radius="${whistlegraph.video.innerRadius}"
+        data-border-setting="${whistlegraph.video.border}"
+        style="z-index: 2"
+      >
         <div class="card" data-type="video" data-ratio="4x5">
-          <video class="card-content" width="100%" height="100%" preload="auto"
-           playsinline disablepictureinpicture src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-web.mp4"></video>
-           <div class="card-cover"></div>
-           <div class="card-outline" style="border-color: ${whistlegraph.video.highlight}"></div>
-           <div id="card-play">
-             <img src="/aesthetic.computer/disks/whistlegraph/play-circle.svg"> 
-             <img src="/aesthetic.computer/disks/whistlegraph/play-triangle.svg"> 
-           </div>
+          <video
+            class="card-content"
+            width="100%"
+            height="100%"
+            preload="auto"
+            playsinline
+            disablepictureinpicture
+            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-web.mp4"
+          ></video>
+          <div class="card-cover"></div>
+          <div
+            class="card-outline"
+            style="border-color: ${whistlegraph.video.highlight}"
+          ></div>
+          <div id="card-play">
+            <img src="/aesthetic.computer/disks/whistlegraph/play-circle.svg" />
+            <img
+              src="/aesthetic.computer/disks/whistlegraph/play-triangle.svg"
+            />
+          </div>
         </div>
       </div>
-    <div id="card-deck-loading">
-      <div id="spinner" style="filter: brightness(0.9) drop-shadow(0 0 1vmin ${whistlegraph.glow})">
-        <img width="1000" height="1000" src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}.webp">
-        <canvas width="1000" height="1000" id="spinner-canvas"></canvas>
+      <div id="card-deck-loading">
+        <div
+          id="spinner"
+          style="filter: brightness(0.9) drop-shadow(0 0 1vmin ${whistlegraph.glow})"
+        >
+          <img
+            width="1000"
+            height="1000"
+            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}.webp"
+          />
+          <canvas width="1000" height="1000" id="spinner-canvas"></canvas>
+        </div>
       </div>
     </div>
-    </div>
-    <script src="/aesthetic.computer/disks/whistlegraph/whistlegraph-cards.js" type="module" defer></script>
-    <style>  
-    #content .card-deck {
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      user-select: none;
-      -webkit-user-select: none;
-      font-size: 32px;
-      display: flex;
-      /* This fixes a rendering bug specific to Google Chrome on Windows.
+    <script
+      src="/aesthetic.computer/disks/whistlegraph/whistlegraph-cards.js"
+      type="module"
+      defer
+    ></script>
+    <style>
+      #content .card-deck {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-user-select: none;
+        font-size: 32px;
+        display: flex;
+        /* This fixes a rendering bug specific to Google Chrome on Windows.
          It doesn't affect the look, but forces a different rendering stack in
-         which everything seems to work fine. 2022.05.02.20.49 */ 
-      transform: rotate(0.00001deg);
-    }
-    
-    #content .card-view {
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      position: absolute;
-      pointer-events: none;
-    }
-    
-    #content .card-view:not(.active):not(.running) {
-      /*transition: 1s ease-out transform;*/
-    }
-    
-    #card-deck-loading {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 1);
-      z-index: 100;
-      display: flex;
-    }
-    
-    #card-deck-loading #spinner {
-      display: block;
-      margin: auto;
-      width: 40vmin;
-      height: 40vmin;
-      position: relative;
-    }
-    
-    #spinner img {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-    }
-    
-    #spinner canvas {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      display: none;
-    }
-    
-    .card-deck:not(.loading) #spinner img { display: none; }
-    .card-deck:not(.loading) #spinner canvas { display: block; }
-    
-    .card-deck:not(.loading) #card-deck-loading {
-      transform: scale(2);
-      opacity: 0;
-      transition: 0.25s transform ease-out, 0.25s opacity ease-in;
-    }
-    
-    .card-deck.loading #card-play { display: none; }
-    
-    #card-play.played {
-     opacity: 0;
-     transform: scale(2);
-     transition: 0.25s opacity, 0.25s transform;
-    }
-    
-    #card-play {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      pointer-events: none;
-    }
-    
-    #card-play img {
-      position: absolute;
-      width: 25vmin;
-      margin-left: -12.5vmin;
-      margin-top: -12.5vmin;
-    }
-    
-    #card-play img:nth-child(1) { filter: brightness(0); }
-    #card-play img:nth-child(2) { filter: brightness(1); }
-    
-    .card.touch #card-play img {
-      transform: scale(0.95);
-    }
-    
-    .card-view.active .card { cursor: pointer; }
-    .card-view.active .card.running { cursor: alias; }
-    .card-view.active .card[data-type=score] { cursor: alias; }
-    
-    .card {
-      box-sizing: border-box;
-      position: relative;
-      box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.75);
-      pointer-events: all;
-    }
-    
-    .card-view.active.pressed {
-      transform: scale(0.99);
-      animation: bounce 0.15s ease-out;
-      animation-fill-mode: forwards;
-    }
-    
-    @keyframes bounce {
-      0% { transform: scale(0.99); }
-      50% { transform: scale(0.96); }
-      100% { transform: scale(0.99); }
-    } 
-    
-    .card-view.active.pressed .card {
-      box-shadow: 0px 0px 48px rgba(0, 0, 0, 0.35),
-                  0px 0px 24px rgba(0, 0, 0, 0.35),
-                  0px 0px 12px rgba(0, 0, 0, 0.35) !important;
-    } 
-    
-    .card.touch {
-      box-shadow: 0px 0px 48px rgba(0, 0, 0, 0.5),
-                  0px 0px 48px rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    .card.hover { box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.75) !important; }
-   
-    .card.touch .card-outline {
-      display: block;
-      box-sizing: border-box;
-      position: absolute;
-      border-style: solid;
-      border-color: rgba(0, 0, 0, 1);
-      border-width: 1vmin;
-      top: -0.5vmin;
-      left: -0.5vmin;
-      width: calc(100% + 1vmin);
-      height: calc(100% + 1vmin);
-    }
-    
-    .card[data-type=score].touch .card-outline {
-      border-width: 0.75vmin;
-      top: -0.375vmin;
-      left: -0.375vmin;
-      width: calc(100% + 0.75vmin);
-      height: calc(100% + 0.75vmin);
-    }
-    
-    .card[data-type=compilation].touch .card-outline {
-      border-width: 0.75vmin;
-      top: -0.375vmin;
-      left: -0.375vmin;
-      width: calc(100% + 0.75vmin);
-      height: calc(100% + 0.75vmin);
-    }
-    
-    .card.animating .card-outline {
-      display: none !important;
-    }
-    
-    .card-outline {
-      display: none;
-      pointer-events: none;
-    }
-    
-    .card-view .card-content { position: absolute; }
-    
-    .card-cover { /* A black screen that gets removed once videos are loaded. */
-      background: black;
-      position: absolute;
-    }
-    
-    .card-deck:not(.loading) .card-cover { display: none; }
-    
-    /* Card types */ 
-    .card-view[data-type=video] .card video,
-    .card-view[data-type=compilation] .card video {
-      object-fit: cover;
-      pointer-events: none;
-    }
-    
-    .card-view[data-type=video] .card {
-      background: ${whistlegraph.video.color};
-      box-shadow: ${whistlegraph.video.boxShadow}; 
-    }
-   
-    .card-view[data-type=score] .card {
-      background: ${whistlegraph.score.color};
-      box-shadow: ${whistlegraph.score.boxShadow}; 
-    }
-    
-    .card-view[data-type=compilation] .card {
-      background: ${whistlegraph.compilation.color};
-      box-shadow: ${whistlegraph.compilation.boxShadow}; 
-    }
-    
-    /* Contents inside each card */
-    .card-view[data-type=score] .card img {
-      box-sizing: border-box;
-      object-fit: cover;
-      margin: auto;
-      pointer-events: none;
-    } 
+         which everything seems to work fine. 2022.05.02.20.49 */
+        transform: rotate(0.00001deg);
+      }
+
+      #content .card-view {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        position: absolute;
+        pointer-events: none;
+      }
+
+      #content .card-view:not(.active):not(.running) {
+        /*transition: 1s ease-out transform;*/
+      }
+
+      #card-deck-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 1);
+        z-index: 100;
+        display: flex;
+      }
+
+      #card-deck-loading #spinner {
+        display: block;
+        margin: auto;
+        width: 40vmin;
+        height: 40vmin;
+        position: relative;
+      }
+
+      #spinner img {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+      }
+
+      #spinner canvas {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        display: none;
+      }
+
+      .card-deck:not(.loading) #spinner img {
+        display: none;
+      }
+      .card-deck:not(.loading) #spinner canvas {
+        display: block;
+      }
+
+      .card-deck:not(.loading) #card-deck-loading {
+        transform: scale(2);
+        opacity: 0;
+        transition: 0.25s transform ease-out, 0.25s opacity ease-in;
+      }
+
+      .card-deck.loading #card-play {
+        display: none;
+      }
+
+      #card-play.played {
+        opacity: 0;
+        transform: scale(2);
+        transition: 0.25s opacity, 0.25s transform;
+      }
+
+      #card-play {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        pointer-events: none;
+      }
+
+      #card-play img {
+        position: absolute;
+        width: 25vmin;
+        margin-left: -12.5vmin;
+        margin-top: -12.5vmin;
+      }
+
+      #card-play img:nth-child(1) {
+        filter: brightness(0);
+      }
+      #card-play img:nth-child(2) {
+        filter: brightness(1);
+      }
+
+      .card.touch #card-play img {
+        transform: scale(0.95);
+      }
+
+      .card-view.active .card {
+        cursor: pointer;
+      }
+      .card-view.active .card.running {
+        cursor: alias;
+      }
+      .card-view.active .card[data-type="score"] {
+        cursor: alias;
+      }
+
+      .card {
+        box-sizing: border-box;
+        position: relative;
+        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.75);
+        pointer-events: all;
+      }
+
+      .card-view.active.pressed {
+        transform: scale(0.99);
+        animation: bounce 0.15s ease-out;
+        animation-fill-mode: forwards;
+      }
+
+      @keyframes bounce {
+        0% {
+          transform: scale(0.99);
+        }
+        50% {
+          transform: scale(0.96);
+        }
+        100% {
+          transform: scale(0.99);
+        }
+      }
+
+      .card-view.active.pressed .card {
+        box-shadow: 0px 0px 48px rgba(0, 0, 0, 0.35),
+          0px 0px 24px rgba(0, 0, 0, 0.35), 0px 0px 12px rgba(0, 0, 0, 0.35) !important;
+      }
+
+      .card.touch {
+        box-shadow: 0px 0px 48px rgba(0, 0, 0, 0.5),
+          0px 0px 48px rgba(0, 0, 0, 0.5) !important;
+      }
+
+      .card.hover {
+        box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.75) !important;
+      }
+
+      .card.touch .card-outline {
+        display: block;
+        box-sizing: border-box;
+        position: absolute;
+        border-style: solid;
+        border-color: rgba(0, 0, 0, 1);
+        border-width: 1vmin;
+        top: -0.5vmin;
+        left: -0.5vmin;
+        width: calc(100% + 1vmin);
+        height: calc(100% + 1vmin);
+      }
+
+      .card[data-type="score"].touch .card-outline {
+        border-width: 0.75vmin;
+        top: -0.375vmin;
+        left: -0.375vmin;
+        width: calc(100% + 0.75vmin);
+        height: calc(100% + 0.75vmin);
+      }
+
+      .card[data-type="compilation"].touch .card-outline {
+        border-width: 0.75vmin;
+        top: -0.375vmin;
+        left: -0.375vmin;
+        width: calc(100% + 0.75vmin);
+        height: calc(100% + 0.75vmin);
+      }
+
+      .card.animating .card-outline {
+        display: none !important;
+      }
+
+      .card-outline {
+        display: none;
+        pointer-events: none;
+      }
+
+      .card-view .card-content {
+        position: absolute;
+      }
+
+      .card-cover {
+        /* A black screen that gets removed once videos are loaded. */
+        background: black;
+        position: absolute;
+      }
+
+      .card-deck:not(.loading) .card-cover {
+        display: none;
+      }
+
+      /* Card types */
+      .card-view[data-type="video"] .card video,
+      .card-view[data-type="compilation"] .card video {
+        object-fit: cover;
+        pointer-events: none;
+      }
+
+      .card-view[data-type="video"] .card {
+        background: ${whistlegraph.video.color};
+        box-shadow: ${whistlegraph.video.boxShadow};
+      }
+
+      .card-view[data-type="score"] .card {
+        background: ${whistlegraph.score.color};
+        box-shadow: ${whistlegraph.score.boxShadow};
+      }
+
+      .card-view[data-type="compilation"] .card {
+        background: ${whistlegraph.compilation.color};
+        box-shadow: ${whistlegraph.compilation.boxShadow};
+      }
+
+      /* Contents inside each card */
+      .card-view[data-type="score"] .card img {
+        box-sizing: border-box;
+        object-fit: cover;
+        margin: auto;
+        pointer-events: none;
+      }
     </style>
-  `);
+  `;
 }
 
 function sim({ simCount, needsPaint }) {
@@ -701,7 +789,8 @@ function paint({ noiseTinted }) {
 
 function act({ event: e, net: { preloadReady } }) {
   if (e.is("signal") && e.signal.includes("whistlegraph:started")) fuzzy = true;
-  if (e.is("signal") && e.signal.includes("whistlegraph:preloaded")) preloadReady();
+  if (e.is("signal") && e.signal.includes("whistlegraph:preloaded"))
+    preloadReady();
 }
 
 export { boot, sim, paint, act };

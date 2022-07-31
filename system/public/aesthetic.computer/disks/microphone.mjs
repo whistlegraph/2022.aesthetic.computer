@@ -61,20 +61,19 @@ function sim({ dom: { html, css, javascript } }) {
     `;
 
     javascript`
-      const recBtn = document.body.querySelector('#rec-btn'); 
-      console.log(recBtn);
+      const rec = document.body.querySelector('#rec-btn'); 
+      console.log(rec);
 
-      // TODO: Add more events to make a better button.
-      recBtn.addEventListener("pointerdown", () => {
+      rec.addEventListener("pointerdown", () => {
         signal("microphone:record-btn-pressed");
       });
 
       when("microphone:recording", () => {
-        recBtn.classList.add('recording');
+        rec.classList.add('recording');
       });
 
       when("microphone:recording-done", () => {
-        recBtn.classList.remove('recording');
+        rec.classList.remove('recording');
       });
     `;
   }

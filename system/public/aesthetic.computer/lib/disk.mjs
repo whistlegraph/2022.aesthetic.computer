@@ -496,9 +496,21 @@ async function load(
     $commonApi.content = new Content();
 
     $commonApi.dom = {}
-    $commonApi.dom.html = (src) => { $commonApi.content.add(src); }
-    $commonApi.dom.css = (src) => { $commonApi.content.add(`<style>${src}</style>`); }
-    $commonApi.dom.javascript = (src) => { $commonApi.content.add(`<script>${src}</script>`); }
+
+    $commonApi.dom.html = (strings, ...vars) => {
+      const processed = defaultTemplateStringProcessor(strings, ...vars);
+      $commonApi.content.add(processed);
+    }
+
+    $commonApi.dom.css = (strings, ...vars) => {
+      const processed = defaultTemplateStringProcessor(strings, ...vars);
+       $commonApi.content.add(`<style>${processed}</style>`);
+    }
+
+    $commonApi.dom.javascript = (strings, ...vars) => {
+      const processed = defaultTemplateStringProcessor(strings, ...vars);
+      $commonApi.content.add(`<script>${processed}</script>`);
+    }
 
     cursorCode = "precise";
     loading = false;
@@ -1191,4 +1203,15 @@ function makeFrame({ data: { type, content } }) {
       });
     }
   }
+}
+
+// 📚 Utilities
+
+// Default template string behavior: https://stackoverflow.com/a/64298689/8146077
+function defaultTemplateStringProcessor (strings, ...vars) {
+  let result = "";
+  strings.forEach((str, i) => {
+    result += `${str}${i === strings.length - 1 ? "" : vars[i]}`;
+  });
+  return result;
 }

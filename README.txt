@@ -22,8 +22,9 @@ Welcome to...
       future runtimes, given that Math in JavaScript doesn't change.
 
 🐞 Major Bugs & Regressions
- - [🔴] Fix Firefox AudioWorklet Initialization Bug
-        `Error: Module resolve hook not set`
+ - [🔴] `wg` disks no longer work 
+ - [] Fix Firefox AudioWorklet Initialization Bug
+      `Error: Module resolve hook not set`
  - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
  - [] TODO: How should I generate favicons for each page or treat favicons in general?
   - Maybe just design a favicon? Should each piece also be able to have an icon?
@@ -40,6 +41,7 @@ Welcome to...
 
 ***Video Storage (Microphone)***
  - [⭐] Check to see what type of encoding mobile safari uses.
+  - [] Add more pointerevents to make a better button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
  - [] Sidetrack: Hack in an SVG cursor really quick.
  - [] Make microphone recording button a bit nicer.
  - [] If not possible to change container quickly, then
