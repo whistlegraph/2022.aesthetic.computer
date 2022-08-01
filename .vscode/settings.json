@@ -1,7 +1,7 @@
 {
-  "search.useGlobalIgnoreFiles": false,
+  "search.useGlobalIgnoreFiles": true,
   "search.exclude": {
-    "**/node_modules": false
+    "**/node_modules": true
   },
-  "search.useIgnoreFiles": false
+  "search.useIgnoreFiles": true
 }
