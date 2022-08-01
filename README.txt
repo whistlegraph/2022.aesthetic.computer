@@ -41,14 +41,13 @@ Welcome to...
 
 ***Video Storage (Microphone)***
  - [⭐] Check to see what type of encoding mobile safari uses.
-  - [] Add more pointerevents to make a better button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
- - [] Sidetrack: Hack in an SVG cursor really quick.
  - [] Make microphone recording button a bit nicer.
  - [] If not possible to change container quickly, then
  -    transcode everything into h264 mp4 files?
       https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
  - [] Aside: Research scaling and other ffmpeg.wasm features.
  - [] Add some UI for uploading the file, so it's a choice.
+ - [] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
  - [x] Fix microphone record button.
  - [x] Try to just upload the file directly here.
  - [x] Write a netlify serverless function and call it from the microphone
@@ -61,6 +60,14 @@ Welcome to...
       These would be great for custom file properties likw
       what piece was used to make the art / object and what git commit
       of the project was used or something like that...
+
+***Cursors***
+- [] View current custom cursor css examples.
+- "Chromium cursor images are restricted to 128x128 pixels by default, but it is
+  recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
+- [] Sidetrack: Hack in an SVG cursor really quick.
+- [] Replace Canvas 2D cursors with SVGs (or DIVs?).
+- [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
 ***Developers***
   - [] Add developer console log / catch errors and show them to users
@@ -103,10 +110,6 @@ Welcome to...
 - [] Make a basic bleep box that makes a tone when you tap on it.
 - [] Support multi-touch on bleep.
 - [] Support different wave types.
-
-***Cursors***
-- [] Replace Canvas 2D cursors with SVGs (or DIVs?).
-- [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [] Only record frames that are not part of the interface.
