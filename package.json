@@ -5,6 +5,13 @@
   "type": "module",
   "scripts": {
     "code": "cd system; npm run codespaces-dev",
+    "server:socket": "cd socket-server; npm run server",
+    "install:system": "cd system; npm install",
+    "install:socket-server": "cd socket-server; npm install",
+    "install:thumbnail-server": "cd thumbnail-server; npm install",
+    "install:stream": "cd stream; npm install",
+    "install:figjam": "cd figjam; npm install",
+    "postinstall": "run-p install:*",
     "watch": "cd system; npm run watch"
   },
   "repository": {
@@ -16,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/digitpain/aesthetic.computer/issues"
   },
-  "homepage": "https://github.com/digitpain/aesthetic.computer#readme"
+  "homepage": "https://github.com/digitpain/aesthetic.computer#readme",
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
 }
