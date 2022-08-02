@@ -17,6 +17,9 @@
   targetPort = 8080
   port = 8000
   autoLaunch = false
+[dev.https]
+  certFile = "../ssl-dev/localhost.pem"
+  keyFile = "../ssl-dev/localhost-key.pem"
 [context.production]
   NODE_ENV= "production"
 [[headers]]

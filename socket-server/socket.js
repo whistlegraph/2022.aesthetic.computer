@@ -17,6 +17,7 @@ let connectionId = 0; // TODO: Eventually replace with a username arrived at thr
 //                             a client <-> server authentication function.
 
 if (process.env.NODE_ENV === "development") {
+  /*
   // Put the development environment behind a local https server.
   const server = createServer({
     cert: readFileSync("../ssl-dev/localhost.pem"),
@@ -29,6 +30,12 @@ if (process.env.NODE_ENV === "development") {
     );
   });
   wss = new WebSocketServer({ server });
+  */
+  port = 8082;
+  wss = new WebSocketServer({ port });
+  console.log(
+    `🤖 server.aesthetic.computer (Development) socket: ws://${ip.address()}:${port}`
+  );
 } else {
   // And assume that in production we are already behind an https proxy.
   port = 8080;

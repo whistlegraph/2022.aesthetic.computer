@@ -444,10 +444,12 @@ async function load(
   // Automatically connect a socket server if we are in debug mode.
   if (debug) {
     let receiver;
+
     socket = new Socket(
       servers.local,
       (id, type, content) => receiver?.(id, type, content),
-      $commonApi.reload
+      $commonApi.reload,
+      "ws"
     );
 
     $commonApi.net.socket = function (receive) {
@@ -458,7 +460,7 @@ async function load(
   } else {
     $commonApi.net.socket = function (
       receive,
-      host = debug ? servers.local : servers.main
+      host = servers.main
     ) {
       // TODO: Flesh out the rest of reload functionality here to extract it from
       //       Socket. 21.1.5

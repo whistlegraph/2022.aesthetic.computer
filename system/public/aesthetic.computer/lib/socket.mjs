@@ -3,13 +3,13 @@ export class Socket {
   #ws;
   #reconnectTime = 1000;
 
-  constructor(host, receive, reload) {
-    this.#connect(host, receive, reload);
+  constructor(host, receive, reload, protocol = "wss") {
+    this.#connect(host, receive, reload, protocol);
   }
 
   // Connects a WebSocket object and takes a handler for messages.
-  #connect(host, receive, reload) {
-    this.#ws = new WebSocket(`wss://${host}`);
+  #connect(host, receive, reload, protocol = "wss") {
+    this.#ws = new WebSocket(`${protocol}://${host}`);
     const ws = this.#ws;
 
     // Send a message to the console after the first connection.
