@@ -9,6 +9,12 @@ import * as Glaze from "./lib/glaze.mjs";
 import { apiObject, extension } from "./lib/helpers.mjs";
 import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
+import { create } from "./dep/gl-matrix/mat4.mjs";
+
+//import * as FFmpeg from "./dep/ffmpeg/ffmpeg.min.js";
+
+// TODO: Dynamically load ffmpeg here, then eventually move that to a DOM
+//       scripts api? 22.08.03.10.37
 
 const { assign } = Object;
 const { ceil, round, floor, min } = Math;
@@ -121,6 +127,24 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let curReframeDelay = REFRAME_DELAY;
   let gap = 0;
   let density = 1; // added to window.devicePixelRatio
+
+  async function loadFFmpeg() {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "aesthetic.computer/dep/ffmpeg/ffmpeg.min.js"
+
+      script.onerror = function (err) {
+        reject(err, s);
+      }
+
+      script.onload = function handleScriptLoaded() {
+        if (debug) console.log("📼 FFmpeg has loaded.", FFmpeg);
+        resolve(FFmpeg);
+      };
+
+      document.head.appendChild(script);
+    });
+  }
 
   // Used by `disk` to set the metatags by default when a piece loads. It can
   // be overridden using `meta` inside of `boot` for any given piece.
@@ -957,10 +981,30 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const chunks = []; // Store chunks of the recording.
       mediaRecorder.ondataavailable = (evt) => chunks.push(evt.data);
 
-      mediaRecorder.onstop = function (evt) {
+      mediaRecorder.onstop = async function (evt) {
         const blob = new Blob(chunks, {
           type: options.mimeType,
         });
+
+        // Load FFmpeg so the recording can be transcribed to a proper
+        // audio or video format.
+        const { createFFmpeg } = await loadFFmpeg();
+        console.log(createFFmpeg);
+
+        const ffmpeg = createFFmpeg({ log: true });
+
+        (async () => {
+          await ffmpeg.load();
+          console.log("loaded ffmpeg")
+          /*
+          ffmpeg.FS("writeFile", "test.mp4", await fetchFile("./test.avi"));
+          await ffmpeg.run("-i", "test.avi", "test.mp4");
+          await fs.promises.writeFile(
+            "./test.mp4",
+            ffmpeg.FS("readFile", "test.mp4")
+          );
+          */
+        })();
 
         // Make an appropriate element to store the recording.
         const el = document.createElement(content); // "audio" or "video"

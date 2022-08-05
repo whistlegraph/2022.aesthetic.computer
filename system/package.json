@@ -32,6 +32,8 @@
   },
   "homepage": "https://github.com/whistlegraph/system#readme",
   "dependencies": {
+    "@ffmpeg/core": "^0.10.0",
+    "@ffmpeg/ffmpeg": "^0.10.1",
     "gl-matrix": "^3.4.3"
   },
   "devDependencies": {

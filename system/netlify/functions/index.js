@@ -59,11 +59,9 @@ async function fun(event, context) {
   // Externally hosted piece.
   try {
     if (slug.startsWith("~")) {
-      console.log("Getting page...");
       const externalPiece = await getPage(
         `https://${parsed.host}/${parsed.path}.mjs`
       );
-      console.log("got page...");
       if (externalPiece?.code === 200) {
         desc =
           externalPiece.data.split(/\r?\n/)[0].replace("//", "").trim() ||
@@ -136,7 +134,7 @@ async function getPage(url) {
       })
       .on("error", (e) => {
         console.log("Error:", e);
-        resolve();
+        resolve(); // TODO: Should I error here, rather than resolve?
       });
   });
 }
