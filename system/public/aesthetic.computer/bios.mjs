@@ -990,14 +990,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         // audio or video format.
         const { createFFmpeg } = await loadFFmpeg();
         console.log(createFFmpeg);
-
         const ffmpeg = createFFmpeg({ log: true });
 
         (async () => {
           await ffmpeg.load();
-          console.log("loaded ffmpeg")
+          console.log("loaded ffmpeg");
+          ffmpeg.FS("writeFile", "input.mp4", );
           /*
-          ffmpeg.FS("writeFile", "test.mp4", await fetchFile("./test.avi"));
           await ffmpeg.run("-i", "test.avi", "test.mp4");
           await fs.promises.writeFile(
             "./test.mp4",
