@@ -114,6 +114,8 @@ async function fun(event, context) {
     statusCode: 200,
     headers: {
       "Content-Type": "text/html",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
     },
     body: html,
     ttl: 60,
