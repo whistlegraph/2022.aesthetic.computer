@@ -32,6 +32,16 @@
   Cross-Origin-Embedder-Policy = "require-corp"
   Cross-Origin-Opener-Policy = "same-origin"
 [[redirects]]
+  from = "https://www.4esthetic.com/*"
+  to = "https://aesthetic.computer/:splat"
+  status = 301
+  force = true
+[[redirects]]
+  from = "https://4esthetic.com/*"
+  to = "https://aesthetic.computer/:splat"
+  status = 301
+  force = true
+[[redirects]]
   from = "/thumbnail/*"
   to = "/.netlify/builders/thumbnail"
   status = 200
@@ -45,13 +55,3 @@
   to = "/.netlify/builders/index"
   status = 200
   force = false
-[[redirects]]
-  from = "https://www.4esthetic.com/*"
-  to = "https://aesthetic.computer/:splat"
-  status = 301
-  force = true
-[[redirects]]
-  from = "https://4esthetic.com/*"
-  to = "https://aesthetic.computer/:splat"
-  status = 301
-  force = true
