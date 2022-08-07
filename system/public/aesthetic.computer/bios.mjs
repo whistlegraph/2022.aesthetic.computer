@@ -92,6 +92,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
+  // An extra canvas reference for passing through or buffering video recording streams.
+  let streamCanvasContext = ctx;
+  let resizeToStreamCanvas = false;
+
   // A layer for modal messages such as "audio engine is off".
   const modal = document.createElement("div");
   modal.id = "modal";
@@ -973,7 +977,31 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           mimeType,
         };
 
-        const canvasStream = canvas.captureStream(30);
+        // TODO: Duplicate / resize canvas as needed?
+        // TODO: What happens upon resize?
+
+        // TODO: Only set the streamCanvas here if it is below a certain
+        //       resolution.
+        streamCanvasContext = document.createElement("canvas").getContext("2d");
+        streamCanvasContext.canvas.width = canvas.width * 2;
+        streamCanvasContext.canvas.height = canvas.height * 2;
+
+        // TODO: Turn resizeToStreamCanvas into a function...
+        // Draw into the streamCanvas buffer from the normal canvas,
+        // TODO: This should leave black bars?
+        // resizing it to the frame of the streamCanvas.
+        resizeToStreamCanvas = function () {
+          streamCanvasContext.drawImage(
+            canvas,
+            0,
+            0,
+            streamCanvasContext.canvas.width,
+            streamCanvasContext.canvas.height
+          );
+        };
+
+        const canvasStream = streamCanvasContext.canvas.captureStream(30);
+
         canvasStream.addTrack(audioStreamDest.stream.getAudioTracks()[0]);
         mediaRecorder = new MediaRecorder(canvasStream, options);
       }
@@ -982,6 +1010,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       mediaRecorder.ondataavailable = (evt) => chunks.push(evt.data);
 
       mediaRecorder.onstop = async function (evt) {
+        // Reset global streamCanvas state.
+        streamCanvasContext = ctx;
+        resizeToStreamCanvas = null;
+
         let blob = new Blob(chunks, {
           type: options.mimeType,
         });
@@ -1391,6 +1423,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (debug && frameCached && content.loading !== true) UI.cached(uiCtx); // Pause icon.
 
       uiCtx.resetTransform();
+
+      if (typeof resizeToStreamCanvas === "function") {
+        resizeToStreamCanvas();
+      }
     }
 
     if (pixelsDidChange || pen.changedInPiece) {

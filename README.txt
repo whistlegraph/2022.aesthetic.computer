@@ -40,15 +40,16 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 ***Video Storage (Microphone)***
- - [] Add ffmpeg.wasm
- - [] If not possible to change container quickly, then
+ - [] Check to see what type of encoding mobile safari uses.
+ - [] If it's not possible to change the container quickly, then
  -    transcode everything into h264 mp4 files?
       https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
- - [] Check to see what type of encoding mobile safari uses.
  - [] Make microphone recording button a bit nicer.
  - [] Aside: Research scaling and other ffmpeg.wasm features.
  - [] Add some UI for uploading the file, so it's a choice.
  - [] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+
+ - [x] Add ffmpeg.wasm
  - [x] Fix microphone record button.
  - [x] Try to just upload the file directly here.
  - [x] Write a netlify serverless function and call it from the microphone

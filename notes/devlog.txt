@@ -1,6 +1,9 @@
 🧪 Dev Log
 Practical and conceptual notes weaved together.
 
+🕸️ W3C Proposals To Watch:
+- https://www.w3.org/TR/mediacapture-fromelement
+
 ☁️ Ideas
 Maybe aesthetic.computer is more of an interface project
 or search engine or *branded* prompt than it is a creative
