@@ -632,6 +632,11 @@ const signals = [];
 function makeFrame({ data: { type, content } }) {
   // console.log("Frame:", type);
 
+  if (type === "transcode-progress") {
+    if (debug) console.log("🤸 Transcode progress:", content);
+    return;
+  }
+
   if (type === "signal") {
     signals.push(content);
     return;

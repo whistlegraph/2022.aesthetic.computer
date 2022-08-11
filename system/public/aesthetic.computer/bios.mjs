@@ -93,7 +93,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   const ctx = canvas.getContext("2d");
 
   // An extra canvas reference for passing through or buffering video recording streams.
-  let streamCanvasContext = ctx;
+  let streamCanvasContext;
   let resizeToStreamCanvas = false;
 
   // A layer for modal messages such as "audio engine is off".
@@ -978,12 +978,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         };
 
         // *** streamCanvas Recording Settings ***
+        // TODO: Examine the canvas stream resolution?
 
         // TODO: Duplicate / resize canvas as needed?
         // TODO: What happens upon resize?
         // TODO: Only set the streamCanvas here if it is below a certain
         //       resolution.
         streamCanvasContext = document.createElement("canvas").getContext("2d");
+        streamCanvasContext.imageSmoothingEnabled = false;
 
         // TODO: If we aren't using TikTok, then just find a good resolution / double
         // the pixels as needed. 22.08.11.03.38
@@ -1010,7 +1012,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               0,
               frameHeight / 2 - height / 2,
               streamCanvasContext.canvas.width,
-              height 
+              height
             );
           } else {
             const width = streamCanvasContext.canvas.height / aspectRatio;
@@ -1035,7 +1037,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       mediaRecorder.onstop = async function (evt) {
         // Reset global streamCanvas state.
-        streamCanvasContext = ctx;
+        streamCanvasContext = undefined;
         resizeToStreamCanvas = null;
 
         let blob = new Blob(chunks, {
@@ -1044,11 +1046,17 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
         // Load FFmpeg so the recording can be transcribed to a proper video format.
         if (content === "video") {
-
-        // TODO: Check to see if encoding can be skipped? 22.08.11.03.41
+          // TODO: Check to see if encoding can be skipped? 22.08.11.03.41
 
           const { createFFmpeg, fetchFile } = await loadFFmpeg();
-          const ffmpeg = createFFmpeg({ log: debug });
+          const ffmpeg = createFFmpeg({
+            log: debug,
+            progress: (p) => {
+              // Send a message to the piece that gives the transcode progress.
+              const progress = p.time / (evt.timeStamp / 1000);
+              send({ type: "transcode-progress", content: progress });
+            },
+          });
 
           await ffmpeg.load();
           ffmpeg.FS("writeFile", "input.video", await fetchFile(blob));
