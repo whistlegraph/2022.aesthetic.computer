@@ -1044,6 +1044,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
         // Load FFmpeg so the recording can be transcribed to a proper video format.
         if (content === "video") {
+
+        // TODO: Check to see if encoding can be skipped? 22.08.11.03.41
+
           const { createFFmpeg, fetchFile } = await loadFFmpeg();
           const ffmpeg = createFFmpeg({ log: debug });
 

@@ -22,9 +22,11 @@ Welcome to...
       future runtimes, given that Math in JavaScript doesn't change.
 
 🐞 Major Bugs & Regressions
+ - [🏡] Check to see why custom thumbnails are broken for remote URL disks.
  - [] Fix Firefox AudioWorklet Initialization Bug
       `Error: Module resolve hook not set`
  - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
+ - [] Check to see if ffmpeg encoding can be skipped.
  - [] TODO: How should I generate favicons for each page or treat favicons in general?
   - Maybe just design a favicon? Should each piece also be able to have an icon?
   - Maybe the system could use these icons if pieces defined them...
@@ -40,15 +42,9 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 ***Video Storage (Microphone)***
- - [] Check to see what type of encoding mobile safari uses.
- - [] If it's not possible to change the container quickly, then
- -    transcode everything into h264 mp4 files?
-      https://stackoverflow.com/questions/62863547/save-canvas-data-as-mp4-javascript
- - [] Make microphone recording button a bit nicer.
- - [] Aside: Research scaling and other ffmpeg.wasm features.
- - [] Add some UI for uploading the file, so it's a choice.
  - [] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
-
+ - [] Add some UI for uploading the file, so it's a choice.
+ - [x] Make microphone recording button a bit nicer.
  - [x] Add ffmpeg.wasm
  - [x] Fix microphone record button.
  - [x] Try to just upload the file directly here.
@@ -56,12 +52,6 @@ Welcome to...
        piece... so the file can be uploaded.
    - [x] Netlify Serverless Hello World
    - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
- - [] Look into categorizing objects with tags...
- https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-tagging.html
- - [] And making use of user defined metadata in s3.
-      These would be great for custom file properties likw
-      what piece was used to make the art / object and what git commit
-      of the project was used or something like that...
 
 ***Cursors***
 - [] View current custom cursor css examples.
@@ -189,6 +179,12 @@ Welcome to...
        - Do they get stored at a special code, then users can
          go to the website / open another window and mint from the code
          or download it?
+ - [] Look into categorizing uploaded objects with tags...
+ https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-tagging.html
+ - [] And making use of user defined metadata in s3.
+      These would be great for custom file properties likw
+      what piece was used to make the art / object and what git commit
+      of the project was used or something like that...
          
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***
