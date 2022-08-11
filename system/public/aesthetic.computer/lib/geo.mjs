@@ -1,7 +1,7 @@
 // 🧮 Geometry
 
 const { abs, cos, sin, floor } = Math;
-import { dist, randIntRange } from "./num.mjs";
+import { dist, radians, randIntRange } from "./num.mjs";
 
 // A generic circle model for algorithmic use.
 export class Circle {
