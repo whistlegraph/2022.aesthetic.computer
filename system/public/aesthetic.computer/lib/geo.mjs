@@ -1,6 +1,6 @@
 // 🧮 Geometry
 
-const { abs, floor } = Math;
+const { abs, cos, sin, floor } = Math;
 import { dist, randIntRange } from "./num.mjs";
 
 // A generic circle model for algorithmic use.
@@ -289,4 +289,10 @@ export class DirtyBox {
   croppedBox(image) {
     return this.box.crop(0, 0, image.width, image.height);
   }
+}
+
+export function linePointsFromAngle(x1, y1, dist, degrees) {
+  const x2 = x1 + dist * cos(radians(degrees));
+  const y2 = y1 + dist * sin(radians(degrees));
+  return [x1, y1, x2, y2];
 }

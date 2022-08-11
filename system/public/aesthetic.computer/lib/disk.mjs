@@ -95,6 +95,7 @@ const $commonApi = {
     DirtyBox: geo.DirtyBox,
     Grid: geo.Grid,
     Circle: geo.Circle,
+    linePointsFromAngle: geo.linePointsFromAngle
   },
   ui: {
     Button: ui.Button,
