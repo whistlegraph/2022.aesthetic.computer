@@ -94,13 +94,13 @@ async function fun(event, context) {
           desc || "An aesthetic.computer piece."
         }" />
         <meta name="og:image" content="https://${
-          parsed.host
+          event.headers['host']
         }/thumbnail/1200x630/${slug}.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="${slug}" />
         <meta name="twitter:site" content="aesthetic.computer" />
         <meta name="twitter:image" content="https://${
-          parsed.host
+         event.headers['host'] 
         }/thumbnail/1800x900/${slug}.jpg"/>
       </head>
       <body class="native-cursor">
