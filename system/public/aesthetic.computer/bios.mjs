@@ -977,27 +977,51 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           mimeType,
         };
 
+        // *** streamCanvas Recording Settings ***
+
         // TODO: Duplicate / resize canvas as needed?
         // TODO: What happens upon resize?
-
         // TODO: Only set the streamCanvas here if it is below a certain
         //       resolution.
         streamCanvasContext = document.createElement("canvas").getContext("2d");
-        streamCanvasContext.canvas.width = canvas.width * 2;
-        streamCanvasContext.canvas.height = canvas.height * 2;
 
-        // TODO: Turn resizeToStreamCanvas into a function...
+        // TODO: If we aren't using TikTok, then just find a good resolution / double
+        // the pixels as needed. 22.08.11.03.38
+        // streamCanvasContext.canvas.width = canvas.width * 2;
+        // streamCanvasContext.canvas.height = canvas.height * 2;
+
+        // Portrait Mode / TikTok (this is the default for recording)
+        // This is hardcoded at 1080p for TikTok right now.
+        streamCanvasContext.canvas.width = 1080;
+        streamCanvasContext.canvas.height = 1920;
+
         // Draw into the streamCanvas buffer from the normal canvas,
-        // TODO: This should leave black bars?
-        // resizing it to the frame of the streamCanvas.
+        // Leaves black bars, resizing it to the frame of the streamCanvas.
         resizeToStreamCanvas = function () {
-          streamCanvasContext.drawImage(
-            canvas,
-            0,
-            0,
-            streamCanvasContext.canvas.width,
-            streamCanvasContext.canvas.height
-          );
+          const frameWidth = streamCanvasContext.canvas.width;
+          const frameHeight = streamCanvasContext.canvas.height;
+          const frameAspectRatio = frameHeight / frameWidth;
+          const aspectRatio = canvas.height / canvas.width;
+
+          if (frameAspectRatio > aspectRatio) {
+            const height = streamCanvasContext.canvas.width * aspectRatio;
+            streamCanvasContext.drawImage(
+              canvas,
+              0,
+              frameHeight / 2 - height / 2,
+              streamCanvasContext.canvas.width,
+              height 
+            );
+          } else {
+            const width = streamCanvasContext.canvas.height / aspectRatio;
+            streamCanvasContext.drawImage(
+              canvas,
+              frameWidth / 2 - width / 2,
+              0,
+              width,
+              streamCanvasContext.canvas.height
+            );
+          }
         };
 
         const canvasStream = streamCanvasContext.canvas.captureStream(30);
@@ -1035,7 +1059,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             // General shaving to make even sides (required by the pixel format)
             // "pad=ceil(iw/2)*2:ceil(ih/2)*2",
             // TikTok
-            "fps=30, scale=1080x1920:flags=neighbor:force_original_aspect_ratio=decrease, pad=1080:1920:(ow-iw)/2:(oh-ih)/2",
+            //"fps=30, scale=1080x1920:flags=neighbor:force_original_aspect_ratio=decrease, pad=1080:1920:(ow-iw)/2:(oh-ih)/2",
+            "fps=30",
             "output.mp4"
           );
           // Notes on these options:
