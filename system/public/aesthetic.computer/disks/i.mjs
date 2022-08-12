@@ -22,7 +22,7 @@ const i = new I();
 function boot({ density, resize }) {
   //density(8); // TODO: Should density be replaced with zoom or accept fractions?
   // TODO: Runs only once!
-  resize(32, 32);
+  resize(32, );
 }
 
 // 🎨 Paint (Executes every display frame)
