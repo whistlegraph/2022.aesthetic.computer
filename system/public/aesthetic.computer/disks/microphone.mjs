@@ -15,7 +15,7 @@ function boot({ ui, screen, cursor, content }) {
   // btn.disabled = true;
 }
 
-function paint({ wipe, ink, screen: { width, height } }) {
+function paint({ wipe, box, ink, rec: { printProgress }, screen: { width, height } }) {
   wipe(15, 20, 0); // Dark green background.
 
   // Waveform & Amplitude Line
@@ -31,6 +31,12 @@ function paint({ wipe, ink, screen: { width, height } }) {
   }
 
   ink(0, 255, 0, 16).line(0, height / 2, width, height / 2); // Center line.
+
+  // Draw progress bar for video rendering.
+  if (printProgress > 0) {
+    ink(255, 0, 0);
+    box(0, 0, printProgress * width, 3);
+  } 
 }
 
 function sim({ dom: { html, css, javascript } }) {
