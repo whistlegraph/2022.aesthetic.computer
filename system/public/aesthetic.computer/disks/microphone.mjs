@@ -89,8 +89,9 @@ function beat({ sound: { time, microphone }, content }) {
   if (!mic) mic = microphone.connect();
 }
 
-function act({ signal, event: e, rec: { rolling, cut, print } }) {
+function act({ signal, event: e, rec: { rolling, cut, print, printProgress } }) {
   if (!mic) return; // Disable all events until the microphone is working.
+  if (printProgress > 0) return; // Prevent any interaction when a video is rendering.
 
   // Keyboard Events
   if (e.is("keyboard:down") && e.repeat === false) {
