@@ -63,6 +63,15 @@ Welcome to...
 - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
 - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
+***Spinline***
+  - [] Circle algorithm with transparency, has doubly drawin pixels.
+  - [] example: ink(255, 100).circle(x, y, 128);
+  - [] Circle needs 'pan' support.
+  - [] Make the regular circle small, and positioned at the tip of the rotating line.
+  - [] No exported boot function does not show the mouse cursor...
+  - [] Click and drag selection bug needs to be fixed on iOS. (Chrome + Safari)
+  - [] Improve "density" function.
+
 ***Developers***
   - [] Add developer console log / catch errors and show them to users
        directly on the screen. Maybe this should be available all the time,
