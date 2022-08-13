@@ -41,6 +41,10 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+***L8 Night***
+- [] Get a debugger working. 
+- [] Get easymotion working?
+
 ***Video Storage (Microphone)***
  - [🌛] Add a progress bar / interstitial that runs while the file is encoding,
       preventing the user from being able to act.

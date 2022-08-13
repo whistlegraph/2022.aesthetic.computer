@@ -12,6 +12,8 @@ node_modules/
 /ssl-dev/localhost.pem
 /ssl-dev/localhost-key.pem
 
+remote-debug/
+
 # hosting for the frontend
 .vercel
 
