@@ -39,11 +39,14 @@ Welcome to...
  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
+*** Piecemakers: niki, artur, reas ***
+
 🌟 Projects In Progress 🌟
 
 ***L8 Night***
-- [] Get a debugger working. 
 - [] Get easymotion working?
+- [] Move `i` to artur.
+- [x] Get a debugger working. 
 
 ***Video Storage (Microphone)***
  - [🌛] Add a progress bar / interstitial that runs while the file is encoding,
@@ -70,7 +73,7 @@ Welcome to...
 - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
 ***Spinline***
-  - [] Circle algorithm with transparency, has doubly drawin pixels.
+  - [] Circle algorithm with transparency, has doubly drawn pixels.
   - [] example: ink(255, 100).circle(x, y, 128);
   - [] Circle needs 'pan' support.
   - [] Make the regular circle small, and positioned at the tip of the rotating line.
