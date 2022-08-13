@@ -1053,8 +1053,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             log: debug,
             progress: (p) => {
               // Send a message to the piece that gives the transcode progress.
-              const progress = p.time / (evt.timeStamp / 1000);
-              send({ type: "transcode-progress", content: progress });
+              const timeStamp = evt.timeStamp / 1000; 
+              let time = p.time || timeStamp;
+              send({ type: "transcode-progress", content: time / timeStamp });
             },
           });
 

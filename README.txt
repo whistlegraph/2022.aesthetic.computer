@@ -46,9 +46,11 @@ Welcome to...
 - [] Move `i` to artur.
 
 ***Video Storage (Microphone)***
- - [🔥] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
- - [] Add a progress bar / interstitial that runs while the file is encoding,
+ - [🌛] Add a progress bar / interstitial that runs while the file is encoding,
       preventing the user from being able to act.
+      - [] Test the interaction.
+      - [] Gray out the screen.
+ - [] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
  - [] Add some UI for uploading the file, so it's a choice.
  - [x] Make microphone recording button a bit nicer.
  - [x] Add ffmpeg.wasm

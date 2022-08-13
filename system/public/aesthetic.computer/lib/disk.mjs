@@ -112,6 +112,7 @@ const $commonApi = {
     rolling: (opts) => send({ type: "recorder-rolling", content: opts }),
     cut: () => send({ type: "recorder-cut" }),
     print: () => send({ type: "recorder-print" }),
+    printProgress: 0,
   },
   net: {},
   needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
@@ -634,7 +635,8 @@ function makeFrame({ data: { type, content } }) {
   // console.log("Frame:", type);
 
   if (type === "transcode-progress") {
-    if (debug) console.log("🤸 Transcode progress:", content);
+    if (debug) console.log("Print progress:", content);
+    $commonApi.rec.printProgress = content;
     return;
   }
 
@@ -1210,6 +1212,10 @@ function makeFrame({ data: { type, content } }) {
         content: { didntRender: true, loading },
       });
     }
+
+    // ***Frame State Reset***
+    // Reset video transcoding / print progress.
+    if ($commonApi.rec.printProgress === 1) $commonApi.rec.printProgress = 0;
   }
 }
 
