@@ -43,11 +43,6 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-***L8 Night***
-- [] Get easymotion working?
-- [] Move `i` to artur.
-- [x] Get a debugger working. 
-
 ***Video Storage (Microphone)***
  - [🌛] Add a progress bar / interstitial that runs while the file is encoding,
       preventing the user from being able to act.
@@ -358,7 +353,6 @@ Welcome to...
        And: https://googlechromelabs.github.io/text-editor
   - [] Make a VSCode extension that opens an official aesthetic.computer pane?
 
-
 *Recently Completed*
 
  ***Meta***
@@ -376,6 +370,8 @@ Welcome to...
         so that prerendering can be turned off (get imessage previews working).
   - [x] Should og:image and twitter:image have file extensions?
 
+***L8 Night***
+- [x] Get a debugger working. 
 
 ***2D Drawing Primitives for Niki***
  - [x] line from point... at angle with distance
