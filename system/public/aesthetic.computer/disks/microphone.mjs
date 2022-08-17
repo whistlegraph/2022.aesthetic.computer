@@ -15,7 +15,13 @@ function boot({ ui, screen, cursor, content }) {
   // btn.disabled = true;
 }
 
-function paint({ wipe, box, ink, rec: { printProgress }, screen: { width, height } }) {
+function paint({
+  wipe,
+  box,
+  ink,
+  rec: { printProgress },
+  screen: { width, height },
+}) {
   wipe(15, 20, 0); // Dark green background.
 
   // Waveform & Amplitude Line
@@ -36,7 +42,7 @@ function paint({ wipe, box, ink, rec: { printProgress }, screen: { width, height
   if (printProgress > 0) {
     ink(255, 0, 0);
     box(0, 0, printProgress * width, 3);
-  } 
+  }
 }
 
 function sim({ dom: { html, css, javascript } }) {
@@ -57,7 +63,7 @@ function sim({ dom: { html, css, javascript } }) {
         background-color: rgb(200, 0, 0);
         border: 0.45em solid rgb(28, 59, 34);
         cursor: none;
-        transition: .25s border-radius, .25s background-color;
+        transition: 0.25s border-radius, 0.25s background-color;
       }
       button.recording {
         border: 0.85em solid rgb(28, 59, 34);
@@ -89,7 +95,11 @@ function beat({ sound: { time, microphone }, content }) {
   if (!mic) mic = microphone.connect();
 }
 
-function act({ signal, event: e, rec: { rolling, cut, print, printProgress } }) {
+function act({
+  signal,
+  event: e,
+  rec: { rolling, cut, print, printProgress },
+}) {
   if (!mic) return; // Disable all events until the microphone is working.
   if (printProgress > 0) return; // Prevent any interaction when a video is rendering.
 
