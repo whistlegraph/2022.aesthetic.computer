@@ -22,50 +22,63 @@ Welcome to...
       future runtimes, given that Math in JavaScript doesn't change.
 
 🐞 Major Bugs & Regressions
- - [] Fix Firefox AudioWorklet Initialization Bug
-      `Error: Module resolve hook not set`
- - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
- - [] Check to see if ffmpeg encoding can be skipped.
- - [] TODO: How should I generate favicons for each page or treat favicons in general?
-  - Maybe just design a favicon? Should each piece also be able to have an icon?
-  - Maybe the system could use these icons if pieces defined them...
- - [] Refactor `wg` to make better use of thumbnails... what should the new structure be?
-   - [] How to have a default or custom thumbnail... even though things are randomly routed?
- - [] Each page should print out its own description in the console.
-  - [] Then all descriptions of existing pieces can be written.
-  - [] Why are the disks located there in the first place?
- - [X] Check to see why custom thumbnails are broken for remote URL disks.
- - [X] `wg` disks no longer work 
- - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
- - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
+  - [] Fix Firefox AudioWorklet Initialization Bug
+       `Error: Module resolve hook not set`
+  - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
+  - [] Check to see if ffmpeg encoding can be skipped.
+  - [] TODO: How should I generate favicons for each page or treat favicons in general?
+   - Maybe just design a favicon? Should each piece also be able to have an icon?
+   - Maybe the system could use these icons if pieces defined them...
+  - [] Refactor `wg` to make better use of thumbnails... what should the new structure be?
+    - [] How to have a default or custom thumbnail... even though things are randomly routed?
+  - [] Each page should print out its own description in the console.
+   - [] Then all descriptions of existing pieces can be written.
+   - [] Why are the disks located there in the first place?
+  - [X] Check to see why custom thumbnails are broken for remote URL disks.
+  - [X] `wg` disks no longer work 
+  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
+  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
 *** Piecemakers: niki, artur, reas ***
 
 🌟 Projects In Progress 🌟
 
-***Video Storage (Microphone)***
- - [🌛] Add a progress bar / interstitial that runs while the file is encoding,
+***Audio + Video Storage (Microphone)***
+ + Now
+  - [🌟] Add a "done" or "close" button to the recording UI / share sheet which re-
+      activates the UI.
+  - [] Add a special UI for uploading the file / receiving a code...
+      so it's a choice?
+  - [] Make the recording process re-entrant. (Don't reload ffmpeg each time?)  
+  + Later
+  - [] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+ + Done
+  - [x] Add a progress bar / interstitial that runs while the file is encoding,
       preventing the user from being able to act.
-      - [] Test the interaction.
-      - [] Gray out the screen.
- - [] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
- - [] Add some UI for uploading the file, so it's a choice.
- - [x] Make microphone recording button a bit nicer.
- - [x] Add ffmpeg.wasm
- - [x] Fix microphone record button.
- - [x] Try to just upload the file directly here.
- - [x] Write a netlify serverless function and call it from the microphone
-       piece... so the file can be uploaded.
-   - [x] Netlify Serverless Hello World
-   - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
+      - [x] Test the interaction.
+      - [x] Gray out the screen.
+  - [x] Make microphone recording button a bit nicer.
+  - [x] Add ffmpeg.wasm
+  - [x] Fix microphone record button.
+  - [x] Try to just upload the file directly here.
+  - [x] Write a netlify serverless function and call it from the microphone
+        piece... so the file can be uploaded.
+    - [x] Netlify Serverless Hello World
+    - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
+
+
+***Bleep***
+  - [] Make a basic bleep box that makes a tone when you tap on it.
+  - [] Support multi-touch on bleep.
+  - [] Support different wave types.
 
 ***Cursors***
-- [] View current custom cursor css examples.
-- "Chromium cursor images are restricted to 128x128 pixels by default, but it is
-  recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
-- [] Sidetrack: Hack in an SVG cursor really quick.
-- [] Replace Canvas 2D cursors with SVGs (or DIVs?).
-- [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
+  - [] View current custom cursor css examples.
+  - "Chromium cursor images are restricted to 128x128 pixels by default, but it is
+    recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
+  - [] Sidetrack: Hack in an SVG cursor really quick.
+  - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
+  - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
 ***Spinline***
   - [] Circle algorithm with transparency, has doubly drawn pixels.
@@ -94,6 +107,9 @@ Welcome to...
 ***i***
   - [] See `disks/i.mjs` 
 
+***Walkie Talkie***
+- [] Maybe recordings / videos can be sent back and forth between two parties?
+
 ***Shortcuts / open a new URL ***
   - [] Figure out notation: ~user/piece, piece~param1, #notion
     - [] Should this only be for `prompt` or should it also route URLs?
@@ -112,11 +128,6 @@ Welcome to...
 ***Prompt Updates***
   - [] “search bar” any letter typed shows “ghost” letters of all possible options
   - [] Also make the commands case insensitive!
-
-***Bleep***
-- [] Make a basic bleep box that makes a tone when you tap on it.
-- [] Support multi-touch on bleep.
-- [] Support different wave types.
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [] Only record frames that are not part of the interface.

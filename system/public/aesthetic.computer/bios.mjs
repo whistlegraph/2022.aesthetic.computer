@@ -9,15 +9,11 @@ import * as Glaze from "./lib/glaze.mjs";
 import { apiObject, extension } from "./lib/helpers.mjs";
 import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
-import { create } from "./dep/gl-matrix/mat4.mjs";
 
 //import * as FFmpeg from "./dep/ffmpeg/ffmpeg.min.js";
 
-// TODO: Dynamically load ffmpeg here, then eventually move that to a DOM
-//       scripts api? 22.08.03.10.37
-
 const { assign } = Object;
-const { ceil, round, floor, min } = Math;
+const { round, floor, min, max } = Math;
 
 // 💾 Boot the system and load a disk.
 async function boot(parsed, bpm = 60, resolution, debug) {
@@ -413,7 +409,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     // Microphone Input Processor
     // (Gets attached via a message from the running disk.)
     attachMicrophone = async (data) => {
-      if (debug) console.log("🎙 Microphone:", data || { monitor: false });
+      if (debug) console.log("🎙 Microphone:", data);
 
       const micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -1035,7 +1031,16 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const chunks = []; // Store chunks of the recording.
       mediaRecorder.ondataavailable = (evt) => chunks.push(evt.data);
 
+      let recordingStartTime = 0;
+      let recordingDuration;
+
+      mediaRecorder.onstart = function () {
+        recordingStartTime = performance.now();
+      };
+
       mediaRecorder.onstop = async function (evt) {
+        recordingDuration = (performance.now() - recordingStartTime) / 1000;
+
         // Reset global streamCanvas state.
         streamCanvasContext = undefined;
         resizeToStreamCanvas = null;
@@ -1049,15 +1054,30 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           // TODO: Check to see if encoding can be skipped? 22.08.11.03.41
 
           const { createFFmpeg, fetchFile } = await loadFFmpeg();
+
+          let transcodeProgress = 0;
+
           const ffmpeg = createFFmpeg({
             log: debug,
             progress: (p) => {
               // Send a message to the piece that gives the transcode progress.
-              const timeStamp = evt.timeStamp / 1000; 
-              let time = p.time || timeStamp;
-              send({ type: "transcode-progress", content: time / timeStamp });
+              let time = p.time;
+              if (time === undefined) {
+                if (transcodeProgress === 0) {
+                  time = 0;
+                } else {
+                  time = recordingDuration;
+                }
+              }
+              transcodeProgress = min(1, time / recordingDuration);
+              send({
+                type: "transcode-progress",
+                content: transcodeProgress,
+              });
             },
           });
+
+          ffmpeg.setLogging(debug); // Enable ffmpeg logging only if we are in `debug` mode.
 
           await ffmpeg.load();
           ffmpeg.FS("writeFile", "input.video", await fetchFile(blob));
