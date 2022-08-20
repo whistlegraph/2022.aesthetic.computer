@@ -40,13 +40,22 @@ function paint({
 
   // Draw progress bar for video rendering.
   if (printProgress > 0) {
+    ink(0, 0, 0, 128).box(0, 0, width, height);
     ink(255, 0, 0);
     box(0, 0, printProgress * width, 3);
   }
 }
 
-function sim({ dom: { html, css, javascript } }) {
+//let printFinished = false;
+
+function sim({ dom: { html, css, javascript }, signal, rec: { printProgress } }) {
   mic?.poll(); // Query for updated amplitude and waveform data.
+
+  //if (printProgress === 1 && !printFinished) {
+    //signal("microphone:transcoding-complete");
+    //printFinished = true;
+  //}
+
   if (mic && interfaceDisabled) {
     interfaceDisabled = false;
 
@@ -70,13 +79,16 @@ function sim({ dom: { html, css, javascript } }) {
         background-color: rgb(100, 100, 100);
         border-radius: 15%;
       }
+      button.transcoding {
+        filter: saturate(0);
+      }
     `;
 
     javascript`
       const rec = document.body.querySelector('#rec-btn'); 
-      console.log(rec);
 
       rec.addEventListener("pointerdown", () => {
+        if (rec.classList.contains('transcoding')) return;
         signal("microphone:record-btn-pressed");
       });
 
@@ -84,8 +96,13 @@ function sim({ dom: { html, css, javascript } }) {
         rec.classList.add('recording');
       });
 
+      when("recorder:transcoding-done", () => {
+        rec.classList.remove('transcoding');
+      });
+
       when("microphone:recording-done", () => {
         rec.classList.remove('recording');
+        rec.classList.add('transcoding');
       });
     `;
   }
@@ -131,6 +148,8 @@ function act({
       signal("microphone:recording-done");
     }
   }
+
+  // if (e.is("signal")) console.log(e.signal); // 🔔 Print all signals.
 }
 
 export { boot, sim, paint, beat, act };

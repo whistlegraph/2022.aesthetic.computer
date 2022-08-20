@@ -95,7 +95,7 @@ const $commonApi = {
     DirtyBox: geo.DirtyBox,
     Grid: geo.Grid,
     Circle: geo.Circle,
-    linePointsFromAngle: geo.linePointsFromAngle
+    linePointsFromAngle: geo.linePointsFromAngle,
   },
   ui: {
     Button: ui.Button,
@@ -296,6 +296,7 @@ class Microphone {
   amplitude = 0;
   waveform = [];
 
+  // Note: can send `{monitor: true}` in `options` for audio feedback.
   connect(options) {
     send({ type: "microphone", content: options });
     return this;
@@ -460,10 +461,7 @@ async function load(
       return socket;
     };
   } else {
-    $commonApi.net.socket = function (
-      receive,
-      host = servers.main
-    ) {
+    $commonApi.net.socket = function (receive, host = servers.main) {
       // TODO: Flesh out the rest of reload functionality here to extract it from
       //       Socket. 21.1.5
       socket = new Socket(host, receive);
@@ -499,22 +497,22 @@ async function load(
     $commonApi.pieceCount += 1;
     $commonApi.content = new Content();
 
-    $commonApi.dom = {}
+    $commonApi.dom = {};
 
     $commonApi.dom.html = (strings, ...vars) => {
       const processed = defaultTemplateStringProcessor(strings, ...vars);
       $commonApi.content.add(processed);
-    }
+    };
 
     $commonApi.dom.css = (strings, ...vars) => {
       const processed = defaultTemplateStringProcessor(strings, ...vars);
-       $commonApi.content.add(`<style>${processed}</style>`);
-    }
+      $commonApi.content.add(`<style>${processed}</style>`);
+    };
 
     $commonApi.dom.javascript = (strings, ...vars) => {
       const processed = defaultTemplateStringProcessor(strings, ...vars);
       $commonApi.content.add(`<script>${processed}</script>`);
-    }
+    };
 
     cursorCode = "precise";
     loading = false;
@@ -635,8 +633,12 @@ function makeFrame({ data: { type, content } }) {
   // console.log("Frame:", type);
 
   if (type === "transcode-progress") {
-    if (debug) console.log("Print progress:", content);
+    if (debug) console.log("📼 Recorder: Transcoding", content);
     $commonApi.rec.printProgress = content;
+    if (content === 1)
+      send({ type: "signal", content: "recorder:transcoding-done" });
+      // TODO: Is this the best place for this signal to be sent?
+      //       Maybe it should go back in the BIOS? 22.08.19.13.44
     return;
   }
 
@@ -831,8 +833,8 @@ function makeFrame({ data: { type, content } }) {
 
       // 📻 Signalling
       $api.signal = (content) => {
-        send({ type: "signal", content});
-      }
+        send({ type: "signal", content });
+      };
 
       // 💾 Uploading + Downloading
       // Add download event to trigger a file download from the main thread.
@@ -1222,7 +1224,7 @@ function makeFrame({ data: { type, content } }) {
 // 📚 Utilities
 
 // Default template string behavior: https://stackoverflow.com/a/64298689/8146077
-function defaultTemplateStringProcessor (strings, ...vars) {
+function defaultTemplateStringProcessor(strings, ...vars) {
   let result = "";
   strings.forEach((str, i) => {
     result += `${str}${i === strings.length - 1 ? "" : vars[i]}`;
