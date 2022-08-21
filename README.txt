@@ -43,6 +43,11 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+***Bleep***
+  - [] Make a basic bleep box that makes a tone when you tap on it.
+  - [] Support multi-touch on bleep.
+  - [] Support different wave types.
+
 ***Audio + Video Storage (Microphone)***
  + Now
   - [🌟] Add a "done" or "close" button to the recording UI / share sheet which re-
@@ -66,11 +71,6 @@ Welcome to...
     - [x] Netlify Serverless Hello World
     - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
 
-
-***Bleep***
-  - [] Make a basic bleep box that makes a tone when you tap on it.
-  - [] Support multi-touch on bleep.
-  - [] Support different wave types.
 
 ***Cursors***
   - [] View current custom cursor css examples.

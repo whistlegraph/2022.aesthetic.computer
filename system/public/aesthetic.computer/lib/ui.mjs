@@ -61,18 +61,31 @@ class Button {
     } else this.box = new Box(...arguments); // Otherwise: x, y, w, h for a box.
   }
 
-  act(e, pushCb) {
+  // For using in a piece's `act` function. Contains callbacks for
+  // events that take place inside the button.
+  // Usage:  act(e, () => {}); // For 'push' callback only.
+  //         act(e, {push: () => {}, down: () => {}, cancel: () => {}, draw() => {}});
+  act(e, callbacks) {
     if (this.disabled) return;
 
+    // If only a single function is sent, then assume it's a button push callback.
+    if (typeof callbacks === "function") callbacks = { push: callbacks };
+
     // 1. Down: Enable the button if we touched over it.
-    if (e.is("touch") && this.box.contains(e)) this.down = true;
+    if (e.is("touch") && this.box.contains(e)) {
+      callbacks.down?.();
+      this.down = true;
+    }
 
     // 2. Cancel: Disable the button if it has been pressed and was dragged off.
-    if (e.is("draw") && !this.box.contains(e)) this.down = false;
+    if (e.is("draw") && !this.box.contains(e)) {
+      this.down = false;
+      callbacks.draw?.();
+    }
 
     // 3. Push: Trigger the button if we push it.
-    if (e.is("lift") && this.down) {
-      if (this.box.contains(e)) pushCb(); // TODO: Params for the cb? 2021.12.11.16.56
+    if (e.is("lift")) {
+      callbacks[this.box.contains(e) && this.down ? "push" : "cancel"]?.();
       this.down = false;
     }
   }
