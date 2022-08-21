@@ -84,6 +84,7 @@ const $commonApi = {
     dist: num.dist,
     radians: num.radians,
     lerp: num.lerp,
+    map: num.map,
     Track: num.Track,
     timestamp: num.timestamp,
     vec2: num.vec2,
@@ -660,6 +661,7 @@ function makeFrame({ data: { type, content } }) {
 
     $api.sound = {
       time: content.time,
+      // Get the bpm with bpm() or set the bpm with bpm(newBPM). 
       bpm: function (newBPM) {
         if (newBPM) content.bpm[0] = newBPM;
         return content.bpm[0];

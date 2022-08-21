@@ -44,9 +44,10 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 ***Bleep***
-  - [] Make a basic bleep box that makes a tone when you tap on it.
+  - [] Automatically generate bleep grids with a command line parameter for WxH.
   - [] Support multi-touch on bleep.
   - [] Support different wave types.
+  - [x] Make a basic bleep box that makes a tone when you tap on it.
 
 ***Audio + Video Storage (Microphone)***
  + Now

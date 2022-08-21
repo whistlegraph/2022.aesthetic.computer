@@ -80,6 +80,12 @@ export function lerp(a, b, amount) {
   return a + (b - a) * clamp(amount, 0, 1);
 }
 
+// Maps a number within a range to a new range.
+// https://stackoverflow.com/a/23202637/8146077
+export function map (num, inMin, inMax, outMin, outMax) {
+  return ((num - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+}
+
 // Returns a string of numbers based on local system time. YYYY.MM.DD.HH.MM.SS
 export function timestamp() {
   const d = new Date();
