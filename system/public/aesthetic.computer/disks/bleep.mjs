@@ -54,6 +54,7 @@ function defineGrid({ geo: { Grid }, screen, num }) {
 
   let x, y, scale;
 
+  // 💁 Size the grid to be as tall as the screen.height.
   function fitToHeight() {
     const height = screen.height - margin * 2;
     scale = floor(height / gridHeight);
@@ -61,6 +62,7 @@ function defineGrid({ geo: { Grid }, screen, num }) {
     x = floor(screen.width / 2 - (scale * gridWidth) / 2);
   }
 
+  // 💁 Size the grid to be as wide as the screen.width;
   function fitToWidth() {
     const width = screen.width - margin * 2;
     scale = floor(width / gridWidth);
@@ -73,11 +75,16 @@ function defineGrid({ geo: { Grid }, screen, num }) {
     if (gridRatio > screenRatio) {
       fitToHeight();
     } else {
-      fitToWidth(); // 💁 Size the grid to be as tall as the screen.height.
+      fitToWidth();
     }
   } else if (gridRatio < 1) {
     // Wide
-    fitToWidth(); // 💁 Size the grid to be as wide as the screen.width;
+    if (gridRatio > screenRatio) {
+      fitToHeight();
+    } else {
+      fitToWidth();
+    }
+
   } else {
     // Square
     screenRatio > 1 ? fitToWidth() : fitToHeight();
@@ -149,12 +156,17 @@ let beatCount = 0n
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
 function beat($api) {
-  if (beatCount === 0n) $api.sound.bpm(3600); // Set bpm to 3600 ~ 60fps
+  if (beatCount === 0n) {
+    $api.sound.bpm(3600); // Set bpm to 3600 ~ 60fps
+  }
   bleepers.forEach((bleeper) => bleeper.bleep($api));
   beatCount += 1n;
 }
 
+// 🏃 Leave (Runs once while the piece is being exited) 
+function leave($api) { }
+
 // 📚 Library (Useful classes & functions used throughout the piece)
 // ...
 
-export { boot, sim, paint, act, beat };
+export { boot, sim, paint, act, beat, leave };

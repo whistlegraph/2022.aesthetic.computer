@@ -31,7 +31,7 @@ let firstBeat = true;
 // 💗 Beat
 function beat({ sound, params, store }) {
   // Set the system metronome using `store`.
-  store["metronome:bpm"] = sound.bpm(params[0] || 200);
+  store["metronome:bpm"] = sound.bpm(params[0] || store["metronome:bpm"] || 200);
   // console.log("🎼 BPM:", sound.bpm(), "Time:", sound.time.toFixed(2));
 
   square = sound.square({

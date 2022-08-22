@@ -37,6 +37,7 @@ const defaults = {
   },
   beat: () => false, // Runs every bpm.
   act: () => false, // All user interaction.
+  leave: () => false, // Before unload. 
 };
 
 let boot = defaults.boot;
@@ -44,6 +45,7 @@ let sim = defaults.sim;
 let paint = defaults.paint;
 let beat = defaults.beat;
 let act = defaults.act;
+let leave = defaults.leave;
 
 let currentPath,
   currentHost,
@@ -473,6 +475,9 @@ async function load(
     };
   }
 
+  // TODO: Add the rest of the $api to "leave" ... refactor API. 22.08.22.07.34
+  if (firstLoad === false) leave(); // Trigger leave.
+
   // Artificially imposed loading by at least 1/4 sec.
   setTimeout(() => {
     //console.clear();
@@ -495,6 +500,7 @@ async function load(
     paint = module.paint || defaults.paint;
     beat = module.beat || defaults.beat;
     act = module.act || defaults.act;
+    leave = module.leave || defaults.leave;
     $commonApi.query = search;
     $commonApi.params = params || [];
     $commonApi.load = load;
@@ -654,6 +660,12 @@ function makeFrame({ data: { type, content } }) {
 
   if (type === "content-created") {
     $commonApi.content.receive(content);
+    return;
+  }
+
+  if (type === "leave") {
+    //const $api = {};
+    console.log("🏃‍♂️ Leave:", content);
     return;
   }
 
