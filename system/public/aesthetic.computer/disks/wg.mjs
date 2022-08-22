@@ -400,7 +400,7 @@ function boot({
   waitForPreload();
   cursor("native");
   gap(0);
-  density(1);
+  density(3);
 
   // Decide what whistlegraph to use either directly or via `shortcuts`.
   let wg = params[0];

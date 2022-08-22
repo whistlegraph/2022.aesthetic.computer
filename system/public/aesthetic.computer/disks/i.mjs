@@ -20,8 +20,6 @@ const i = new I();
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ density, resize }) {
-  //density(8); // TODO: Should density be replaced with zoom or accept fractions?
-  // TODO: Runs only once!
   resize(32, 32);
 }
 

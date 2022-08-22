@@ -227,8 +227,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
       // Or pull from density.
-      if (window.devicePixelRatio === 1) density = 2; // Always force a screen density of 3 on non-retina displays.
-      const subdivisions = density + window.devicePixelRatio;
+      let ratio = density || window.devicePixelRatio;
+      if (!density && window.devicePixelRatio === 1) ratio = 3; // Always force a screen density of 3 on non-retina displays.
+      const subdivisions = ratio;
       width = round(window.innerWidth / subdivisions);
       height = round(window.innerHeight / subdivisions);
       projectedWidth = width * subdivisions - gapSize;

@@ -19,18 +19,19 @@ import { font1 } from "./common/fonts.mjs";
 
 let glyphs = {};
 
-let input = `hi i'm not quite there yet                      `+
-            `  but try                                       `+
-            `    typing...                                   `+
-            `                                                `+
-            `bleep, bubble, pull, line,                      `+
-            `metronome, melody, tracker,                     `+
-            `microphone, wg idni,                            `+
-            `~niki/spinline, ~artur/i,                       `+
-            `~reas/bland                                     `+
-            `                                                `+
-            `mail@aesthetic.computer                         `;
+const motd = `hi i'm not quite there yet                      `+
+             `  but try                                       `+
+             `    typing...                                   `+
+             `                                                `+
+             `bleep, bubble, pull, line,                      `+
+             `metronome, melody, tracker,                     `+
+             `microphone, wg idni,                            `+
+             `~niki/spinline, ~artur/i,                       `+
+             `~reas/bland                                     `+
+             `                                                `+
+             `mail@aesthetic.computer                         `;
 
+let input = motd;
 let blink; // block cursor blink timer
 let flash; // error flash timer
 let showBlink = true;
@@ -49,11 +50,12 @@ function boot({
   density,
   screen
 }) {
-  resize(screen.width * 1.75, screen.height * 1.75);
+  density(2.2);
+
+  //resize(screen.width * 1.75, screen.height * 1.75);
 
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
   gap(8); // TODO: Why does adding `gap` cause flickering and result in two calls to `frame`?
-  //density(1);
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
@@ -155,9 +157,7 @@ function act({ event: e, needsPaint, load }) {
         load(parse(input.replaceAll(" ", "~")));
       }
 
-      if (e.key === "Escape") {
-        input = "";
-      }
+      if (e.key === "Escape") input = "";
     }
 
     blink.flip(true);
@@ -179,6 +179,7 @@ function act({ event: e, needsPaint, load }) {
 
   if (e.is("defocus")) {
     canType = false;
+    input = motd;
     needsPaint();
   }
 
