@@ -603,20 +603,18 @@ function shape() {
 // Renders a square grid at x, y given cols, rows, and scale.
 // Buffer is optional, and if present will render the pixels at scale starting
 // from the top left corner of the buffer, repeating if needed to fill the grid.
-function grid({ box: { x, y, w: cols, h: rows }, scale, centers }, buffer) {
+function grid({ box: { x, y, w: cols, h: rows }, scale, centers = [] }, buffer) {
   const oc = c.slice(); // Remember the original color.
 
   const w = cols * scale;
   const h = rows * scale;
 
-  // TODO: Where to add currying back into this API so I can do color().plot().plot() 2021.12.06.21.32
-  // - Make the API object here in this file and wrap the functions as curries?
-
   const colPix = floor(w / cols),
     rowPix = floor(h / rows);
 
+  // Draw a scaled image if the buffer is present.
+  // Technically, this allows us to scale any bitmap. 22.08.21.21.13
   if (buffer) {
-    // Draw a scaled image if the buffer is present.
     for (let j = 0; j < rows; j += 1) {
       const plotY = y + rowPix * j;
       for (let i = 0; i < cols; i += 1) {

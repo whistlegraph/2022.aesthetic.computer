@@ -152,11 +152,7 @@ function act({ event: e, needsPaint, load }) {
     // Other keys.
     else {
       if (e.key === "Backspace") input = input.slice(0, -1);
-
-      if (e.key === "Enter") {
-        load(parse(input.replaceAll(" ", "~")));
-      }
-
+      if (e.key === "Enter") load(parse(input.replaceAll(" ", "~")));
       if (e.key === "Escape") input = "";
     }
 

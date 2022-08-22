@@ -6,6 +6,7 @@ import * as geo from "./geo.mjs";
 import * as gizmo from "./gizmo.mjs";
 import * as ui from "./ui.mjs";
 import * as help from "./help.mjs";
+import { parse } from "./parse.mjs"
 import { Socket } from "./socket.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
 
@@ -70,6 +71,8 @@ let activeVideo; // TODO: Eventually this can be a bank to store video textures.
 let bitmapPromises = {};
 let inFocus;
 let loadFailure;
+
+// let reframeDensityResolve; // TODO: Density could be defined in the disk, to avoid this.
 
 // 1. ✔ API
 
@@ -629,6 +632,7 @@ class Content {
 //       frame.
 
 const signals = [];
+let reframed = false;
 
 function makeFrame({ data: { type, content } }) {
   // console.log("Frame:", type);
@@ -792,6 +796,13 @@ function makeFrame({ data: { type, content } }) {
     return;
   }
 
+  // Request a repaint (runs when the window is resized.)
+  if (type === "reframed") {
+    reframed = true;
+    // reframeDensityResolve?.();
+    return;
+  }
+
   // 2. Frame
   // This is where each...
   if (type === "frame") {
@@ -860,7 +871,15 @@ function makeFrame({ data: { type, content } }) {
       // TODO: Could "device" be removed in favor of "device:event" strings and
       //       if needed, a device method?
 
-      // TODO: Add a focus event.
+      // Reframing the piece... (resizing the window).
+      if (reframed === true) {
+        $api.event = {
+          device: "none",
+          is: (e) => e === "reframed",
+        };
+        act($api);
+        reframed = false;
+      }
 
       // If a disk failed to load, then notify the disk that loaded it
       // by checking to see if loadFailure has anything set.
@@ -941,6 +960,8 @@ function makeFrame({ data: { type, content } }) {
             currentPath !== "aesthetic.computer/disks/prompt"
           ) {
             // Load prompt if the tilde is pressed.
+            $api.load(parse("prompt"));
+            /*
             $api.load({
               host: location.hostname,
               path: "aesthetic.computer/disks/prompt",
@@ -949,6 +970,7 @@ function makeFrame({ data: { type, content } }) {
               hash: "",
               text: "/",
             });
+            */
           }
 
           // [Ctrl + X]
@@ -1005,12 +1027,17 @@ function makeFrame({ data: { type, content } }) {
         send({ type: "gap-change", content: newGap });
       };
 
-      $api.density = function (newDensity) {
+      $api.density = async function (newDensity) {
         send({ type: "density-change", content: newDensity });
+
+        //return new Promise((resolve) => {
+        //  reframeDensityResolve = resolve;
+        //});
       };
 
       $api.resize = function (width, height) {
         // Don't do anything if there is no change.
+        if (screen.width === width && screen.height === height) return;
 
         console.log(
           "🖼 Reframe to:",
@@ -1021,11 +1048,11 @@ function makeFrame({ data: { type, content } }) {
           screen.height
         );
 
-        if (screen.width === width && screen.height === height) return;
-
         screen.width = width;
         screen.height = height;
         screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
+
+        // TODO: Trigger "resize" event.
 
         // Reset the depth buffer.
         // graph.depthBuffer.length = screen.width * screen.height;

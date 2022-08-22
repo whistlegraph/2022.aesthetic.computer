@@ -148,7 +148,7 @@ export class Grid {
   #halfScale;
   centerOffset;
 
-  constructor(x, y, w, h, s) {
+  constructor(x, y, w, h, s = 1) {
     // Takes the same arguments as box.
     this.box = new Box(x, y, w, h);
     this.scale = s;
@@ -207,7 +207,7 @@ export class Grid {
   // Yields an array of offset points that can be plotted to mark the center of
   // each grid square. (Useful for editors, development and debugging.)
   // Tries to find the exact center point, but if that doesn't exist then
-  // this function produces 4 points in the center.
+  // this function produces a 2x2 grid of pixels in the center.
   get centers() {
     const o = this.centerOffset;
 

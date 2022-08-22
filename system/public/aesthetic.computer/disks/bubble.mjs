@@ -14,10 +14,14 @@ let radius = originalRadius;
 let bubbleRadii = [];
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ resize, screen, cursor, glaze }) {
+async function boot({ resize, screen, cursor, glaze, density }) {
   // cursor("none");
   // TODO: Runs only once!
   // resize(50, 20);
+  // density(4); // TODO: screen.width no longer changes after density is set
+
+  console.log(screen.width);
+
   originalRadius = screen.width / 3;
   radius = originalRadius;
 

@@ -126,7 +126,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   const REFRAME_DELAY = 250;
   let curReframeDelay = REFRAME_DELAY;
   let gap = 0;
-  let density = 1; // added to window.devicePixelRatio
+  let density = 2.2; // added to window.devicePixelRatio
 
   async function loadFFmpeg() {
     return new Promise((resolve, reject) => {
@@ -370,6 +370,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     needsReframe = false;
     needsReappearance = true; // Only for `native-cursor` mode.
     send({ type: "needs-paint" });
+    send({ type: "reframed" });
   }
 
   // 2. Audio
@@ -1279,7 +1280,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           history.pushState(
             "",
             document.title,
-            content.text === "prompt" ? "" : content.text // Replace "prompt" with "/".
+            content.text === "prompt" ? "/" : content.text // Replace "prompt" with "/".
           );
         }
       }

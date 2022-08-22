@@ -29,32 +29,30 @@ let firstBeat = true;
 //}
 
 // 💗 Beat
-function beat({ sound, query, store }) {
-  store["metronome:bpm"] = sound.bpm(query || 200); // TODO: Define this in boot?
+function beat({ sound, params, store }) {
+  // Set the system metronome using `store`.
+  store["metronome:bpm"] = sound.bpm(params[0] || 200);
   // console.log("🎼 BPM:", sound.bpm(), "Time:", sound.time.toFixed(2));
 
-  // TODO: Set the system metronome using `store`.
-
-  // TODO: Get simultaneous sound playback working.
   square = sound.square({
     tone: melody[melodyIndex],
     //beats: 1,
-    beats: 1 / 2,
+    beats: 1,
     attack: 0.01,
     decay: 0.9,
-    volume: 1,
-    pan: -1,
+    volume: 0.2,
+    pan: 0,
   });
 
   sound.square({
+    // TODO: Add a delay here so sounds can be arranged
+    //       to start part-way through a beat?
     tone: 200,
     beats: 1 / 2,
     attack: 0.01,
-    // TODO: Add a delay here so sounds can be arranged
-    //       to start part-way through a beat?
     decay: 0.9,
     volume: 1,
-    pan: 1,
+    pan: 0,
   });
 
   flash = true;
@@ -64,21 +62,37 @@ function beat({ sound, query, store }) {
   melodyIndex = (melodyIndex + 1) % melody.length;
 }
 
+let squareP = 0;
+
 // 🧮 Sim(ulate)
 function sim({ sound: { time } }) {
   if (square) {
-    // TODO: Get a record of square's amplitude and paint it somehow.
-    // const a = square.amplitude;
     // Calculate progress of square.
     const p = square.progress(time);
-    flashColor.fill(Math.floor((1 - p) * 255), 0, 2);
+    squareP = p;
+    flashColor.fill(Math.floor((1 - p) * 255) / 4, 0, 3);
     if (p === 1) flash = false; // TODO: This might be skipping 1 frame.
   }
 }
 
 // 🎨 Paint
-const paint = ($) => {
-  $.wipe(flash ? flashColor : 0);
+const paint = ({ wipe, ink, line, screen, num: { lerp } }) => {
+  wipe(flash ? flashColor : 0);
+
+  const baseAngle = -90;
+  const left = baseAngle - 20;
+  const right = baseAngle + 20;
+
+  let angle = melodyIndex === 0 ? lerp(left, right, squareP) : lerp(right, left, squareP);
+
+  if (firstBeat) angle = right;
+
+  ink(255).lineAngle(
+    screen.width / 2,
+    screen.height - screen.height / 4,
+    screen.height / 2,
+    angle
+  );
 };
 
 export { beat, sim, paint };
