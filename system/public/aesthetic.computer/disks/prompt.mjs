@@ -18,7 +18,18 @@ import { parse } from "../lib/parse.mjs";
 import { font1 } from "./common/fonts.mjs";
 
 let glyphs = {};
-let input = "aesthetic.computer";
+
+let input = `hi i'm not quite there yet                      `+
+            `  but try                                       `+
+            `    typing...                                   `+
+            `                                                `+
+            `bleep, bubble, pull, line,                      `+
+            `metronome, melody, tracker,                     `+
+            `microphone, wg idni,                            `+
+            `~niki/spinline, ~artur/i,                       `+
+            `~reas/bland                                     `+
+            `                                                `+
+            `mail@aesthetic.computer                         `;
 
 let blink; // block cursor blink timer
 let flash; // error flash timer
@@ -38,6 +49,8 @@ function boot({
   density,
   screen
 }) {
+  resize(screen.width * 1.75, screen.height * 1.75);
+
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
   gap(8); // TODO: Why does adding `gap` cause flickering and result in two calls to `frame`?
   //density(1);
@@ -96,7 +109,7 @@ function paint({ wipe, screen, ink }) {
 
   // Print `text` to the prompt one letter at time.
   for (const char of input) {
-    ink(255, 255, 0, 20).box(prompt.pos); // Paint a highlight background.
+    //ink(255, 255, 0, 20).box(prompt.pos); // Paint a highlight background.
     // And the letter if it is present.
     const pic = glyphs[char];
     if (pic) ink(255, 100).draw(pic, prompt.pos.x, prompt.pos.y, prompt.scale);
