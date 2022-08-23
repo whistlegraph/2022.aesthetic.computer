@@ -115,7 +115,7 @@ function beat({ sound: { bpm, square, time }, store, gizmo: { Hourglass } }) {
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, ink, geo: { Grid }, screen, num: { randIntRange } }) {
+function paint({ pan, unpan, wipe, ink, geo: { Grid }, screen, num: { randIntRange } }) {
   wipe(0);
 
   // Draw note blocks on top.
@@ -189,6 +189,8 @@ function paint({ wipe, ink, geo: { Grid }, screen, num: { randIntRange } }) {
           }
         }
 
+        pan(-1, -1);
+
         if (column === "small") {
           ink(...color, 250 * alpha).box(
             ...score.center(x, y),
@@ -202,6 +204,9 @@ function paint({ wipe, ink, geo: { Grid }, screen, num: { randIntRange } }) {
             "fill*center"
           );
         }
+
+        unpan();
+
       });
     });
   }

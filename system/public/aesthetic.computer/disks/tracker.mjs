@@ -88,12 +88,12 @@ function boot({
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
-    preload(`/aesthetic.computer/disks/drawings/font-1/${location}.json`).then((res) => {
+    preload(`aesthetic.computer/disks/drawings/font-1/${location}.json`).then((res) => {
       glyphs[glyph] = res;
     });
   });
 
-  preload("/aesthetic.computer/disks/drawings/arrow-up-3x6 2022.1.18.21.59.35.json").then((r) => {
+  preload("aesthetic.computer/disks/drawings/arrow-up-3x6 2022.1.18.21.59.35.json").then((r) => {
     buttons.save.icon = r;
     buttons.load.icon = r;
   });
@@ -175,6 +175,8 @@ function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
   ink(255, 255, 0).grid(bar);
 
   // Small square tool (Quiet)
+
+
   ink(0, 180, 0, 100).box(...bar.center(0, 0), bar.scale / 3, "fill*center");
 
   // Big square (Loud)

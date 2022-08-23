@@ -12,11 +12,16 @@
       "webRoot": "${workspaceFolder}/system/public",
       "linux": {
         "runtimeArgs": [
-          //"--auto-open-devtools-for-tabs",
           "-ozone-platform=wayland",
           "-enable-features=UseOzonePlatform"
         ]
       }
+    },
+    {
+      "type": "pwa-chrome",
+      "name": "https://localhost:8000/tracker",
+      "request": "launch",
+      "url": "https://localhost:8000/tracker"
     }
   ]
 }

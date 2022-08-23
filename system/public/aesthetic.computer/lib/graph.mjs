@@ -548,6 +548,8 @@ function box() {
   if (mode.endsWith(BOX_CENTER)) {
     x = x - w / 2;
     y = y - h / 2;
+    x += 1;
+    y += 1;
     mode = mode.slice(0, -BOX_CENTER.length); // Remove it.
   }
 

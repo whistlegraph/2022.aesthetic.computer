@@ -1,11 +1,6 @@
 // Bleep, 22.07.15.19.21
 // A configurable interface of colored boxes that can be pushed to make tones.
 
-// TODO
-// - [] Restore previous BPM on unload.
-// - [x] Generate all bleeper geometry, to fit into a grid that matches the
-//       requested grid size and maps to the screen.
-
 const { floor } = Math;
 
 const minFreq = 100;
@@ -26,7 +21,6 @@ class Bleeper {
     const color = map(this.tone, minFreq, maxFreq, 0, 200);
     ink(this.button.down ? 25 + color : 55 + color).box(this.button.box);
     ink(0).box(this.button.box, "in"); // Outline
-
     // TODO: Add a text label or color things based on a tone value?
   }
 
