@@ -46,8 +46,13 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 ***Bleep***
-  - [] Support multi-touch on bleep.
-  - [] Support different wave types.
+  - [] Hide cursor on finger action, but show it during mouse action.
+  - [] Support roll-over after touch.
+  - [] Add multi-touch support through bleep.
+  - [] Support more wave types in `lib/speaker`.
+    - [] Sine
+    - [] Triangle
+    - [x] Square
   - [x] Make a basic bleep box that makes a tone when you tap on it.
   - [x] Automatically generate bleep grids with a command line parameter for WxH.
 
