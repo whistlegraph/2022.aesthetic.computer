@@ -10,6 +10,10 @@ export function even(n) {
   return n % 2 === 0;
 }
 
+export function odd(n) {
+  return !even(n);
+}
+
 // Accepts integer from 0–16
 // Yields 17 different values between 0–255.
 export function byteInterval17(i16) {

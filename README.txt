@@ -21,7 +21,11 @@ Welcome to...
     - Pieces that stick to software-rendering are guaranteed accurate results on
       future runtimes, given that Math in JavaScript doesn't change.
 
+*** Piecemakers: niki, artur, reas ***
+
 🐞 Major Bugs & Regressions
+  - [] `npm run code` does not work offline, due to netlify.
+  - [] FFMPEG does not work offline: https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js 
   - [] Fix Firefox AudioWorklet Initialization Bug
        `Error: Module resolve hook not set`
   - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
@@ -39,12 +43,7 @@ Welcome to...
   - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
   - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
-*** Piecemakers: niki, artur, reas ***
-
 🌟 Projects In Progress 🌟
-
-***Tracker***
- - [] Fix interface boxes.
 
 ***Bleep***
   - [] Support multi-touch on bleep.
@@ -74,7 +73,6 @@ Welcome to...
         piece... so the file can be uploaded.
     - [x] Netlify Serverless Hello World
     - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
-
 
 ***Cursors***
   - [] View current custom cursor css examples.
@@ -370,20 +368,24 @@ Welcome to...
 
 *Recently Completed*
 
+***Tracker, Pull***
+ - [x] Fix interface boxes.
+ - [x] Make `boxes` test piece.
+
  ***Meta***
-  - [x] Add support for custom / locally generated thumbnail overrides.
-    - [x] Test override for some specific route... maybe blank?
-  - [x] Serve a 404 page for anything else that breaks.
-    - [x] Right now it just crashes here: https://aesthetic.computer/okok
-    - [x] Right now it just is black here: https://aesthetic.computer/~niki/whatever
-  - [x] Do the TOML routes actually matter? No.
-  - [x] Get ~/niki/blank working again.
-  - [x] Separate out / parse the text before loading a disk serverside so that
-        parameterized disks work again.
-  - [x] Make them work on iOS
-  - [x] Write a new netlify function that returns the proper html for every page,
-        so that prerendering can be turned off (get imessage previews working).
-  - [x] Should og:image and twitter:image have file extensions?
+ - [x] Add support for custom / locally generated thumbnail overrides.
+   - [x] Test override for some specific route... maybe blank?
+ - [x] Serve a 404 page for anything else that breaks.
+   - [x] Right now it just crashes here: https://aesthetic.computer/okok
+   - [x] Right now it just is black here: https://aesthetic.computer/~niki/whatever
+ - [x] Do the TOML routes actually matter? No.
+ - [x] Get ~/niki/blank working again.
+ - [x] Separate out / parse the text before loading a disk serverside so that
+       parameterized disks work again.
+ - [x] Make them work on iOS
+ - [x] Write a new netlify function that returns the proper html for every page,
+       so that prerendering can be turned off (get imessage previews working).
+ - [x] Should og:image and twitter:image have file extensions?
 
 ***L8 Night***
 - [x] Get a debugger working. 

@@ -82,6 +82,8 @@ let loadFailure;
 const $commonApi = {
   // content: added programmatically: see Content class
   num: {
+    even: num.even,
+    odd: num.odd,
     randInt: num.randInt,
     randIntArr: num.randIntArr,
     randIntRange: num.randIntRange,
@@ -166,15 +168,18 @@ const TRIANGLE = {
 
 // Inputs: (r, g, b), (r, g, b, a) or an array of those.
 //         (rgb) for grayscale or (rgb, a) for grayscale with alpha.
+// TODO: Zero arguments should also randomly pick values.
 function ink() {
   let args = arguments;
 
   if (args.length === 1) {
     const isNumber = () => typeof args[0] === "number";
     const isArray = () => Array.isArray(args[0]);
+    const isString = () => typeof args[0] === "string";
 
-    // If it's an object then randomly pick a value & re-run.
-    if (!isNumber() && !isArray()) return ink(help.any(args[0]));
+    // If it's not a Number or Array or String, then assume it's an object,
+    // randomly pick a key & re-run.
+    if (!isNumber() && !isArray() && !isString()) return ink(help.any(args[0]));
 
     // If single argument is a number then replicate it across the first 3 fields.
     if (isNumber()) {
@@ -184,6 +189,16 @@ function ink() {
       // Or if it's an array, then spread it out and re-ink.
       // args = args[0];
       return ink(...args[0]);
+    } else if (isString()) {
+      // If it's a string, then try to match it to a table.
+      const colors = {
+        red: [255, 0, 0],
+        green: [0, 255, 0],
+        blue: [0, 0, 255],
+      }
+
+      args = colors[args[0]];
+      // TODO: Add an error message here. 22.08.29.13.03 
     }
   } else if (args.length === 2) {
     // rgb, a
@@ -432,6 +447,34 @@ async function load(
         text: currentText,
       });
     }
+  };
+
+  // Add resize to the common api.
+  $commonApi.resize = function (width, height = width) {
+    // Don't do anything if there is no change.
+    if (screen.width === width && screen.height === height) return;
+
+    console.log(
+      "🖼 Reframe to:",
+      width,
+      height,
+      "from",
+      screen.width,
+      screen.height
+    );
+
+    screen.width = width;
+    screen.height = height;
+    screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
+
+    // TODO: Trigger "resize" event.
+
+    // Reset the depth buffer.
+    // graph.depthBuffer.length = screen.width * screen.height;
+    // graph.depthBuffer.fill(Number.MAX_VALUE);
+
+    graph.setBuffer(screen);
+    reframe = { width, height };
   };
 
   // Add host to the networking api.
@@ -1045,33 +1088,6 @@ function makeFrame({ data: { type, content } }) {
         //return new Promise((resolve) => {
         //  reframeDensityResolve = resolve;
         //});
-      };
-
-      $api.resize = function (width, height) {
-        // Don't do anything if there is no change.
-        if (screen.width === width && screen.height === height) return;
-
-        console.log(
-          "🖼 Reframe to:",
-          width,
-          height,
-          "from",
-          screen.width,
-          screen.height
-        );
-
-        screen.width = width;
-        screen.height = height;
-        screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
-
-        // TODO: Trigger "resize" event.
-
-        // Reset the depth buffer.
-        // graph.depthBuffer.length = screen.width * screen.height;
-        // graph.depthBuffer.fill(Number.MAX_VALUE);
-
-        graph.setBuffer(screen);
-        reframe = { width, height };
       };
 
       $api.cursor = (code) => (cursorCode = code);

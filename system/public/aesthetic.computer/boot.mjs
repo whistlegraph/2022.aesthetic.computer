@@ -18,8 +18,6 @@ if (window.acDEBUG === true || window.acDEBUG === false) {
   // TODO: This should eventually be upgraded for IPFS exports.
 }
 
-debug = false; // Override.
-
 window.acDEBUG = debug; // Set window.acDEBUG again just in case any code relies
 // on it down the line. Should it need to? 22.07.15.00.21
 

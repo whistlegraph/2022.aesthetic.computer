@@ -10,21 +10,17 @@
 //       - BPM: Adds a thick line to the grid and puts a new number on the right.
 
 const { max, min } = Math;
-
 import { parse } from "../lib/parse.mjs";
 
 // Data
 import { noteList, colors } from "./common/music.mjs";
-
 let scoreData = []; // A 2 dimensional array for storing note info.
 const style = {};
 
 // Layout
 let notes;
-
 let score;
 let scrolling = false;
-
 const buttons = {};
 let bar;
 let currentTool = 0;
@@ -33,6 +29,7 @@ let playIconOffset = [1, 1];
 
 const { entries } = Object;
 import { font1 } from "./common/fonts.mjs";
+
 let glyphs = {};
 
 // 🥾 Boot (Runs once before first paint and sim)
@@ -100,7 +97,7 @@ function boot({
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
+function paint({ wipe, pan, unpan, ink, layer, num: { vec2, odd } }) {
   wipe(10).layer(1); // Make the background black.
 
   // ✔ 1. Top Row: for knowing what notes each column represents, and
@@ -127,6 +124,7 @@ function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
   layer(0).ink(255).grid(score); // Paint a grid to hold the score.
 
   // Paint the score data itself.
+  if (odd(score.scale)) pan(1, 1); // Offset centered boxes when bar.scale is odd.
   scoreData.forEach((row, x) => {
     const color = colors.notes[noteList[x]];
     row?.forEach((column, y) => {
@@ -139,6 +137,7 @@ function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
       }
     });
   });
+  unpan();
 
   // ✔ 2a. Scrolling UI
   // TODO: Maybe the mouse cursor should default to a scrolling one when
@@ -174,13 +173,15 @@ function paint({ wipe, pan, ink, layer, num: { vec2 } }) {
   // ✔ 3. Toolbar
   ink(255, 255, 0).grid(bar);
 
+  if (odd(bar.scale)) pan(1, 1); // Offset centered boxes when bar.scale is odd.
+
   // Small square tool (Quiet)
-
-
   ink(0, 180, 0, 100).box(...bar.center(0, 0), bar.scale / 3, "fill*center");
 
   // Big square (Loud)
   ink(0, 180, 0, 100).box(...bar.center(0, 1), bar.scale / 2, "fill*center");
+
+  unpan();
 
   // Current Tool Highlight
   ink(255, 255, 0, 80).box(...bar.get(0, currentTool), bar.scale, "inline");

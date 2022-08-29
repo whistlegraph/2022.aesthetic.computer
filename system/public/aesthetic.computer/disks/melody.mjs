@@ -47,9 +47,11 @@ function boot({
   //       I need to display per disk... 2022.01.16.23.38
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
-    preload(`aesthetic.computer/disks/drawings/font-1/${location}.json`).then((res) => {
-      glyphs[glyph] = res;
-    });
+    preload(`aesthetic.computer/disks/drawings/font-1/${location}.json`).then(
+      (res) => {
+        glyphs[glyph] = res;
+      }
+    );
   });
 }
 
@@ -115,7 +117,7 @@ function beat({ sound: { bpm, square, time }, store, gizmo: { Hourglass } }) {
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ pan, unpan, wipe, ink, geo: { Grid }, screen, num: { randIntRange } }) {
+function paint({ wipe, ink, geo: { Grid }, screen, num: { randIntRange } }) {
   wipe(0);
 
   // Draw note blocks on top.
@@ -189,8 +191,6 @@ function paint({ pan, unpan, wipe, ink, geo: { Grid }, screen, num: { randIntRan
           }
         }
 
-        pan(-1, -1);
-
         if (column === "small") {
           ink(...color, 250 * alpha).box(
             ...score.center(x, y),
@@ -204,9 +204,6 @@ function paint({ pan, unpan, wipe, ink, geo: { Grid }, screen, num: { randIntRan
             "fill*center"
           );
         }
-
-        unpan();
-
       });
     });
   }

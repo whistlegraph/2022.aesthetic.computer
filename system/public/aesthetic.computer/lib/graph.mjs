@@ -546,10 +546,9 @@ function box() {
 
   // Check for "Center" at the end of mode.
   if (mode.endsWith(BOX_CENTER)) {
-    x = x - w / 2;
-    y = y - h / 2;
-    x += 1;
-    y += 1;
+    x -= w / 2;
+    y -= h / 2;
+
     mode = mode.slice(0, -BOX_CENTER.length); // Remove it.
   }
 

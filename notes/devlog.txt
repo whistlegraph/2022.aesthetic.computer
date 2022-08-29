@@ -5,9 +5,15 @@ Practical and conceptual notes weaved together.
 - https://www.w3.org/TR/mediacapture-fromelement
 
 ☁️ Ideas
-Maybe aesthetic.computer is more of an interface project
-or search engine or *branded* prompt than it is a creative
-platform?
+- Maybe aesthetic.computer is more of an interface project
+  or search engine or *branded* prompt than it is a creative
+  platform?
+
+❓ Questions
+- How does aesthetic.computer relate to urbit?
+
+- What would editing lisp-like syntax feel like in VS code / my own
+  browser editor?
 
 🧑‍💻 Text Editor / Shell Notes
 - [] Start a blog or journal of some kind - that is sourced from
