@@ -1,19 +1,23 @@
 // Bleep, 22.07.15.19.21
 // A configurable interface of colored boxes that can be pushed to make tones.
 
+const debug = false;
+
 const { floor } = Math;
 
 const minFreq = 100;
 const maxFreq = 1000;
+const bleeps = [];
 
-class Bleeper {
+let grid, gridWidth, gridHeight;
+
+class Bleep {
   button;
   needsBleep = false;
   tone;
 
   constructor({ ui: { Button }, screen, num: { randIntRange } }, geometry) {
     this.tone = randIntRange(minFreq, maxFreq);
-
     this.button = new Button(...geometry);
   }
 
@@ -24,7 +28,7 @@ class Bleeper {
     // TODO: Add a text label or color things based on a tone value?
   }
 
-  bleep({ sound: { square } }) {
+  beep({ sound: { square } }) {
     if (!this.needsBleep) return;
     this.needsBleep = false;
 
@@ -36,15 +40,19 @@ class Bleeper {
   }
 }
 
-let grid, gridWidth, gridHeight;
-const bleepers = [];
+function buildBleeps($) {
+  const {
+    geo: { Grid, Box },
+    screen,
+    num,
+  } = $;
 
-function defineGrid({ geo: { Grid }, screen, num }) {
   const gridRatio = gridHeight / gridWidth;
   const screenRatio = screen.height / screen.width;
   const margin = 8;
 
-  // console.log("grid:", gridRatio, "screen:", screenRatio);
+  if (debug)
+    console.log("🐛", "gridRatio:", gridRatio, "screenRatio:", screenRatio);
 
   let x, y, scale;
 
@@ -78,21 +86,32 @@ function defineGrid({ geo: { Grid }, screen, num }) {
     } else {
       fitToWidth();
     }
-
   } else {
     // Square
     screenRatio > 1 ? fitToWidth() : fitToHeight();
   }
 
   grid = new Grid(x, y, gridWidth, gridHeight, scale);
+
+  if (bleeps.length > 0) {
+    grid.each((x, y, i) => {
+      bleeps[i].button.box = new Box(...grid.get(x, y), grid.scale);
+    });
+  } else {
+    grid.each((x, y, i) => {
+      bleeps.push(new Bleep($, [...grid.get(x, y), grid.scale]));
+    });
+  }
 }
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot($) {
   const { params, num } = $;
 
-  gridWidth = num.randIntRange(1, 6),
-  gridHeight = num.randIntRange(1, 6);
+  // TODO: Density does not change `screen` right away... 22.08.29.22.13
+  // $.density(2); 
+
+  (gridWidth = num.randIntRange(1, 6)), (gridHeight = num.randIntRange(1, 6));
 
   if (params.length === 1) {
     const split = params[0].split("x");
@@ -100,17 +119,7 @@ function boot($) {
     gridHeight = parseInt(split[1]) || gridHeight;
   }
 
-  // TODO: This does not affect screen width and height right away...
-  // $.density(2);
-  defineGrid($);
-
-  // Create bleepers and add them to grid boxes.
-  for (let x = 0; x < grid.box.w; x += 1) {
-    for (let y = 0; y < grid.box.h; y += 1) {
-      bleepers.push(new Bleeper($, [...grid.get(x, y), grid.scale]));
-    }
-  }
-
+  buildBleeps($);
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
@@ -120,25 +129,38 @@ function sim($api) {}
 function paint($) {
   const { wipe, screen, ink } = $;
   wipe(0); // Draw a black background
-  bleepers.forEach((bleeper) => bleeper.paint($)); // Draw every bleeper.
+  bleeps.forEach((bleep) => bleep.paint($)); // Draw every bleeper.
   // ink(255, 0, 0).grid(grid); // Paint grid overlay, for debugging purposes.
   return false; // Draw only once until `needsPaint` is called..
 }
 
 // ✒ Act (Runs once per user interaction)
 function act($) {
-  const { event, needsPaint } = $;
+  const {
+    event,
+    needsPaint,
+    cursor,
+    geo: { Box },
+  } = $;
+
+  // Disable the cursor for touch input, and re-enable it if a mouse is used.
+  event.device === "touch" ? cursor("none") : cursor("precise");
 
   if (event.is("reframed")) {
-    defineGrid($);
-    // TODO: Loop over bleepers here so they can remap properly.
+    buildBleeps($);
+    // Loop over bleeps and reposition them.
+    for (let x = 0; x < grid.box.w; x += 1) {
+      for (let y = 0; y < grid.box.h; y += 1) {
+        const i = x + y * grid.box.w;
+      }
+    }
   }
 
-  bleepers.forEach((bleeper) => {
-    bleeper.button.act(event, {
+  bleeps.forEach((bleep) => {
+    bleep.button.act(event, {
       push: () => needsPaint(),
       down: () => {
-        bleeper.needsBleep = true;
+        bleep.needsBleep = true;
         needsPaint();
       },
       cancel: () => needsPaint(),
@@ -146,19 +168,19 @@ function act($) {
   });
 }
 
-let beatCount = 0n
+let beatCount = 0n;
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
 function beat($api) {
   if (beatCount === 0n) {
     $api.sound.bpm(3600); // Set bpm to 3600 ~ 60fps
   }
-  bleepers.forEach((bleeper) => bleeper.bleep($api));
+  bleeps.forEach((bleep) => bleep.beep($api));
   beatCount += 1n;
 }
 
-// 🏃 Leave (Runs once while the piece is being exited) 
-function leave($api) { }
+// 🏃 Leave (Runs once while the piece is being exited)
+function leave($api) {}
 
 // 📚 Library (Useful classes & functions used throughout the piece)
 // ...

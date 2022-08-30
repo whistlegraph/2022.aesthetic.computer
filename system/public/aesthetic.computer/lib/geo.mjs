@@ -156,6 +156,16 @@ export class Grid {
     this.centerOffset = floor(this.#halfScale);
   }
 
+  // Loop through every point in the grid, starting from the top left, and
+  // applying a callback.
+  each(fun) {
+    for (let x = 0; x < this.box.w; x += 1) {
+      for (let y = 0; y < this.box.h; y += 1) {
+        fun(x, y, x + y * this.box.w); // Send back the coords and an index.
+      }
+    }
+  }
+
   // Returns unscaled point `{x, y}` in `grid` for given display coordinate
   // `pos`, or `false` if `pos` is outside of `grid`.
   under({ x, y }, cb) {

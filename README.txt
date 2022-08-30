@@ -25,7 +25,6 @@ Welcome to...
 
 🐞 Major Bugs & Regressions
   - [] `npm run code` does not work offline, due to netlify.
-  - [] FFMPEG does not work offline: https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js 
   - [] Fix Firefox AudioWorklet Initialization Bug
        `Error: Module resolve hook not set`
   - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
@@ -46,13 +45,14 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 ***Bleep***
-  - [] Hide cursor on finger action, but show it during mouse action.
-  - [] Support roll-over after touch.
+  - [🌲] Support roll-over after touch.
   - [] Add multi-touch support through bleep.
   - [] Support more wave types in `lib/speaker`.
     - [] Sine
     - [] Triangle
     - [x] Square
+  - [x] Hide cursor on finger action, but show it during mouse action.
+  - [x] Resize window support.
   - [x] Make a basic bleep box that makes a tone when you tap on it.
   - [x] Automatically generate bleep grids with a command line parameter for WxH.
 
@@ -60,6 +60,7 @@ Welcome to...
  + Now
   - [🌟] Add a "done" or "close" button to the recording UI / share sheet which re-
       activates the UI.
+  - [] FFMPEG does not work offline: https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js 
   - [] Add a special UI for uploading the file / receiving a code...
       so it's a choice?
   - [] Make the recording process re-entrant. (Don't reload ffmpeg each time?)  
