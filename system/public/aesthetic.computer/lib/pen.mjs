@@ -62,9 +62,18 @@ export class Pen {
       }
     );
 
-    // Touch
+    // Multi-Touch Story
+    // Use a concept of 'primary' through nth-pointers. 
+    // The 'primary' behavior is already defined below.
+    // And now `nth-pointers` can be tacked on.
+
+    // TODO:
+    // - [🙋‍♂️] Tack on `nth-pointers`.
+
+    // ***Touch***
     window.addEventListener("pointerdown", (e) => {
       if (!e.isPrimary) return;
+
       pen.pointerType = e.pointerType;
 
       assign(pen, point(e.x, e.y));
@@ -82,9 +91,10 @@ export class Pen {
       if (e.pointerType !== "mouse") pen.penCursor = false;
     });
 
-    // Hover and Draw
+    // ***Move (Hover) and Draw (Drag)***
     window.addEventListener("pointermove", (e) => {
       if (!e.isPrimary) return;
+
       pen.pointerType = e.pointerType;
 
       assign(pen, point(e.x, e.y));
@@ -123,9 +133,10 @@ export class Pen {
       }
     }
 
-    // Lift
+    // ***Lift***
     window.addEventListener("pointerup", (e) => {
       if (!e.isPrimary) return;
+
       pen.pointerType = e.pointerType;
 
       pen.down = false;

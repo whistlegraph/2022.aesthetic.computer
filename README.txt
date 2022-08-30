@@ -45,7 +45,7 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 ***Bleep***
-  - [💚] Add multi-touch support through bleep.
+  - [💚] Add multi-touch support through bleep, via `pen`.
   - [] Support more wave types in `lib/speaker`.
     - [] Sine
     - [] Triangle
