@@ -77,16 +77,31 @@ class Button {
       this.down = true;
     }
 
-    // 2. Cancel: Disable the button if it has been pressed and was dragged off.
-    if (e.is("draw") && !this.box.contains(e)) {
-      this.down = false;
-      callbacks.draw?.();
-    }
-
     // 3. Push: Trigger the button if we push it.
     if (e.is("lift")) {
-      callbacks[this.box.contains(e) && this.down ? "push" : "cancel"]?.();
+      let event;
+
+      if (this.box.contains(e) && this.down) {
+        event = "push";
+      } else if (!this.box.contains(e)) {
+        event = "cancel"; // TODO: Is this necessary now that we have rollout? 22.08.29.23.11
+      }
+
+      callbacks[event]?.();
       this.down = false;
+    }
+
+    // Note: Each piece may use the below to implement custom rolling behavior,
+    //       which often differs among use cases such as pianos or general GUIs.
+
+    // 4. Rollover: Run a rollover event if dragged on.
+    if (e.is("draw") && this.box.contains(e) && !this.down) {
+      callbacks.rollover?.();
+    }
+
+    // 5. Rollout: Run a rollout event if dragged off.
+    if (e.is("draw") && !this.box.contains(e) && this.down) {
+      callbacks.rollout?.();
     }
   }
 

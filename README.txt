@@ -45,12 +45,12 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 ***Bleep***
-  - [🌲] Support roll-over after touch.
   - [] Add multi-touch support through bleep.
   - [] Support more wave types in `lib/speaker`.
     - [] Sine
     - [] Triangle
     - [x] Square
+  - [x] Support roll-over after touch.
   - [x] Hide cursor on finger action, but show it during mouse action.
   - [x] Resize window support.
   - [x] Make a basic bleep box that makes a tone when you tap on it.

@@ -134,6 +134,8 @@ function paint($) {
   return false; // Draw only once until `needsPaint` is called..
 }
 
+let anyBleepDowned = false;
+
 // ✒ Act (Runs once per user interaction)
 function act($) {
   const {
@@ -160,10 +162,24 @@ function act($) {
     bleep.button.act(event, {
       push: () => needsPaint(),
       down: () => {
+        anyBleepDowned = true;
         bleep.needsBleep = true;
         needsPaint();
       },
-      cancel: () => needsPaint(),
+      rollover: () => {
+        if (!anyBleepDowned) return;
+        bleep.button.down = true;
+        bleep.needsBleep = true;
+        needsPaint();
+      },
+      rollout: () => {
+        bleep.button.down = false;
+        needsPaint();
+      },
+      cancel: () => {
+        anyBleepDowned = false;
+        needsPaint();
+      }
     });
   });
 }
