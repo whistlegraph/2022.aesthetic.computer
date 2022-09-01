@@ -149,6 +149,7 @@ function act($) {
   event.device === "touch" ? cursor("none") : cursor("precise");
 
   if (event.is("reframed")) {
+    console.log("REFRAMED");
     buildBleeps($);
     // Loop over bleeps and reposition them.
     for (let x = 0; x < grid.box.w; x += 1) {

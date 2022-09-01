@@ -851,10 +851,10 @@ function makeFrame({ data: { type, content } }) {
     return;
   }
 
-  // Request a repaint (runs when the window is resized.)
   if (type === "reframed") {
-    reframed = true;
-    // reframeDensityResolve?.();
+    // Only trigger a reframe event if we have already passed `boot` (painted
+    // at least once)
+    if (paintCount > 0n) reframed = true;
     return;
   }
 

@@ -50,6 +50,7 @@ Welcome to...
     - [] Sine
     - [] Triangle
     - [x] Square
+  - [x] Why does the board generate twice on first load.
   - [x] Support roll-over after touch.
   - [x] Hide cursor on finger action, but show it during mouse action.
   - [x] Resize window support.
