@@ -9,6 +9,17 @@ Practical and conceptual notes weaved together.
   or search engine or *branded* prompt than it is a creative
   platform?
 
+- Large scale re-organization:
+  - Every piece is a set of functions.
+  - Functions are like "plug-ins" to aesthetic.computer.
+  - They enable certain device features like the ability to make a sound or
+    display an image.
+  - Code modules / libraries in aesthetic.computer are loaded based on the
+    functions the piece uses.
+  - New functionality can always be added and improved upon, and new global APIs
+    can be created with this architecture in mind.
+  ✨ Perhaps there is more power in smaller APIs than there is in larger APIs?
+
 ❓ Questions
 - How does aesthetic.computer relate to urbit?
 
