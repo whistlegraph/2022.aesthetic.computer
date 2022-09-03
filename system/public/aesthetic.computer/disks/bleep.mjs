@@ -109,7 +109,7 @@ function boot($) {
   const { params, num } = $;
 
   // TODO: Density does not change `screen` right away... 22.08.29.22.13
-  // $.density(2); 
+  // $.density(2);
 
   (gridWidth = num.randIntRange(1, 6)), (gridHeight = num.randIntRange(1, 6));
 
@@ -149,7 +149,6 @@ function act($) {
   event.device === "touch" ? cursor("none") : cursor("precise");
 
   if (event.is("reframed")) {
-    console.log("REFRAMED");
     buildBleeps($);
     // Loop over bleeps and reposition them.
     for (let x = 0; x < grid.box.w; x += 1) {
@@ -180,7 +179,7 @@ function act($) {
       cancel: () => {
         anyBleepDowned = false;
         needsPaint();
-      }
+      },
     });
   });
 }
