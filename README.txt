@@ -25,31 +25,19 @@ Welcome to...
 
 🐞 Major Bugs & Regressions
   - [] `npm run code` does not work offline, due to netlify.
-  - [] Fix Firefox AudioWorklet Initialization Bug
-       `Error: Module resolve hook not set`
-  - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
-  - [] Check to see if ffmpeg encoding can be skipped.
-  - [] TODO: How should I generate favicons for each page or treat favicons in general?
-   - Maybe just design a favicon? Should each piece also be able to have an icon?
-   - Maybe the system could use these icons if pieces defined them...
-  - [] Refactor `wg` to make better use of thumbnails... what should the new structure be?
-    - [] How to have a default or custom thumbnail... even though things are randomly routed?
-  - [] Each page should print out its own description in the console.
-   - [] Then all descriptions of existing pieces can be written.
-   - [] Why are the disks located there in the first place?
-  - [X] Check to see why custom thumbnails are broken for remote URL disks.
-  - [X] `wg` disks no longer work 
-  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
-  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
+  - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
 
 🌟 Projects In Progress 🌟
 
 ***Bleep***
+ + Now
   - [💚] Add multi-touch support through bleep, via `pen`.
+ + Later
   - [] Support more wave types in `lib/speaker`.
     - [] Sine
     - [] Triangle
     - [x] Square
+ + Complete
   - [x] Why does the board generate twice on first load.
   - [x] Support roll-over after touch.
   - [x] Hide cursor on finger action, but show it during mouse action.
@@ -65,6 +53,7 @@ Welcome to...
   - [] Add a special UI for uploading the file / receiving a code...
       so it's a choice?
   - [] Make the recording process re-entrant. (Don't reload ffmpeg each time?)  
+  - [] Check to see if ffmpeg encoding can be skipped if the browser doesn't need to do it.
   + Later
   - [] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
  + Done
@@ -80,63 +69,6 @@ Welcome to...
         piece... so the file can be uploaded.
     - [x] Netlify Serverless Hello World
     - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
-
-***Cursors***
-  - [] View current custom cursor css examples.
-  - "Chromium cursor images are restricted to 128x128 pixels by default, but it is
-    recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
-  - [] Sidetrack: Hack in an SVG cursor really quick.
-  - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
-  - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
-
-***Spinline***
-  - [] Circle algorithm with transparency, has doubly drawn pixels.
-  - [] example: ink(255, 100).circle(x, y, 128);
-  - [] Circle needs 'pan' support.
-  - [] Make the regular circle small, and positioned at the tip of the rotating line.
-  - [] No exported boot function does not show the mouse cursor...
-  - [] Click and drag selection bug needs to be fixed on iOS. (Chrome + Safari)
-  - [] Improve "density" function.
-
-***Developers***
-  - [] Add developer console log / catch errors and show them to users
-       directly on the screen. Maybe this should be available all the time,
-       even in production?
-  - [] Catch errors better in the modules, so they can be easily deciphered
-       from console messages.
-  - [] Get it working on: https://glitch.com/edit/#!/niki-aesthetic-computer
-
-***View-Source***
-  - [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
-  - [] Typing `src` plus the `piece` should jump you to the github source page and these should also be url addressable.
-
-***Readme***
-  - [] Directly load the GitHub readme in a scrollable content window.
-
-***i***
-  - [] See `disks/i.mjs` 
-
-***Walkie Talkie***
-- [] Maybe recordings / videos can be sent back and forth between two parties?
-
-***Shortcuts / open a new URL ***
-  - [] Figure out notation: ~user/piece, piece~param1, #notion
-    - [] Should this only be for `prompt` or should it also route URLs?
-  - [] Make `manual` and `hq` load the notion (separate places) in a new tab.
-  - [] Should the manual be a super.so site using one of the chosen typefaces?
-
-***Prompt Start***
-  - [] What info goes on the starting prompt page?
-       Given that it can change every 60 seconds.
-       And anyone who shares the link will see a preview image.
-  - [] Short poem? Weekly poem?
-  - [] Make the prompt start message easily editable by Niki.
-    What would it mean for this message to use the ***Upload Server*** and merit
-    a text editor.
-
-***Prompt Updates***
-  - [] “search bar” any letter typed shows “ghost” letters of all possible options
-  - [] Also make the commands case insensitive!
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [] Only record frames that are not part of the interface.
@@ -220,7 +152,7 @@ Welcome to...
       These would be great for custom file properties likw
       what piece was used to make the art / object and what git commit
       of the project was used or something like that...
-         
+
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***
   - Prototype:
@@ -242,6 +174,88 @@ Welcome to...
   ***Without A-Frame***
    - [] Clone the basic WebXR examples, run them and and read them.
         URL here: https://github.com/immersive-web/webxr-samples
+
+*** Re-organize Repository *** 
+  - [] Make a better entry point for this repository, consider how far the
+       monorepo idea should extend and make better room for text files, such as
+       splitting up README.txt with PROJECTS.txt, WIP.txt, and GRAVEYARD.txt.
+
+*** Publishing ***
+  - [] How to have a default or custom thumbnail... even though things are randomly routed?
+
+*** Refactoring ***
+  - [] Clean up the use of "aesthetic.computer/disks/" across the whole project.
+  - [] Refactor `wg` to make better use of thumbnails... what should the new structure be?
+
+*** Favicons ***  
+  - [] How should I generate favicons for each page or treat favicons in general?
+   - Maybe just design a favicon? Should each piece also be able to have an icon?
+   - Maybe the system could use these icons if pieces defined them...
+
+***Terminal***
+  - [] Make `function terminal()` to render to a text mode layer.
+
+***Cursors***
+  - [] View current custom cursor css examples.
+  - "Chromium cursor images are restricted to 128x128 pixels by default, but it is
+    recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
+  - [] Sidetrack: Hack in an SVG cursor really quick.
+  - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
+  - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
+
+***Spinline***
+  - [] Circle algorithm with transparency, has doubly drawn pixels.
+  - [] example: ink(255, 100).circle(x, y, 128);
+  - [] Circle needs 'pan' support.
+  - [] Make the regular circle small, and positioned at the tip of the rotating line.
+  - [] No exported boot function does not show the mouse cursor...
+  - [] Click and drag selection bug needs to be fixed on iOS. (Chrome + Safari)
+  - [] Improve "density" function.
+
+***Developers***
+  - [] Add developer console log / catch errors and show them to users
+       directly on the screen. Maybe this should be available all the time,
+       even in production?
+  - [] Catch errors better in the modules, so they can be easily deciphered
+       from console messages.
+  - [] Get it working on: https://glitch.com/edit/#!/niki-aesthetic-computer
+  - [] Make an `edit` or `new` command to open an editor from the main page.
+
+***View-Source***
+  - [] Pressing 'Ctrl + `' should open the source code. - Document this in console.log of bios.
+  - [] Typing `src` plus the `piece` should jump you to the github source page and these should also be url addressable.
+  - [] Each page should print out its own description in the console.
+   - [] Then all descriptions of existing pieces can be written.
+   - [] Why are the disks located there in the first place?
+
+***Readme***
+  - [] Directly load the GitHub readme in a scrollable content window.
+  - [] How could this tie into publishing a blog or devlog?
+
+***i***
+  - [] See `disks/i.mjs` 
+
+***Walkie Talkie***
+- [] Maybe recordings / videos can be sent back and forth between two parties?
+
+***Shortcuts / open a new URL ***
+  - [] Figure out notation: ~user/piece, piece~param1, #notion
+    - [] Should this only be for `prompt` or should it also route URLs?
+  - [] Make `manual` and `hq` load the notion (separate places) in a new tab.
+  - [] Should the manual be a super.so site using one of the chosen typefaces?
+
+***Prompt Start***
+  - [] What info goes on the starting prompt page?
+       Given that it can change every 60 seconds.
+       And anyone who shares the link will see a preview image.
+  - [] Short poem? Weekly poem?
+  - [] Make the prompt start message easily editable by Niki.
+    What would it mean for this message to use the ***Upload Server*** and merit
+    a text editor.
+
+***Prompt Updates***
+  - [] “search bar” any letter typed shows “ghost” letters of all possible options
+  - [] Also make the commands case insensitive!
 
 ***Rooms***
   (WIP Notes)
@@ -438,6 +452,12 @@ Welcome to...
 - [-] Get socket server running under GitHub codespaces as well.
   (wss:// is currently unsupported)
 - [x] Get the project working in GitHub codespaces.
+
+🐛 Completed Bugs & Regressions
+  - [X] Check to see why custom thumbnails are broken for remote URL disks.
+  - [X] `wg` disks no longer work 
+  - [X] Kill any microphone (or video) connection after leaving a piece it's connected to.
+  - [X] Routing: Check ~tilde~ key - don't push duplicate states in the history.
 
 
 ⏳ Investigate ⏳
