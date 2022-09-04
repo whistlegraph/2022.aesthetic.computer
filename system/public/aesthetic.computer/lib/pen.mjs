@@ -1,40 +1,47 @@
 // ✍️ Pen
-// TODO: Clean up this whole class and its connections to the system.
+
+// Multi-Touch Story
+// Use a concept of 'primary' through nth-pointers.
+// The 'primary' behavior is already defined below.
+// And now `nth-pointers` can be tacked on.
+
+// TODO:
+// - [🙋‍♂️] Add multi-touch support. 
+//   - [] Convert specific pointer data to a collection that support
+//        the same properties for multiple pointers. 
+//   - [] Update the API in `multipen` to reflect this.
+
 const { assign } = Object;
 const { round } = Math;
 
 import { Point } from "./geo.mjs";
 
 export class Pen {
-  x;
-  y;
-  delta;
-  pressure;
-  pointerType;
-  untransformedPosition;
-  point;
-  changedInPiece = false;
-  #lastP;
+  // Global data for the overall pen system.
+  point; // + Used globally (transform to screen space fn)
+  changedInPiece = false; // + Used globally.
+  events = []; // + Used globally to hold all events.
 
-  down = false;
-  changed = false;
+  #lastP; // + Used globally, in the renderer.
+  cursorCode; // + Used globally, in the renderer.
+  penCursor = false; // + Used globally, in the renderer.
 
-  event = "";
-  events = [];
+  // Specific data to each pointer.
 
-  cursorCode;
-  penCursor = false;
+  x; // -
+  y; // -
+  delta; // -
+  pressure; // -
+  pointerType; // -
+  untransformedPosition; // -
+  lastPenX; // -
+  lastPenY; // -
+  down = false; // -
+  changed = false; // -
 
-  lastPenX;
-  lastPenY;
-
-  lastPenCursor;
-
-  dragBox;
-
-  #dragging = false;
-  #lastPenDown;
-  #penDragStartPos;
+  #dragging = false; // -
+  #penDragStartPos; // -
+  dragBox; // -
 
   // `point` is a transform function for projecting coordinates from screen
   // space to virtual screen space.
@@ -62,17 +69,11 @@ export class Pen {
       }
     );
 
-    // Multi-Touch Story
-    // Use a concept of 'primary' through nth-pointers. 
-    // The 'primary' behavior is already defined below.
-    // And now `nth-pointers` can be tacked on.
-
-    // TODO:
-    // - [🙋‍♂️] Tack on `nth-pointers`.
-
     // ***Touch***
     window.addEventListener("pointerdown", (e) => {
-      if (!e.isPrimary) return;
+      console.log(e);
+
+      if (e.pointerType === "touch") if (!e.isPrimary) return;
 
       pen.pointerType = e.pointerType;
 
@@ -209,8 +210,6 @@ export class Pen {
   // TODO: Merge this logic into the above events & consolidate class properties.
   // Check the hardware for any changes.
   #event(name) {
-    this.event = name;
-
     const delta = {
       x: this.x - this.lastPenX || 0,
       y: this.y - this.lastPenY || 0,
@@ -224,7 +223,7 @@ export class Pen {
     this.changedInPiece = delta.x !== 0 || delta.y !== 0;
 
     this.events.push({
-      name: this.event,
+      name,
       device: this.pointerType,
       x: this.x,
       y: this.y,
@@ -234,8 +233,6 @@ export class Pen {
       drag: this.dragBox,
     });
 
-    this.lastPenCursor = this.penCursor;
-    this.#lastPenDown = this.down;
     this.lastPenX = this.x;
     this.lastPenY = this.y;
   }
