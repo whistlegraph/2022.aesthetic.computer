@@ -6,15 +6,34 @@
 // And now `nth-pointers` can be tacked on.
 
 // TODO:
-// - [🙋‍♂️] Add multi-touch support. 
+// - [🙋‍♂️] Add multi-touch support.
 //   - [] Convert specific pointer data to a collection that support
-//        the same properties for multiple pointers. 
+//        the same properties for multiple pointers.
 //   - [] Update the API in `multipen` to reflect this.
 
 const { assign } = Object;
 const { round } = Math;
+const debug = window.acDEBUG;
 
 import { Point } from "./geo.mjs";
+
+class Pointer {
+  x;
+  y;
+  delta;
+  pressure;
+  pointerType;
+  pointerId;
+  untransformedPosition;
+  lastPenX;
+  lastPenY;
+  down = false;
+  changed = false;
+
+  dragging = false;
+  penDragStartPos;
+  dragBox; // -
+}
 
 export class Pen {
   // Global data for the overall pen system.
@@ -26,22 +45,7 @@ export class Pen {
   cursorCode; // + Used globally, in the renderer.
   penCursor = false; // + Used globally, in the renderer.
 
-  // Specific data to each pointer.
-
-  x; // -
-  y; // -
-  delta; // -
-  pressure; // -
-  pointerType; // -
-  untransformedPosition; // -
-  lastPenX; // -
-  lastPenY; // -
-  down = false; // -
-  changed = false; // -
-
-  #dragging = false; // -
-  #penDragStartPos; // -
-  dragBox; // -
+  pointers = {}; // Stores an array of `Pointers` to keep track of each gesture.
 
   // `point` is a transform function for projecting coordinates from screen
   // space to virtual screen space.
@@ -50,9 +54,6 @@ export class Pen {
 
     // Add pointer events.
     const pen = this;
-
-    let forceTouchPressure = 0;
-    let forceTouchEnabled = false;
 
     // Prevent double-tap delay: https://stackoverflow.com/a/71025095
     window.addEventListener(
@@ -71,84 +72,108 @@ export class Pen {
 
     // ***Touch***
     window.addEventListener("pointerdown", (e) => {
-      console.log(e);
+      // Create a new `Pointer` to track an individual gesture.
+      const pointer = new Pointer();
 
-      if (e.pointerType === "touch") if (!e.isPrimary) return;
+      // console.log("Touch:", e.pointerId);
 
-      pen.pointerType = e.pointerType;
+      // Assign data to individual pointer.
+      assign(pointer, point(e.x, e.y));
+      pointer.untransformedPosition = { x: e.x, y: e.y };
+      pointer.pressure = reportPressure(e);
+      pointer.down = true;
+      pointer.dragging = true;
+      pointer.penDragStartPos = { x: pen.x, y: pen.y };
+      pointer.pointerType = e.pointerType;
+      pointer.pointerId = e.pointerId;
+      pointer.changed = true;
 
-      assign(pen, point(e.x, e.y));
-      this.untransformedPosition = { x: e.x, y: e.y };
-
-      pen.pressure = reportPressure(e);
-
-      pen.down = true;
-      pen.#dragging = true;
-      pen.#penDragStartPos = { x: pen.x, y: pen.y };
-      pen.#event("touch");
-
-      pen.changed = true;
+      // Set `pen` globals.
+      pen.pointers[e.pointerId] = pointer;
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
+      pen.#event("touch", pointer);
     });
 
     // ***Move (Hover) and Draw (Drag)***
     window.addEventListener("pointermove", (e) => {
-      if (!e.isPrimary) return;
+      // Make sure the pointer we are using is already being tracked.
+      let pointer = pen.pointers[e.pointerId];
 
-      pen.pointerType = e.pointerType;
+      // If it doesn't exist, then make a new pointer and push to pointers.
+      if (!pointer) {
+        pointer = new Pointer();
+        pointer.pointerType = e.pointerType;
+        pointer.pointerId = e.pointerId;
+        pen.pointers[e.pointerId] = pointer;
+      }
 
-      assign(pen, point(e.x, e.y));
-      this.untransformedPosition = { x: e.x, y: e.y };
+      // console.log("Move:", e.pointerId);
 
-      pen.pressure = reportPressure(e);
+      // Assign data to individual pointer.
+      assign(pointer, point(e.x, e.y));
+      pointer.untransformedPosition = { x: e.x, y: e.y };
+      pointer.pressure = reportPressure(e);
 
-      if (pen.#dragging) {
-        // draw
+      if (pointer.dragging) {
         const penDragAmount = {
-          x: pen.x - pen.#penDragStartPos.x,
-          y: pen.y - pen.#penDragStartPos.y,
+          x: pointer.x - pointer.penDragStartPos.x,
+          y: pointer.y - pointer.penDragStartPos.y,
         };
 
-        pen.dragBox = {
-          x: pen.#penDragStartPos.x,
-          y: pen.#penDragStartPos.y,
+        pointer.dragBox = {
+          x: pointer.penDragStartPos.x,
+          y: pointer.penDragStartPos.y,
           w: penDragAmount.x,
           h: penDragAmount.y,
         };
-
         // Only send an event if the new point differs from the last.
-        pointerMoveEvent("draw");
+        pointerMoveEvent("draw", pointer);
       } else {
-        pointerMoveEvent("move");
+        pointerMoveEvent("move", pointer);
       }
 
-      pen.changed = true;
+      pointer.changed = true;
+
+      // Set `pen` globals.
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
     });
 
-    function pointerMoveEvent(type) {
-      if (!Point.equals(pen, { x: pen.lastPenX, y: pen.lastPenY })) {
-        pen.#event(type);
+    function pointerMoveEvent(type, pointer) {
+      if (
+        !Point.equals(pointer, { x: pointer.lastPenX, y: pointer.lastPenY })
+      ) {
+        pen.#event(type, pointer);
       }
     }
 
     // ***Lift***
     window.addEventListener("pointerup", (e) => {
-      if (!e.isPrimary) return;
+      const pointer = pen.pointers[e.pointerId];
+      if (!pointer) return;
 
-      pen.pointerType = e.pointerType;
+      // console.log("Lift:", e.pointerId);
 
-      pen.down = false;
-      if (pen.#dragging) pen.#event("lift");
+      pointer.down = false;
+      if (pointer.dragging) pen.#event("lift", pointer);
 
-      pen.#dragging = false;
+      pointer.dragging = false;
+      pointer.changed = true;
 
-      pen.changed = true;
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
+
+      // TODO: *️⃣
+      // Remove this pointer from the pointers array.
+      //this.pointers.splice(e.pointerId - 1, 1);
+      delete this.pointers[e.pointerId];
+      if (debug) console.log("Removed pointer by ID:", e.pointerId, this.pointers);
     });
+
+    // Pressure Detection
+    let forceTouchPressure = 0;
+    let forceTouchEnabled = false;
 
     // MacBook Trackpad Pressure (in Safari)
     // TODO: When shipping natively for macOS:
@@ -209,37 +234,46 @@ export class Pen {
 
   // TODO: Merge this logic into the above events & consolidate class properties.
   // Check the hardware for any changes.
-  #event(name) {
+  #event(name, pointer) {
+    // console.log(name, pointer);
+
+    const pen = this;
+
     const delta = {
-      x: this.x - this.lastPenX || 0,
-      y: this.y - this.lastPenY || 0,
+      x: pointer.x - pointer.lastPenX || 0,
+      y: pointer.y - pointer.lastPenY || 0,
     };
 
-    this.delta = delta;
+    pointer.delta = delta;
 
     // This field detects whether the pen projection to the current resolution has changed or not.
     // Note: Original data is not sent at the moment. It could be calculated and sent
     //       similar to `Pen`s `untransformedPosition`
-    this.changedInPiece = delta.x !== 0 || delta.y !== 0;
+    pen.changedInPiece = delta.x !== 0 || delta.y !== 0;
 
-    this.events.push({
+    pen.events.push({
       name,
-      device: this.pointerType,
-      x: this.x,
-      y: this.y,
-      delta,
+      device: pointer.pointerType,
+      id: pointer.pointerId,
+      x: pointer.x,
+      y: pointer.y,
+      delta: pointer.delta,
+      pressure: pointer.pressure,
+      drag: pointer.dragBox,
       penChanged: this.changedInPiece,
-      pressure: this.pressure,
-      drag: this.dragBox,
     });
 
-    this.lastPenX = this.x;
-    this.lastPenY = this.y;
+    pointer.lastPenX = pointer.x;
+    pointer.lastPenY = pointer.y;
   }
 
   render(ctx, bouRect) {
-    const p = this.untransformedPosition;
-    if (!p) return;
+    // TODO: How to get the primary pointer from pointers?
+    const pointer = this.pointers[1];
+
+    if (!pointer) return;
+
+    const p = pointer.untransformedPosition;
 
     const s = 10 + 4,
       r = bouRect;

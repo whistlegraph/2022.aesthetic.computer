@@ -22,16 +22,15 @@ function paint({ wipe, ink, pen }) {
   wipe(128); // Draw a gray background
 
 
-  ink(0).line(0, 0, pen.x, pen.y);
+  ink(0).line(0, 0, pen.x || 0, pen.y || 0);
+  console.log(pen.x, pen.y);
 }
 
 // ✒ Act (Runs once per user interaction)
 function act({ event }) {
 
-  if (event.is('touch')) {
-    console.log(event.pointers);
-  }
-
+  if (event)
+  console.log(event);
   // console.log(event);
 }
 
