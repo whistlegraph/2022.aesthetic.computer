@@ -6,6 +6,7 @@ import {
   even,
   radians,
   lerp,
+  randIntRange,
 } from "./num.mjs";
 const { abs, sign, ceil, floor, sin, cos } = Math;
 
@@ -329,7 +330,7 @@ function line() {
   let x0, y0, x1, y1;
 
   if (arguments.length === 4) {
-    x0 = arguments[0];
+    x0 = arguments[0]; // Set all `undefined` or `null` values to 0.
     y0 = arguments[1];
     x1 = arguments[2];
     y1 = arguments[3];
@@ -353,6 +354,12 @@ function line() {
       arguments
     );
   }
+
+  // Set all untruthy values like null, or undefined to a random value.
+  if (x0 == null) x0 = randIntRange(0, width);
+  if (y0 == null) y0 = randIntRange(0, height);
+  if (x1 == null) x1 = randIntRange(0, width);
+  if (y1 == null) y1 = randIntRange(0, height);
 
   if (isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1)) {
     return console.error("Invalid line arguments:", x0, y0, x1, y1);

@@ -6,7 +6,7 @@ set directory $argv[1] # any directory with sequentially named webp files
 set filename $argv[2] # should have .webp at the end
 
 # then grab all webps in the directory and (assuming they are named sequentially, build the image)
-set delay 200 # in milliseconds per frame
+set delay $argv[3] # in milliseconds per frame - 250 is a good default
 set frames
 for file in $directory/*.webp;
   set -a frames -frame $file +$delay+0+0+0-b

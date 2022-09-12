@@ -1,9 +1,9 @@
-// Multipen, 22.09.04.16.18 
+// Multipen, 22.09.04.16.18
 // A basic example of multi-touch / multiple tracked
 // cursors from one client.
 
 // TODO
-// - [] Draw a point for one cursor, and a line for two.
+// - [?] Draw a point for one cursor, and a line for two.
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ resize }) {
@@ -17,20 +17,41 @@ function sim($api) {
   //console.log($api);
 }
 
+let sx;
+let sy;
+let color = [0];
+
 // 🎨 Paint (Executes every display frame)
-function paint({ wipe, ink, pen }) {
-  wipe(128); // Draw a gray background
+function paint({ wipe, pen }) {
+  // Draw a gray background and a line from the 1st -> 2nd pen / finger.
+  wipe(128).ink(color).line(pen.x, pen.y, sx, sy);
 
-
-  ink(0).line(0, 0, pen.x || 0, pen.y || 0);
-  console.log(pen.x, pen.y);
+  // Ideally the API on `pen` would be like... 22.09.12.04.30
+  //wipe(128).ink(0).line(pen?.second.x, pen?.second.y, pen.x, pen.y);
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event }) {
+function act({ event: e }) {
+  if (e.is("touch") && !e.isPrimary) {
+    console.log("Non-primary touch:", e.index, e.id);
+  }
 
-  if (event)
-  console.log(event);
+  // TODO: Should e.index be e.pointer or e.pointerCount? 22.09.12.04.55
+  if (e.is("touch") && e.index === 1) {
+    sx = e.x;
+    sy = e.y;
+    color = [255, 0, 0];
+    console.log("Secondary touch:", e.index, e.id);
+  }
+
+  if (e.is("draw") && e.index === 1) {
+    sx = e.x;
+    sy = e.y;
+    console.log("Secondary draw:", e.index, e.id);
+  }
+
+  // TODO: How to actually get touch information here?
+
   // console.log(event);
 }
 

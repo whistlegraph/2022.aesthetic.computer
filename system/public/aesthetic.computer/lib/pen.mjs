@@ -24,11 +24,11 @@ class Pointer {
   pressure;
   pointerType;
   pointerId;
+  isPrimary;
   untransformedPosition;
   lastPenX;
   lastPenY;
   down = false;
-  changed = false;
 
   dragging = false;
   penDragStartPos;
@@ -45,7 +45,11 @@ export class Pen {
   cursorCode; // + Used globally, in the renderer.
   penCursor = false; // + Used globally, in the renderer.
 
-  pointers = {}; // Stores an array of `Pointers` to keep track of each gesture.
+  pointers = {}; // Stores an object of `Pointers` to keep track of each gesture.
+
+  get pointerCount() {
+    return Object.keys(this.pointers).length;
+  }
 
   // `point` is a transform function for projecting coordinates from screen
   // space to virtual screen space.
@@ -72,24 +76,30 @@ export class Pen {
 
     // ***Touch***
     window.addEventListener("pointerdown", (e) => {
-      // Create a new `Pointer` to track an individual gesture.
-      const pointer = new Pointer();
+      // Make sure the pointer we are using is already being tracked.
+      let pointer = pen.pointers[e.pointerId];
 
-      // console.log("Touch:", e.pointerId);
+      // If it doesn't exist, then make a new pointer and push to pointers.
+      if (!pointer) {
+        // Create a new `Pointer` to track an individual gesture.
+        pointer = new Pointer();
 
-      // Assign data to individual pointer.
-      assign(pointer, point(e.x, e.y));
-      pointer.untransformedPosition = { x: e.x, y: e.y };
-      pointer.pressure = reportPressure(e);
-      pointer.down = true;
-      pointer.dragging = true;
-      pointer.penDragStartPos = { x: pen.x, y: pen.y };
-      pointer.pointerType = e.pointerType;
-      pointer.pointerId = e.pointerId;
-      pointer.changed = true;
+        // Assign data to individual pointer.
+        assign(pointer, point(e.x, e.y));
+        pointer.untransformedPosition = { x: e.x, y: e.y };
+        pointer.pressure = reportPressure(e);
+        pointer.down = true;
+        pointer.dragging = true;
+        pointer.penDragStartPos = { x: pen.x, y: pen.y };
+        pointer.pointerType = e.pointerType;
+        pointer.pointerId = e.pointerId;
+        pointer.isPrimary = e.isPrimary;
+        pointer.pointerIndex = this.pointerCount;
+
+        pen.pointers[e.pointerId] = pointer;
+      }
 
       // Set `pen` globals.
-      pen.pointers[e.pointerId] = pointer;
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
       pen.#event("touch", pointer);
@@ -105,10 +115,10 @@ export class Pen {
         pointer = new Pointer();
         pointer.pointerType = e.pointerType;
         pointer.pointerId = e.pointerId;
+        pointer.isPrimary = e.isPrimary;
+        pointer.pointerIndex = this.pointerCount;
         pen.pointers[e.pointerId] = pointer;
       }
-
-      // console.log("Move:", e.pointerId);
 
       // Assign data to individual pointer.
       assign(pointer, point(e.x, e.y));
@@ -133,8 +143,6 @@ export class Pen {
         pointerMoveEvent("move", pointer);
       }
 
-      pointer.changed = true;
-
       // Set `pen` globals.
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
@@ -153,22 +161,18 @@ export class Pen {
       const pointer = pen.pointers[e.pointerId];
       if (!pointer) return;
 
-      // console.log("Lift:", e.pointerId);
-
       pointer.down = false;
       if (pointer.dragging) pen.#event("lift", pointer);
 
       pointer.dragging = false;
-      pointer.changed = true;
 
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
 
-      // TODO: *️⃣
-      // Remove this pointer from the pointers array.
-      //this.pointers.splice(e.pointerId - 1, 1);
-      delete this.pointers[e.pointerId];
-      if (debug) console.log("Removed pointer by ID:", e.pointerId, this.pointers);
+      delete pen.pointers[e.pointerId];
+
+      if (debug)
+        console.log("Removed pointer by ID:", e.pointerId, this.pointers);
     });
 
     // Pressure Detection
@@ -255,6 +259,8 @@ export class Pen {
       name,
       device: pointer.pointerType,
       id: pointer.pointerId,
+      isPrimary: pointer.isPrimary,
+      index: pointer.pointerIndex,
       x: pointer.x,
       y: pointer.y,
       delta: pointer.delta,
@@ -366,7 +372,6 @@ export class Pen {
         document.body.classList.add("native-cursor");
       }
     }
-    this.changed = false;
   }
 
   setCursorCode(code) {

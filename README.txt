@@ -24,6 +24,7 @@ Welcome to...
 *** Piecemakers: niki, artur, reas ***
 
 🐞 Major Bugs & Regressions
+  - [] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
   - [] `npm run code` does not work offline, due to netlify.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
 
