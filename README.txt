@@ -33,6 +33,8 @@ Welcome to...
 ***Bleep***
  + Now
   - [💚] Add multi-touch support through bleep, via `pen`.
+    - [🟢] Write a `multipen` implementation example with a simple API.
+    - [] Add support to `bleep`.
  + Later
   - [] Support more wave types in `lib/speaker`.
     - [] Sine
