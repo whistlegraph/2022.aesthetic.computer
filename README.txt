@@ -30,6 +30,12 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+***JtoA***
+  - [] Use web speech recognition API to make a program so that Artur and I can 
+      communicate more complex thoughts.
+      - https://www.google.com/intl/en/chrome/demos/speech.html
+  Note: It's only gonna work in Safari on iOS. <https://bugs.webkit.org/show_bug.cgi?id=225298> (And if Dictation is enabled.)
+
 ***Bleep***
  + Now
   - [💚] Add multi-touch support through bleep, via `pen`.
