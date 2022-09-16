@@ -3,6 +3,10 @@
 // cursors from one client.
 
 // TODO
+// - [] Modify this test to encompass N pointers.
+  // - [] Add numbers next to each pointer.
+  // - [] Figure out what to do when a new pointer gets added after the first one
+  //      was lifted, but a second or third one is already down.
 // - [x] Draw a point for one cursor, and a line for two.
 
 // 🥾 Boot (Runs once before first paint and sim)
