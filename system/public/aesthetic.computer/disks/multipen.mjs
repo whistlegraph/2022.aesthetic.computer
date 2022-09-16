@@ -1,53 +1,31 @@
 // Multipen, 22.09.04.16.18
-// A basic example of multi-touch / multiple tracked
-// cursors from one client.
+// A basic example of multi-touch / multiple tracked cursors from one client,
+// using both the `pen` API for the primary pointer and `pens` for the others,
+// in addition to filtering "touch:2" for pointer no. 2 in `act`.
 
-// TODO
-// - [] Modify this test to encompass N pointers.
-  // - [] Add numbers next to each pointer.
-  // - [] Figure out what to do when a new pointer gets added after the first one
-  //      was lifted, but a second or third one is already down.
-// - [x] Draw a point for one cursor, and a line for two.
+/*
+TODO
+- [] Modify this test to encompass N pointers.
+- [] Add numbers next to each pointer.
+- [] Figure out what to do when a new pointer gets added after the first one
+     was lifted, but a second or third one is already down.
+- [x] Draw a point for one cursor, and a line for two.
+*/
 
-// 🥾 Boot (Runs once before first paint and sim)
-function boot({ resize }) {
-  // TODO: Runs only once!
-  // resize(50, 20);
-}
-
-// 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim($api) {
-  // TODO: Move a ball here!
-  //console.log($api);
-}
-
-// TODO: Eliminate the need for sx and sy here.
-let color = [0];
+let rgb = [0];
 
 // 🎨 Paint (Executes every display frame)
-function paint({ wipe, pen, pens, ink, circle }) {
-  // Draw a gray background and a line from the 1st -> 2nd pen / finger.
-
-  // TODO: How to know if no more fingers are down here?
-  wipe(128).ink(color).line(pens(1).x, pens(1).y, pens(2).x, pens(2).y);
-  ink(0, 0, 255).circle(pens(1).x, pens(1).y, 16);
-  ink(0, 255, 255).circle(pens(2).x, pens(2).y, 16);
+function paint({ wipe, ink, pen, pens }) {
+  wipe(128); // Gray background.
+  ink(rgb).line(pen.x, pen.y, pens(2).x, pens(2).y); // Line from pen 1->2.
+  ink(0, 0, 255).circle(pen.x, pen.y, 16); // Blue circle for 1st pen.
+  ink(0, 255, 255).circle(pens(2).x, pens(2).y, 16); // Teal for 2nd pen.
 }
 
 // ✒ Act (Runs once per user interaction)
 function act({ event: e }) {
-  // The "2" allows us to filter for the 2nd pointer / finger,
-  // toggling the color of the connecting line.
-  if (e.is("touch:2")) color = [255, 0, 0];
-  if (e.is("lift:2")) color = [0];
+  if (e.is("touch:2")) rgb = [255, 0, 0]; // Alter color when 2nd pen is down.
+  if (e.is("lift:2")) rgb = [0]; // And again when it's lifted.
 }
 
-// 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
-function beat($api) {
-  // TODO: Play a sound here!
-}
-
-// 📚 Library (Useful functions used throughout the piece)
-// ...
-
-export { boot, sim, paint, act, beat };
+export { paint, act };
