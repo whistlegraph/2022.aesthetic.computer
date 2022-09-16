@@ -116,8 +116,6 @@ export class Pen {
       // Make sure the pointer we are using is already being tracked.
       let pointer = pen.pointers[e.pointerId];
 
-      console.log(pointer?.dragging, e.pointerId);
-
       // If it doesn't exist, then make a new pointer and push to pointers.
       if (!pointer) {
         pointer = new Pointer();

@@ -30,11 +30,14 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-***JtoA***
-  - [] Use web speech recognition API to make a program so that Artur and I can 
-      communicate more complex thoughts.
-      - https://www.google.com/intl/en/chrome/demos/speech.html
-  Note: It's only gonna work in Safari on iOS. <https://bugs.webkit.org/show_bug.cgi?id=225298> (And if Dictation is enabled.)
+***Don't Go Upstairs***
+  + Plans
+    - An interactive story, told in multi-piece parts: https://twitter.com/digitpain/status/1567690125743919104/photo/1
+    - This should serve as a test for fast-transitioning / preloading and
+      sequencing pieces.
+  + Now
+    - Make a sub-directory for the pieces, and adjust the prompt so that
+      if no file exists in the subdirectory then it checks an `index` file.
 
 ***Bleep***
  + Now
@@ -211,6 +214,12 @@ Welcome to...
   - [] Sidetrack: Hack in an SVG cursor really quick.
   - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
   - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
+
+***JtoA***
+  - [] Use web speech recognition API to make a program so that Artur and I can 
+      communicate more complex thoughts.
+      - https://www.google.com/intl/en/chrome/demos/speech.html
+  Note: It's only gonna work in Safari on iOS. <https://bugs.webkit.org/show_bug.cgi?id=225298> (And if Dictation is enabled.)
 
 ***Spinline***
   - [] Circle algorithm with transparency, has doubly drawn pixels.
