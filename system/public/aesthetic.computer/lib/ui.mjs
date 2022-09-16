@@ -65,6 +65,13 @@ class Button {
   // events that take place inside the button.
   // Usage:  act(e, () => {}); // For 'push' callback only.
   //         act(e, {push: () => {}, down: () => {}, cancel: () => {}, draw() => {}});
+
+  // 🔥
+  // TODO: Add multi-touch support here...
+  // Would each button be locked or tracked to one finger?
+  // How to do true multi-touch with a grid of buttons?
+  // What happens if two fingers are on a button and one lifts off?
+
   act(e, callbacks) {
     if (this.disabled) return;
 

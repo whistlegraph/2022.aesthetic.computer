@@ -43,6 +43,8 @@ Welcome to...
  + Now
   - [💚] Add multi-touch support through bleep, via `pen`.
     - [] Add support to `bleep`.
+      - ui.mjs:69, bleep.mjs:162
+      - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
     - [x] Write a `multipen` implementation example with a simple API.
  + Later
   - [] Support more wave types in `lib/speaker`.

@@ -141,8 +141,7 @@ function act($) {
   const {
     event,
     needsPaint,
-    cursor,
-    geo: { Box },
+    cursor
   } = $;
 
   // Disable the cursor for touch input, and re-enable it if a mouse is used.
