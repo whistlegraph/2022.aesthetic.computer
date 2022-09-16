@@ -25,8 +25,8 @@ function paint({ wipe, pen, pens, ink, circle }) {
   // Draw a gray background and a line from the 1st -> 2nd pen / finger.
 
   // TODO: How to know if no more fingers are down here?
-  wipe(128).ink(color).line(pen.x, pen.y, pens(2).x, pens(2).y);
-  ink(0, 0, 255).circle(pen.x, pen.y, 16);
+  wipe(128).ink(color).line(pens(1).x, pens(1).y, pens(2).x, pens(2).y);
+  ink(0, 0, 255).circle(pens(1).x, pens(1).y, 16);
   ink(0, 255, 255).circle(pens(2).x, pens(2).y, 16);
 }
 

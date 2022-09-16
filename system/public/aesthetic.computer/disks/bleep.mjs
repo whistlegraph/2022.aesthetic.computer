@@ -158,6 +158,8 @@ function act($) {
     }
   }
 
+  // TODO: Add multi-touch support to bleep. 22.09.16.12.35
+
   bleeps.forEach((bleep) => {
     bleep.button.act(event, {
       push: () => needsPaint(),

@@ -988,15 +988,6 @@ function makeFrame({ data: { type, content } }) {
           },
         });
 
-        // TODO: For now, pen.x and pen.y in the API are only for the primary
-       //        pointer. 22.09.16.02.08
-        //if (data.isPrimary === true) {
-          //$api.pen = data;
-          //pen = data;
-          //penX = data.x;
-          //penY = data.y;
-        //}
-
         $api.event = data;
         act($api);
       });
@@ -1114,7 +1105,7 @@ function makeFrame({ data: { type, content } }) {
         y: primaryPointer?.y,
       }
 
-      $api.pens = (n) => help.findKeyAndValue(content.pen.pointers, "pointer", n) || {},
+      $api.pens = (n) => help.findKeyAndValue(content.pen.pointers, "pointerIndex", n - 1) || {},
 
       /**
        * @function video
