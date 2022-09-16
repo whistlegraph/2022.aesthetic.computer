@@ -24,6 +24,7 @@ class Pointer {
   pressure;
   pointerType;
   pointerId;
+  pointerIndex;
   isPrimary;
   untransformedPosition;
   lastPenX;
@@ -269,7 +270,8 @@ export class Pen {
       device: pointer.pointerType,
       id: pointer.pointerId,
       isPrimary: pointer.isPrimary,
-      index: pointer.pointerIndex,
+      // index: pointer.pointerIndex, // 0 based index of pointers.
+      pointer: pointer.pointerIndex + 1, // 1 based index of pointers.
       x: pointer.x,
       y: pointer.y,
       delta: pointer.delta,

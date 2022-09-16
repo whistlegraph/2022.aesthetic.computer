@@ -52,3 +52,8 @@ export function each(obj, fn) {
 export function repeat(n, fn) {
   for (let i = 0; i < n; i += 1) fn(i);
 }
+
+// Find a key value pair match inside an object of objects, 0 levels deep.
+export function findKeyAndValue(obj, k, v) {
+  return obj[Object.keys(obj).find((key) => obj[key][k] === v)];
+}

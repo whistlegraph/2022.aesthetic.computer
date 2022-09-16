@@ -3,7 +3,7 @@
 // cursors from one client.
 
 // TODO
-// - [?] Draw a point for one cursor, and a line for two.
+// - [x] Draw a point for one cursor, and a line for two.
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ resize }) {
@@ -17,50 +17,25 @@ function sim($api) {
   //console.log($api);
 }
 
-let sx;
-let sy;
+// TODO: Eliminate the need for sx and sy here.
 let color = [0];
 
 // 🎨 Paint (Executes every display frame)
-function paint({ wipe, pen, ink, circle }) {
+function paint({ wipe, pen, pens, ink, circle }) {
   // Draw a gray background and a line from the 1st -> 2nd pen / finger.
 
   // TODO: How to know if no more fingers are down here?
-  wipe(128).ink(color).line(pen.x, pen.y, sx, sy);
-
+  wipe(128).ink(color).line(pen.x, pen.y, pens(2).x, pens(2).y);
   ink(0, 0, 255).circle(pen.x, pen.y, 16);
-  ink(0, 255, 255).circle(sx, sy, 16);
-
-  // Ideally the API on `pen` would be like... 22.09.12.04.30
-  //wipe(128).ink(0).line(pen?.second.x, pen?.second.y, pen.x, pen.y);
+  ink(0, 255, 255).circle(pens(2).x, pens(2).y, 16);
 }
 
 // ✒ Act (Runs once per user interaction)
 function act({ event: e }) {
-
-  // TODO: Should e.index be e.pointer or e.pointerCount? 22.09.12.04.55
-  if (e.is("touch") && e.index === 1) {
-    sx = e.x;
-    sy = e.y;
-    color = [255, 0, 0];
-    //console.log("Secondary touch:", e.index, e.id);
-  }
-
-  if (e.is("draw") && e.index === 1) {
-    sx = e.x;
-    sy = e.y;
-    //console.log("Secondary draw:", e.index, e.id);
-  }
-
-  if (e.is("lift") && e.index === 1) {
-    color = [0];
-    sx = undefined;
-    sy = undefined;
-  }
-
-  // TODO: How to actually get touch information here?
-
-  // console.log(event);
+  // The "2" allows us to filter for the 2nd pointer / finger,
+  // toggling the color of the connecting line.
+  if (e.is("touch:2")) color = [255, 0, 0];
+  if (e.is("lift:2")) color = [0];
 }
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)

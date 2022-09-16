@@ -975,20 +975,27 @@ function makeFrame({ data: { type, content } }) {
       // TODO: I could also be transforming pen coordinates here...
       // TODO: Keep track of lastPen to see if it changed.
 
-      content.pen.forEach((data) => {
+      content.pen.events.forEach((data) => {
         Object.assign(data, {
           device: data.device,
-          is: (e) => e === data.name,
+          is: (e) => {
+            let [name, pointer] = e.split(":");
+            if (pointer) {
+              return name === data.name && data.pointer === parseInt(pointer);
+            } else {
+              return name === data.name;
+            }
+          },
         });
 
         // TODO: For now, pen.x and pen.y in the API are only for the primary
        //        pointer. 22.09.16.02.08
-        if (data.isPrimary === true) {
+        //if (data.isPrimary === true) {
           //$api.pen = data;
-          pen = data;
+          //pen = data;
           //penX = data.x;
           //penY = data.y;
-        }
+        //}
 
         $api.event = data;
         act($api);
@@ -1100,10 +1107,14 @@ function makeFrame({ data: { type, content } }) {
 
       $api.cursor = (code) => (cursorCode = code);
 
-      // TODO: This object should not be persistent.
-      // TODO: Make this whatever the primary pen is.
-      //$api.pen = { x: penX, y: penY };
-      $api.pen = pen;
+      const primaryPointer = help.findKeyAndValue(content.pen.pointers, "isPrimary", true);
+
+      $api.pen = {
+        x: primaryPointer?.x,
+        y: primaryPointer?.y,
+      }
+
+      $api.pens = (n) => help.findKeyAndValue(content.pen.pointers, "pointer", n) || {},
 
       /**
        * @function video

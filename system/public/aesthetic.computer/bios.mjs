@@ -770,8 +770,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         audioBpm: sound.bpm[0], // TODO: Turn this into a messaging thing.
         width: canvas.width,
         height: canvas.height,
-        pen: pen.events, // TODO: Should store an array of states that get ingested by the worker.
-        keyboard: keyboard.events, // TODO: Should store an array of states that get ingested by the worker.
+        pen: { events: pen.events, pointers: pen.pointers },
+        keyboard: keyboard.events,
       },
     });
 
