@@ -383,7 +383,11 @@ function lineAngle(x1, y1, dist, degrees) {
 }
 
 // Draws a 1px aliased circle: http://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#C
-function circle(x0, y0, radius) {
+function circle(
+  x0 = randIntRange(0, width),
+  y0 = randIntRange(0, height),
+  radius
+) {
   x0 = floor(x0);
   y0 = floor(y0);
   radius = floor(radius);
@@ -611,7 +615,10 @@ function shape() {
 // Renders a square grid at x, y given cols, rows, and scale.
 // Buffer is optional, and if present will render the pixels at scale starting
 // from the top left corner of the buffer, repeating if needed to fill the grid.
-function grid({ box: { x, y, w: cols, h: rows }, scale, centers = [] }, buffer) {
+function grid(
+  { box: { x, y, w: cols, h: rows }, scale, centers = [] },
+  buffer
+) {
   const oc = c.slice(); // Remember the original color.
 
   const w = cols * scale;

@@ -64,7 +64,7 @@ let initialSim = true;
 let noPaint = false;
 
 let socket;
-let penX, penY;
+let pen = {};
 const store = {}; // This object is used to store and retrieve data across disks
 //                   during individual sessions. It doesn't get cleared
 //                   automatically unless the whole system refreshes.
@@ -569,8 +569,8 @@ async function load(
 
     cursorCode = "precise";
     loading = false;
-    penX = undefined;
-    penY = undefined;
+    //penX = undefined;
+    //penY = undefined;
 
     send({
       type: "disk-loaded",
@@ -980,8 +980,16 @@ function makeFrame({ data: { type, content } }) {
           device: data.device,
           is: (e) => e === data.name,
         });
-        penX = data.x;
-        penY = data.y;
+
+        // TODO: For now, pen.x and pen.y in the API are only for the primary
+       //        pointer. 22.09.16.02.08
+        if (data.isPrimary === true) {
+          //$api.pen = data;
+          pen = data;
+          //penX = data.x;
+          //penY = data.y;
+        }
+
         $api.event = data;
         act($api);
       });
@@ -1092,7 +1100,10 @@ function makeFrame({ data: { type, content } }) {
 
       $api.cursor = (code) => (cursorCode = code);
 
-      $api.pen = { x: penX, y: penY }; // TODO: This object should not be persistent.
+      // TODO: This object should not be persistent.
+      // TODO: Make this whatever the primary pen is.
+      //$api.pen = { x: penX, y: penY };
+      $api.pen = pen;
 
       /**
        * @function video

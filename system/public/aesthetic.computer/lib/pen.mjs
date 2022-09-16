@@ -91,7 +91,6 @@ export class Pen {
         pointer.down = true;
         pointer.dragging = true;
 
-        console.log("dragging true", e.pointerId);
         pointer.penDragStartPos = { x: pen.x, y: pen.y };
 
         pointer.pointerType = e.pointerType;
