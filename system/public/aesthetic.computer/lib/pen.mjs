@@ -90,13 +90,19 @@ export class Pen {
         pointer.pressure = reportPressure(e);
         pointer.down = true;
         pointer.dragging = true;
+
+        console.log("dragging true", e.pointerId);
         pointer.penDragStartPos = { x: pen.x, y: pen.y };
+
         pointer.pointerType = e.pointerType;
         pointer.pointerId = e.pointerId;
         pointer.isPrimary = e.isPrimary;
         pointer.pointerIndex = this.pointerCount;
 
         pen.pointers[e.pointerId] = pointer;
+      } else {
+        pointer.dragging = true;
+        pointer.penDragStartPos = { x: pen.x, y: pen.y };
       }
 
       // Set `pen` globals.
@@ -110,9 +116,15 @@ export class Pen {
       // Make sure the pointer we are using is already being tracked.
       let pointer = pen.pointers[e.pointerId];
 
+      console.log(pointer?.dragging, e.pointerId);
+
       // If it doesn't exist, then make a new pointer and push to pointers.
       if (!pointer) {
         pointer = new Pointer();
+        assign(pointer, point(e.x, e.y));
+        pointer.untransformedPosition = { x: e.x, y: e.y };
+        pointer.pressure = reportPressure(e);
+
         pointer.pointerType = e.pointerType;
         pointer.pointerId = e.pointerId;
         pointer.isPrimary = e.isPrimary;
