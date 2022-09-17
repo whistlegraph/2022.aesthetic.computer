@@ -65,21 +65,15 @@ class Button {
   // events that take place inside the button.
   // Usage:  act(e, () => {}); // For 'push' callback only.
   //         act(e, {push: () => {}, down: () => {}, cancel: () => {}, draw() => {}});
-
-  // 🔥
-  // TODO: Add multi-touch support here...
-  // Would each button be locked or tracked to one finger?
-  // How to do true multi-touch with a grid of buttons?
-  // What happens if two fingers are on a button and one lifts off?
-
-  act(e, callbacks) {
+  // You can optionally pass in an array of `pens` {x, y} for multi-touch support.
+  act(e, callbacks, pens = []) {
     if (this.disabled) return;
 
     // If only a single function is sent, then assume it's a button push callback.
     if (typeof callbacks === "function") callbacks = { push: callbacks };
 
     // 1. Down: Enable the button if we touched over it.
-    if (e.is("touch") && this.box.contains(e)) {
+    if (e.is("touch") && this.box.contains(e) && !this.down) {
       callbacks.down?.();
       this.down = true;
     }
@@ -88,9 +82,9 @@ class Button {
     if (e.is("lift")) {
       let event;
 
-      if (this.box.contains(e) && this.down) {
+      if (this.box.onlyContains(e, pens()) && this.down) {
         event = "push";
-      } else if (!this.box.contains(e)) {
+      } else if (!this.box.contains(e) && this.box.containsNone(pens())) {
         event = "cancel"; // TODO: Is this necessary now that we have rollout? 22.08.29.23.11
       }
 
@@ -102,12 +96,12 @@ class Button {
     //       which often differs among use cases such as pianos or general GUIs.
 
     // 4. Rollover: Run a rollover event if dragged on.
-    if (e.is("draw") && this.box.contains(e) && !this.down) {
+    if (e.is("draw") && !this.down && this.box.contains(e)) {
       callbacks.rollover?.();
     }
 
     // 5. Rollout: Run a rollout event if dragged off.
-    if (e.is("draw") && !this.box.contains(e) && this.down) {
+    if (e.is("draw") && this.down && !this.box.contains(e) && this.box.containsNone(pens())) {
       callbacks.rollout?.();
     }
   }

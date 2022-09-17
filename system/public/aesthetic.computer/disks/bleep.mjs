@@ -141,7 +141,8 @@ function act($) {
   const {
     event,
     needsPaint,
-    cursor
+    cursor,
+    pens
   } = $;
 
   // Disable the cursor for touch input, and re-enable it if a mouse is used.
@@ -156,8 +157,6 @@ function act($) {
       }
     }
   }
-
-  // TODO: Add multi-touch support to bleep. 22.09.16.12.35
 
   bleeps.forEach((bleep) => {
     bleep.button.act(event, {
@@ -181,7 +180,7 @@ function act($) {
         anyBleepDowned = false;
         needsPaint();
       },
-    });
+    }, pens); // Passing pens here enables multi-touch support for ui buttons.
   });
 }
 

@@ -126,6 +126,17 @@ export class Box {
     );
   }
 
+  // Returns true if this box contains NO points in `arr`.
+  containsNone(arr) {
+    return arr.every((o) => !this.contains(o));
+  }
+
+  // Returns true if this box contains the point `xy` and NO points in `arr`.
+  onlyContains(xy, arr) {
+    // If xy is in the box, but it contains no other points, return true.
+    return this.contains(xy) && this.containsNone(arr)
+  }
+
   // The opposite of contains.
   misses(o) {
     return !this.contains(o);
