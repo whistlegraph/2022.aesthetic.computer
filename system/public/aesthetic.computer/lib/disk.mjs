@@ -884,14 +884,14 @@ function makeFrame({ data: { type, content } }) {
         true
       );
 
-      $api.pen = {
+      $commonApi.pen = {
         x: primaryPointer?.x,
         y: primaryPointer?.y,
       };
 
       // Returns all [pens] if n is undefined, or can return a specific pen by 1 based index.
       // [pens] are sorted by `pointerIndex`
-      $api.pens = (n) => {
+      $commonApi.pens = (n) => {
         if (n === undefined) {
           return Object.values(content.pen.pointers).reduce((arr, value) => {
             arr[value.pointerIndex] = value;

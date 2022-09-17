@@ -30,35 +30,6 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-***Don't Go Upstairs***
-  + Plans
-    - An interactive story, told in multi-piece parts: https://twitter.com/digitpain/status/1567690125743919104/photo/1
-    - This should serve as a test for fast-transitioning / preloading and
-      sequencing pieces.
-  + Now
-    - Make a sub-directory for the pieces, and adjust the prompt so that
-      if no file exists in the subdirectory then it checks an `index` file.
-
-***Bleep***
- + Now
-  - [💚] Add multi-touch support through bleep, via `pen`.
-    - [] Add support to `bleep`.
-      - ui.mjs:69, bleep.mjs:162
-      - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
-    - [x] Write a `multipen` implementation example with a simple API.
- + Later
-  - [] Support more wave types in `lib/speaker`.
-    - [] Sine
-    - [] Triangle
-    - [x] Square
- + Complete
-  - [x] Why does the board generate twice on first load.
-  - [x] Support roll-over after touch.
-  - [x] Hide cursor on finger action, but show it during mouse action.
-  - [x] Resize window support.
-  - [x] Make a basic bleep box that makes a tone when you tap on it.
-  - [x] Automatically generate bleep grids with a command line parameter for WxH.
-
 ***Audio + Video Storage (Microphone)***
  + Now
   - [🌟] Add a "done" or "close" button to the recording UI / share sheet which re-
@@ -83,6 +54,27 @@ Welcome to...
         piece... so the file can be uploaded.
     - [x] Netlify Serverless Hello World
     - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
+
+***Bleep***
+ + Now
+  - [🥲] Test multi-touch support on a phone.
+ + Later
+  - [] Support more wave types in `lib/speaker`.
+    - [] Sine
+    - [] Triangle
+    - [x] Square
+ + Complete
+  - [x] Add multi-touch support through bleep, via `pen`.
+    - [x] Add support to `bleep`.
+      - ui.mjs:69, bleep.mjs:162
+      - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
+    - [x] Write a `multipen` implementation example with a simple API.
+  - [x] Why does the board generate twice on first load.
+  - [x] Support roll-over after touch.
+  - [x] Hide cursor on finger action, but show it during mouse action.
+  - [x] Resize window support.
+  - [x] Make a basic bleep box that makes a tone when you tap on it.
+  - [x] Automatically generate bleep grids with a command line parameter for WxH.
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [] Only record frames that are not part of the interface.
@@ -167,6 +159,15 @@ Welcome to...
       what piece was used to make the art / object and what git commit
       of the project was used or something like that...
 
+***Don't Go Upstairs***
+  + Plans
+    - An interactive story, told in multi-piece parts: https://twitter.com/digitpain/status/1567690125743919104/photo/1
+    - This should serve as a test for fast-transitioning / preloading and
+      sequencing pieces.
+  + Now
+    - Make a sub-directory for the pieces, and adjust the prompt so that
+      if no file exists in the subdirectory then it checks an `index` file.
+      
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***
   - Prototype:

@@ -7,6 +7,9 @@ export const desc = "A 1px line drawing algorithm";
 // TODO: Better colors. Abstract everything so it can be used
 //       in multiple instances. (See: `Painters` in `nail`)
 
+// TODO: For some reason the first wipe is not always running...
+//       Maybe it's a race condition? 22.09.17.13.34
+
 let painting; // A bitmap to draw on.
 let points = []; // This stored every point in a mark.
 let allPoints = [];
