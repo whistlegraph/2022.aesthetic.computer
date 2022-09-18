@@ -35,6 +35,7 @@ Welcome to...
     - An interactive story, told in multi-piece parts: https://twitter.com/digitpain/status/1567690125743919104/photo/1
     - This should serve as a test for fast-transitioning / preloading and
       sequencing pieces.
+    - Use old Vectrex animation software as inspiration for the editors.
   + Now
     - Make a sub-directory for the pieces, and adjust the prompt so that
       if no file exists in the subdirectory then it checks an `index` file.
@@ -42,7 +43,7 @@ Welcome to...
 ***Bleep***
  + Now
   - [💚] Add multi-touch support through bleep, via `pen`.
-    - [] Add support to `bleep`.
+    - [🆒] Add support to `bleep`.
       - ui.mjs:69, bleep.mjs:162
       - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
     - [x] Write a `multipen` implementation example with a simple API.
