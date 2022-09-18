@@ -6,7 +6,7 @@ import * as geo from "./geo.mjs";
 import * as gizmo from "./gizmo.mjs";
 import * as ui from "./ui.mjs";
 import * as help from "./help.mjs";
-import { parse } from "./parse.mjs"
+import { parse } from "./parse.mjs";
 import { Socket } from "./socket.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
 
@@ -37,7 +37,7 @@ const defaults = {
   },
   beat: () => false, // Runs every bpm.
   act: () => false, // All user interaction.
-  leave: () => false, // Before unload. 
+  leave: () => false, // Before unload.
 };
 
 let boot = defaults.boot;
@@ -195,10 +195,10 @@ function ink() {
         red: [255, 0, 0],
         green: [0, 255, 0],
         blue: [0, 0, 255],
-      }
+      };
 
       args = colors[args[0]];
-      // TODO: Add an error message here. 22.08.29.13.03 
+      // TODO: Add an error message here. 22.08.29.13.03
     }
   } else if (args.length === 2) {
     // rgb, a
@@ -569,8 +569,6 @@ async function load(
 
     cursorCode = "precise";
     loading = false;
-    //penX = undefined;
-    //penY = undefined;
 
     send({
       type: "disk-loaded",
@@ -691,8 +689,8 @@ function makeFrame({ data: { type, content } }) {
     $commonApi.rec.printProgress = content;
     if (content === 1)
       send({ type: "signal", content: "recorder:transcoding-done" });
-      // TODO: Is this the best place for this signal to be sent?
-      //       Maybe it should go back in the BIOS? 22.08.19.13.44
+    // TODO: Is this the best place for this signal to be sent?
+    //       Maybe it should go back in the BIOS? 22.08.19.13.44
     return;
   }
 
@@ -720,7 +718,7 @@ function makeFrame({ data: { type, content } }) {
 
     $api.sound = {
       time: content.time,
-      // Get the bpm with bpm() or set the bpm with bpm(newBPM). 
+      // Get the bpm with bpm() or set the bpm with bpm(newBPM).
       bpm: function (newBPM) {
         if (newBPM) content.bpm[0] = newBPM;
         return content.bpm[0];
@@ -880,6 +878,32 @@ function makeFrame({ data: { type, content } }) {
 
       $api.cursor = (code) => (cursorCode = code);
 
+      const primaryPointer = help.findKeyAndValue(
+        content.pen.pointers,
+        "isPrimary",
+        true
+      );
+
+      $commonApi.pen = {
+        x: primaryPointer?.x,
+        y: primaryPointer?.y,
+      };
+
+      // Returns all [pens] if n is undefined, or can return a specific pen by 1 based index.
+      // [pens] are sorted by `pointerIndex`
+      $commonApi.pens = (n) => {
+        if (n === undefined) {
+          return Object.values(content.pen.pointers).reduce((arr, value) => {
+            arr[value.pointerIndex] = value;
+            return arr;
+          }, []);
+        }
+        return (
+          help.findKeyAndValue(content.pen.pointers, "pointerIndex", n - 1) ||
+          {}
+        );
+      };
+
       // 🤖 Sim // no send
       $api.seconds = function (s) {
         return s * 120; // TODO: Get 120 dynamically from the Loop setting. 2022.01.13.23.28
@@ -971,19 +995,23 @@ function makeFrame({ data: { type, content } }) {
         act($api);
       }
 
+      // *** Pen Events ***
       // Ingest all pen input events by running act for each event.
       // TODO: I could also be transforming pen coordinates here...
       // TODO: Keep track of lastPen to see if it changed.
-
       content.pen.events.forEach((data) => {
         Object.assign(data, {
           device: data.device,
           is: (e) => {
             let [name, pointer] = e.split(":");
             if (pointer) {
-              return name === data.name && data.pointer === parseInt(pointer);
+              if (pointer === "any") {
+                return name === data.name;
+              } else {
+                return name === data.name && data.pointer === parseInt(pointer);
+              }
             } else {
-              return name === data.name;
+              return name === data.name && data.isPrimary === true;
             }
           },
         });
@@ -1097,15 +1125,6 @@ function makeFrame({ data: { type, content } }) {
       };
 
       $api.cursor = (code) => (cursorCode = code);
-
-      const primaryPointer = help.findKeyAndValue(content.pen.pointers, "isPrimary", true);
-
-      $api.pen = {
-        x: primaryPointer?.x,
-        y: primaryPointer?.y,
-      }
-
-      $api.pens = (n) => help.findKeyAndValue(content.pen.pointers, "pointerIndex", n - 1) || {},
 
       /**
        * @function video
