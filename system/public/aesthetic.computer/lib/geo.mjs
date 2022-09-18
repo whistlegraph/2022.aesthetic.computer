@@ -120,7 +120,8 @@ export class Box {
   }
 
   // Returns true if this box contains the point {x, y}.
-  contains({ x, y }) {
+  contains(point = { x: undefined, y: undefined}) {
+    const { x, y } = point;
     return (
       this.x <= x && x < this.x + this.w && this.y <= y && y < this.y + this.h
     );
@@ -128,13 +129,15 @@ export class Box {
 
   // Returns true if this box contains NO points in `arr`.
   containsNone(arr) {
-    return arr.every((o) => !this.contains(o));
+    return arr.every((o) => this.contains(o) === false);
   }
 
-  // Returns true if this box contains the point `xy` and NO points in `arr`.
-  onlyContains(xy, arr) {
-    // If xy is in the box, but it contains no other points, return true.
-    return this.contains(xy) && this.containsNone(arr)
+  // Returns true if this box contains the point `xy` from `arr`.
+  onlyContains(index, arr) {
+    // Cut index out of the original arr.
+    const newArr = arr.slice(0, index).concat(arr.slice(index + 1));
+    // If our index is in the box, but it contains no other points, return true.
+    return this.contains(arr[index]) && this.containsNone(newArr)
   }
 
   // The opposite of contains.

@@ -149,6 +149,13 @@ function act({
     }
   }
 
+  if (e.is("signal") && e.signal.includes("recordings:close")) {
+    console.log("closed!");
+
+    // TODO: How to reset the record button so another recording can get made?
+
+  }
+
   // if (e.is("signal")) console.log(e.signal); // 🔔 Print all signals.
 }
 

@@ -32,13 +32,13 @@ Welcome to...
 
 ***Audio + Video Storage (Microphone)***
  + Now
-  - [🌟] Add a "done" or "close" button to the recording UI / share sheet which re-
-      activates the UI.
-  - [] FFMPEG does not work offline: https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js 
+  - [🌟] Add a "done" or "close" button to the recording UI / share sheet which
+         re-activates the UI.
   - [] Add a special UI for uploading the file / receiving a code...
       so it's a choice?
   - [] Make the recording process re-entrant. (Don't reload ffmpeg each time?)  
   - [] Check to see if ffmpeg encoding can be skipped if the browser doesn't need to do it.
+  - [] FFMPEG does not work offline: https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js - https://github.com/ffmpegwasm/ffmpeg.wasm#why-it-doesnt-work-in-my-local-environment
   + Later
   - [] Add more pointerevents to make a better / final record button: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
  + Done

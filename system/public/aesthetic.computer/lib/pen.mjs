@@ -249,8 +249,6 @@ export class Pen {
   // TODO: Merge this logic into the above events & consolidate class properties.
   // Check the hardware for any changes.
   #event(name, pointer) {
-    // console.log(name, pointer);
-
     const pen = this;
 
     const delta = {
