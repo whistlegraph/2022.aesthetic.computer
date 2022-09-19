@@ -30,6 +30,11 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+***Picture Architecture***
++ Now
+- [🅿️] Write boilerplate for painting tool.
+- [] Set up a glitch account / editing situation for Sage.
+
 ***Bleep***
  + Now
   - [💚] Add multi-touch support through bleep, via `pen`.

@@ -775,6 +775,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       },
     });
 
+    pen.updatePastPositions();
+
     // Time budgeting stuff...
     //const updateDelta = performance.now() - updateNow;
     //console.log("Update Budget: ", round((updateDelta / updateRate) * 100));

@@ -148,6 +148,9 @@ function point(...args) {
   } else if (args.length === 2) {
     x = args[0];
     y = args[1];
+  } else {
+    x = randInt(width);
+    y = randInt(height);
   }
 
   // TODO: Add support for {x, y} single argument. 2022.02.02.20.39

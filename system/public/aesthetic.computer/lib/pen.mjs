@@ -20,6 +20,8 @@ import { Point } from "./geo.mjs";
 class Pointer {
   x;
   y;
+  px;
+  py;
   delta;
   pressure;
   pointerType;
@@ -27,13 +29,9 @@ class Pointer {
   pointerIndex;
   isPrimary;
   untransformedPosition;
-  lastPenX;
-  lastPenY;
-  down = false;
-
-  dragging = false;
+  drawing = false;
   penDragStartPos;
-  dragBox; // -
+  dragBox;
 }
 
 export class Pen {
@@ -87,12 +85,17 @@ export class Pen {
 
         // Assign data to individual pointer.
         assign(pointer, point(e.x, e.y));
+
+        pointer.px = pointer.x;
+        pointer.py = pointer.y;
+
         pointer.untransformedPosition = { x: e.x, y: e.y };
         pointer.pressure = reportPressure(e);
-        pointer.down = true;
-        pointer.dragging = true;
+        //pointer.down = true;
+        //console.log("pointerdown", pointer.down);
+        pointer.drawing = true;
 
-        pointer.penDragStartPos = { x: pen.x, y: pen.y };
+        pointer.penDragStartPos = { x: pointer.x, y: pointer.y };
 
         pointer.pointerType = e.pointerType;
         pointer.pointerId = e.pointerId;
@@ -101,8 +104,8 @@ export class Pen {
 
         pen.pointers[e.pointerId] = pointer;
       } else {
-        pointer.dragging = true;
-        pointer.penDragStartPos = { x: pen.x, y: pen.y };
+        pointer.drawing = true;
+        pointer.penDragStartPos = { x: pointer.x, y: pointer.y };
       }
 
       // Set `pen` globals.
@@ -120,6 +123,8 @@ export class Pen {
       if (!pointer) {
         pointer = new Pointer();
         assign(pointer, point(e.x, e.y));
+        pointer.px = pointer.x;
+        pointer.py = pointer.y;
         pointer.untransformedPosition = { x: e.x, y: e.y };
         pointer.pressure = reportPressure(e);
 
@@ -130,12 +135,20 @@ export class Pen {
         pen.pointers[e.pointerId] = pointer;
       }
 
-      // Assign data to individual pointer.
+      //pointer.px = pointer.x;
+      //pointer.py = pointer.y;
       assign(pointer, point(e.x, e.y));
       pointer.untransformedPosition = { x: e.x, y: e.y };
       pointer.pressure = reportPressure(e);
 
-      if (pointer.dragging) {
+      const delta = {
+        x: pointer.x - pointer.px || 0,
+        y: pointer.y - pointer.py || 0,
+      };
+
+      pointer.delta = delta;
+
+      if (pointer.drawing) {
         const penDragAmount = {
           x: pointer.x - pointer.penDragStartPos.x,
           y: pointer.y - pointer.penDragStartPos.y,
@@ -159,9 +172,7 @@ export class Pen {
     });
 
     function pointerMoveEvent(type, pointer) {
-      if (
-        !Point.equals(pointer, { x: pointer.lastPenX, y: pointer.lastPenY })
-      ) {
+      if (!Point.equals(pointer, { x: pointer.px, y: pointer.py })) {
         pen.#event(type, pointer);
       }
     }
@@ -171,10 +182,10 @@ export class Pen {
       const pointer = pen.pointers[e.pointerId];
       if (!pointer) return;
 
-      pointer.down = false;
-      if (pointer.dragging) pen.#event("lift", pointer);
+      //pointer.down = false;
+      if (pointer.drawing) pen.#event("lift", pointer);
 
-      pointer.dragging = false;
+      pointer.drawing = false;
 
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
@@ -228,6 +239,13 @@ export class Pen {
     return pen;
   }
 
+  updatePastPositions() {
+    for (const pointer in this.pointers) {
+      this.pointers[pointer].px = this.pointers[pointer].x;
+      this.pointers[pointer].py = this.pointers[pointer].y;
+    }
+  }
+
   retransformPosition() {
     assign(
       this,
@@ -251,17 +269,10 @@ export class Pen {
   #event(name, pointer) {
     const pen = this;
 
-    const delta = {
-      x: pointer.x - pointer.lastPenX || 0,
-      y: pointer.y - pointer.lastPenY || 0,
-    };
-
-    pointer.delta = delta;
-
     // This field detects whether the pen projection to the current resolution has changed or not.
     // Note: Original data is not sent at the moment. It could be calculated and sent
     //       similar to `Pen`s `untransformedPosition`
-    pen.changedInPiece = delta.x !== 0 || delta.y !== 0;
+    pen.changedInPiece = pointer.delta.x !== 0 || pointer.delta.y !== 0;
 
     pen.events.push({
       name,
@@ -272,14 +283,17 @@ export class Pen {
       pointer: pointer.pointerIndex + 1, // 1 based index of pointers.
       x: pointer.x,
       y: pointer.y,
+      px: pointer.px,
+      py: pointer.py,
       delta: pointer.delta,
       pressure: pointer.pressure,
       drag: pointer.dragBox,
       penChanged: this.changedInPiece,
     });
 
-    pointer.lastPenX = pointer.x;
-    pointer.lastPenY = pointer.y;
+    // Assign data to individual pointer.
+    //pointer.px = pointer.x;
+    //pointer.py = pointer.y;
   }
 
   render(ctx, bouRect) {

@@ -203,6 +203,8 @@ function ink() {
   } else if (args.length === 2) {
     // rgb, a
     args = [arguments[0], arguments[0], arguments[0], arguments[1]];
+  } else if (args.length === 0) {
+    args = num.randIntArr(255, 4);
   }
 
   graph.color(...args);
@@ -519,7 +521,7 @@ async function load(
   }
 
   // TODO: Add the rest of the $api to "leave" ... refactor API. 22.08.22.07.34
-  if (firstLoad === false) leave(); // Trigger leave.
+  if (firstLoad === false) leave({ store, screen }); // Trigger leave.
 
   // Artificially imposed loading by at least 1/4 sec.
   setTimeout(() => {
@@ -884,11 +886,6 @@ function makeFrame({ data: { type, content } }) {
         true
       );
 
-      $commonApi.pen = {
-        x: primaryPointer?.x,
-        y: primaryPointer?.y,
-      };
-
       // Returns all [pens] if n is undefined, or can return a specific pen by 1 based index.
       // [pens] are sorted by `pointerIndex`
       $commonApi.pens = (n) => {
@@ -903,6 +900,8 @@ function makeFrame({ data: { type, content } }) {
           {}
         );
       };
+
+      $commonApi.pen = primaryPointer || { x: undefined, y: undefined };
 
       // 🤖 Sim // no send
       $api.seconds = function (s) {
@@ -1023,13 +1022,20 @@ function makeFrame({ data: { type, content } }) {
 
       // Ingest all keyboard input events by running act for each event.
       content.keyboard.forEach((data) => {
-        Object.assign(data, { device: "keyboard", is: (e) => e === data.name });
+        Object.assign(data, {
+          device: "keyboard",
+          is: (e) => {
+            //const parts = e.split(":");
+            //console.log("Parts", parts, "Name", data.name);
+
+            return data.name.indexOf(e) === 0;
+          },
+        });
         $api.event = data;
         act($api); // Execute piece shortcut.
 
         // 🌟 Global Keyboard Shortcuts
-
-        if (data.name === "keyboard:down") {
+        if (data.name.indexOf("keyboard:down") === 0) {
           // [Escape]
           // If not on prompt, then move backwards through the history of
           // previously loaded pieces in a session.
@@ -1095,6 +1101,24 @@ function makeFrame({ data: { type, content } }) {
           pixels: new Uint8ClampedArray(content.width * content.height * 4),
           width: content.width,
           height: content.height,
+          load: function (name) {
+            if (store[name]?.pixels) {
+              this.pixels = new Uint8ClampedArray(store[name].pixels);
+              this.width = store[name].width;
+              this.height = store[name].height;
+              $commonApi.resize(this.width, this.height);
+              return true;
+            } else {
+              return false;
+            }
+          },
+          save: function (name) {
+            store[name] = {
+              pixels: new Uint8ClampedArray(this.pixels),
+              width: this.width,
+              height: this.height,
+            };
+          },
         };
 
         // TODO: Add the depth buffer back here.
