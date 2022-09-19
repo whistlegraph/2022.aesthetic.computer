@@ -1123,14 +1123,30 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         } else {
           const recordingsEl = document.createElement("div");
           recordingsEl.id = "recordings";
+
+          // Add video element.
           recordingsEl.append(el);
 
+          // Add download link.
           const download = document.createElement("a");
           download.href = el.src;
           download.innerText = "Download Video";
           download.download = "test.mp4";
           recordingsEl.append(download);
 
+          // Add close button.
+          const close = document.createElement('div');
+          close.innerText = "CLOSE";
+          close.id = "recordings-close";
+          recordingsEl.append(close);
+
+          close.onpointerdown = () => {
+            recordingsEl.remove();
+            signal("recordings:close");
+          }
+
+          // TODO: There needs to be a progress bar or spinner or button to
+          //       upload the video.
           fetch("/presigned-upload-url/" + "mp4")
             .then(async (res) => {
               const presignedUrl = (await res.json()).uploadURL;

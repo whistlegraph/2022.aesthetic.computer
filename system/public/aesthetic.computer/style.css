@@ -65,7 +65,7 @@ input { pointer-events: none; }
   z-index: 4;
   pointer-events: all;
   touch-action: manipulation;
-  background: white;
+  background: gray;
 }
 
 /*font-family: 'Berkeley Mono Variable', monospace;*/

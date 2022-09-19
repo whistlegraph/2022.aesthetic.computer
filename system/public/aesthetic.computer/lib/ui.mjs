@@ -73,35 +73,39 @@ class Button {
     if (typeof callbacks === "function") callbacks = { push: callbacks };
 
     // 1. Down: Enable the button if we touched over it.
-    if (e.is("touch") && this.box.contains(e) && !this.down) {
+    if (e.is("touch:any") && this.box.contains(e) && !this.down) {
       callbacks.down?.();
       this.down = true;
     }
 
     // 3. Push: Trigger the button if we push it.
-    if (e.is("lift")) {
+    if (e.is("lift:any")) {
       let event;
 
-      if (this.box.onlyContains(e, pens()) && this.down) {
+      if (this.box.onlyContains(e.pointer - 1, pens) && this.down) {
         event = "push";
-      } else if (!this.box.contains(e) && this.box.containsNone(pens())) {
+        callbacks[event]?.();
+        // console.log("push");
+        this.down = false;
+      } else if (!this.box.contains(e) && this.box.containsNone(pens)) {
         event = "cancel"; // TODO: Is this necessary now that we have rollout? 22.08.29.23.11
+        // console.log("cancel");
+        callbacks[event]?.();
+        this.down = false;
       }
 
-      callbacks[event]?.();
-      this.down = false;
     }
 
     // Note: Each piece may use the below to implement custom rolling behavior,
     //       which often differs among use cases such as pianos or general GUIs.
 
     // 4. Rollover: Run a rollover event if dragged on.
-    if (e.is("draw") && !this.down && this.box.contains(e)) {
+    if (e.is("draw:any") && !this.down && this.box.contains(e)) {
       callbacks.rollover?.();
     }
 
     // 5. Rollout: Run a rollout event if dragged off.
-    if (e.is("draw") && this.down && !this.box.contains(e) && this.box.containsNone(pens())) {
+    if (e.is("draw:any") && this.down && !this.box.contains(e) && this.box.containsNone(pens)) {
       callbacks.rollout?.();
     }
   }
