@@ -30,16 +30,6 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-***Don't Go Upstairs***
-  + Plans
-    - An interactive story, told in multi-piece parts: https://twitter.com/digitpain/status/1567690125743919104/photo/1
-    - This should serve as a test for fast-transitioning / preloading and
-      sequencing pieces.
-    - Use old Vectrex animation software as inspiration for the editors.
-  + Now
-    - Make a sub-directory for the pieces, and adjust the prompt so that
-      if no file exists in the subdirectory then it checks an `index` file.
-
 ***Bleep***
  + Now
   - [💚] Add multi-touch support through bleep, via `pen`.
@@ -188,12 +178,13 @@ Welcome to...
       These would be great for custom file properties likw
       what piece was used to make the art / object and what git commit
       of the project was used or something like that...
-
+      
 ***Don't Go Upstairs***
   + Plans
     - An interactive story, told in multi-piece parts: https://twitter.com/digitpain/status/1567690125743919104/photo/1
     - This should serve as a test for fast-transitioning / preloading and
       sequencing pieces.
+    - Use old Vectrex animation software as inspiration for the editors.
   + Now
     - Make a sub-directory for the pieces, and adjust the prompt so that
       if no file exists in the subdirectory then it checks an `index` file.
