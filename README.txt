@@ -33,27 +33,8 @@ Welcome to...
 ***Picture Architecture***
 + Now
 - [🅿️] Write boilerplate for painting tool.
+- [] Make a glaze appear instantly after it loads the first time?
 - [] Set up a glitch account / editing situation for Sage.
-
-***Bleep***
- + Now
-  - [💚] Add multi-touch support through bleep, via `pen`.
-    - [🆒] Add support to `bleep`.
-      - ui.mjs:69, bleep.mjs:162
-      - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
-    - [x] Write a `multipen` implementation example with a simple API.
- + Later
-  - [] Support more wave types in `lib/speaker`.
-    - [] Sine
-    - [] Triangle
-    - [x] Square
- + Complete
-  - [x] Why does the board generate twice on first load.
-  - [x] Support roll-over after touch.
-  - [x] Hide cursor on finger action, but show it during mouse action.
-  - [x] Resize window support.
-  - [x] Make a basic bleep box that makes a tone when you tap on it.
-  - [x] Automatically generate bleep grids with a command line parameter for WxH.
 
 ***Audio + Video Storage (Microphone)***
  + Now
@@ -82,13 +63,15 @@ Welcome to...
 
 ***Bleep***
  + Now
-  - [🥲] Test multi-touch support on a phone.
- + Later
   - [] Support more wave types in `lib/speaker`.
     - [] Sine
     - [] Triangle
     - [x] Square
+ + Later
+  - [] Add support for playing samples.
+  - [] Add the ability to play sound from other top level functions.
  + Complete
+  - [x] Test multi-touch support on a phone.
   - [x] Add multi-touch support through bleep, via `pen`.
     - [x] Add support to `bleep`.
       - ui.mjs:69, bleep.mjs:162

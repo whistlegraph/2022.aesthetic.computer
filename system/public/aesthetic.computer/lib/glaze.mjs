@@ -17,12 +17,12 @@ class Glaze {
   shadersLoaded = false;
   uniformNames;
   frag;
+  type;
 
   #uniforms;
-  #type;
 
   constructor(type = "prompt") {
-    this.#type = type;
+    this.type = type;
     this.#uniforms = glazes[type];
     this.uniformNames = keys(this.#uniforms).map((id) => id.split(":")[1]);
   }
@@ -32,9 +32,9 @@ class Glaze {
     // TODO: Technically this should load with the other shaders in parallel,
     //       and it would be faster.
     const names = [
-      `./glazes/${this.#type}/${this.#type}-frag`,
-      `./glazes/${this.#type}/${this.#type}-compute`,
-      `./glazes/${this.#type}/${this.#type}-display`,
+      `./glazes/${this.type}/${this.type}-frag`,
+      `./glazes/${this.type}/${this.type}-compute`,
+      `./glazes/${this.type}/${this.type}-display`,
       `./glazes/passthrough-vert`,
     ];
     const shaders = await preloadShaders(names);
@@ -317,14 +317,19 @@ export async function on(
   type,
   loaded
 ) {
-  glaze = new Glaze(type);
+  if (glaze && (glaze.type === type || type === undefined)) {
+    // Don't reload glaze from scratch if the same one has already been loaded.
+    return glaze;
+  } else {
+    glaze = new Glaze(type);
 
-  await glaze.load(() => {
-    frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
-    offed = false;
-    loaded();
-  });
-  return glaze;
+    await glaze.load(() => {
+      frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
+      offed = false;
+      loaded();
+    });
+    return glaze;
+  }
 }
 
 // Update the texture either in whole or in part based on a dirtyRect from `bios`.
