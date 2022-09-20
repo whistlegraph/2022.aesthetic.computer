@@ -508,10 +508,15 @@ function box() {
       h = arguments[0][3];
     } else {
       // Object {x, y, w, h}
-      x = arguments[0].x;
-      y = arguments[0].y;
-      w = arguments[0].w;
-      h = arguments[0].h || arguments[0].w;
+      // Note: Also works with anything that has width and height properties.
+      x = arguments[0].x || 0;
+      y = arguments[0].y || 0;
+      w = arguments[0].w || arguments[0].width;
+      h =
+        arguments[0].h ||
+        arguments[0].height ||
+        arguments[0].w ||
+        arguments[0].width;
       if (x === undefined || y === undefined || w === undefined) {
         return console.error(
           "Could not make a box {x,y,w,h} from:",

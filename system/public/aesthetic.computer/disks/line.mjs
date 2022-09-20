@@ -85,7 +85,7 @@ function paint({ pen, ink, page, screen, paste, geo, paintCount }) {
     db1.soil(pen);
   }
 
-  if (pointsToHighlight.length === 0 && usingMouse) {
+  if (paintCount > 0n && pointsToHighlight.length === 0 && usingMouse) {
     // Or just paste the existing painting and paint a navigation cursor.
     ink(255, 255, 0, 100).plot({ x: pen.x, y: pen.y }); // 🟡 Navigation cursor.
     db1.soil(pen);

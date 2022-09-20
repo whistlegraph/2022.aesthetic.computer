@@ -40,6 +40,23 @@ const defaults = {
   leave: () => false, // Before unload.
 };
 
+// Inheritable via `export const system = "nopaint"` from any piece.
+// Boilerplate for a distributed raster editor.
+const nopaint = {
+  boot: function boot({ screen, wipe, fps }) {
+    if (!screen.load("painting")) wipe(64); // Load painting or wipe to gray.
+  },
+  act: function act({ event: e }) {
+    if (e.is("keyboard:down:enter")) {
+      console.log("Save image!");
+      // TODO: Should be able to save a `.png` here...
+    }
+  },
+  leave: function leave({ store, screen }) {
+    screen.save("painting");
+  },
+};
+
 let boot = defaults.boot;
 let sim = defaults.sim;
 let paint = defaults.paint;
@@ -172,7 +189,7 @@ const TRIANGLE = {
 function ink() {
   let args = arguments;
 
-  if (args.length === 1) {
+  if (args.length === 1 && args[0] !== undefined) {
     const isNumber = () => typeof args[0] === "number";
     const isArray = () => Array.isArray(args[0]);
     const isString = () => typeof args[0] === "string";
@@ -203,7 +220,7 @@ function ink() {
   } else if (args.length === 2) {
     // rgb, a
     args = [arguments[0], arguments[0], arguments[0], arguments[1]];
-  } else if (args.length === 0) {
+  } else if (args.length === 0 || (args.length === 1 && args[0] === undefined)) {
     args = num.randIntArr(255, 4);
   }
 
@@ -343,7 +360,6 @@ let lastHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
 let firstLoad = true;
 let firstPiece, firstParams, firstSearch;
 
-// TODO: Give load function a labeled options parameter.
 async function load(
   { path, host, search, params, hash, text },
   fromHistory = false
@@ -540,12 +556,23 @@ async function load(
     currentText = text;
 
     // Redefine the default event functions if they exist in the module.
-    boot = module.boot || defaults.boot;
-    sim = module.sim || defaults.sim;
-    paint = module.paint || defaults.paint;
-    beat = module.beat || defaults.beat;
-    act = module.act || defaults.act;
-    leave = module.leave || defaults.leave;
+    // Or... inhereit an existing `system` (just nopaint for now).
+    if (module.system === "nopaint") {
+      boot = module.boot || nopaint.boot;
+      sim = module.sim || defaults.sim;
+      paint = module.paint || defaults.paint;
+      beat = module.beat || defaults.beat;
+      act = module.act || defaults.act;
+      leave = module.leave || nopaint.leave;
+    } else {
+      boot = module.boot || defaults.boot;
+      sim = module.sim || defaults.sim;
+      paint = module.paint || defaults.paint;
+      beat = module.beat || defaults.beat;
+      act = module.act || defaults.act;
+      leave = module.leave || defaults.leave;
+    }
+
     $commonApi.query = search;
     $commonApi.params = params || [];
     $commonApi.load = load;
@@ -1101,7 +1128,7 @@ function makeFrame({ data: { type, content } }) {
           pixels: new Uint8ClampedArray(content.width * content.height * 4),
           width: content.width,
           height: content.height,
-          load: function (name) {
+          load: function load (name) {
             if (store[name]?.pixels) {
               this.pixels = new Uint8ClampedArray(store[name].pixels);
               this.width = store[name].width;
@@ -1112,7 +1139,7 @@ function makeFrame({ data: { type, content } }) {
               return false;
             }
           },
-          save: function (name) {
+          save: function save (name) {
             store[name] = {
               pixels: new Uint8ClampedArray(this.pixels),
               width: this.width,
@@ -1245,8 +1272,14 @@ function makeFrame({ data: { type, content } }) {
        */
 
       // Run boot only once before painting for the first time.
-
       // TODO: Why is boot running twice? 22.07.17.17.26
+
+      // TODO: Boot's painting is currently bound by whatever dirtyBox gets
+      //       set to at the end of `paint`.
+
+      // How can this be solved intelligently?
+      // Right now, in `line` there is a paintCount check to work around this.
+      // 22.09.19.20.45
 
       if (paintCount === 0n) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.

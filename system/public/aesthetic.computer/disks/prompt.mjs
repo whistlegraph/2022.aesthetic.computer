@@ -50,12 +50,11 @@ function boot({
   density,
   screen
 }) {
-  density(2.2);
-
-  //resize(screen.width * 1.75, screen.height * 1.75);
+  //density(2.2);
 
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
-  gap(8); // TODO: Why does adding `gap` cause flickering and result in two calls to `frame`?
+  //gap(8);
+ // TODO: Why does adding `gap` cause flickering and result in two calls to `frame`?
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
@@ -102,10 +101,16 @@ function sim({ seconds, needsPaint, gizmo: { Hourglass } }) {
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ wipe, screen, ink }) {
+function paint({ box, screen, wipe, ink, paste, store }) {
   //console.log("paint");
 
-  wipe(70, 50, 100); // Backdrop
+  if (store["painting"]) {
+    paste(store["painting"]);
+    ink(70, 50, 100, 127).box(screen); // Backdrop
+    //wipe(70, 50, 100);
+  } else {
+    wipe(70, 50, 100);
+  }
 
   const prompt = new Prompt(6, 6);
 
@@ -137,9 +142,7 @@ function paint({ wipe, screen, ink }) {
 function act({ event: e, needsPaint, load }) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
-  if (e.is("move")) {
-    needsPaint();
-  }
+  //if (e.is("move")) needsPaint();
 
   if (e.is("keyboard:down")) {
     if (canType === false) {
