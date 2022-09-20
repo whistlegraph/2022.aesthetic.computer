@@ -23,8 +23,8 @@ const motd = `hi i'm not quite there yet                      `+
              `  but try                                       `+
              `    typing...                                   `+
              `                                                `+
-             `bleep, bubble, pull, line,                      `+
-             `metronome, melody, tracker,                     `+
+             `bleep, bubble, line, rect,                      `+
+             `melody, tracker, metronome,                     `+
              `microphone, wg idni,                            `+
              `~niki/spinline, ~artur/i,                       `+
              `~reas/bland                                     `+
@@ -53,7 +53,7 @@ function boot({
   //density(2.2);
 
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
-  //gap(8);
+  gap(8);
  // TODO: Why does adding `gap` cause flickering and result in two calls to `frame`?
 
   // Preload all glyphs.

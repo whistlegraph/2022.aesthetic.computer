@@ -33,10 +33,17 @@ Welcome to...
 
 ***Picture Architecture***
 + Now
+- [] The painting resolution should auto-expand, but not contract.
+- [] Add saving of webp or png images.
 - [] Set up a glitch account / editing situation for Sage.
+- [] Add `nopaint` template for Sage, Casey and Niki.
 - [x] Write `rect` tool, which necessitates an extra buffer.
 - [x️] Write boilerplate for painting tool.
 - [x] Make a glaze appear instantly after it loads the first time?
+
+***Android Day***
+- [] Provision Android phone.
+- [] Fix keyboard controls not working (this should also fix Meta Quest 2).
 
 ***Audio + Video Storage (Microphone)***
  + Now

@@ -12,7 +12,7 @@ export function paint({
   page,
   geo: { Box },
 }) {
-  let color = parseInt(params[0]);
+  const color = (params.map((str) => parseInt(str)));
 
   if (needsBake) {
     page(system.painting);

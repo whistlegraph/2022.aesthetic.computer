@@ -43,8 +43,9 @@ const defaults = {
 // Inheritable via `export const system = "nopaint"` from any piece.
 // Boilerplate for a distributed raster editor.
 const nopaint = {
-  boot: function boot({ screen, wipe, fps, paste, system }) {
+  boot: function boot({ paste, system, gap }) {
     //if (!screen.load("painting")) wipe(64); // Load painting or wipe to gray.
+    gap(8);
     paste(system.painting);
   },
   act: function act({ event: e }) {
