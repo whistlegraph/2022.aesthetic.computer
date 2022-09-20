@@ -24,8 +24,7 @@ Welcome to...
 *** Piecemakers: niki, artur, reas ***
 
 🐞 Major Bugs & Regressions
-  - [] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
-  - [] `npm run code` does not work offline, due to netlify.
+  - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
   - [x] Pull - fix pointer delta event in-accuracy.
 
@@ -40,6 +39,12 @@ Welcome to...
 - [x] Write `rect` tool, which necessitates an extra buffer.
 - [x️] Write boilerplate for painting tool.
 - [x] Make a glaze appear instantly after it loads the first time?
+
+*** Safari Day ***
+- [] Thin lines appearing from `gap` and no gap in mobile Safari.
+- [] Loading spinner not appearing in mobile Safari. 
+- [] Grey selection bubble appears in mobile Safari.
+- [] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
 
 ***Android Day***
 - [] Provision Android phone.
