@@ -30,11 +30,14 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+- [🔴] Pull - fix pointer delta event in-accuracy.
+
 ***Picture Architecture***
 + Now
-- [🅿️] Write boilerplate for painting tool.
-- [] Make a glaze appear instantly after it loads the first time?
 - [] Set up a glitch account / editing situation for Sage.
+- [x] Write `rect` tool, which necessitates an extra buffer.
+- [x️] Write boilerplate for painting tool.
+- [x] Make a glaze appear instantly after it loads the first time?
 
 ***Audio + Video Storage (Microphone)***
  + Now

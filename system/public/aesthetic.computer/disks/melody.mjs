@@ -112,8 +112,11 @@ function beat({ sound: { bpm, square, time }, store, gizmo: { Hourglass } }) {
 
   globalBeatCount += 1;
   beatCount += 1;
-  if (beatCount === stopRow) beatCount = 0;
+  if (beatCount === stopRow) {
+    beatCount = 0;
+  }
   beatStartTime = time;
+  beatProgress = 0; // Reset beat progress (to not conflict with `sim`s guess.)
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
@@ -140,6 +143,7 @@ function paint({ wipe, ink, geo: { Grid }, screen, num: { randIntRange } }) {
 
   // Crossing score.
   const scoreY = ceil(scale * beatCount + beatProgress * scale);
+
   const score = new Grid(
     startX,
     notes.box.y + scale - scoreY,

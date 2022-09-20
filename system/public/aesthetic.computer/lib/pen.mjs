@@ -135,8 +135,6 @@ export class Pen {
         pen.pointers[e.pointerId] = pointer;
       }
 
-      //pointer.px = pointer.x;
-      //pointer.py = pointer.y;
       assign(pointer, point(e.x, e.y));
       pointer.untransformedPosition = { x: e.x, y: e.y };
       pointer.pressure = reportPressure(e);
@@ -148,6 +146,11 @@ export class Pen {
 
       pointer.delta = delta;
 
+      // This field detects whether the pen projection to the current resolution has changed or not.
+      // Note: Original data is not sent at the moment. It could be calculated and sent
+      //       similar to `Pen`s `untransformedPosition`
+      pen.changedInPiece = pointer.delta.x !== 0 || pointer.delta.y !== 0;
+      
       if (pointer.drawing) {
         const penDragAmount = {
           x: pointer.x - pointer.penDragStartPos.x,
@@ -239,6 +242,7 @@ export class Pen {
     return pen;
   }
 
+  // TODO: Fix pointer delta issues.
   updatePastPositions() {
     for (const pointer in this.pointers) {
       this.pointers[pointer].px = this.pointers[pointer].x;
@@ -268,11 +272,6 @@ export class Pen {
   // Check the hardware for any changes.
   #event(name, pointer) {
     const pen = this;
-
-    // This field detects whether the pen projection to the current resolution has changed or not.
-    // Note: Original data is not sent at the moment. It could be calculated and sent
-    //       similar to `Pen`s `untransformedPosition`
-    pen.changedInPiece = pointer.delta.x !== 0 || pointer.delta.y !== 0;
 
     pen.events.push({
       name,

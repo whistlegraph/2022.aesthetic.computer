@@ -43,8 +43,9 @@ const defaults = {
 // Inheritable via `export const system = "nopaint"` from any piece.
 // Boilerplate for a distributed raster editor.
 const nopaint = {
-  boot: function boot({ screen, wipe, fps }) {
-    if (!screen.load("painting")) wipe(64); // Load painting or wipe to gray.
+  boot: function boot({ screen, wipe, fps, paste, system }) {
+    //if (!screen.load("painting")) wipe(64); // Load painting or wipe to gray.
+    paste(system.painting);
   },
   act: function act({ event: e }) {
     if (e.is("keyboard:down:enter")) {
@@ -52,8 +53,9 @@ const nopaint = {
       // TODO: Should be able to save a `.png` here...
     }
   },
-  leave: function leave({ store, screen }) {
-    screen.save("painting");
+  leave: function leave({ store, screen, system }) {
+    store["painting"] = system.painting;
+    //screen.save("painting");
   },
 };
 
@@ -220,7 +222,10 @@ function ink() {
   } else if (args.length === 2) {
     // rgb, a
     args = [arguments[0], arguments[0], arguments[0], arguments[1]];
-  } else if (args.length === 0 || (args.length === 1 && args[0] === undefined)) {
+  } else if (
+    args.length === 0 ||
+    (args.length === 1 && args[0] === undefined)
+  ) {
     args = num.randIntArr(255, 4);
   }
 
@@ -292,7 +297,7 @@ class Painting {
         // Wrap and then transfer to #api.
         p.api[k] = function () {
           if (notArray(p.#layers[p.#layer])) p.#layers[p.#layer] = [];
-          p.#layers[p.#layer].push(() => $paintApiUnwrapped[k](...arguments));
+          p.#layers[p.#layer].push(() => $paintApiUnwrapped[k](...arguments)); // deferred action called as paint() below.
           return p.api;
         };
       }
@@ -537,7 +542,7 @@ async function load(
   }
 
   // TODO: Add the rest of the $api to "leave" ... refactor API. 22.08.22.07.34
-  if (firstLoad === false) leave({ store, screen }); // Trigger leave.
+  if (firstLoad === false) leave({ store, screen, system: $commonApi.system }); // Trigger leave.
 
   // Artificially imposed loading by at least 1/4 sec.
   setTimeout(() => {
@@ -564,6 +569,15 @@ async function load(
       beat = module.beat || defaults.beat;
       act = module.act || defaults.act;
       leave = module.leave || nopaint.leave;
+
+      $commonApi.system = {
+        name: "nopaint",
+        painting:
+          store["painting"] ||
+          painting.api.painting(screen.width, screen.height, ({ wipe }) => {
+            wipe(64);
+          }),
+      };
     } else {
       boot = module.boot || defaults.boot;
       sim = module.sim || defaults.sim;
@@ -571,6 +585,8 @@ async function load(
       beat = module.beat || defaults.beat;
       act = module.act || defaults.act;
       leave = module.leave || defaults.leave;
+
+      delete $commonApi.system; // No system in use.
     }
 
     $commonApi.query = search;
@@ -1128,7 +1144,7 @@ function makeFrame({ data: { type, content } }) {
           pixels: new Uint8ClampedArray(content.width * content.height * 4),
           width: content.width,
           height: content.height,
-          load: function load (name) {
+          load: function load(name) {
             if (store[name]?.pixels) {
               this.pixels = new Uint8ClampedArray(store[name].pixels);
               this.width = store[name].width;
@@ -1139,7 +1155,7 @@ function makeFrame({ data: { type, content } }) {
               return false;
             }
           },
-          save: function save (name) {
+          save: function save(name) {
             store[name] = {
               pixels: new Uint8ClampedArray(this.pixels),
               width: this.width,

@@ -350,9 +350,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
-
-      console.log("Current glaze:", currentGlaze);
-
       currentGlaze = Glaze.on(
         canvas.width,
         canvas.height,
