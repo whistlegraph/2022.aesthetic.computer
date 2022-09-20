@@ -116,8 +116,8 @@ async function fun(event, context) {
       "Content-Type": "text/html",
       // These headers are required in order for SharedArrayBuffer to be enabled.
       // Currently used by ffmpeg.wasm. 22.08.06.11.01
-      // "Cross-Origin-Embedder-Policy": "require-corp",
-      // "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
     },
     body: html,
     ttl: 60,
