@@ -13,6 +13,9 @@ const { keys } = Object;
 import glazes from "./glazes/uniforms.js";
 
 class Glaze {
+  w;
+  h;
+
   loaded = false;
   shadersLoaded = false;
   uniformNames;
@@ -21,7 +24,9 @@ class Glaze {
 
   #uniforms;
 
-  constructor(type = "prompt") {
+  constructor(type = "prompt", w, h) {
+    this.w = w;
+    this.h = h;
     this.type = type;
     this.#uniforms = glazes[type];
     this.uniformNames = keys(this.#uniforms).map((id) => id.split(":")[1]);
@@ -317,11 +322,21 @@ export async function on(
   type,
   loaded
 ) {
-  if (glaze && (glaze.type === type || type === undefined)) {
+
+
+
+  if (glaze && (glaze.type === type || type === undefined) && (glaze.w === w && glaze.h === h)) {
     // Don't reload glaze from scratch if the same one has already been loaded.
+
+    // TODO: Re-implement this... it causes a flicker rn. 22.09.19.23.43
+    // Reframe glaze only if necessary...
+    // if (glaze.w !== w || glaze.h !== h) {
+    //  frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
+    // }
+
     return glaze;
   } else {
-    glaze = new Glaze(type);
+    glaze = new Glaze(type, w, h);
 
     await glaze.load(() => {
       frame(w, h, rect, nativeWidth, nativeHeight, wrapper);

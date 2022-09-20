@@ -27,10 +27,9 @@ Welcome to...
   - [] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
   - [] `npm run code` does not work offline, due to netlify.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
+  - [x] Pull - fix pointer delta event in-accuracy.
 
 🌟 Projects In Progress 🌟
-
-- [🔴] Pull - fix pointer delta event in-accuracy.
 
 ***Picture Architecture***
 + Now

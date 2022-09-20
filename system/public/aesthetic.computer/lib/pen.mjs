@@ -32,6 +32,9 @@ class Pointer {
   drawing = false;
   penDragStartPos;
   dragBox;
+  // These are only used to calculate the liminal event delta.
+  lastEventX;
+  lastEventY;
 }
 
 export class Pen {
@@ -146,11 +149,6 @@ export class Pen {
 
       pointer.delta = delta;
 
-      // This field detects whether the pen projection to the current resolution has changed or not.
-      // Note: Original data is not sent at the moment. It could be calculated and sent
-      //       similar to `Pen`s `untransformedPosition`
-      pen.changedInPiece = pointer.delta.x !== 0 || pointer.delta.y !== 0;
-      
       if (pointer.drawing) {
         const penDragAmount = {
           x: pointer.x - pointer.penDragStartPos.x,
@@ -273,6 +271,21 @@ export class Pen {
   #event(name, pointer) {
     const pen = this;
 
+    // 💁
+    // Two separate deltas are calculated for pointers.
+    // One for internal use within each pointer (for using pens)
+    // And another for the `act` event system which gets consumed differently.
+
+    const delta = {
+      x: pointer.x - pointer.lastEventX || 0,
+      y: pointer.y - pointer.lastEventY || 0,
+    };
+
+    // This field detects whether the pen projection to the current resolution has changed or not.
+    // Note: Original data is not sent at the moment. It could be calculated and sent
+    //       similar to `Pen`s `untransformedPosition`
+    pen.changedInPiece = delta.x !== 0 || delta.y !== 0;
+
     pen.events.push({
       name,
       device: pointer.pointerType,
@@ -284,7 +297,7 @@ export class Pen {
       y: pointer.y,
       px: pointer.px,
       py: pointer.py,
-      delta: pointer.delta,
+      delta: delta,
       pressure: pointer.pressure,
       drag: pointer.dragBox,
       penChanged: this.changedInPiece,
@@ -293,6 +306,8 @@ export class Pen {
     // Assign data to individual pointer.
     //pointer.px = pointer.x;
     //pointer.py = pointer.y;
+    pointer.lastEventX = pointer.x;
+    pointer.lastEventY = pointer.y;
   }
 
   render(ctx, bouRect) {

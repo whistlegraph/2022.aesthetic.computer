@@ -771,6 +771,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         audioBpm: sound.bpm[0], // TODO: Turn this into a messaging thing.
         width: canvas.width,
         height: canvas.height,
+        // TODO: Do all fields of `pointer` need to be sent? 22.09.19.23.30
         pen: { events: pen.events, pointers: pen.pointers },
         keyboard: keyboard.events,
       },
