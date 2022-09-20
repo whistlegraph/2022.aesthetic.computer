@@ -59,7 +59,10 @@ const parsed = parse(
 const bpm = 120; // Set the starting bpm. Is this still necessary?
 
 // TODO: Add params, search, and hash in here. 22.07.15.00.46
-boot(parsed, bpm, undefined, debug);
+
+setTimeout(function() {
+  boot(parsed, bpm, undefined, debug);
+}, 3000);
 
 // ***Incoming Message Responder***
 
