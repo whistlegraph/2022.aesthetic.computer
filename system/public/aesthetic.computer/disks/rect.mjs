@@ -1,6 +1,8 @@
 // Rect, 22.09.19.21.07
 // Inherits from the "nopaint" system, which predefines boot, act, and leave.
 
+// TODO: Continuing to click keeps redrawing the same rectangle.
+
 // 🎨
 export function paint({
   params,
@@ -14,11 +16,12 @@ export function paint({
 }) {
   const color = (params.map((str) => parseInt(str)));
 
-  if (needsBake) {
+  if (rect && needsBake) {
     page(system.painting);
     ink(color).box(rect);
     page(screen);
     needsBake = false;
+    rect = null;
   }
 
   if (pen.dragBox) {
@@ -37,7 +40,6 @@ let rect;
 export function act({ event: e }) {
   if (e.is("lift")) {
     needsBake = true;
-    console.log('bake!');
   }
 }
 
