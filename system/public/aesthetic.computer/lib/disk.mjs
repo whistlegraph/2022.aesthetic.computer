@@ -576,7 +576,7 @@ async function load(
         painting:
           store["painting"] ||
           painting.api.painting(screen.width, screen.height, ({ wipe }) => {
-            wipe(64);
+            wipe(64, 0, 0);
           }),
       };
     } else {
