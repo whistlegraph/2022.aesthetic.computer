@@ -556,7 +556,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   //  type: "module",
   //});
 
-  const worker = new Worker(new URL("./lib/disk.mjs", import.meta.url), {
+  const worker = new Worker(new URL("/aesthetic.computer/lib/disk.mjs", import.meta.url), {
     type: "module",
   });
 
