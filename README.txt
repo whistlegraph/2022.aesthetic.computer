@@ -30,6 +30,12 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** Safari Day ***
+- [] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
+- [] Loading spinner not appearing in mobile Safari. 
+- [] Thin lines appearing from `gap` and no gap in mobile Safari.
+- [] Grey selection bubble appears in mobile Safari.
+
 ***Picture Architecture***
 + Now
 - [] The painting resolution should auto-expand, but not contract.
@@ -39,12 +45,6 @@ Welcome to...
 - [x] Write `rect` tool, which necessitates an extra buffer.
 - [x️] Write boilerplate for painting tool.
 - [x] Make a glaze appear instantly after it loads the first time?
-
-*** Safari Day ***
-- [] Thin lines appearing from `gap` and no gap in mobile Safari.
-- [] Loading spinner not appearing in mobile Safari. 
-- [] Grey selection bubble appears in mobile Safari.
-- [] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
 
 ***Android Day***
 - [] Provision Android phone.
