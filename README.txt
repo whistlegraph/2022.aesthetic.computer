@@ -21,7 +21,13 @@ Welcome to...
     - Pieces that stick to software-rendering are guaranteed accurate results on
       future runtimes, given that Math in JavaScript doesn't change.
 
-*** Piecemakers: niki, artur, reas ***
+*** Piecemaker Sources ***
+  - Niki:  https://glitch.com/edit/#!/niki-aesthetic-computer
+  - Artur: https://glitch.com/edit/#!/artur-aesthetic-computer 
+    - [] Move this account off Glitch.
+    - [] Make simple lessons.
+  - Reas: https://glitch.com/edit/#!/reas-aesthetic-computer
+  - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
@@ -31,7 +37,7 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 *** Safari Day ***
-- [] Loading spinner not appearing in mobile Safari. 
+- [🔴] Loading spinner not appearing in mobile Safari. 
 - [] Thin lines appearing from `gap` and no gap in mobile Safari.
 - [] Grey selection bubble appears in mobile Safari.
 - [x] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
