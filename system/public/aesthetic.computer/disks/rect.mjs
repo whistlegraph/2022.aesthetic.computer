@@ -1,7 +1,8 @@
 // Rect, 22.09.19.21.07
 // Inherits from the "nopaint" system, which predefines boot, act, and leave.
 
-// TODO: Continuing to click keeps redrawing the same rectangle.
+let needsBake = false;
+let rect;
 
 // 🎨
 export function paint({
@@ -33,9 +34,6 @@ export function paint({
   }
 
 }
-
-let needsBake = false;
-let rect;
 
 export function act({ event: e }) {
   if (e.is("lift")) {

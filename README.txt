@@ -31,10 +31,55 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 *** Safari Day ***
-- [] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
 - [] Loading spinner not appearing in mobile Safari. 
 - [] Thin lines appearing from `gap` and no gap in mobile Safari.
 - [] Grey selection bubble appears in mobile Safari.
+- [x] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
+  (Needed `Vary: *` http header, to prevent Safari's cache from bugging out
+   on the SharedArrayBuffer / isolatedOrigin CORS headers.)
+
+*** Pieces: Prompt ***
+ - [] No more tildes for user paths...
+      Instead, use a whitelist of usernames.
+      eg. sage/piece
+ - [] Up arrow for previous comand. 
+ - [] Update MOTD. 
+
+*** Density ***
+ - [] Only allow density to be set as an export?
+ - Or... prevent density from clearing the screen buffer.
+ - [] Remove the frameCount hack.
+
+*** API: Glaze ***
+ - [] Be able to turn glaze on inside of remotely hosted pieces.
+ - [] Add ability to update glaze uniforms via
+     `glaze.params({uniform1: value, uni2: [0, 1, 2]});``
+       function paint() {
+         // user draw a dirty box that needs gpu processing as a tile larger than
+         // the original pixel drawing
+         glaze.params({
+           crop: dirtyBox,
+           samples: 12 // this dirtyBox will keep being glazed over for 12 frames
+           uniform1: 1,
+           uniform2: 2,
+         });
+         return dirtyBox;
+       } 
+ - [] Add "kiln" function to bake in a glaze at the end.
+ 
+*** Load Image ***
+  - [] From a URL into a buffer.
+  - [] and then be able to paste it.
+   
+*** Save PNG ***
+  - [] Stamp of URL 
+   
+*** Pressure ***
+  - [] Get pen and finger working together.
+       (When finger is drawing and pen is touched... is it recognized as pen?)
+  - [] Pen: Get a good mapping for Apple Pencil / normalize the data. 
+  - [] Touch: Two finger pressure. (Second finger regulates it via Y axis.)
+  - [] Mouse: Use scroll wheel for delta. 
 
 ***Picture Architecture***
 + Now
