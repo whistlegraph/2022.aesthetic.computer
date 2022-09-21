@@ -44,6 +44,12 @@ Welcome to...
   (Needed `Vary: *` http header, to prevent Safari's cache from bugging out
    on the SharedArrayBuffer / isolatedOrigin CORS headers.)
 
+*** Pieces: Run&Gun ***
+- [] Make a basic character with multi-platform controls.
+- [] Make a ground for them to run on back and forth.
+- [] Make something dangerous that can easily kill them. 
+- [] Add a timer.
+
 *** Pieces: Prompt ***
  - [] No more tildes for user paths...
       Instead, use a whitelist of usernames.
@@ -697,6 +703,10 @@ Make sure `git` and `git-lfs` is installed, (you can do that through `homebrew`)
   0. Check `ssl-dev/readme.txt` to generate SSL certificates before running locally for all features to work.
   1. `cd` into `server` and run `npm install` and `npm run dev` to start the socket server. (optional)
   2. `cd` into `system` and run `npm install` and `npm run dev` to start the web server. (required)
+
+🧩 Making a new included piece.
+- Run `npm run new-piece -- name-of-your-piece` 
+- Then open the file in `system/public/aesthetic.computer/disks` and start working!
 
 📖 This project originally began as two separate repositories with their own
 commit history: `digitpain/system` and `digitpain/disks`.
