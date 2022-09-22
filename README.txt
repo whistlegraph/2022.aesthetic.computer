@@ -37,8 +37,8 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 *** Pieces: Prompt ***
- - [] No more tildes for user paths...
-      Instead, use a whitelist of usernames.
+ - [🔴] No more tildes for user paths...
+      Instead, use an @ for usernames.
       eg. sage/piece
  - [] Up arrow for previous comand. 
  - [] Update MOTD. 

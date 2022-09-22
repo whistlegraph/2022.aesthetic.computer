@@ -26,8 +26,8 @@ const motd = `hi i'm not quite there yet                      `+
              `bleep, bubble, line, rect,                      `+
              `melody, tracker, metronome,                     `+
              `microphone, wg idni,                            `+
-             `~niki/spinline, ~artur/i,                       `+
-             `~reas/bland                                     `+
+             `niki/spinline, artur/i,                       `+
+             `reas/bland                                     `+
              `                                                `+
              `mail@aesthetic.computer                         `;
 

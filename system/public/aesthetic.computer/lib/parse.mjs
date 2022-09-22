@@ -13,10 +13,10 @@
 // - Used in both the URL bar of the browser, and the `prompt` piece.
 // Accepts: bpm 180
 //          bpm~180
-//          ~niki/bpm 180
-//          ~niki/bpm~180
-//          ~game.jas.life/bpm~180?mute=true
-//          ~niki
+//          niki/bpm 180
+//          niki/bpm~180
+//          game.jas.life/bpm~180?mute=true (not working yet?) 22.09.22.12.05
+//          niki
 
 function parse(text, location = self?.location) {
   let path, host, params, search, hash;
@@ -39,6 +39,12 @@ function parse(text, location = self?.location) {
     tokens.shift();
   }
 
+  //const pieceMakerPath = ["niki", "artur", "sage", "reas"].every((value) => {
+  //  return tokens[0] === value;
+  //});
+
+  debugger;
+
   if (customHost) {
     [host, ...path] = tokens[0].split("/");
     path = path.join("/");
@@ -51,7 +57,7 @@ function parse(text, location = self?.location) {
       host += ".aesthetic.computer";
     }
   } else {
-    host = location.hostname
+    host = location.hostname;
     if (location.port) host += ":" + location.port;
     // TODO: Will this allow jumping from one disk to
     //       another on a different host just by
