@@ -36,26 +36,18 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** Safari Day ***
-- [🔴] Loading spinner not appearing in mobile Safari. 
-- [] Thin lines appearing from `gap` and no gap in mobile Safari.
-- [] Grey selection bubble appears in mobile Safari.
-- [x] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
-  (Needed `Vary: *` http header, to prevent Safari's cache from bugging out
-   on the SharedArrayBuffer / isolatedOrigin CORS headers.)
-
-*** Pieces: Run&Gun ***
-- [] Make a basic character with multi-platform controls.
-- [] Make a ground for them to run on back and forth.
-- [] Make something dangerous that can easily kill them. 
-- [] Add a timer.
-
 *** Pieces: Prompt ***
  - [] No more tildes for user paths...
       Instead, use a whitelist of usernames.
       eg. sage/piece
  - [] Up arrow for previous comand. 
  - [] Update MOTD. 
+
+*** Pieces: Run&Gun ***
+- [] Make a basic character with multi-platform controls.
+- [] Make a ground for them to run on back and forth.
+- [] Make something dangerous that can easily kill them. 
+- [] Add a timer.
 
 *** Density ***
  - [] Only allow density to be set as an export?
@@ -490,9 +482,17 @@ Welcome to...
 
 *Recently Completed*
 
+*** Safari Day ***
+- [-] Thin lines appearing from `gap` and no gap in mobile Safari.
+- [x] Grey selection bubble appears in mobile Safari.
+- [x] Loading spinner not appearing in mobile Safari. 
+- [x] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
+  (Needed `Vary: *` http header, to prevent Safari's cache from bugging out
+  on the SharedArrayBuffer / isolatedOrigin CORS headers.)
+
 ***Tracker, Pull***
- - [x] Fix interface boxes.
- - [x] Make `boxes` test piece.
+- [x] Fix interface boxes.
+- [x] Make `boxes` test piece.
 
  ***Meta***
  - [x] Add support for custom / locally generated thumbnail overrides.

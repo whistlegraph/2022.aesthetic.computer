@@ -3,11 +3,13 @@ import { radians } from "./num.mjs";
 const { round } = Math;
 
 function spinner(ctx, timePassed) {
-  const gap = 12,
-    s = 6;
+  const gap = 20,
+    s = 8;
 
   ctx.save();
-  ctx.translate(s + gap, s + gap);
+  const scaledWidth = ctx.canvas.width / window.devicePixelRatio;
+  ctx.translate(scaledWidth - (s + gap), s + gap);
+
   ctx.rotate(radians(timePassed % 360) * 1);
 
   ctx.beginPath();

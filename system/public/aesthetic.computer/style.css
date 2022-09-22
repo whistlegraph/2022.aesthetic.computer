@@ -21,6 +21,8 @@ body {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-text-size-adjust: none;
+  }
+
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -33,7 +35,7 @@ body.native-cursor {
   /* TODO: Did this break anything with zooming? 22.09.04.23.33 */
 }
 
-body.native-cursor canvas[data-type="ui"] { opacity: 0 !important; }
+/* body.native-cursor canvas[data-type="ui"] { opacity: 0 !important; } */
 
 canvas { touch-action: none; }
 

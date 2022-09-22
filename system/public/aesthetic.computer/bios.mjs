@@ -335,7 +335,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       // Prevent canvas touchstart events from triggering magnifying glass on
       // iOS Safari.
-      canvas.addEventListener(
+      wrapper.addEventListener(
         "touchstart",
         function (event) {
           event.preventDefault();
@@ -350,6 +350,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
+      console.log("Preglaze gap:", gap);
+
       currentGlaze = Glaze.on(
         canvas.width,
         canvas.height,
@@ -362,7 +364,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           send({ type: "needs-paint" }); // Once all the glaze shaders load, render a single frame.
           // canvas.style.opacity = 0;
         }
-
       );
     } else {
       Glaze.off();
@@ -1139,7 +1140,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           recordingsEl.append(download);
 
           // Add close button.
-          const close = document.createElement('div');
+          const close = document.createElement("div");
           close.innerText = "CLOSE";
           close.id = "recordings-close";
           recordingsEl.append(close);
@@ -1147,7 +1148,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           close.onpointerdown = () => {
             recordingsEl.remove();
             signal("recordings:close");
-          }
+          };
 
           // TODO: There needs to be a progress bar or spinner or button to
           //       upload the video.
@@ -1492,6 +1493,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       uiCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
       //                                previously rendered corner icons.
+
+      uiCtx.clearRect(uiCtx.canvas.width / dpi - 64, 0, 64, 64);
+      // Also clear 64 pixels from the top right to remove any previously rendered corner icons.
 
       pen.render(uiCtx, canvasRect); // ️ 🐭 Draw the cursor.
 

@@ -15,6 +15,7 @@ import glazes from "./glazes/uniforms.js";
 class Glaze {
   w;
   h;
+  rect;
 
   loaded = false;
   shadersLoaded = false;
@@ -24,9 +25,10 @@ class Glaze {
 
   #uniforms;
 
-  constructor(type = "prompt", w, h) {
+  constructor(type = "prompt", w, h, rect) {
     this.w = w;
     this.h = h;
+    this.rect = rect;
     this.type = type;
     this.#uniforms = glazes[type];
     this.uniformNames = keys(this.#uniforms).map((id) => id.split(":")[1]);
@@ -323,20 +325,21 @@ export async function on(
   loaded
 ) {
 
+  //console.log("Starting a glaze...", glaze, arguments);
 
-
-  if (glaze && (glaze.type === type || type === undefined) && (glaze.w === w && glaze.h === h)) {
+  if (glaze && (glaze.type === type || type === undefined) && (glaze.w === w && glaze.h === h) && (rect.width === glaze.rect.width && rect.height === glaze.rect.height)) {
     // Don't reload glaze from scratch if the same one has already been loaded.
+
+    //console.log("Keeping glaze...", rect, glaze.rect);
 
     // TODO: Re-implement this... it causes a flicker rn. 22.09.19.23.43
     // Reframe glaze only if necessary...
     // if (glaze.w !== w || glaze.h !== h) {
     //  frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
     // }
-
     return glaze;
   } else {
-    glaze = new Glaze(type, w, h);
+    glaze = new Glaze(type, w, h, rect);
 
     await glaze.load(() => {
       frame(w, h, rect, nativeWidth, nativeHeight, wrapper);
