@@ -36,13 +36,6 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** Pieces: Prompt ***
- - [🔴] No more tildes for user paths...
-      Instead, use an @ for usernames.
-      eg. sage/piece
- - [] Up arrow for previous comand. 
- - [] Update MOTD. 
-
 *** Pieces: Run&Gun ***
 - [] Make a basic character with multi-platform controls.
 - [] Make a ground for them to run on back and forth.
@@ -480,7 +473,17 @@ Welcome to...
        And: https://googlechromelabs.github.io/text-editor
   - [] Make a VSCode extension that opens an official aesthetic.computer pane?
 
-*Recently Completed*
+
+*Recently ✅ Completed*
+
+*** Pieces: Prompt ***
+ - [x] No more tildes for user paths...
+      Instead, use an '@' for usernames.
+      eg. sage/piece
+  - [x] Prompt
+  - [x] Index
+ - [x] Up arrow for previous command. 
+ - [x] Update MOTD. 
 
 *** Safari Day ***
 - [-] Thin lines appearing from `gap` and no gap in mobile Safari.

@@ -36,7 +36,7 @@ async function fun(event, context) {
   //       - Implementation below.
   /*
   let importPath;
-  if (slug.startsWith('~')) {
+  if (slug.startsWith('@')) {
     importPath = `https://${parsed.host}/${parsed.path}.mjs`;
   } else {
     importPath = `../../public/${parsed.path}.mjs`;
@@ -56,16 +56,16 @@ async function fun(event, context) {
     body: '<a href="https://aesthetic.computer">https://aesthetic.computer</a>',
   };
 
-  // Externally hosted piece.
+  // Externally hosted pieces always start with @.
   try {
-    if (slug.startsWith("~")) {
+    if (slug.startsWith("@")) {
       const externalPiece = await getPage(
         `https://${parsed.host}/${parsed.path}.mjs`
       );
       if (externalPiece?.code === 200) {
         desc =
           externalPiece.data.split(/\r?\n/)[0].replace("//", "").trim() ||
-          `A piece by ${slug.split("/")[0].replace("~", "")}.`;
+          `A piece by ${slug.split("/")[0].replace("@", "")}.`;
       } else {
         return redirect;
       }

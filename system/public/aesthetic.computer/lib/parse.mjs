@@ -33,17 +33,15 @@ function parse(text, location = self?.location) {
 
   // 3. Determine the host and path.
   let customHost = false;
-  // Remove first token if it was originally "~", setting the customHost flag.
-  if (tokens[0] === "") {
+  // Remove "@" from 1st token if it starts with "@", and set customHost flag.
+  if (tokens[0].indexOf("@") === 0) {
     customHost = true;
-    tokens.shift();
+    tokens[0] = tokens[0].substring(1);
   }
 
   //const pieceMakerPath = ["niki", "artur", "sage", "reas"].every((value) => {
   //  return tokens[0] === value;
   //});
-
-  debugger;
 
   if (customHost) {
     [host, ...path] = tokens[0].split("/");
