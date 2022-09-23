@@ -36,6 +36,15 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** Prompt ***
+- [] Use localStorage for command history.
+  - [] Set up general localStorage system / API.
+  - [] Maybe it could be built off of store?
+
+  Storage API Notes:
+    What if `store` was for localStorage, `serve` or `host` was for online storage and `ram` or `memory` was for tab session storage that reset upon refresh, but persisted across pieces?
+
+
 *** Pieces: Run&Gun ***
 - [] Make a basic character with multi-platform controls.
 - [] Make a ground for them to run on back and forth.
