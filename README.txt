@@ -41,17 +41,12 @@ Welcome to...
   - [] Add it to the definition of send, on both sides.
 
 *** Prompt ***
-- [] Use localStorage for command history.
+- [🟡] Use localStorage for command history.
   - [] Set up general localStorage system / API.
   - [] Maybe it could be built off of store?
 
   Storage API Notes:
     What if `store` was for localStorage, `serve` or `host` was for online storage and `ram` or `memory` was for tab session storage that reset upon refresh, but persisted across pieces?
-
-*** Density ***
- - [] Only allow density to be set as an export?
- - Or... prevent density from clearing the screen buffer.
- - [] Remove the frameCount hack.
 
 *** Pieces: Run&Gun ***
 - [] Make a basic character with multi-platform controls.
@@ -60,50 +55,59 @@ Welcome to...
 - [] Add a timer.
 - [] Use screen.save and screen.load functionality for scorekeeping.
 
-*** API: Glaze ***
- - [] Be able to turn glaze on inside of remotely hosted pieces.
- - [] Add ability to update glaze uniforms via
-     `glaze.params({uniform1: value, uni2: [0, 1, 2]});``
-       function paint() {
-         // user draw a dirty box that needs gpu processing as a tile larger than
-         // the original pixel drawing
-         glaze.params({
-           crop: dirtyBox,
-           samples: 12 // this dirtyBox will keep being glazed over for 12 frames
-           uniform1: 1,
-           uniform2: 2,
-         });
-         return dirtyBox;
-       } 
- - [] Add "kiln" function to bake in a glaze at the end.
- 
-*** Load Image ***
+ *** Sage's Brush ***
+  + Now
+   *** Density ***
+     - [] Only allow density to be set as an export?
+     - Or... prevent density from clearing the screen buffer.
+     - [] Remove the frameCount hack.
+
+  + Later
+   *** API: Glaze ***
+     - [] Be able to turn glaze on inside of remotely hosted pieces.
+     - [] Add ability to update glaze uniforms via
+         `glaze.params({uniform1: value, uni2: [0, 1, 2]});``
+           function paint() {
+             // user draw a dirty box that needs gpu processing as a tile larger than
+             // the original pixel drawing
+             glaze.params({
+               crop: dirtyBox,
+               samples: 12 // this dirtyBox will keep being glazed over for 12 frames
+               uniform1: 1,
+               uniform2: 2,
+             });
+             return dirtyBox;
+           } 
+     - [] Add "kiln" function to bake in a glaze at the end.
+
+  *** Pressure ***
+    - [] Get pen and finger working together.
+        (When finger is drawing and pen is touched... is it recognized as pen?)
+    - [] Pen: Get a good mapping for Apple Pencil / normalize the data. 
+    - [] Touch: Two finger pressure. (Second finger regulates it via Y axis.)
+    - [] Mouse: Use scroll wheel for delta. 
+>>>>>>> 7fb2b0c04eaef83ef06fbb1f175b8d4c608429b8
+
+*** Image Support ***
+  *** Load ***
   - [] From a URL into a buffer.
   - [] and then be able to paste it.
-   
-*** Save PNG ***
-  - [] Stamp of URL 
-   
-*** Pressure ***
-  - [] Get pen and finger working together.
-       (When finger is drawing and pen is touched... is it recognized as pen?)
-  - [] Pen: Get a good mapping for Apple Pencil / normalize the data. 
-  - [] Touch: Two finger pressure. (Second finger regulates it via Y axis.)
-  - [] Mouse: Use scroll wheel for delta. 
+  *** Save ***
+  - [] Add API for system-wide saving of webp or png images (through nopaint).
 
 ***Picture Architecture***
-+ Now
-- [] The painting resolution should auto-expand, but not contract.
-- [] Add saving of webp or png images.
-- [] Set up a glitch account / editing situation for Sage.
-- [] Add `nopaint` template for Sage, Casey and Niki.
-- [x] Write `rect` tool, which necessitates an extra buffer.
-- [x️] Write boilerplate for painting tool.
-- [x] Make a glaze appear instantly after it loads the first time?
+  + Now
+  - [] The painting resolution should auto-expand, but not contract.
+  - [] Add `nopaint` template for Sage, Casey and Niki.
+    - [x] Sage
+  - [x] Set up a glitch account / editing situation for Sage.
+  - [x] Write `rect` tool, which necessitates an extra buffer.
+  - [x️] Write boilerplate for painting tool.
+  - [x] Make a glaze appear instantly after it loads the first time?
 
 ***Android Day***
-- [] Provision Android phone.
-- [] Fix keyboard controls not working (this should also fix Meta Quest 2).
+  - [] Provision Android phone.
+  - [] Fix keyboard controls not working (this should also fix Meta Quest 2).
 
 ***Audio + Video Storage (Microphone)***
  + Now
@@ -129,29 +133,6 @@ Welcome to...
         piece... so the file can be uploaded.
     - [x] Netlify Serverless Hello World
     - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
-
-***Bleep***
- + Now
-  - [] Support more wave types in `lib/speaker`.
-    - [] Sine
-    - [] Triangle
-    - [x] Square
- + Later
-  - [] Add support for playing samples.
-  - [] Add the ability to play sound from other top level functions.
- + Complete
-  - [x] Test multi-touch support on a phone.
-  - [x] Add multi-touch support through bleep, via `pen`.
-    - [x] Add support to `bleep`.
-      - ui.mjs:69, bleep.mjs:162
-      - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
-    - [x] Write a `multipen` implementation example with a simple API.
-  - [x] Why does the board generate twice on first load.
-  - [x] Support roll-over after touch.
-  - [x] Hide cursor on finger action, but show it during mouse action.
-  - [x] Resize window support.
-  - [x] Make a basic bleep box that makes a tone when you tap on it.
-  - [x] Automatically generate bleep grids with a command line parameter for WxH.
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [] Only record frames that are not part of the interface.
@@ -236,6 +217,35 @@ Welcome to...
       what piece was used to make the art / object and what git commit
       of the project was used or something like that...
       
+*** Pieces: Run&Gun ***
+  - [] Make a basic character with multi-platform controls.
+  - [] Make a ground for them to run on back and forth.
+  - [] Make something dangerous that can easily kill them. 
+  - [] Add a timer.
+
+***Bleep***
+ + Now
+  - [] Support more wave types in `lib/speaker`.
+    - [] Sine
+    - [] Triangle
+    - [x] Square
+ + Later
+  - [] Add support for playing samples.
+  - [] Add the ability to play sound from other top level functions.
+ + Complete
+  - [x] Test multi-touch support on a phone.
+  - [x] Add multi-touch support through bleep, via `pen`.
+    - [x] Add support to `bleep`.
+      - ui.mjs:69, bleep.mjs:162
+      - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
+    - [x] Write a `multipen` implementation example with a simple API.
+  - [x] Why does the board generate twice on first load.
+  - [x] Support roll-over after touch.
+  - [x] Hide cursor on finger action, but show it during mouse action.
+  - [x] Resize window support.
+  - [x] Make a basic bleep box that makes a tone when you tap on it.
+  - [x] Automatically generate bleep grids with a command line parameter for WxH.
+
 ***Don't Go Upstairs***
   + Plans
     - An interactive story, told in multi-piece parts: https://twitter.com/digitpain/status/1567690125743919104/photo/1
