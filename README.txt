@@ -36,6 +36,10 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** Cool Debug Feature ***
+- [] Log / visualize all thread communicated messages.
+  - [] Add it to the definition of send, on both sides.
+
 *** Prompt ***
 - [] Use localStorage for command history.
   - [] Set up general localStorage system / API.
@@ -44,17 +48,17 @@ Welcome to...
   Storage API Notes:
     What if `store` was for localStorage, `serve` or `host` was for online storage and `ram` or `memory` was for tab session storage that reset upon refresh, but persisted across pieces?
 
+*** Density ***
+ - [] Only allow density to be set as an export?
+ - Or... prevent density from clearing the screen buffer.
+ - [] Remove the frameCount hack.
 
 *** Pieces: Run&Gun ***
 - [] Make a basic character with multi-platform controls.
 - [] Make a ground for them to run on back and forth.
 - [] Make something dangerous that can easily kill them. 
 - [] Add a timer.
-
-*** Density ***
- - [] Only allow density to be set as an export?
- - Or... prevent density from clearing the screen buffer.
- - [] Remove the frameCount hack.
+- [] Use screen.save and screen.load functionality for scorekeeping.
 
 *** API: Glaze ***
  - [] Be able to turn glaze on inside of remotely hosted pieces.

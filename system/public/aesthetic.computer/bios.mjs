@@ -867,6 +867,35 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
     }
 
+    if (type === "store:persist") {
+      // Local
+      if (content.method === "local") {
+        localStorage.setItem(content.key, content.data);
+        console.log("📦 Persisted locally:", localStorage);
+      }
+
+      // IndexedDB
+      // TODO: Implement basic indexedDB storage and retrieval for the
+      //       painting / array buffer.
+      // web.dev/indexeddb-best-practices
+      // Potentially use this library: github.com/jakearchibald/idb
+      // For images: https://hacks.mozilla.org/2012/02/storing-images-and-files-in-indexeddb/
+
+      // Remote
+      // Use S3 bucket / token-gated web3 authentication here?
+      return;
+    }
+
+    if (type === "store:retrieve") {
+      console.log("📦 Retrieving persisted local data:", content.key);
+      if (content.method === "local") {
+        send({
+          type: "store:retrieved",
+          content: localStorage.getItem(content.key),
+        });
+      }
+    }
+
     if (type === "meta") {
       setMetatags(content);
       return;

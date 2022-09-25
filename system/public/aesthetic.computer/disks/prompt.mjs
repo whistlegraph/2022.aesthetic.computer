@@ -141,7 +141,7 @@ function paint({ box, screen, wipe, ink, paste, store }) {
 let promptHistoryDepth = 0;
 
 // ✒ Act (Runs once per user interaction, after boot.)
-function act({ event: e, needsPaint, load, store }) {
+async function act({ event: e, needsPaint, load, store }) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
   //if (e.is("move")) needsPaint();
@@ -157,26 +157,33 @@ function act({ event: e, needsPaint, load, store }) {
     // Other keys.
     else {
       if (e.key === "Backspace") input = input.slice(0, -1);
+
+      const key = "prompt:history";
+
       if (e.key === "Enter") {
         // Make a history stack if one doesn't exist already.
-        store["prompt:history"] = store["prompt:history"] || [];
-        store["prompt:history"].unshift(input); // Push input to a history stack.
+        store[key] = store[key] || [];
+        store[key].unshift(input); // Push input to a history stack.
 
-        console.log("📚 Stored history:", store["prompt:history"]);
+        console.log("📚 Stored history:", store[key]);
+
+        store.persist(key); // Persist the history stack across tabs.
 
         load(parse(input.replaceAll(" ", "~"))); // Execute the current command.
       } 
+
       if (e.key === "Escape") input = "";
 
-      if (e.key === "ArrowUp" && store["prompt:history"]) {
-        input = store["prompt:history"][promptHistoryDepth];
-        promptHistoryDepth = (promptHistoryDepth + 1) % store["prompt:history"].length;
+      if (e.key === "ArrowUp") {
+        //input = store[key][promptHistoryDepth];
+        input = await store.retrieve(key);
+        promptHistoryDepth = (promptHistoryDepth + 1) % store[key].length;
       } 
 
       if (e.key === "ArrowDown" && store["prompt:history"]) {
-        input = store["prompt:history"][promptHistoryDepth];
+        input = store[key][promptHistoryDepth];
         promptHistoryDepth -= 1; 
-        if (promptHistoryDepth < 0) promptHistoryDepth = store["prompt:history"].length - 1;
+        if (promptHistoryDepth < 0) promptHistoryDepth = store[key].length - 1;
       } 
 
     }
