@@ -335,7 +335,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       // Prevent canvas touchstart events from triggering magnifying glass on
       // iOS Safari.
-      canvas.addEventListener(
+      wrapper.addEventListener(
         "touchstart",
         function (event) {
           event.preventDefault();
@@ -350,6 +350,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
+      console.log("Preglaze gap:", gap);
+
       currentGlaze = Glaze.on(
         canvas.width,
         canvas.height,
@@ -362,7 +364,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           send({ type: "needs-paint" }); // Once all the glaze shaders load, render a single frame.
           // canvas.style.opacity = 0;
         }
-
       );
     } else {
       Glaze.off();
@@ -555,8 +556,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   //const worker = new Worker("./aesthetic.computer/lib/disk.js", {
   //  type: "module",
   //});
-
-  const worker = new Worker(new URL("./lib/disk.mjs", import.meta.url), {
+  const fullPath = "/aesthetic.computer/lib/disk.mjs" + "#" + Date.now(); // bust the cache. This prevents an error related to Safari loading workers from memory.
+  const worker = new Worker(new URL(fullPath, window.location.href), {
     type: "module",
   });
 
@@ -866,6 +867,35 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
     }
 
+    if (type === "store:persist") {
+      // Local
+      if (content.method === "local") {
+        localStorage.setItem(content.key, content.data);
+        console.log("📦 Persisted locally:", localStorage);
+      }
+
+      // IndexedDB
+      // TODO: Implement basic indexedDB storage and retrieval for the
+      //       painting / array buffer.
+      // web.dev/indexeddb-best-practices
+      // Potentially use this library: github.com/jakearchibald/idb
+      // For images: https://hacks.mozilla.org/2012/02/storing-images-and-files-in-indexeddb/
+
+      // Remote
+      // Use S3 bucket / token-gated web3 authentication here?
+      return;
+    }
+
+    if (type === "store:retrieve") {
+      console.log("📦 Retrieving persisted local data:", content.key);
+      if (content.method === "local") {
+        send({
+          type: "store:retrieved",
+          content: localStorage.getItem(content.key),
+        });
+      }
+    }
+
     if (type === "meta") {
       setMetatags(content);
       return;
@@ -1139,7 +1169,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           recordingsEl.append(download);
 
           // Add close button.
-          const close = document.createElement('div');
+          const close = document.createElement("div");
           close.innerText = "CLOSE";
           close.id = "recordings-close";
           recordingsEl.append(close);
@@ -1147,7 +1177,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           close.onpointerdown = () => {
             recordingsEl.remove();
             signal("recordings:close");
-          }
+          };
 
           // TODO: There needs to be a progress bar or spinner or button to
           //       upload the video.
@@ -1492,6 +1522,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       uiCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
       //                                previously rendered corner icons.
+
+      uiCtx.clearRect(uiCtx.canvas.width / dpi - 64, 0, 64, 64);
+      // Also clear 64 pixels from the top right to remove any previously rendered corner icons.
 
       pen.render(uiCtx, canvasRect); // ️ 🐭 Draw the cursor.
 

@@ -83,9 +83,38 @@ let simCount = 0n;
 let initialSim = true;
 let noPaint = false;
 
+let storeRetrievalResolution;
+
 let socket;
 let pen = {};
-const store = {}; // This object is used to store and retrieve data across disks
+
+// This object is used to store and retrieve data across disks
+const store = {
+  persist: function (key, method = "local") {
+    // Send data over the thread through a key in this object.
+    send({
+      type: "store:persist",
+      content: {
+        key,
+        data: this[key],
+        method,
+      },
+    });
+    // TODO: Turn the existing key into a retrieval function / promise?
+  },
+  retrieve: function (key, method = "local") {
+    send({
+      type: "store:retrieve",
+      content: {
+        key,
+        method,
+      },
+    });
+    return new Promise((resolve) => {
+      storeRetrievalResolution = resolve;
+    });
+  },
+};
 //                   during individual sessions. It doesn't get cleared
 //                   automatically unless the whole system refreshes.
 let upload;
@@ -145,6 +174,7 @@ const $commonApi = {
   net: {},
   needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
   store,
+
   pieceCount: -1, // Incs to 0 when the first piece (usually the prompt) loads.
   //                 Increments by 1 each time a new piece loads.
   debug,
@@ -576,7 +606,7 @@ async function load(
         painting:
           store["painting"] ||
           painting.api.painting(screen.width, screen.height, ({ wipe }) => {
-            wipe(64);
+            wipe(64, 0, 0);
           }),
       };
     } else {
@@ -671,6 +701,7 @@ if (isWorker) {
   };
 }
 
+// The main messaging function to comumunicate back with the main thread.
 function send(data) {
   if (isWorker) {
     postMessage(data);
@@ -718,15 +749,14 @@ class Content {
 // before `paint`ing occurs. One `sim` always happens after `boot` and before
 // any `act`. `paint` can return false to stop drawing every display frame,
 // then, it must be manually restarted via `needsPaint();`).  2022.01.19.01.08
-// TODO: Make simple needsPaint example.
-// TODO: Try to remove as many API calls from here as possible.
+// 🔥
 // TODO: makeFrame is no longer a great name for this function, which actually
 //       receives every message from the main thread, one of which renders a
 //       frame.
-
+// TODO: Make simple needsPaint example.
+// TODO: Try to remove as many API calls from here as possible.
 const signals = [];
 let reframed = false;
-
 function makeFrame({ data: { type, content } }) {
   // console.log("Frame:", type);
 
@@ -742,6 +772,11 @@ function makeFrame({ data: { type, content } }) {
 
   if (type === "signal") {
     signals.push(content);
+    return;
+  }
+
+  if (type === "store:retrieved") {
+    storeRetrievalResolution?.(content);
     return;
   }
 

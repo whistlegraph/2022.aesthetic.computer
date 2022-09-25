@@ -1,6 +1,9 @@
 // Rect, 22.09.19.21.07
 // Inherits from the "nopaint" system, which predefines boot, act, and leave.
 
+let needsBake = false;
+let rect;
+
 // 🎨
 export function paint({
   params,
@@ -14,11 +17,12 @@ export function paint({
 }) {
   const color = (params.map((str) => parseInt(str)));
 
-  if (needsBake) {
+  if (rect && needsBake) {
     page(system.painting);
     ink(color).box(rect);
     page(screen);
     needsBake = false;
+    rect = null;
   }
 
   if (pen.dragBox) {
@@ -31,13 +35,9 @@ export function paint({
 
 }
 
-let needsBake = false;
-let rect;
-
 export function act({ event: e }) {
   if (e.is("lift")) {
     needsBake = true;
-    console.log('bake!');
   }
 }
 

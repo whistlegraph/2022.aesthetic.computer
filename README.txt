@@ -21,7 +21,13 @@ Welcome to...
     - Pieces that stick to software-rendering are guaranteed accurate results on
       future runtimes.
 
-*** Piecemakers: niki, artur, reas ***
+*** Piecemaker Sources ***
+  - Niki:  https://glitch.com/edit/#!/niki-aesthetic-computer
+  - Artur: https://glitch.com/edit/#!/artur-aesthetic-computer 
+    - [] Move this account off Glitch.
+    - [] Make simple lessons.
+  - Reas: https://glitch.com/edit/#!/reas-aesthetic-computer
+  - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
@@ -30,25 +36,77 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-***Picture Architecture***
-+ Now
-- [] The painting resolution should auto-expand, but not contract.
-- [] Add saving of webp or png images.
-- [] Set up a glitch account / editing situation for Sage.
-- [] Add `nopaint` template for Sage, Casey and Niki.
-- [x] Write `rect` tool, which necessitates an extra buffer.
-- [x️] Write boilerplate for painting tool.
-- [x] Make a glaze appear instantly after it loads the first time?
+*** Cool Debug Feature ***
+- [] Log / visualize all thread communicated messages.
+  - [] Add it to the definition of send, on both sides.
 
-*** Safari Day ***
-- [] Thin lines appearing from `gap` and no gap in mobile Safari.
-- [] Loading spinner not appearing in mobile Safari. 
-- [] Grey selection bubble appears in mobile Safari.
-- [] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
+*** Prompt ***
+- [🟡] Use localStorage for command history.
+  - [] Set up general localStorage system / API.
+  - [] Maybe it could be built off of store?
+
+  Storage API Notes:
+    What if `store` was for localStorage, `serve` or `host` was for online storage and `ram` or `memory` was for tab session storage that reset upon refresh, but persisted across pieces?
+
+*** Pieces: Run&Gun ***
+- [] Make a basic character with multi-platform controls.
+- [] Make a ground for them to run on back and forth.
+- [] Make something dangerous that can easily kill them. 
+- [] Add a timer.
+- [] Use screen.save and screen.load functionality for scorekeeping.
+
+ *** Sage's Brush ***
+  + Now
+   *** Density ***
+     - [] Only allow density to be set as an export?
+     - Or... prevent density from clearing the screen buffer.
+     - [] Remove the frameCount hack.
+
+  + Later
+   *** API: Glaze ***
+     - [] Be able to turn glaze on inside of remotely hosted pieces.
+     - [] Add ability to update glaze uniforms via
+         `glaze.params({uniform1: value, uni2: [0, 1, 2]});``
+           function paint() {
+             // user draw a dirty box that needs gpu processing as a tile larger than
+             // the original pixel drawing
+             glaze.params({
+               crop: dirtyBox,
+               samples: 12 // this dirtyBox will keep being glazed over for 12 frames
+               uniform1: 1,
+               uniform2: 2,
+             });
+             return dirtyBox;
+           } 
+     - [] Add "kiln" function to bake in a glaze at the end.
+
+  *** Pressure ***
+    - [] Get pen and finger working together.
+        (When finger is drawing and pen is touched... is it recognized as pen?)
+    - [] Pen: Get a good mapping for Apple Pencil / normalize the data. 
+    - [] Touch: Two finger pressure. (Second finger regulates it via Y axis.)
+    - [] Mouse: Use scroll wheel for delta. 
+
+*** Image Support ***
+  *** Load ***
+  - [] From a URL into a buffer.
+  - [] and then be able to paste it.
+  *** Save ***
+  - [] Add API for system-wide saving of webp or png images (through nopaint).
+
+***Picture Architecture***
+  + Now
+  - [] The painting resolution should auto-expand, but not contract.
+  - [] Add `nopaint` template for Sage, Casey and Niki.
+    - [x] Sage
+  - [x] Set up a glitch account / editing situation for Sage.
+  - [x] Write `rect` tool, which necessitates an extra buffer.
+  - [x️] Write boilerplate for painting tool.
+  - [x] Make a glaze appear instantly after it loads the first time?
 
 ***Android Day***
-- [] Provision Android phone.
-- [] Fix keyboard controls not working (this should also fix Meta Quest 2).
+  - [] Provision Android phone.
+  - [] Fix keyboard controls not working (this should also fix Meta Quest 2).
 
 ***Audio + Video Storage (Microphone)***
  + Now
@@ -74,29 +132,6 @@ Welcome to...
         piece... so the file can be uploaded.
     - [x] Netlify Serverless Hello World
     - https://www.netlify.com/blog/2021/07/29/how-to-process-multipart-form-data-with-a-netlify-function/
-
-***Bleep***
- + Now
-  - [] Support more wave types in `lib/speaker`.
-    - [] Sine
-    - [] Triangle
-    - [x] Square
- + Later
-  - [] Add support for playing samples.
-  - [] Add the ability to play sound from other top level functions.
- + Complete
-  - [x] Test multi-touch support on a phone.
-  - [x] Add multi-touch support through bleep, via `pen`.
-    - [x] Add support to `bleep`.
-      - ui.mjs:69, bleep.mjs:162
-      - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
-    - [x] Write a `multipen` implementation example with a simple API.
-  - [x] Why does the board generate twice on first load.
-  - [x] Support roll-over after touch.
-  - [x] Hide cursor on finger action, but show it during mouse action.
-  - [x] Resize window support.
-  - [x] Make a basic bleep box that makes a tone when you tap on it.
-  - [x] Automatically generate bleep grids with a command line parameter for WxH.
 
 ***2D Whistlegraph Recorder*** (August 1st - Launch)
  - [] Only record frames that are not part of the interface.
@@ -181,6 +216,35 @@ Welcome to...
       what piece was used to make the art / object and what git commit
       of the project was used or something like that...
       
+*** Pieces: Run&Gun ***
+  - [] Make a basic character with multi-platform controls.
+  - [] Make a ground for them to run on back and forth.
+  - [] Make something dangerous that can easily kill them. 
+  - [] Add a timer.
+
+***Bleep***
+ + Now
+  - [] Support more wave types in `lib/speaker`.
+    - [] Sine
+    - [] Triangle
+    - [x] Square
+ + Later
+  - [] Add support for playing samples.
+  - [] Add the ability to play sound from other top level functions.
+ + Complete
+  - [x] Test multi-touch support on a phone.
+  - [x] Add multi-touch support through bleep, via `pen`.
+    - [x] Add support to `bleep`.
+      - ui.mjs:69, bleep.mjs:162
+      - Sidenote: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
+    - [x] Write a `multipen` implementation example with a simple API.
+  - [x] Why does the board generate twice on first load.
+  - [x] Support roll-over after touch.
+  - [x] Hide cursor on finger action, but show it during mouse action.
+  - [x] Resize window support.
+  - [x] Make a basic bleep box that makes a tone when you tap on it.
+  - [x] Automatically generate bleep grids with a command line parameter for WxH.
+
 ***Don't Go Upstairs***
   + Plans
     - An interactive story, told in multi-piece parts: https://twitter.com/digitpain/status/1567690125743919104/photo/1
@@ -431,11 +495,29 @@ Welcome to...
        And: https://googlechromelabs.github.io/text-editor
   - [] Make a VSCode extension that opens an official aesthetic.computer pane?
 
-*Recently Completed*
+
+*Recently ✅ Completed*
+
+*** Pieces: Prompt ***
+ - [x] No more tildes for user paths...
+      Instead, use an '@' for usernames.
+      eg. sage/piece
+  - [x] Prompt
+  - [x] Index
+ - [x] Up arrow for previous command. 
+ - [x] Update MOTD. 
+
+*** Safari Day ***
+- [-] Thin lines appearing from `gap` and no gap in mobile Safari.
+- [x] Grey selection bubble appears in mobile Safari.
+- [x] Loading spinner not appearing in mobile Safari. 
+- [x] Fix iOS Safari page refresh bug. (Test on MacBook Pro)
+  (Needed `Vary: *` http header, to prevent Safari's cache from bugging out
+  on the SharedArrayBuffer / isolatedOrigin CORS headers.)
 
 ***Tracker, Pull***
- - [x] Fix interface boxes.
- - [x] Make `boxes` test piece.
+- [x] Fix interface boxes.
+- [x] Make `boxes` test piece.
 
  ***Meta***
  - [x] Add support for custom / locally generated thumbnail overrides.
@@ -646,6 +728,10 @@ Make sure `git` and `git-lfs` is installed, (you can do that through `homebrew`)
   0. Check `ssl-dev/readme.txt` to generate SSL certificates before running locally for all features to work.
   1. `cd` into `server` and run `npm install` and `npm run dev` to start the socket server. (optional)
   2. `cd` into `system` and run `npm install` and `npm run dev` to start the web server. (required)
+
+🧩 Making a new included piece.
+- Run `npm run new-piece -- name-of-your-piece` 
+- Then open the file in `system/public/aesthetic.computer/disks` and start working!
 
 📖 This project originally began as two separate repositories with their own
 commit history: `digitpain/system` and `digitpain/disks`.

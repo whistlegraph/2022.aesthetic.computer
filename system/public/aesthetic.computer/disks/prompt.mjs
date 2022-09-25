@@ -26,8 +26,8 @@ const motd = `hi i'm not quite there yet                      `+
              `bleep, bubble, line, rect,                      `+
              `melody, tracker, metronome,                     `+
              `microphone, wg idni,                            `+
-             `~niki/spinline, ~artur/i,                       `+
-             `~reas/bland                                     `+
+             `@niki/spinline, @artur/i,                       `+
+             `@reas/bland                                     `+
              `                                                `+
              `mail@aesthetic.computer                         `;
 
@@ -138,8 +138,10 @@ function paint({ box, screen, wipe, ink, paste, store }) {
   return !(Object.keys(glyphs).length === Object.keys(font1).length);
 }
 
+let promptHistoryDepth = 0;
+
 // ✒ Act (Runs once per user interaction, after boot.)
-function act({ event: e, needsPaint, load }) {
+async function act({ event: e, needsPaint, load, store }) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
   //if (e.is("move")) needsPaint();
@@ -155,8 +157,35 @@ function act({ event: e, needsPaint, load }) {
     // Other keys.
     else {
       if (e.key === "Backspace") input = input.slice(0, -1);
-      if (e.key === "Enter") load(parse(input.replaceAll(" ", "~")));
+
+      const key = "prompt:history";
+
+      if (e.key === "Enter") {
+        // Make a history stack if one doesn't exist already.
+        store[key] = store[key] || [];
+        store[key].unshift(input); // Push input to a history stack.
+
+        console.log("📚 Stored history:", store[key]);
+
+        store.persist(key); // Persist the history stack across tabs.
+
+        load(parse(input.replaceAll(" ", "~"))); // Execute the current command.
+      } 
+
       if (e.key === "Escape") input = "";
+
+      if (e.key === "ArrowUp") {
+        //input = store[key][promptHistoryDepth];
+        input = await store.retrieve(key);
+        promptHistoryDepth = (promptHistoryDepth + 1) % store[key].length;
+      } 
+
+      if (e.key === "ArrowDown" && store["prompt:history"]) {
+        input = store[key][promptHistoryDepth];
+        promptHistoryDepth -= 1; 
+        if (promptHistoryDepth < 0) promptHistoryDepth = store[key].length - 1;
+      } 
+
     }
 
     blink.flip(true);

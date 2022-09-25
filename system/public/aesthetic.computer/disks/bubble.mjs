@@ -20,12 +20,10 @@ async function boot({ resize, screen, cursor, glaze, density }) {
   // resize(50, 20);
   // density(4); // TODO: screen.width no longer changes after density is set
 
-  console.log(screen.width);
-
   originalRadius = screen.width / 3;
   radius = originalRadius;
 
-  glaze({ on: true });
+  glaze({ on: true, type: "prompt" });
 }
 
 const bubbles = [];
