@@ -175,15 +175,16 @@ async function act({ event: e, needsPaint, load, store }) {
       if (e.key === "Escape") input = "";
 
       if (e.key === "ArrowUp") {
-        //input = store[key][promptHistoryDepth];
-        input = await store.retrieve(key);
-        promptHistoryDepth = (promptHistoryDepth + 1) % store[key].length;
+        const promptHistory = (await store.retrieve(key)) || [""];
+        input = promptHistory[promptHistoryDepth];
+        promptHistoryDepth = (promptHistoryDepth + 1) % promptHistory.length;
       } 
 
-      if (e.key === "ArrowDown" && store["prompt:history"]) {
-        input = store[key][promptHistoryDepth];
+      if (e.key === "ArrowDown") {
+        const promptHistory = (await store.retrieve(key)) || [""];
+        input = promptHistory[promptHistoryDepth];
         promptHistoryDepth -= 1; 
-        if (promptHistoryDepth < 0) promptHistoryDepth = store[key].length - 1;
+        if (promptHistoryDepth < 0) promptHistoryDepth = promptHistory.length - 1;
       } 
 
     }

@@ -36,29 +36,10 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** Cool Debug Feature ***
-- [] Log / visualize all thread communicated messages.
-  - [] Add it to the definition of send, on both sides.
-
-*** Prompt ***
-- [🟡] Use localStorage for command history.
-  - [] Set up general localStorage system / API.
-  - [] Maybe it could be built off of store?
-
-  Storage API Notes:
-    What if `store` was for localStorage, `serve` or `host` was for online storage and `ram` or `memory` was for tab session storage that reset upon refresh, but persisted across pieces?
-
-*** Pieces: Run&Gun ***
-- [] Make a basic character with multi-platform controls.
-- [] Make a ground for them to run on back and forth.
-- [] Make something dangerous that can easily kill them. 
-- [] Add a timer.
-- [] Use screen.save and screen.load functionality for scorekeeping.
-
  *** Sage's Brush ***
   + Now
    *** Density ***
-     - [] Only allow density to be set as an export?
+     - [🟡] Only allow density to be set as an export?
      - Or... prevent density from clearing the screen buffer.
      - [] Remove the frameCount hack.
 
@@ -217,10 +198,24 @@ Welcome to...
       of the project was used or something like that...
       
 *** Pieces: Run&Gun ***
-  - [] Make a basic character with multi-platform controls.
-  - [] Make a ground for them to run on back and forth.
-  - [] Make something dangerous that can easily kill them. 
-  - [] Add a timer.
+- [] Make a basic character with multi-platform controls.
+- [] Make a ground for them to run on back and forth.
+- [] Make something dangerous that can easily kill them. 
+- [] Add a timer.
+- [] Use screen.save and screen.load functionality for scorekeeping.
+
+*** Cool Debug Feature ***
+- [] Log / visualize all thread communicated messages.
+  - [] Add it to the definition of send, on both sides.
+
+*** Storage ***
+  - [] Add indexedDB storage method.
+  - [] Add "remote:temporary" storage method. (Default for remote)
+    - [] Add "remote:token" storage method. (Default for token-gated storage)
+
+*** MIDI / Analyzer Demo ***
+  - [] Real-time pitch detection of current microphone.
+  - [] Convert to midi notes and send out from the tab.
 
 ***Bleep***
  + Now
@@ -497,6 +492,11 @@ Welcome to...
 
 
 *Recently ✅ Completed*
+
+*** Prompt ***
+- [x] Use localStorage for command history.
+  - [x] Set up general localStorage system / API.
+  - [x] Maybe it could be built off of store?
 
 *** Pieces: Prompt ***
  - [x] No more tildes for user paths...

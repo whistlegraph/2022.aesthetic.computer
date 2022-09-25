@@ -88,7 +88,9 @@ let storeRetrievalResolution;
 let socket;
 let pen = {};
 
+// *** Store ***
 // This object is used to store and retrieve data across disks
+// The `local` method encodes everything as a JSON string.
 const store = {
   persist: function (key, method = "local") {
     // Send data over the thread through a key in this object.

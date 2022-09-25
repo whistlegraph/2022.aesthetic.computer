@@ -867,11 +867,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
     }
 
+    // *** 🏪 Storage / Store ***
+
     if (type === "store:persist") {
       // Local
       if (content.method === "local") {
-        localStorage.setItem(content.key, content.data);
-        console.log("📦 Persisted locally:", localStorage);
+        localStorage.setItem(content.key, JSON.stringify(content.data));
+        if (debug) console.log("📦 Persisted locally:", content, localStorage);
       }
 
       // IndexedDB
@@ -887,11 +889,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "store:retrieve") {
-      console.log("📦 Retrieving persisted local data:", content.key);
       if (content.method === "local") {
+        if (debug)
+          console.log("📦 Retrieving persisted local data:", content.key);
         send({
           type: "store:retrieved",
-          content: localStorage.getItem(content.key),
+          content: JSON.parse(localStorage.getItem(content.key)),
         });
       }
     }
