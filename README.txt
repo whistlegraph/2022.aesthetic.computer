@@ -86,7 +86,6 @@ Welcome to...
     - [] Pen: Get a good mapping for Apple Pencil / normalize the data. 
     - [] Touch: Two finger pressure. (Second finger regulates it via Y axis.)
     - [] Mouse: Use scroll wheel for delta. 
->>>>>>> 7fb2b0c04eaef83ef06fbb1f175b8d4c608429b8
 
 *** Image Support ***
   *** Load ***
