@@ -1285,6 +1285,17 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       return;
     }
 
+    // TODO: How can these updates be made more
+    //       instant? 22.09.25.15.43
+    // So that after calling them in the API, drawing can still happen...
+
+    // TODO: They need to be synchronous / just use basic numbers
+    //       that the disks already have.
+    //       The pixel buffers can be updated instantly in the thread...
+
+    //       And glaze and other functions can stay asynchronous, so no
+    //       pixels are lost.
+
     if (type === "gap-change") {
       if (gap !== content) {
         if (debug) console.log("🕳️ Gap:", content);
