@@ -17,9 +17,9 @@ Welcome to...
       (similar to a disk based operating system)
     - Pieces can transition from one to another (instantly) without refreshing
       the page or losing context. 
-    - Pieces can load remotely of any `https://` url and link to other pieces via the API.
+    - Pieces can load remotely off any `https://` url and link to other pieces.
     - Pieces that stick to software-rendering are guaranteed accurate results on
-      future runtimes, given that Math in JavaScript doesn't change.
+      future runtimes.
 
 *** Piecemakers: niki, artur, reas ***
 
