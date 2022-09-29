@@ -9,6 +9,7 @@ import * as help from "./help.mjs";
 import { parse } from "./parse.mjs";
 import { Socket } from "./socket.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
+const { round } = Math;
 
 export const noWorker = { onMessage: undefined, postMessage: undefined };
 
@@ -26,14 +27,13 @@ let debug = false; // This can be overwritten on boot.
 const defaults = {
   boot: ($) => {
     $.cursor("native");
-    $.gap(0);
   }, // aka Setup
   sim: () => false, // A framerate independent of rendering.
   paint: ($) => {
     // TODO: Make this a boot choice via the index.html file?
     //$.noise16DIGITPAIN();
     //$.noiseTinted([20, 20, 20], 0.8, 0.7);
-    $.wipe(0, 0, 0);
+    //$.wipe(0, 0, 0);
   },
   beat: () => false, // Runs every bpm.
   act: () => false, // All user interaction.
@@ -76,6 +76,7 @@ let currentPath,
 let loading = false;
 let reframe;
 let screen;
+let currentDisplay; // TODO: Remove this? 22.09.29.11.38
 let cursorCode;
 let pieceHistoryIndex = -1; // Gets incremented to 0 when first piece loads.
 let paintCount = 0n;
@@ -124,8 +125,6 @@ let activeVideo; // TODO: Eventually this can be a bank to store video textures.
 let bitmapPromises = {};
 let inFocus;
 let loadFailure;
-
-// let reframeDensityResolve; // TODO: Density could be defined in the disk, to avoid this.
 
 // 1. ✔ API
 
@@ -506,9 +505,37 @@ async function load(
   };
 
   // Add resize to the common api.
-  $commonApi.resize = function (width, height = width) {
+  // TODO: Change resize
+  $commonApi.resize = function (width, height = width, gap = 8) {
     // Don't do anything if there is no change.
     if (screen.width === width && screen.height === height) return;
+
+    // width = width || currentDisplay.innerWidth;
+    // height = height || currentDisplay.innerHeight;
+
+    // TODO: Paint anything that needs to be painted before resizing...
+    // TODO: Does this even work right now?
+    //debugger;
+    painting.paint();
+
+    if (width === undefined && height === undefined) {
+      // 1. Generate a new width and height.
+      width = round(currentDisplay.innerWidth / currentDisplay.subdivisions);
+      height = round(currentDisplay.innerHeight / currentDisplay.subdivisions);
+      // Build a reframe request that will be sent to the main thread, mirroring this.
+      reframe = {
+        width: undefined,
+        height: undefined,
+        gap,
+      };
+    } else {
+      // 2. Manually set the width and height.
+      reframe = { width, height, gap };
+    }
+
+    // Reset the depth buffer. (This is only used for the 3D software renderer in `graph`)
+    // graph.depthBuffer.length = screen.width * screen.height;
+    // graph.depthBuffer.fill(Number.MAX_VALUE);
 
     console.log(
       "🖼 Reframe to:",
@@ -519,18 +546,42 @@ async function load(
       screen.height
     );
 
+    // 3. Assign the generated or manual width and height.
+
+    const widthDelta = width - screen.width;
+    const heightDelta = height - screen.height;
+
+    const oldScreen = {
+      width: screen.width,
+      height: screen.height,
+      pixels: screen.pixels,
+    }
+
     screen.width = width;
     screen.height = height;
+
+    // TODO:
+    // Crop existing image by copying, then adding blank space if
+    // necessary.
+    //graph.paste();
+
+    const oldPixels = screen.pixels;
+
     screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
-
-    // TODO: Trigger "resize" event.
-
-    // Reset the depth buffer.
-    // graph.depthBuffer.length = screen.width * screen.height;
-    // graph.depthBuffer.fill(Number.MAX_VALUE);
+    
+    screen.pixels.fill(255);
 
     graph.setBuffer(screen);
-    reframe = { width, height };
+    graph.paste({ painting: oldScreen, crop: new geo.Box(0, 0, oldScreen.width, oldScreen.height) });
+  };
+
+  $commonApi.gap = function (newGap) {
+    console.log("🟡 Gap has been deprecated. Use `resize` instead.");
+  };
+
+  // TODO: Eventually remove this deprecation notice. 22.09.29.11.07
+  $commonApi.density = function (newDensity) {
+    console.log("Density has been deprecated. Use `resize` instead.");
   };
 
   // Add host to the networking api.
@@ -933,6 +984,13 @@ function makeFrame({ data: { type, content } }) {
   }
 
   if (type === "reframed") {
+    // Always update the currentDisplay settings for synchronous
+    // screen buffer updates.
+    currentDisplay = {
+      innerWidth: content.innerWidth,
+      innerHeight: content.innerHeight,
+      subdivisions: content.subdivisions,
+    };
     // Only trigger a reframe event if we have already passed `boot` (painted
     // at least once)
     if (paintCount > 0n) reframed = true;
@@ -1216,18 +1274,6 @@ function makeFrame({ data: { type, content } }) {
 
       $api.fps = function (newFps) {
         send({ type: "fps-change", content: newFps });
-      };
-
-      $api.gap = function (newGap) {
-        send({ type: "gap-change", content: newGap });
-      };
-
-      $api.density = async function (newDensity) {
-        send({ type: "density-change", content: newDensity });
-
-        //return new Promise((resolve) => {
-        //  reframeDensityResolve = resolve;
-        //});
       };
 
       $api.cursor = (code) => (cursorCode = code);

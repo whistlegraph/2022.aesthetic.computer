@@ -255,6 +255,7 @@ function copyRow(destX, destY, srcX, srcY, src) {
 // the source buffer.
 // TODO: Add dirty rectangle support here...
 //       - What would the best parameter set be?
+// `from` - can either be 
 function paste(from, destX = 0, destY = 0) {
   // TODO: See if from has a dirtyBox attribute.
   if (from.crop) {
