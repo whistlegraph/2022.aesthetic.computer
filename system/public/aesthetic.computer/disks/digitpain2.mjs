@@ -8,7 +8,7 @@ const frames = { count: 7, loaded: false, images: [] };
 
 // 🥾 Boot
 async function boot({
-  net: { waitForPreload, preload, preloadReady },
+  net: { waitForPreload, preload, preloaded },
   cursor,
   resize,
   gap,
@@ -22,11 +22,11 @@ async function boot({
   waitForPreload();
   ["bg1", "bg2", "bg3", "figure", "info", "shine", "signature"].forEach(
     (n, i) => {
-      preload(`/aesthetic.computer/disks/digitpain/2/${n}.webp`).then((img) => {
+      preload(`aesthetic.computer/disks/digitpain/2/${n}.webp`).then((img) => {
         frames.images[i] = img;
         // Set the `loaded` flag if everything is finished.
         frames.loaded = frames.images.reduce((n) => n + 1, 0) === frames.count;
-        if (frames.loaded) preloadReady();
+        if (frames.loaded) preloaded();
       });
     }
   );

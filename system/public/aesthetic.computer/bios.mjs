@@ -924,8 +924,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "preload-ready") {
-      window.preloadReady = true;
-      if (debug) console.log("⏳ Preloaded:", window.preloadReady);
+      window.preloaded = true;
+      if (debug) console.log("⏳ Preloaded: ✅️", window.preloaded);
       return;
     }
 
@@ -1355,8 +1355,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "disk-loaded-and-booted") {
-      if (!window.waitForPreload) window.preloadReady = true;
-      if (debug) console.log("⏳ Preloaded:", window.preloadReady);
+      if (!window.waitForPreload) window.preloaded = true;
+      if (debug) console.log("⏳ Preloaded: ❌", window.preloaded);
       return;
     }
 
@@ -1371,7 +1371,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       // Reset preloading.
       window.waitForPreload = false;
-      window.preloadReady = false;
+      window.preloaded = false;
 
       // Clear any DOM content that was added by a piece.
       contentFrame?.remove(); // Remove the contentFrame if it exists.

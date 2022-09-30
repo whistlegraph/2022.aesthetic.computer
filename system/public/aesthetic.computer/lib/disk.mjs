@@ -265,6 +265,8 @@ function ink() {
 }
 
 const $paintApi = {
+  // Image Loading
+  
   // 3D Classes & Objects
   Camera: graph.Camera,
   Form: graph.Form,
@@ -607,12 +609,12 @@ async function load(
     send({ type: "web", content: url }); // Jump the browser to a new url.
   };
 
-  $commonApi.net.preloadReady = () => {
-    send({ type: "preload-ready", content: true }); // Tell the browser that all preloading is done.
+  $commonApi.net.waitForPreload = () => {
+    send({ type: "wait-for-preload", content: true }); // Tell the browser to wait until preloading is finished before painting.
   };
 
-  $commonApi.net.waitForPreload = () => {
-    send({ type: "wait-for-preload", content: true }); // Tell the browser that all preloading is done.
+  $commonApi.net.preloaded = () => {
+    send({ type: "preload-ready", content: true }); // Tell the browser that all preloading is done.
   };
 
   // Automatically connect a socket server if we are in debug mode.
@@ -1332,9 +1334,9 @@ function makeFrame({ data: { type, content } }) {
 
         const extension = path.split(".").pop();
 
-        if (extension === "json") {
-          path = encodeURIComponent(path);
-        }
+        //if (extension === "json") {
+        path = encodeURIComponent(path);
+        //}
 
         try {
           const url = new URL(path);

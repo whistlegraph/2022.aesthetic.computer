@@ -73,7 +73,7 @@ Welcome to...
 
 *** Image Support ***
   *** Load ***
-  - [] From a URL into a buffer.
+  - [🟡] From a URL into a buffer.
   - [] and then be able to paste it.
   *** Save ***
   - [] Add API for system-wide saving of webp or png images (through nopaint).

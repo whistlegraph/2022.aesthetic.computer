@@ -57,11 +57,11 @@ async function fun(event, context) {
   }
 
   try {
-    await page.waitForFunction("window.preloadReady === true", {
+    await page.waitForFunction("window.preloaded === true", {
       timeout: 6000,
     });
   } catch {
-    console.log("🔴 Failed window.preloadReady timer.");
+    console.log("🔴 Failed window.preloaded timer.");
   }
 
   await page.waitForTimeout(500); // A bit of extra time.

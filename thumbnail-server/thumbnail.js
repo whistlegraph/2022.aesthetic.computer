@@ -63,9 +63,9 @@ fastify.get('/thumbnail/:resolution/:command.jpg', async (request, reply) => {
 
   // Add a potential extra 2 seconds until preloading is ready.
   try {
-    await page.waitForFunction(() => preloadReady === true, {timeout: 3000});
+    await page.waitForFunction(() => preloaded === true, {timeout: 3000});
   } catch {
-    console.log("Failed preloadReady check...");
+    console.log("Failed preloaded check...");
   }
 
   console.log("Waiting for 1s...");

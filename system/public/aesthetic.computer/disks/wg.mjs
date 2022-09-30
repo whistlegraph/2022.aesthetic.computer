@@ -785,10 +785,10 @@ function paint({ noiseTinted }) {
   return false;
 }
 
-function act({ event: e, net: { preloadReady } }) {
+function act({ event: e, net: { preloaded } }) {
   if (e.is("signal") && e.signal.includes("whistlegraph:started")) fuzzy = true;
   if (e.is("signal") && e.signal.includes("whistlegraph:preloaded"))
-    preloadReady();
+    preloaded();
 }
 
 export { boot, sim, paint, act };

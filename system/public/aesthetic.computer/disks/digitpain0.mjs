@@ -22,7 +22,7 @@ let flip = true;
 // 🥾 Boot (Runs once before first paint and sim)
 async function boot({
   wipe,
-  net: { waitForPreload, preload, preloadReady },
+  net: { waitForPreload, preload, preloaded },
   cursor,
   fps,
   resize,
@@ -35,16 +35,16 @@ async function boot({
 
   waitForPreload();
 
-  preload("/aesthetic.computer/disks/digitpain/0/0.webp").then((img) => {
+  preload("aesthetic.computer/disks/digitpain/0/0.webp").then((img) => {
     img1 = img;
     img1OriginalPixels = img.pixels.slice();
-    if (img1 && img2) preloadReady();
+    if (img1 && img2) preloaded();
   });
 
-  preload("/aesthetic.computer/disks/digitpain/0/1.webp").then((img) => {
+  preload("aesthetic.computer/disks/digitpain/0/1.webp").then((img) => {
     img2 = img;
     img2OriginalPixels = img.pixels.slice();
-    if (img1 && img2) preloadReady();
+    if (img1 && img2) preloaded();
   });
 
   // glaze({ on: true, type: "digitpain0" });
