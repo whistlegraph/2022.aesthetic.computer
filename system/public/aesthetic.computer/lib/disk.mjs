@@ -504,9 +504,24 @@ async function load(
     }
   };
 
-  // Add resize to the common api.
-  // TODO: Change resize
+  // *** Resize ***
+  // Accepts width, height and gap either as numbers or as
+  // an object with those keys.
+  // 
+  // Usage: resize(64);
+  //        resize(320, 240);
+  //        resize(display); // "display" is a global object whose width
+  //                             and height matches the hardware display
+  //                             hosting aesthetic.computer.
   $commonApi.resize = function (width, height = width, gap = 8) {
+
+    if (typeof width === 'object') {
+      const props = width;
+      height = props.height;
+      width = props.width || props.height;
+      gap = props.gap || 8;
+    }
+
     // Don't do anything if there is no change.
     if (screen.width === width && screen.height === height) return;
 
@@ -520,8 +535,8 @@ async function load(
 
     if (width === undefined && height === undefined) {
       // 1. Generate a new width and height.
-      width = round(currentDisplay.innerWidth / currentDisplay.subdivisions);
-      height = round(currentDisplay.innerHeight / currentDisplay.subdivisions);
+      width = round(currentDisplay.width / currentDisplay.subdivisions);
+      height = round(currentDisplay.height / currentDisplay.subdivisions);
       // Build a reframe request that will be sent to the main thread, mirroring this.
       reframe = {
         width: undefined,
@@ -987,10 +1002,11 @@ function makeFrame({ data: { type, content } }) {
     // Always update the currentDisplay settings for synchronous
     // screen buffer updates.
     currentDisplay = {
-      innerWidth: content.innerWidth,
-      innerHeight: content.innerHeight,
+      width: content.innerWidth,
+      height: content.innerHeight,
       subdivisions: content.subdivisions,
     };
+    $commonApi.display = currentDisplay;
     // Only trigger a reframe event if we have already passed `boot` (painted
     // at least once)
     if (paintCount > 0n) reframed = true;

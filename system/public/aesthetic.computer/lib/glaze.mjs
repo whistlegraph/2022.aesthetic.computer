@@ -512,7 +512,7 @@ function createProgram(vertShader, fragShader) {
 export async function preloadShaders(pathArray) {
   const sources = await Promise.all(
     pathArray.map((path) =>
-      fetch("aesthetic.computer/lib/" + path + ".glsl").then((file) => {
+      fetch("/aesthetic.computer/lib/" + path + ".glsl").then((file) => {
         return file.text();
       })
     )

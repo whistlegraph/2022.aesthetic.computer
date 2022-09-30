@@ -35,17 +35,18 @@ Welcome to...
   - [x] Pull - fix pointer delta event in-accuracy.
 
 🌟 Projects In Progress 🌟
+  
+ *** Resize (gap-density) ***
+   - [🟡] Add "scaling" to `resize`.
 
- *** Sage's Brush ***
+ *** Sage's Brush (@sage/hello_line) ***
   + Now
    *** Refactor: Density / Gap / Resize ***
-     - [🟢] Remove the frameCount hack in sage's code.
-     - [] Add "scaling" to `resize`.
+     - [x] Remove the frameCount hack in sage's code.
      - [x] Deprecate both gap and density. Bake gap into resize.
 
   + Later
    *** API: Glaze ***
-     - [] Be able to turn glaze on inside of remotely hosted pieces.
      - [] Add ability to update glaze uniforms via
          `glaze.params({uniform1: value, uni2: [0, 1, 2]});`
            function paint() {
@@ -59,7 +60,9 @@ Welcome to...
              });
              return dirtyBox;
            } 
-     - [] Add "kiln" function to bake in a glaze at the end.
+     - [] Add "kiln" or "bake" function to bake in a glaze at the end of a
+          nopaint buffer change.
+     - [x] Be able to turn glaze on inside of remotely hosted pieces.
 
   *** Pressure ***
     - [] Get pen and finger working together.
