@@ -47,7 +47,7 @@ Welcome to...
    *** API: Glaze ***
      - [] Be able to turn glaze on inside of remotely hosted pieces.
      - [] Add ability to update glaze uniforms via
-         `glaze.params({uniform1: value, uni2: [0, 1, 2]});``
+         `glaze.params({uniform1: value, uni2: [0, 1, 2]});`
            function paint() {
              // user draw a dirty box that needs gpu processing as a tile larger than
              // the original pixel drawing
