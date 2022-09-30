@@ -38,10 +38,10 @@ Welcome to...
 
  *** Sage's Brush ***
   + Now
-   *** Density ***
-     - [🟡] Only allow density to be set as an export?
-     - Or... prevent density from clearing the screen buffer.
-     - [] Remove the frameCount hack.
+   *** Refactor: Density / Gap / Resize ***
+     - [🟢] Remove the frameCount hack in sage's code.
+     - [] Add "scaling" to `resize`.
+     - [x] Deprecate both gap and density. Bake gap into resize.
 
   + Later
    *** API: Glaze ***

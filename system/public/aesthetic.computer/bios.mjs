@@ -125,7 +125,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   const REFRAME_DELAY = 250;
   let curReframeDelay = REFRAME_DELAY;
-  let gap = 0;
+  let lastGap = 0;
   let density = 2.2; // added to window.devicePixelRatio
 
   async function loadFFmpeg() {
@@ -169,7 +169,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     //}
   }
 
-  function frame(width, height) {
+  function frame(width, height, gap = 8) {
+    lastGap = gap;
+
     // Cache the current canvas if needed.
     if (freezeFrame && imageData && !document.body.contains(freezeFrameCan)) {
       console.log(
@@ -224,12 +226,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // console.log("INNER HEIGHT", window.innerHeight);
 
+    let subdivisions = 1;
+
     if (width === undefined && height === undefined) {
       // Automatically set and frame a reasonable resolution.
       // Or pull from density.
       let ratio = density || window.devicePixelRatio;
       if (!density && window.devicePixelRatio === 1) ratio = 3; // Always force a screen density of 3 on non-retina displays.
-      const subdivisions = ratio;
+      subdivisions = ratio;
       width = round(window.innerWidth / subdivisions);
       height = round(window.innerHeight / subdivisions);
       projectedWidth = width * subdivisions - gapSize;
@@ -350,8 +354,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // A native resolution canvas for drawing cursors, system UI, and effects.
     if (glaze.on) {
-      console.log("Preglaze gap:", gap);
-
       currentGlaze = Glaze.on(
         canvas.width,
         canvas.height,
@@ -372,7 +374,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     needsReframe = false;
     needsReappearance = true; // Only for `native-cursor` mode.
     send({ type: "needs-paint" });
-    send({ type: "reframed" });
+    send({
+      type: "reframed",
+      content: {
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        subdivisions
+      },
+    });
   }
 
   // 2. Audio
@@ -751,7 +760,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   function requestFrame(needsRender, updateCount) {
     if (needsReframe) {
-      frame();
+      frame(undefined, undefined, lastGap);
       pen.retransformPosition();
     }
 
@@ -1296,6 +1305,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     //       And glaze and other functions can stay asynchronous, so no
     //       pixels are lost.
 
+    /*
     if (type === "gap-change") {
       if (gap !== content) {
         if (debug) console.log("🕳️ Gap:", content);
@@ -1304,15 +1314,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
       return;
     }
-
-    if (type === "density-change") {
-      if (debug) console.log("💻️ Density:", content);
-      if (density !== content) {
-        density = content;
-        needsReframe = true;
-      }
-      return;
-    }
+    */
 
     if (type === "glaze") {
       if (debug) {
@@ -1405,8 +1407,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         needsReframe = true;
       }
 
-      if (gap !== 0) {
-        gap = 0;
+      if (lastGap !== 0) {
+        lastGap = 0;
         freezeFrame = true;
         freezeFrameCan.width = imageData.width;
         freezeFrameCan.height = imageData.height;
@@ -1446,7 +1448,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     // Check for a change in resolution.
     if (content.reframe) {
       // Reframe the captured pixels.
-      frame(content.reframe.width, content.reframe.height);
+      frame(content.reframe.width, content.reframe.height, content.reframe.gap);
       pen.retransformPosition();
     }
 

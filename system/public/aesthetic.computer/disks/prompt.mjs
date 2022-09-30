@@ -46,15 +46,12 @@ function boot({
   pieceCount,
   glaze,
   resize,
-  gap,
   density,
   screen
 }) {
   //density(2.2);
 
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
-  gap(8);
- // TODO: Why does adding `gap` cause flickering and result in two calls to `frame`?
 
   // Preload all glyphs.
   entries(font1).forEach(([glyph, location]) => {
