@@ -131,6 +131,9 @@ let loadFailure;
 // For every function to access.
 const $commonApi = {
   // content: added programmatically: see Content class
+  save: function save(filename, data) {
+    send({ type: "save-file", content: { filename, data } });
+  },
   num: {
     even: num.even,
     odd: num.odd,
@@ -266,7 +269,7 @@ function ink() {
 
 const $paintApi = {
   // Image Loading
-  
+
   // 3D Classes & Objects
   Camera: graph.Camera,
   Form: graph.Form,
@@ -509,15 +512,14 @@ async function load(
   // *** Resize ***
   // Accepts width, height and gap either as numbers or as
   // an object with those keys.
-  // 
+  //
   // Usage: resize(64);
   //        resize(320, 240);
   //        resize(display); // "display" is a global object whose width
   //                             and height matches the hardware display
   //                             hosting aesthetic.computer.
   $commonApi.resize = function (width, height = width, gap = 8) {
-
-    if (typeof width === 'object') {
+    if (typeof width === "object") {
       const props = width;
       height = props.height;
       width = props.width || props.height;
@@ -572,7 +574,7 @@ async function load(
       width: screen.width,
       height: screen.height,
       pixels: screen.pixels,
-    }
+    };
 
     screen.width = width;
     screen.height = height;
@@ -585,11 +587,14 @@ async function load(
     const oldPixels = screen.pixels;
 
     screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
-    
+
     screen.pixels.fill(255);
 
     graph.setBuffer(screen);
-    graph.paste({ painting: oldScreen, crop: new geo.Box(0, 0, oldScreen.width, oldScreen.height) });
+    graph.paste({
+      painting: oldScreen,
+      crop: new geo.Box(0, 0, oldScreen.width, oldScreen.height),
+    });
   };
 
   $commonApi.gap = function (newGap) {

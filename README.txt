@@ -72,11 +72,13 @@ Welcome to...
     - [] Mouse: Use scroll wheel for delta. 
 
 *** Image Support ***
-  *** Load ***
-  - [🟡] From a URL into a buffer.
-  - [] and then be able to paste it.
   *** Save ***
-  - [] Add API for system-wide saving of webp or png images (through nopaint).
+  - [🟡] Add API for system-wide saving of webp or png images (through nopaint).
+    - [📙] Test image saving on different platforms.
+    - [x] Prototype image save function.
+  *** Load ***
+  - [x] From a URL into a buffer.
+  - [x] and then be able to paste it.
 
 ***Picture Architecture***
   + Now
