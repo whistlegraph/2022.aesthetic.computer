@@ -39,39 +39,7 @@ Welcome to...
   
  *** Resize (gap-density) ***
    - [🟡] Add "scaling" to `resize`.
-   - [🆘] Cursor is janky when paint returns -> false.
-
- *** Sage's Brush (@sage/hello_line) ***
-  + Now
-   *** Refactor: Density / Gap / Resize ***
-     - [x] Remove the frameCount hack in sage's code.
-     - [x] Deprecate both gap and density. Bake gap into resize.
-
-  + Later
-   *** API: Glaze ***
-     - [] Add ability to update glaze uniforms via
-         `glaze.params({uniform1: value, uni2: [0, 1, 2]});`
-           function paint() {
-             // user draw a dirty box that needs gpu processing as a tile larger than
-             // the original pixel drawing
-             glaze.params({
-               crop: dirtyBox,
-               samples: 12 // this dirtyBox will keep being glazed over for 12 frames
-               uniform1: 1,
-               uniform2: 2,
-             });
-             return dirtyBox;
-           } 
-     - [] Add "kiln" or "bake" function to bake in a glaze at the end of a
-          nopaint buffer change.
-     - [x] Be able to turn glaze on inside of remotely hosted pieces.
-
-  *** Pressure ***
-    - [] Get pen and finger working together.
-        (When finger is drawing and pen is touched... is it recognized as pen?)
-    - [] Pen: Get a good mapping for Apple Pencil / normalize the data. 
-    - [] Touch: Two finger pressure. (Second finger regulates it via Y axis.)
-    - [] Mouse: Use scroll wheel for delta. 
+   - [x] Cursor is janky when paint returns -> false.
 
 *** Image Support ***
   *** Save ***
@@ -262,6 +230,38 @@ Welcome to...
   + Now
     - Make a sub-directory for the pieces, and adjust the prompt so that
       if no file exists in the subdirectory then it checks an `index` file.
+
+ *** Sage's Brush (@sage/hello_line) ***
+  + Now
+   *** Refactor: Density / Gap / Resize ***
+     - [x] Remove the frameCount hack in sage's code.
+     - [x] Deprecate both gap and density. Bake gap into resize.
+
+  + Later
+   *** API: Glaze ***
+     - [] Add ability to update glaze uniforms via
+         `glaze.params({uniform1: value, uni2: [0, 1, 2]});`
+           function paint() {
+             // user draw a dirty box that needs gpu processing as a tile larger than
+             // the original pixel drawing
+             glaze.params({
+               crop: dirtyBox,
+               samples: 12 // this dirtyBox will keep being glazed over for 12 frames
+               uniform1: 1,
+               uniform2: 2,
+             });
+             return dirtyBox;
+           } 
+     - [] Add "kiln" or "bake" function to bake in a glaze at the end of a
+          nopaint buffer change.
+     - [x] Be able to turn glaze on inside of remotely hosted pieces.
+
+  *** Pressure ***
+    - [] Get pen and finger working together.
+        (When finger is drawing and pen is touched... is it recognized as pen?)
+    - [] Pen: Get a good mapping for Apple Pencil / normalize the data. 
+    - [] Touch: Two finger pressure. (Second finger regulates it via Y axis.)
+    - [] Mouse: Use scroll wheel for delta. 
       
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***

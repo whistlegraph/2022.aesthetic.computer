@@ -31,7 +31,7 @@ function boot({ resize, wipe, screen, ink, grid }) {
         w: 32,
         h: 32,
       },
-      scale: 5,
+      scale: 2,
     },
     oldScr
   );
