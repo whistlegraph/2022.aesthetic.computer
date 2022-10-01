@@ -46,6 +46,14 @@ function makeBuffer(width, height, fillProcess, painting) {
   return buffer;
 }
 
+function cloneBuffer (buffer) {
+  return {
+    width: buffer.width,
+    height: buffer.height,
+    pixels: new Uint8ClampedArray(buffer.pixels),
+  }
+}
+
 function getBuffer() {
   return { width, height, pixels };
 }
@@ -61,7 +69,7 @@ function color(r, g, b, a = 255) {
   c[3] = floor(a);
 }
 
-export { makeBuffer, setBuffer, depthBuffer, color };
+export { makeBuffer, cloneBuffer, setBuffer, depthBuffer, color };
 
 // 2. 2D Drawing
 
@@ -256,7 +264,27 @@ function copyRow(destX, destY, srcX, srcY, src) {
 // TODO: Add dirty rectangle support here...
 //       - What would the best parameter set be?
 // `from` - can either be 
-function paste(from, destX = 0, destY = 0) {
+
+// TODO: Some of these routes are incompatible. 22.10.01.11.57
+// TODO: Replace with more generic algorithm?
+function paste(from, destX = 0, destY = 0, scale = 1) {
+
+  if (scale !== 1) {
+    grid(
+      {
+        box: {
+          x: destX,
+          y: destY,
+          w: from.width,
+          h: from.height,
+        },
+        scale,
+      },
+      from
+    );
+    return;
+  }
+
   // TODO: See if from has a dirtyBox attribute.
   if (from.crop) {
     // A cropped copy.
@@ -633,8 +661,8 @@ function grid(
   const w = cols * scale;
   const h = rows * scale;
 
-  const colPix = floor(w / cols),
-    rowPix = floor(h / rows);
+  const colPix = w / cols,
+    rowPix = h / rows;
 
   // Draw a scaled image if the buffer is present.
   // Technically, this allows us to scale any bitmap. 22.08.21.21.13

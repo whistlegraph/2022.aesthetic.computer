@@ -268,8 +268,8 @@ function ink() {
 }
 
 const $paintApi = {
-  // Image Loading
-
+  // Image Utilities
+  clonePixels: graph.cloneBuffer,
   // 3D Classes & Objects
   Camera: graph.Camera,
   Form: graph.Form,
@@ -370,7 +370,13 @@ class Painting {
   }
 }
 
+
 const painting = new Painting();
+
+$commonApi.flatten = function () {
+  return painting.paint();
+}
+
 let glazeAfterReframe;
 
 // Microphone State (Audio Input)

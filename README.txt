@@ -37,13 +37,9 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
   
- *** Resize (gap-density) ***
-   - [🟡] Add "scaling" to `resize`.
-   - [x] Cursor is janky when paint returns -> false.
-
 *** Image Support ***
   *** Save ***
-    - [x] Make it so that desktop uses the current "save-file" event route,
+    - [🔶] Make it so that desktop uses the current "save-file" event route,
           but mobile pops open a UI... 
         - Should this UI be shared on all platforms?
         - What does it mean to "save" an image?
@@ -505,6 +501,10 @@ Welcome to...
 
 
 *Recently ✅ Completed*
+
+ *** Resize (gap-density) ***
+   - [x] Add "scale" to "paste"
+   - [x] Cursor is janky when paint returns -> false.
 
 *** Prompt ***
 - [x] Use localStorage for command history.
