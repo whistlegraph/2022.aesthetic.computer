@@ -74,11 +74,19 @@ Welcome to...
     - [] Mouse: Use scroll wheel for delta. 
 
 *** Image Support ***
-  *** Load ***
-  - [] From a URL into a buffer.
-  - [] and then be able to paste it.
   *** Save ***
-  - [] Add API for system-wide saving of webp or png images (through nopaint).
+    - [x] Make it so that desktop uses the current "save-file" event route,
+          but mobile pops open a UI... 
+        - Should this UI be shared on all platforms?
+        - What does it mean to "save" an image?
+    - [🔶] Make sure that video encoding works on all platforms. 
+        - [] Try implementing custom ffmpeg-core files: https://github.com/ffmpegwasm/ffmpeg.wasm/issues/299
+    - [x] Add API for system-wide saving of webp or png images (through nopaint).
+    - [x] Test image saving on different platforms.
+    - [x] Prototype image save function.
+  *** Load ***
+  - [x] From a URL into a buffer.
+  - [x] and then be able to paste it.
 
 ***Picture Architecture***
   + Now

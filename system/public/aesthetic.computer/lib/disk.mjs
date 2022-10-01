@@ -131,6 +131,9 @@ let loadFailure;
 // For every function to access.
 const $commonApi = {
   // content: added programmatically: see Content class
+  save: function save(filename, data) {
+    send({ type: "save-file", content: { filename, data } });
+  },
   num: {
     even: num.even,
     odd: num.odd,
@@ -265,6 +268,8 @@ function ink() {
 }
 
 const $paintApi = {
+  // Image Loading
+
   // 3D Classes & Objects
   Camera: graph.Camera,
   Form: graph.Form,
@@ -507,15 +512,14 @@ async function load(
   // *** Resize ***
   // Accepts width, height and gap either as numbers or as
   // an object with those keys.
-  // 
+  //
   // Usage: resize(64);
   //        resize(320, 240);
   //        resize(display); // "display" is a global object whose width
   //                             and height matches the hardware display
   //                             hosting aesthetic.computer.
   $commonApi.resize = function (width, height = width, gap = 8) {
-
-    if (typeof width === 'object') {
+    if (typeof width === "object") {
       const props = width;
       height = props.height;
       width = props.width || props.height;
@@ -570,7 +574,7 @@ async function load(
       width: screen.width,
       height: screen.height,
       pixels: screen.pixels,
-    }
+    };
 
     screen.width = width;
     screen.height = height;
@@ -583,11 +587,14 @@ async function load(
     const oldPixels = screen.pixels;
 
     screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
-    
+
     screen.pixels.fill(255);
 
     graph.setBuffer(screen);
-    graph.paste({ painting: oldScreen, crop: new geo.Box(0, 0, oldScreen.width, oldScreen.height) });
+    graph.paste({
+      painting: oldScreen,
+      crop: new geo.Box(0, 0, oldScreen.width, oldScreen.height),
+    });
   };
 
   $commonApi.gap = function (newGap) {
@@ -607,12 +614,12 @@ async function load(
     send({ type: "web", content: url }); // Jump the browser to a new url.
   };
 
-  $commonApi.net.preloadReady = () => {
-    send({ type: "preload-ready", content: true }); // Tell the browser that all preloading is done.
+  $commonApi.net.waitForPreload = () => {
+    send({ type: "wait-for-preload", content: true }); // Tell the browser to wait until preloading is finished before painting.
   };
 
-  $commonApi.net.waitForPreload = () => {
-    send({ type: "wait-for-preload", content: true }); // Tell the browser that all preloading is done.
+  $commonApi.net.preloaded = () => {
+    send({ type: "preload-ready", content: true }); // Tell the browser that all preloading is done.
   };
 
   // Automatically connect a socket server if we are in debug mode.
@@ -1332,9 +1339,9 @@ function makeFrame({ data: { type, content } }) {
 
         const extension = path.split(".").pop();
 
-        if (extension === "json") {
-          path = encodeURIComponent(path);
-        }
+        //if (extension === "json") {
+        path = encodeURIComponent(path);
+        //}
 
         try {
           const url = new URL(path);

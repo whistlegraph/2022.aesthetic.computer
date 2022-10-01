@@ -897,6 +897,30 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       return;
     }
 
+    // Saving image files.
+    // See also: https://stackoverflow.com/questions/11112321/how-to-save-canvas-as-png-image
+    if (type === "save-file") {
+      console.log("💾 Saving locally:", content);
+      const img = content.data;
+      const imageData = new ImageData(img.pixels, img.width, img.height);
+
+      const pngCan = document.createElement("canvas");
+      const pngCtx = pngCan.getContext("2d");
+      pngCan.width = img.width;
+      pngCan.height = img.width;
+      pngCtx.putImageData(imageData, 0, 0);
+
+      const dl = document.createElement('a');
+      dl.setAttribute('download', content.filename);
+      const blob = await new Promise(resolve => pngCan.toBlob(resolve));
+      let url = URL.createObjectURL(blob);
+
+      dl.setAttribute('href', url);
+      dl.click();
+
+      return;
+    }
+
     if (type === "store:retrieve") {
       if (content.method === "local") {
         if (debug)
@@ -906,6 +930,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           content: JSON.parse(localStorage.getItem(content.key)),
         });
       }
+      return;
     }
 
     if (type === "meta") {
@@ -924,8 +949,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "preload-ready") {
-      window.preloadReady = true;
-      if (debug) console.log("⏳ Preloaded:", window.preloadReady);
+      window.preloaded = true;
+      if (debug) console.log("⏳ Preloaded: ✅️", window.preloaded);
       return;
     }
 
@@ -1355,8 +1380,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "disk-loaded-and-booted") {
-      if (!window.waitForPreload) window.preloadReady = true;
-      if (debug) console.log("⏳ Preloaded:", window.preloadReady);
+      if (!window.waitForPreload) window.preloaded = true;
+      if (debug) console.log("⏳ Preloaded: ❌", window.preloaded);
       return;
     }
 
@@ -1371,7 +1396,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       // Reset preloading.
       window.waitForPreload = false;
-      window.preloadReady = false;
+      window.preloaded = false;
 
       // Clear any DOM content that was added by a piece.
       contentFrame?.remove(); // Remove the contentFrame if it exists.

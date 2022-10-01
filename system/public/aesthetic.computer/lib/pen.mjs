@@ -167,6 +167,9 @@ export class Pen {
         pointerMoveEvent("move", pointer);
       }
 
+      // TODO: This could be renamed? 22.09.30.10.56
+      pen.changedInPiece = true; //delta.x !== 0 || delta.y !== 0;
+
       // Set `pen` globals.
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
@@ -280,11 +283,6 @@ export class Pen {
       x: pointer.x - pointer.lastEventX || 0,
       y: pointer.y - pointer.lastEventY || 0,
     };
-
-    // This field detects whether the pen projection to the current resolution has changed or not.
-    // Note: Original data is not sent at the moment. It could be calculated and sent
-    //       similar to `Pen`s `untransformedPosition`
-    pen.changedInPiece = delta.x !== 0 || delta.y !== 0;
 
     pen.events.push({
       name,

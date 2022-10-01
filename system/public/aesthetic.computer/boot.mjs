@@ -3,7 +3,7 @@ import { parse, slug } from "./lib/parse.mjs";
 
 let debug;
 
-window.preloadReady = false; // This gets set to true either automatically or
+window.preloaded = false; // This gets set to true either automatically or
                              // manually by a disk. It's used by the thumbnail
                              // system to know when to take screenshots of each
                              // piece.
