@@ -86,7 +86,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   // Our main display surface.
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
   // An extra canvas reference for passing through or buffering video recording streams.
   let streamCanvasContext;

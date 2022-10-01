@@ -30,6 +30,7 @@ Welcome to...
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
+  - [🆘] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
   - [x] Pull - fix pointer delta event in-accuracy.
@@ -38,6 +39,7 @@ Welcome to...
   
  *** Resize (gap-density) ***
    - [🟡] Add "scaling" to `resize`.
+   - [🆘] Cursor is janky when paint returns -> false.
 
  *** Sage's Brush (@sage/hello_line) ***
   + Now
