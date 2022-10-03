@@ -212,7 +212,7 @@ function act({ event: e, download, upload, num: { timestamp }, needsPaint }) {
   }
 
   // Relay event info to the save button.
-  save.act(e, () => download(encode(timestamp())));
+  save.act(e, () => download(...encode(timestamp())));
 
   if (!opening) {
     open.act(e, () => {
@@ -261,7 +261,7 @@ function encode(filename) {
     2
   );
 
-  return { filename, data };
+  return [ filename, data ];
 
   // *Future Plans*
   // TODO: Use a custom file format instead of JSON? 2021.12.11.19.02

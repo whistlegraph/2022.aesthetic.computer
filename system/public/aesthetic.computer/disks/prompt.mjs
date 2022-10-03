@@ -36,7 +36,8 @@ let blink; // block cursor blink timer
 let flash; // error flash timer
 let showBlink = true;
 let showFlash = false;
-let errorPresent = false;
+let flashColor = [];
+let flashPresent = false;
 let canType = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
@@ -87,14 +88,14 @@ function sim({ seconds, needsPaint, gizmo: { Hourglass } }) {
     new Hourglass(seconds(0.1), {
       flipped: () => {
         showFlash = false;
-        errorPresent = false;
+        flashPresent = false;
         needsPaint();
       },
       autoFlip: true,
     });
 
   if (canType) blink.step();
-  if (errorPresent) flash.step();
+  if (flashPresent) flash.step();
 }
 
 // 🎨 Paint (Runs once per display refresh rate)
@@ -127,8 +128,8 @@ function paint({ box, screen, wipe, ink, paste, store }) {
     if (showBlink) ink(200, 30, 100).box(prompt.pos); // Draw blinking cursor.
   }
 
-  // Trigger a red screen flash with a timer.
-  if (showFlash) ink(255, 0, 0).box(0, 0, screen.width, screen.height);
+  // Trigger a red or green screen flash with a timer.
+  if (showFlash) ink(flashColor).box(0, 0, screen.width, screen.height);
 
   // Return false if we are yet to load every glyph.
   // TODO: This causes some extra paints on startup.
@@ -138,7 +139,7 @@ function paint({ box, screen, wipe, ink, paste, store }) {
 let promptHistoryDepth = 0;
 
 // ✒ Act (Runs once per user interaction, after boot.)
-async function act({ event: e, needsPaint, load, store }) {
+async function act({ event: e, needsPaint, load, store, download }) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
   //if (e.is("move")) needsPaint();
@@ -166,7 +167,24 @@ async function act({ event: e, needsPaint, load, store }) {
 
         store.persist(key); // Persist the history stack across tabs.
 
-        load(parse(input.replaceAll(" ", "~"))); // Execute the current command.
+        // 🍎 In-prompt commands...
+        if (input === "dl" || input === "download") {
+          if (store["painting"]) {
+            download("image.png", store["painting"]);
+            // Show a green flash if we succesfully download the file.
+            flashColor = [0, 255, 0];
+          } else {
+            flashColor = [255, 0, 0]; // Show a red flash otherwise. 
+          }
+          flashPresent = true;
+          showFlash = true;
+          input = "";
+          needsPaint();
+        } else {
+          // 🟠 Local and remote pieces...
+          load(parse(input.replaceAll(" ", "~"))); // Execute the current command.
+        }
+
       } 
 
       if (e.key === "Escape") input = "";
@@ -210,8 +228,9 @@ async function act({ event: e, needsPaint, load, store }) {
   }
 
   if (e.is("load-error")) {
-    errorPresent = true;
+    flashPresent = true;
     showFlash = true;
+    flashColor = [255, 0, 0];
     input = "";
     needsPaint();
   }

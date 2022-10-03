@@ -131,9 +131,6 @@ let loadFailure;
 // For every function to access.
 const $commonApi = {
   // content: added programmatically: see Content class
-  save: function save(filename, data) {
-    send({ type: "save-file", content: { filename, data } });
-  },
   num: {
     even: num.even,
     odd: num.odd,
@@ -370,12 +367,11 @@ class Painting {
   }
 }
 
-
 const painting = new Painting();
 
 $commonApi.flatten = function () {
   return painting.paint();
-}
+};
 
 let glazeAfterReframe;
 
@@ -1097,7 +1093,8 @@ function makeFrame({ data: { type, content } }) {
 
       // 💾 Uploading + Downloading
       // Add download event to trigger a file download from the main thread.
-      $api.download = (dl) => send({ type: "download", content: dl });
+      $api.download = (filename, data) =>
+        send({ type: "download", content: { filename, data } });
 
       // Add upload event to allow the main thread to open a file chooser.
       // type: Accepts N mimetypes or file extensions as comma separated string.

@@ -379,7 +379,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       content: {
         innerWidth: window.innerWidth,
         innerHeight: window.innerHeight,
-        subdivisions
+        subdivisions,
       },
     });
   }
@@ -877,7 +877,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     // *** 🏪 Storage / Store ***
-
     if (type === "store:persist") {
       // Local
       if (content.method === "local") {
@@ -894,30 +893,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       // Remote
       // Use S3 bucket / token-gated web3 authentication here?
-      return;
-    }
-
-    // Saving image files.
-    // See also: https://stackoverflow.com/questions/11112321/how-to-save-canvas-as-png-image
-    if (type === "save-file") {
-      console.log("💾 Saving locally:", content);
-      const img = content.data;
-      const imageData = new ImageData(img.pixels, img.width, img.height);
-
-      const pngCan = document.createElement("canvas");
-      const pngCtx = pngCan.getContext("2d");
-      pngCan.width = img.width;
-      pngCan.height = img.width;
-      pngCtx.putImageData(imageData, 0, 0);
-
-      const dl = document.createElement('a');
-      dl.setAttribute('download', content.filename);
-      const blob = await new Promise(resolve => pngCan.toBlob(resolve));
-      let url = URL.createObjectURL(blob);
-
-      dl.setAttribute('href', url);
-      dl.click();
-
       return;
     }
 
@@ -1629,18 +1604,50 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   // Reads the extension off of filename to determine the mimetype and then
   // handles the data accordingly and downloads the file in the browser.
-  function receivedDownload({ filename, data }) {
+  async function receivedDownload({ filename, data }) {
+    console.log("💾 Downloading locally:", filename, data);
+
+    let object;
     let MIME = "application/octet-stream"; // TODO: Default content type?
 
     if (extension(filename) === "json") {
+      // JSON
       MIME = "application/json";
+      object = URL.createObjectURL(new Blob([data], { type: MIME })); 
+    } else if (extension(filename) === "png") {
+      // PNG
+      MIME = "image/png";
+      // Encode a pixel buffer as a png.
+      // See also: https://stackoverflow.com/questions/11112321/how-to-save-canvas-as-png-image
+      const img = data;
+      const imageData = new ImageData(img.pixels, img.width, img.height);
+
+      const pngCan = document.createElement("canvas");
+      const pngCtx = pngCan.getContext("2d");
+      pngCan.width = img.width;
+      pngCan.height = img.height;
+      pngCtx.putImageData(imageData, 0, 0);
+
+      const blob = await new Promise((resolve) => pngCan.toBlob(resolve));
+      object = URL.createObjectURL(blob, { type: MIME });
     }
 
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([data], { type: MIME }));
+    a.href = object; 
     a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
+
+    // Picture in Picture
+    //const container = document.createElement('div');
+    //const iframe = document.createElement('iframe');
+
+    //container.id = "pip-wrapper";
+    //iframe.id = "pip";
+    //iframe.src = "/blank";
+
+    //container.append(iframe);
+    //wrapper.append(container);
   }
 
   // Opens a file chooser that is filtered by a given extension / mimetype list.

@@ -6,7 +6,7 @@ let image;
 let imgToExport;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ resize, net, needsPaint, painting, save }) {
+function boot({ resize, net, needsPaint, painting, dowwnload }) {
   // 🅰️
   // net.waitForPreload();
   // net.preload(`aesthetic.computer/disks/digitpain/1/${0}.webp`).then((img) => {
@@ -18,7 +18,6 @@ function boot({ resize, net, needsPaint, painting, save }) {
   // 🅱️
   resize(256, 256);
   imgToExport = painting(256, 256, ({noise16DIGITPAIN}) => noise16DIGITPAIN());
-  save("noise.png", imgToExport);
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
@@ -39,7 +38,11 @@ function paint({ wipe, paste }) {
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event }) {}
+function act({ event: e, download }) {
+  if (e.is("keyboard:down")) {
+    download("noise.png", imgToExport);
+  }
+}
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
 function beat($api) {

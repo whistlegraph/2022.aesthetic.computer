@@ -36,25 +36,26 @@ Welcome to...
   - [x] Pull - fix pointer delta event in-accuracy.
 
 🌟 Projects In Progress 🌟
-  
-*** Image Support ***
-  *** Save ***
-    - [🔶] Make it so that desktop uses the current "save-file" event route,
-          but mobile pops open a UI... 
-        - Should this UI be shared on all platforms?
-        - What does it mean to "save" an image?
-    - [🔶] Make sure that video encoding works on all platforms. 
-        - [] Try implementing custom ffmpeg-core files: https://github.com/ffmpegwasm/ffmpeg.wasm/issues/299
-    - [x] Add API for system-wide saving of webp or png images (through nopaint).
-    - [x] Test image saving on different platforms.
-    - [x] Prototype image save function.
-  *** Load ***
-  - [x] From a URL into a buffer.
-  - [x] and then be able to paste it.
 
-***Picture Architecture***
+***No Paint System***
   + Now
+  - [🟡] Cache the current painting along with
+       potential history states to indexedDB.
+  - [x] Add "dl" or "download" command to the prompt.
+    - [🔶] Test this inside of an iOS in-app browser.
+    - [x] Shouldn't have to leave the prompt to
+         save the image.
+  - [] Add "no" command to the prompt.
+  - [] Enter for paint and ESC for no.
   - [] The painting resolution should auto-expand, but not contract.
+  - [] There seems to be a backbuffer / transparency error
+       that's easy to find on mobile iOS but hard to 
+       reproduce otherwise.
+  - [] Add "sign" command which writes a timestamp with a signature.
+  - [] Add "mint" command to trigger a wallet signature request
+       and produce a work.
+       * Should be able to specify a contract here.
+  + Later
   - [] Add `nopaint` template for Sage, Casey and Niki.
     - [x] Sage
   - [x] Set up a glitch account / editing situation for Sage.
@@ -62,12 +63,38 @@ Welcome to...
   - [x️] Write boilerplate for painting tool.
   - [x] Make a glaze appear instantly after it loads the first time?
 
+*** Storage ***
+  - [] Add indexedDB storage method.
+  - [] Add "remote:temporary" storage method. (Default for remote)
+    - [] Add "remote:token" storage method. (Default for token-gated storage)
+
+*** Image Support ***
+  *** Save ***
+    - [🔶] Make it so that desktop uses the current "save-file" event route,
+          but mobile pops open a UI... 
+        - Should this UI be shared on all platforms?
+        - What does it mean to "save" an image?
+    - [x] Add API for system-wide saving of webp or png images (through nopaint).
+    - [x] Test image saving on different platforms.
+    - [x] Prototype image save function.
+  *** Load ***
+  - [x] From a URL into a buffer.
+  - [x] and then be able to paste it.
+
+*** Piece Caching ***
+  - [] Cache already remotely loaded pieces in a given session,
+       so they can be reloaded without having to re-download them or show a spinner.
+  - [] Disable this in debug / development mode.
+
 ***Android Day***
   - [] Provision Android phone.
   - [] Fix keyboard controls not working (this should also fix Meta Quest 2).
 
 ***Audio + Video Storage (Microphone)***
  + Now
+  - [🔶] Make sure that video encoding works on all platforms. 
+      - [] Try implementing custom ffmpeg-core files
+      : https://github.com/ffmpegwasm/ffmpeg.wasm/issues/299
   - [🌟] Add a "done" or "close" button to the recording UI / share sheet which
          re-activates the UI.
   - [] Add a special UI for uploading the file / receiving a code...
@@ -184,11 +211,6 @@ Welcome to...
 *** Cool Debug Feature ***
 - [] Log / visualize all thread communicated messages.
   - [] Add it to the definition of send, on both sides.
-
-*** Storage ***
-  - [] Add indexedDB storage method.
-  - [] Add "remote:temporary" storage method. (Default for remote)
-    - [] Add "remote:token" storage method. (Default for token-gated storage)
 
 *** MIDI / Analyzer Demo ***
   - [] Real-time pitch detection of current microphone.

@@ -21,13 +21,15 @@ body {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-text-size-adjust: none;
-  }
-
 }
 
-* { -webkit-tap-highlight-color: transparent; }
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 
-body.embed { background-color: transparent; }
+body.embed {
+  background-color: transparent;
+}
 
 body.native-cursor {
   cursor: auto;
@@ -37,16 +39,22 @@ body.native-cursor {
 
 /* body.native-cursor canvas[data-type="ui"] { opacity: 0 !important; } */
 
-canvas { touch-action: none; }
+canvas {
+  touch-action: none;
+}
 
-input { pointer-events: none; }
+input {
+  pointer-events: none;
+}
 
 #aesthetic-computer {
   position: relative;
   overflow: hidden;
 }
 
-#aesthetic-computer.hidden { opacity: 0; }
+#aesthetic-computer.hidden {
+  opacity: 0;
+}
 
 #content {
   position: absolute;
@@ -69,6 +77,31 @@ input { pointer-events: none; }
   touch-action: manipulation;
   background: gray;
 }
+
+/* Picture in Picture */
+
+/*
+#pip-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  pointer-events: none;
+  touch-action: none;
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+#pip {
+  pointer-events: all;
+  touch-action: manipulation;
+  border: none;
+  width: 80%;
+  height: 80%;
+  margin: auto;
+}
+*/
 
 /*font-family: 'Berkeley Mono Variable', monospace;*/
 /*
@@ -100,22 +133,33 @@ canvas {
   image-rendering: pixelated;
 }
 
-canvas[data-type="ui"], canvas[data-type="glaze"] {
+canvas[data-type="ui"],
+canvas[data-type="glaze"] {
   position: absolute;
   top: 0;
   left: 0;
   pointer-events: none;
 }
 
-canvas[data-type="freeze"] { pointer-events: none; }
+canvas[data-type="freeze"] {
+  pointer-events: none;
+}
 
 canvas[data-type="glaze"] {
   /*transition: 0.5s opacity;*/
 }
 
-canvas[data-type="glaze"] { z-index: 1; }
-canvas[data-type="freeze"] { z-index: 2; }
-canvas[data-type="freeze"] { position: fixed; }
+canvas[data-type="glaze"] {
+  z-index: 1;
+}
+
+canvas[data-type="freeze"] {
+  z-index: 2;
+}
+
+canvas[data-type="freeze"] {
+  position: fixed;
+}
 
 canvas[data-type="ui"] {
   z-index: 6;
