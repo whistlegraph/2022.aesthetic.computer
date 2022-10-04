@@ -44,7 +44,7 @@ Welcome to...
 
 ***No Paint System***
   + Now
-  - [] The painting resolution should auto-expand, but not contract.
+  - [💛] The painting resolution should auto-expand, but not contract.
   - [] Add "no" command to the prompt.
     - [] Store two history states?
   - [] Enter for paint and ESC for no.
@@ -97,6 +97,7 @@ Welcome to...
     - [🔶] Make it so that desktop uses the current "save-file" event route,
           but mobile pops open a UI... 
         - Should this UI be shared on all platforms?
+        Try web components here: https://developer.mozilla.org/en-US/docs/Web/Web_Components
         - What does it mean to "save" an image?
     - [x] Add API for system-wide saving of webp or png images (through nopaint).
     - [x] Test image saving on different platforms.
