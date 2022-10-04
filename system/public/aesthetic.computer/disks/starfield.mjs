@@ -2,10 +2,13 @@ export const desc = "A simple display of zooming, colored points.";
 
 let width, height;
 
+export function boot ($) {
+  $.resize({gap: 0});
+}
+
 // 🧮 Sim(ulate)
 export function sim({ screen }) {
   ({ width, height } = screen);
-
   starfield.update();
 }
 

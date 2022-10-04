@@ -44,7 +44,6 @@ Welcome to...
 
 ***No Paint System***
   + Now
-  - [🆘] Jumping from prompt to a nopaint brush removes the gap.
   - [] The painting resolution should auto-expand, but not contract.
   - [] Add "no" command to the prompt.
     - [] Store two history states?
@@ -70,6 +69,7 @@ Welcome to...
   - [x️] Write boilerplate for painting tool.
   - [x] Make a glaze appear instantly after it loads the first time?
   + Done
+  - [x] Jumping from prompt to a nopaint brush removes the gap.
   - [x] Cache the current painting to indexedDB.
   - [x] Either use the added `umd.js` in dep or what's below:
           See also: https://www.npmjs.com/package/idb#installation

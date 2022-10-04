@@ -1471,7 +1471,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
 
       if (lastGap !== 0) {
-        lastGap = 0;
+        // lastGap = 0; No longer needed... 22.10.04.15.28
         freezeFrame = true;
         freezeFrameCan.width = imageData.width;
         freezeFrameCan.height = imageData.height;

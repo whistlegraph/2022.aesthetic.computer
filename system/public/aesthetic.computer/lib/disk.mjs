@@ -539,11 +539,11 @@ async function load(
       const props = width;
       height = props.height;
       width = props.width || props.height;
-      gap = props.gap || 8;
+      gap = props.gap === 0 ? 0 : props.gap || 8;
     }
 
-    // Don't do anything if there is no change.
-    if (screen.width === width && screen.height === height) return;
+    // Don't do anything if there is no change and no gap update.
+    if (screen.width === width && screen.height === height && gap === undefined) return;
 
     // width = width || currentDisplay.innerWidth;
     // height = height || currentDisplay.innerHeight;
