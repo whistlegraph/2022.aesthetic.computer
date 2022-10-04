@@ -41,6 +41,12 @@ Welcome to...
   + Now
   - [🟡] Cache the current painting along with
        potential history states to indexedDB.
+
+    Either use the added `umd.js` in dep or what's below:
+
+    See also: https://www.npmjs.com/package/idb#installation
+              https://cdn.jsdelivr.net/npm/idb@7/+esm
+
   - [x] Add "dl" or "download" command to the prompt.
     - [🔶] Test this inside of an iOS in-app browser.
     - [x] Shouldn't have to leave the prompt to

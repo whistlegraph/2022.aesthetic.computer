@@ -1,12 +1,13 @@
 {
   "name": "system",
   "version": "1.0.0",
-  "description": "My virtual computer system for loading and running disks.",
+  "description": "My virtual computer system for loading and running pieces.",
   "source": "./public/index.html",
   "type": "module",
   "scripts": {
     "dev": "netlify dev",
     "dev-debug": "netlify dev --debug",
+    "upgrade": "ncu -u",
     "watch": "netlify watch",
     "test": "NODE_OPTIONS='--experimental-vm-modules --es-module-specifier-resolution=node' jest",
     "codespaces-dev": "kill-port 8080 8000; netlify dev",
@@ -32,24 +33,25 @@
   },
   "homepage": "https://github.com/whistlegraph/system#readme",
   "dependencies": {
-    "@ffmpeg/core": "^0.10.0",
-    "@ffmpeg/ffmpeg": "^0.10.1",
-    "gl-matrix": "^3.4.3"
+    "@ffmpeg/core": "^0.11.0",
+    "@ffmpeg/ffmpeg": "^0.11.5",
+    "gl-matrix": "^3.4.3",
+    "idb": "^7.1.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.131.0",
-    "@aws-sdk/s3-request-presigner": "^3.131.0",
-    "@netlify/functions": "^1.0.0",
+    "@aws-sdk/client-s3": "^3.183.0",
+    "@aws-sdk/s3-request-presigner": "^3.183.0",
+    "@netlify/functions": "^1.2.0",
     "chrome-aws-lambda": "^10.1.0",
     "http-server": "^14.1.1",
-    "jest": "^28.1.3",
+    "jest": "^29.1.2",
     "kill-port": "^2.0.1",
-    "nanoid": "^3.3.4",
-    "netlify-cli": "^10.10.2",
-    "parcel": "^2.6.2",
-    "parcel-reporter-static-files-copy": "^1.3.4",
-    "playwright-core": "^1.23.4",
+    "nanoid": "^4.0.0",
+    "netlify-cli": "^12.0.4",
+    "parcel": "^2.7.0",
+    "parcel-reporter-static-files-copy": "^1.4.0",
+    "playwright-core": "^1.26.1",
     "prettier": "^2.7.1",
-    "typescript": "^4.7.4"
+    "typescript": "^4.8.4"
   }
 }

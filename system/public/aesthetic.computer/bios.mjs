@@ -891,6 +891,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Potentially use this library: github.com/jakearchibald/idb
       // For images: https://hacks.mozilla.org/2012/02/storing-images-and-files-in-indexeddb/
 
+      // Use: https://github.com/jakearchibald/idb
+
+
       // Remote
       // Use S3 bucket / token-gated web3 authentication here?
       return;
