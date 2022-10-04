@@ -9,7 +9,8 @@
 // TODO: Generate or pretty print docs (made from the APIs) inside this disk.
 //       - This would allow people to have a reference while writing disks.
 
-export const desc = "A global text prompt for accessing any aesthetic.computer piece."
+export const desc =
+  "A global text prompt for accessing any aesthetic.computer piece.";
 
 const { entries } = Object;
 const { floor } = Math;
@@ -19,17 +20,18 @@ import { font1 } from "./common/fonts.mjs";
 
 let glyphs = {};
 
-const motd = `hi i'm not quite there yet                      `+
-             `  but try                                       `+
-             `    typing...                                   `+
-             `                                                `+
-             `bleep, bubble, line, rect,                      `+
-             `melody, tracker, metronome,                     `+
-             `microphone, wg idni,                            `+
-             `@niki/spinline, @artur/i,                       `+
-             `@reas/bland                                     `+
-             `                                                `+
-             `mail@aesthetic.computer                         `;
+const motd =
+  `hi i'm not quite there yet                      ` +
+  `  but try                                       ` +
+  `    typing...                                   ` +
+  `                                                ` +
+  `bleep, bubble, line, rect,                      ` +
+  `melody, tracker, metronome,                     ` +
+  `microphone, wg idni,                            ` +
+  `@niki/spinline, @artur/i,                       ` +
+  `@reas/bland                                     ` +
+  `                                                ` +
+  `mail@aesthetic.computer                         `;
 
 let input = motd;
 let blink; // block cursor blink timer
@@ -48,10 +50,8 @@ function boot({
   glaze,
   resize,
   density,
-  screen
+  screen,
 }) {
-  //density(2.2);
-
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
 
   // Preload all glyphs.
@@ -161,7 +161,9 @@ async function act({ event: e, needsPaint, load, store, download }) {
       if (e.key === "Enter") {
         // Make a history stack if one doesn't exist already.
         store[key] = store[key] || [];
-        store[key].unshift(input); // Push input to a history stack.
+
+        // Push input to a history stack, avoiding repeats.
+        if (store[key][0] !== input) store[key].unshift(input);
 
         console.log("📚 Stored history:", store[key]);
 
@@ -174,8 +176,21 @@ async function act({ event: e, needsPaint, load, store, download }) {
             // Show a green flash if we succesfully download the file.
             flashColor = [0, 255, 0];
           } else {
-            flashColor = [255, 0, 0]; // Show a red flash otherwise. 
+            flashColor = [255, 0, 0]; // Show a red flash otherwise.
           }
+          flashPresent = true;
+          showFlash = true;
+          input = "";
+          needsPaint();
+        } else if (input === "painting:reset") {
+          const deleted = await store.delete("painting", "local:db");
+
+          if (deleted) {
+            flashColor = [0, 0, 255]; // Blue for succesful deletion.
+          } else {
+            flashColor = [255, 0, 0]; // Red if delete failed.
+          }
+
           flashPresent = true;
           showFlash = true;
           input = "";
@@ -184,8 +199,7 @@ async function act({ event: e, needsPaint, load, store, download }) {
           // 🟠 Local and remote pieces...
           load(parse(input.replaceAll(" ", "~"))); // Execute the current command.
         }
-
-      } 
+      }
 
       if (e.key === "Escape") input = "";
 
@@ -193,15 +207,15 @@ async function act({ event: e, needsPaint, load, store, download }) {
         const promptHistory = (await store.retrieve(key)) || [""];
         input = promptHistory[promptHistoryDepth];
         promptHistoryDepth = (promptHistoryDepth + 1) % promptHistory.length;
-      } 
+      }
 
       if (e.key === "ArrowDown") {
         const promptHistory = (await store.retrieve(key)) || [""];
         input = promptHistory[promptHistoryDepth];
-        promptHistoryDepth -= 1; 
-        if (promptHistoryDepth < 0) promptHistoryDepth = promptHistory.length - 1;
-      } 
-
+        promptHistoryDepth -= 1;
+        if (promptHistoryDepth < 0)
+          promptHistoryDepth = promptHistory.length - 1;
+      }
     }
 
     blink.flip(true);

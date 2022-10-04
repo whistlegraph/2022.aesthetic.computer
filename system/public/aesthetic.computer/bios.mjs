@@ -9,6 +9,7 @@ import * as Glaze from "./lib/glaze.mjs";
 import { apiObject, extension } from "./lib/helpers.mjs";
 import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
+import * as Store from "./lib/store.mjs";
 
 //import * as FFmpeg from "./dep/ffmpeg/ffmpeg.min.js";
 
@@ -876,7 +877,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
     }
 
-    // *** 🏪 Storage / Store ***
+    // *** 🏪 Store: Persist ***
     if (type === "store:persist") {
       // Local
       if (content.method === "local") {
@@ -885,29 +886,88 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
 
       // IndexedDB
-      // TODO: Implement basic indexedDB storage and retrieval for the
-      //       painting / array buffer.
-      // web.dev/indexeddb-best-practices
       // Potentially use this library: github.com/jakearchibald/idb
       // For images: https://hacks.mozilla.org/2012/02/storing-images-and-files-in-indexeddb/
+      // Using: https://github.com/jakearchibald/idb
+      // See also: web.dev/indexeddb-best-practices
+      // TODO: Implement basic indexedDB storage and retrieval for the
+      //       painting / array buffer.
+      if (content.method === "local:db") {
+        const set = await Store.set(content.key, content.data);
+        const get = await Store.get(content.key);
+        if (debug) console.log("📦 Persisted on local:db:", content);
+      }
 
-      // Use: https://github.com/jakearchibald/idb
+      if (content.method === "remote:temporary") {
+        // Upload to S3 with a code.
+      }
 
+      if (content.method === "remote:permanent") {
+        // Combine token-gated web3 authentication here along
+        // with IPFS storage.
+        // This would be used as part of a `mint` function. 22.10.04.11.31
+      }
 
-      // Remote
-      // Use S3 bucket / token-gated web3 authentication here?
       return;
     }
 
+    // Store: Retrieve
     if (type === "store:retrieve") {
       if (content.method === "local") {
+        const data = JSON.parse(localStorage.getItem(content.key));
         if (debug)
-          console.log("📦 Retrieving persisted local data:", content.key);
+          console.log("📦 Retrieved persisted local data:", content.key, data);
         send({
           type: "store:retrieved",
-          content: JSON.parse(localStorage.getItem(content.key)),
+          content: data,
         });
       }
+
+      if (content.method === "local:db") {
+        const retrievedContent = await Store.get(content.key);
+        if (debug)
+          console.log(
+            "📦 Retrieved persisted local:db data:",
+            content.key,
+            retrievedContent
+          );
+        send({ type: "store:retrieved", content: retrievedContent });
+      }
+
+      return;
+    }
+
+    // Store: Delete
+    if (type === "store:delete") {
+      if (content.method === "local") {
+        if (debug) console.log("📦 Delete local data:", content.key);
+        send({
+          type: "store:deleted",
+          content: true,
+        });
+        // Just assume this is deleted.
+      }
+
+      if (content.method === "local:db") {
+        const hasKey = (await Store.keys()).includes(content.key);
+        let deleted;
+
+        if (hasKey) {
+          await Store.del(content.key);
+          const alteredKeys = await Store.keys();
+          deleted = !alteredKeys.includes(content.key);
+        } else {
+          deleted = false;
+        }
+
+        if (debug)
+          console.log("📦 Delete local:db data:", content.key, deleted);
+        send({
+          type: "store:deleted",
+          content: deleted,
+        });
+      }
+
       return;
     }
 
@@ -1616,7 +1676,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (extension(filename) === "json") {
       // JSON
       MIME = "application/json";
-      object = URL.createObjectURL(new Blob([data], { type: MIME })); 
+      object = URL.createObjectURL(new Blob([data], { type: MIME }));
     } else if (extension(filename) === "png") {
       // PNG
       MIME = "image/png";
@@ -1636,7 +1696,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     const a = document.createElement("a");
-    a.href = object; 
+    a.href = object;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);

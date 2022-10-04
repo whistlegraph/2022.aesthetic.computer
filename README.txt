@@ -34,26 +34,25 @@ Welcome to...
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
   - [x] Pull - fix pointer delta event in-accuracy.
+  - [x] Don't store continued prompt history...
+         For example: Stored history: (5) ['painting:reset', 'painting:reset', 'painting:reset', 'painting:reset', 'painting:reset']
 
 🌟 Projects In Progress 🌟
 
+*** In-App Browsers ***
+  - [] The back button does not work in the Instagram in-app browser.
+
 ***No Paint System***
   + Now
-  - [🟡] Cache the current painting along with
-       potential history states to indexedDB.
-
-    Either use the added `umd.js` in dep or what's below:
-
-    See also: https://www.npmjs.com/package/idb#installation
-              https://cdn.jsdelivr.net/npm/idb@7/+esm
-
-  - [x] Add "dl" or "download" command to the prompt.
-    - [🔶] Test this inside of an iOS in-app browser.
-    - [x] Shouldn't have to leave the prompt to
-         save the image.
-  - [] Add "no" command to the prompt.
-  - [] Enter for paint and ESC for no.
+  - [🆘] Jumping from prompt to a nopaint brush removes the gap.
   - [] The painting resolution should auto-expand, but not contract.
+  - [] Add "no" command to the prompt.
+    - [] Store two history states?
+  - [] Enter for paint and ESC for no.
+    - [] Prevent "paint" from occuring when pressing Escape.
+         (Back button still defaults to paint)
+         - [] Esc: Autoflash red on loading prompt or on leave.
+         - [] Return: Autoflash green on loading prompt or on leave.
   - [] There seems to be a backbuffer / transparency error
        that's easy to find on mobile iOS but hard to 
        reproduce otherwise.
@@ -62,17 +61,36 @@ Welcome to...
        and produce a work.
        * Should be able to specify a contract here.
   + Later
+  - [] How can the "nopaint" system be multiplayer and turn based?
+    - [] What if turns could be negotiated?
   - [] Add `nopaint` template for Sage, Casey and Niki.
     - [x] Sage
   - [x] Set up a glitch account / editing situation for Sage.
   - [x] Write `rect` tool, which necessitates an extra buffer.
   - [x️] Write boilerplate for painting tool.
   - [x] Make a glaze appear instantly after it loads the first time?
+  + Done
+  - [x] Cache the current painting to indexedDB.
+  - [x] Either use the added `umd.js` in dep or what's below:
+          See also: https://www.npmjs.com/package/idb#installation
+                    https://cdn.jsdelivr.net/npm/idb@7/+esm
+  - [x] Add "dl" or "download" command to the prompt.
+    - [x] Test this inside of an iOS in-app browser.
+    - [x] Shouldn't have to leave the prompt to
+         save the image.
 
 *** Storage ***
-  - [] Add indexedDB storage method.
+  - [] Write much shorter, clearer console.logs with `📦 Store (method) message`
   - [] Add "remote:temporary" storage method. (Default for remote)
     - [] Add "remote:token" storage method. (Default for token-gated storage)
+  - [x] Add indexedDB (local:db) storage method.
+
+***Device Orientation***
+  - [] Add experimental Gyro sustain control to bleep.
+    - [] Sounds would need a "continuous" mode or a way to control sustain
+         after firing.
+  - [] Make a shaker using the average of all that data.
+  - [] Make a spatial linear curve to fit the data based on some device orientation.
 
 *** Image Support ***
   *** Save ***

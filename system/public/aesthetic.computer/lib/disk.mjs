@@ -43,9 +43,8 @@ const defaults = {
 // Inheritable via `export const system = "nopaint"` from any piece.
 // Boilerplate for a distributed raster editor.
 const nopaint = {
-  boot: function boot({ paste, system, gap }) {
+  boot: function boot({ paste, system }) {
     //if (!screen.load("painting")) wipe(64); // Load painting or wipe to gray.
-    gap(8);
     paste(system.painting);
   },
   act: function act({ event: e }) {
@@ -56,6 +55,7 @@ const nopaint = {
   },
   leave: function leave({ store, screen, system }) {
     store["painting"] = system.painting;
+    store.persist("painting", "local:db");
     //screen.save("painting");
   },
 };
@@ -84,7 +84,7 @@ let simCount = 0n;
 let initialSim = true;
 let noPaint = false;
 
-let storeRetrievalResolution;
+let storeRetrievalResolution, storeDeletionResolution;
 
 let socket;
 let pen = {};
@@ -117,9 +117,23 @@ const store = {
       storeRetrievalResolution = resolve;
     });
   },
+  delete: function (key, method = "local") {
+    // Remove the key from the ram store, no matter what the method.
+    delete store[key];
+
+    send({
+      type: "store:delete",
+      content: {
+        key,
+        method,
+      },
+    });
+    return new Promise((resolve) => {
+      storeDeletionResolution = resolve;
+    });
+  },
 };
-//                   during individual sessions. It doesn't get cleared
-//                   automatically unless the whole system refreshes.
+
 let upload;
 let activeVideo; // TODO: Eventually this can be a bank to store video textures.
 let bitmapPromises = {};
@@ -586,10 +600,7 @@ async function load(
     // necessary.
     //graph.paste();
 
-    const oldPixels = screen.pixels;
-
     screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
-
     screen.pixels.fill(255);
 
     graph.setBuffer(screen);
@@ -653,24 +664,18 @@ async function load(
   if (firstLoad === false) leave({ store, screen, system: $commonApi.system }); // Trigger leave.
 
   // Artificially imposed loading by at least 1/4 sec.
-  setTimeout(() => {
-    //console.clear();
-    paintCount = 0n;
-    simCount = 0n;
-    initialSim = true;
-    activeVideo = null; // reset activeVideo
-    bitmapPromises = {};
-    noPaint = false;
-    currentPath = path;
-    currentHost = host;
-    currentSearch = search;
-    currentParams = params;
-    currentHash = hash;
-    currentText = text;
-
+  setTimeout(async () => {
     // Redefine the default event functions if they exist in the module.
-    // Or... inhereit an existing `system` (just nopaint for now).
+    // Or... inherit an existing `system` (just nopaint for now).
+    if (module.system === "nopaint" || text === "prompt") {
+      store["painting"] =
+        store["painting"] || (await store.retrieve("painting", "local:db"));
+    }
+
     if (module.system === "nopaint") {
+      // If there is no painting is in ram, then grab it from the local store,
+      // or generate one.
+
       boot = module.boot || nopaint.boot;
       sim = module.sim || defaults.sim;
       paint = module.paint || defaults.paint;
@@ -696,6 +701,20 @@ async function load(
 
       delete $commonApi.system; // No system in use.
     }
+
+    //console.clear();
+    paintCount = 0n;
+    simCount = 0n;
+    initialSim = true;
+    activeVideo = null; // reset activeVideo
+    bitmapPromises = {};
+    noPaint = false;
+    currentPath = path;
+    currentHost = host;
+    currentSearch = search;
+    currentParams = params;
+    currentHash = hash;
+    currentText = text;
 
     $commonApi.query = search;
     $commonApi.params = params || [];
@@ -854,6 +873,11 @@ function makeFrame({ data: { type, content } }) {
 
   if (type === "store:retrieved") {
     storeRetrievalResolution?.(content);
+    return;
+  }
+
+  if (type === "store:deleted") {
+    storeDeletionResolution?.(content);
     return;
   }
 
