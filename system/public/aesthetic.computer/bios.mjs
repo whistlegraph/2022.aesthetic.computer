@@ -275,6 +275,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       round((window.innerHeight - projectedHeight) / 2) + "px";
 
     wrapper.style.left = round((window.innerWidth - projectedWidth) / 2) + "px";
+    wrapper.style.width = projectedWidth + "px";
+    wrapper.style.height = projectedHeight + "px";
 
     canvas.style.width = projectedWidth + "px";
     canvas.style.height = projectedHeight + "px";
@@ -612,6 +614,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       // Pen (also handles touch & pointer events)
       pen = new Pen((x, y) => {
+        console.log("cr", canvasRect, "pw", projectedWidth, "sw", screen.width)
         return {
           x: floor(((x - canvasRect.x) / projectedWidth) * screen.width),
           y: floor(((y - canvasRect.y) / projectedHeight) * screen.height),
@@ -834,7 +837,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const script = contentFrame.querySelector("script");
 
       if (script && !script.dataset.evaluated) {
-        if (script?.src) {
+        if (script?.src.length > 0) {
           const s = document.createElement("script");
           s.type = "module";
           // s.onload = callback; // s.onerror = callback;
@@ -856,6 +859,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         type: "content-created",
         content: { id: content.id, response: "Content was made!" }, // TODO: Return an API / better object?
       });
+
+      // debugger;
+
       return;
     }
 
@@ -873,7 +879,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (debug) console.log("📻 Signal received:", content);
       if (whens[content]) {
         whens[content]();
-        delete whens[content];
+        // delete whens[content]; // These shouldn't need to be deleted here. 22.10.04.23.04
       }
     }
 

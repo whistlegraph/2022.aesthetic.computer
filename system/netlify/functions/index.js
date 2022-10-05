@@ -119,6 +119,7 @@ async function fun(event, context) {
       "Access-Control-Allow-Origin": "*",
       "Cross-Origin-Embedder-Policy": "require-corp",
       "Cross-Origin-Opener-Policy": "same-origin",
+      // "Cross-Origin-Resource-Policy": "cross-origin", // for aframe. 22.10.04.21.35
       "Vary": "*"
     },
     body: html,

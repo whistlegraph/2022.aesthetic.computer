@@ -31,6 +31,7 @@
   # Currently used by ffmpeg.wasm. 22.08.06.11.01
   Cross-Origin-Embedder-Policy = "require-corp"
   Cross-Origin-Opener-Policy = "same-origin"
+  # Cross-Origin-Resource-Policy = "cross-origin"
   Vary = "*"
 [[redirects]]
   from = "https://www.4esthetic.com/*"

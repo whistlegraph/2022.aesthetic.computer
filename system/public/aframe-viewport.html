@@ -8,9 +8,7 @@
     }
     canvas, .rs-base, .rs-base h1 { cursor: none !important; }
   </style>
-  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script
-    src="https://unpkg.com/aframe-environment-component/dist/aframe-environment-component.min.js"></script>
+  <script src="aesthetic.computer/dep/aframe-v1.3.0.min.js"></script>
   <script>
     'use strict';
     // A-Frame
@@ -71,7 +69,10 @@
         });
 
         window.addEventListener('message', (e) => {
-          // console.log("Message:", e.data);
+          console.log("Message:", e.data);
+
+
+          /*
           ['down', 'move', 'up'].forEach((event) => {
             if (e.data.pointer === event) {
               let el = scene;
@@ -91,7 +92,11 @@
               );
             }
           });
+        */
+
+
         });
+        
       },
       tick: function() {
         if (bkp) {
@@ -126,7 +131,7 @@
   </a-camera>
   <a-entity text="value: Hello World;"></a-entity>
   <!--<a-sky color="blue"></a-sky>-->
-  <a-box color="blue" position="0 2 -5" rotation="0 45 45" scale="2 2 2"></a-box>
+  <a-box color="orange" position="0 2 -5" rotation="0 45 45" scale="2 4 2"></a-box>
   <a-entity
     id="handright"
     oculus-touch-controls="hand: right"

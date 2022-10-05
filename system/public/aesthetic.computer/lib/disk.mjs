@@ -817,6 +817,7 @@ class Content {
   }
 
   add(content) {
+    console.log("Added:", content);
     // Make a request to add new content to the DOM.
     this.nodes.push({ id: this.#id });
     this.#id = this.nodes.length - 1;

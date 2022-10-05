@@ -78,6 +78,7 @@ export class Pen {
 
     // ***Touch***
     window.addEventListener("pointerdown", (e) => {
+
       // Make sure the pointer we are using is already being tracked.
       let pointer = pen.pointers[e.pointerId];
 
@@ -138,7 +139,12 @@ export class Pen {
         pen.pointers[e.pointerId] = pointer;
       }
 
+      console.log("BXY:", e.x, e.y);
+
       assign(pointer, point(e.x, e.y));
+
+      console.log("AXY:", pointer.x, pointer.y);
+
       pointer.untransformedPosition = { x: e.x, y: e.y };
       pointer.pressure = reportPressure(e);
 
