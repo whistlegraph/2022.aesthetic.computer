@@ -139,11 +139,11 @@ export class Pen {
         pen.pointers[e.pointerId] = pointer;
       }
 
-      console.log("BXY:", e.x, e.y);
+      // console.log("BXY:", e.x, e.y);
 
       assign(pointer, point(e.x, e.y));
 
-      console.log("AXY:", pointer.x, pointer.y);
+      // console.log("AXY:", pointer.x, pointer.y);
 
       pointer.untransformedPosition = { x: e.x, y: e.y };
       pointer.pressure = reportPressure(e);

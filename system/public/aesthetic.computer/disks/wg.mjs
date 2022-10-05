@@ -392,15 +392,13 @@ let fuzzy = false;
 function boot({
   cursor,
   params,
-  gap,
   dom: { html },
   net: { waitForPreload },
-  density,
+  resize
 }) {
+  resize({gap: 0});
   waitForPreload();
   cursor("native");
-  gap(0);
-  density(3);
 
   // Decide what whistlegraph to use either directly or via `shortcuts`.
   let wg = params[0];

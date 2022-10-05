@@ -89,7 +89,7 @@ async function fun(event, context) {
         <link rel="icon" href="data:;base64,iVBORw0KGgo=">
         <link rel="stylesheet" href="/aesthetic.computer/style.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <meta name="og:title" content="${slug}" />
+        <meta name="og:title" content="${title}" />
         <meta name="og:description" content="${
           desc || "An aesthetic.computer piece."
         }" />

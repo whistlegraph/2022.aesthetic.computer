@@ -614,7 +614,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       // Pen (also handles touch & pointer events)
       pen = new Pen((x, y) => {
-        console.log("cr", canvasRect, "pw", projectedWidth, "sw", screen.width)
+        // console.log("cr", canvasRect, "pw", projectedWidth, "sw", screen.width)
         return {
           x: floor(((x - canvasRect.x) / projectedWidth) * screen.width),
           y: floor(((y - canvasRect.y) / projectedHeight) * screen.height),

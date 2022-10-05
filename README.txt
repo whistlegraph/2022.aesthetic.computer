@@ -36,6 +36,13 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** 3D Rasterizer ***
+  - [🃏] Draw a bresenham line in 3d.
+
+*** Whistlegraph (wg) ***
+  - [] Use `wg` to improve dynamic metadata descriptions for link previews.
+    (Does this mean making a export meta function that can be read on the server and the client both?)
+
 *** Web XR Hacking ***
   - [] https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
 

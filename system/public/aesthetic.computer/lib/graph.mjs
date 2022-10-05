@@ -6,6 +6,7 @@ import {
   even,
   radians,
   lerp,
+  map,
   randIntRange,
 } from "./num.mjs";
 const { abs, sign, ceil, floor, sin, cos } = Math;
@@ -46,12 +47,12 @@ function makeBuffer(width, height, fillProcess, painting) {
   return buffer;
 }
 
-function cloneBuffer (buffer) {
+function cloneBuffer(buffer) {
   return {
     width: buffer.width,
     height: buffer.height,
     pixels: new Uint8ClampedArray(buffer.pixels),
-  }
+  };
 }
 
 function getBuffer() {
@@ -263,12 +264,11 @@ function copyRow(destX, destY, srcX, srcY, src) {
 // the source buffer.
 // TODO: Add dirty rectangle support here...
 //       - What would the best parameter set be?
-// `from` - can either be 
+// `from` - can either be
 
 // TODO: Some of these routes are incompatible. 22.10.01.11.57
 // TODO: Replace with more generic algorithm?
 function paste(from, destX = 0, destY = 0, scale = 1) {
-
   if (scale !== 1) {
     grid(
       {
@@ -405,13 +405,32 @@ function line() {
 
   // TODO: Check if line is perfectly horizontal and then skip bresenham and
   //       optimize by filling the whole buffer with the current color.
-  bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
+  //bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
+
+  bresenham(x0, y0, x1, y1).forEach((p) => {
+    plot(p.x, p.y);
+  });
 }
 
 function lineAngle(x1, y1, dist, degrees) {
   const x2 = x1 + dist * Math.cos(radians(degrees));
   const y2 = y1 + dist * Math.sin(radians(degrees));
   return line(x1, y1, x2, y2);
+}
+
+// Take two vertices and plot a 3d line with depth information.
+function line3d(a, b) {
+  const [x0, y0, z0] = a.pos;
+  const [x1, y1, z1] = b.pos;
+  const points = bresenham(x0, y0, x1, y1);
+  points.forEach((p, i) => {
+    const z = lerp(z0, z1, i / points.length);
+    const range = map(z, 0.9, 1, 255, 0);
+    color(range, 0, 0);
+    plot(p.x, p.y);
+    const index = p.x + p.y * width;
+    depthBuffer[index] = z;
+  });
 }
 
 // Draws a 1px aliased circle: http://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#C
@@ -958,7 +977,7 @@ class Form {
 
   constructor(
     // Model
-    { positions, indices },
+    { type, positions, indices },
     fill,
     // Transform
     position = [0, 0, 0],
@@ -1491,12 +1510,9 @@ function fillTriangle(minYVert, midYVert, maxYVert, texture, alpha) {
   // Backface culling by checking if Z normal is negative.
 
   // TODO: Add normal to vertex (for basic lighting) here?
-
-  /*
-                                                        if (triangleAreaDouble(minYVert, maxYVert, midYVert) >= 0) {
-                                                          return;
-                                                        }
-                                                         */
+  //if (triangleAreaDouble(minYVert, maxYVert, midYVert) >= 0) {
+  //  return;
+  //}
 
   if (maxYVert.y < midYVert.y) {
     const temp = maxYVert;
@@ -1526,18 +1542,23 @@ function fillTriangle(minYVert, midYVert, maxYVert, texture, alpha) {
 
   // const tempColor = c.slice();
   // color(127, 127, 127);
-  // line(minYVert.x, minYVert.y, midYVert.x, midYVert.y);
-  // line(midYVert.x, midYVert.y, maxYVert.x, maxYVert.y);
-  // line(minYVert.x, minYVert.y, maxYVert.x, maxYVert.y);
-  //
+
+  // line3d(minYVert, midYVert);
+  // line3d(midYVert, maxYVert);
+  // line3d(minYVert, maxYVert);
+
+  //line(minYVert.x, minYVert.y, midYVert.x, midYVert.y);
+  //line(midYVert.x, midYVert.y, maxYVert.x, maxYVert.y);
+  //line(minYVert.x, minYVert.y, maxYVert.x, maxYVert.y);
+
   // color(...tempColor);
-  //
+
   // color(...minYVert.color24bit);
   // plot(minYVert.x, minYVert.y);
-  //
+
   // color(...midYVert.color24bit);
   // plot(midYVert.x, midYVert.y);
-  //
+
   // color(...maxYVert.color24bit);
   // plot(maxYVert.x, maxYVert.y);
 }
@@ -1562,6 +1583,7 @@ function scanTriangle(
   const topToBottom = new Edge(gradients, minYVert, maxYVert, 0);
   const topToMiddle = new Edge(gradients, minYVert, midYVert, 0);
   const middleToBottom = new Edge(gradients, midYVert, maxYVert, 1);
+
   scanEdges(gradients, topToBottom, topToMiddle, handedness, texture, alpha);
   scanEdges(gradients, topToBottom, middleToBottom, handedness, texture, alpha);
 }
@@ -1615,6 +1637,8 @@ function drawScanLine(gradients, left, right, j, texture, alpha) {
   for (let i = xMin; i < xMax; i += 1) {
     const index = i + j * width;
 
+    //console.log(depthBuffer[index]);
+
     if (depth < depthBuffer[index]) {
       depthBuffer[index] = depth;
 
@@ -1634,6 +1658,9 @@ function drawScanLine(gradients, left, right, j, texture, alpha) {
 
       copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
     }
+
+    //color(255, 0, 0);
+    //plot(i, j);
 
     vec4.add(gradientColor, gradientColor, gradients.colorXStep);
     texCoordX += texCoordXXStep;

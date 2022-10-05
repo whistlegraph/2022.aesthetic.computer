@@ -568,10 +568,6 @@ async function load(
       reframe = { width, height, gap };
     }
 
-    // Reset the depth buffer. (This is only used for the 3D software renderer in `graph`)
-    // graph.depthBuffer.length = screen.width * screen.height;
-    // graph.depthBuffer.fill(Number.MAX_VALUE);
-
     console.log(
       "🖼 Reframe to:",
       width,
@@ -594,6 +590,10 @@ async function load(
 
     screen.width = width;
     screen.height = height;
+
+    // Reset / recreate the depth buffer. (This is only used for the 3D software renderer in `graph`)
+    graph.depthBuffer.length = screen.width * screen.height;
+    graph.depthBuffer.fill(Number.MAX_VALUE);
 
     // TODO:
     // Crop existing image by copying, then adding blank space if
@@ -1313,13 +1313,13 @@ function makeFrame({ data: { type, content } }) {
 
         // TODO: Add the depth buffer back here.
         // Reset the depth buffer.
-        // graph.depthBuffer.length = screen.width * screen.height;
-        // graph.depthBuffer.fill(Number.MAX_VALUE);
+        graph.depthBuffer.length = screen.width * screen.height;
+        graph.depthBuffer.fill(Number.MAX_VALUE);
       }
 
       // TODO: Disable the depth buffer for now... it doesn't need to be
       //       regenerated on every frame.
-      // graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
+      graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
 
       $api.screen = screen;
 
