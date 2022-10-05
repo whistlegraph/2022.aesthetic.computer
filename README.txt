@@ -33,14 +33,19 @@ Welcome to...
   - [🆘] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
-  - [x] Pull - fix pointer delta event in-accuracy.
-  - [x] Don't store continued prompt history...
-         For example: Stored history: (5) ['painting:reset', 'painting:reset', 'painting:reset', 'painting:reset', 'painting:reset']
 
 🌟 Projects In Progress 🌟
 
+*** Web XR Hacking ***
+  - [] https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
+
 *** A-frame Hacking ***
-  - [] Finish routing input events.
+  - [] Finish routing input events?
+
+*** ThreeJS Hacking ***
+  - [] Implement these examples:
+    - [] https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
+    - [] https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
 
 *** In-App Browsers ***
   - [] The back button does not work in the Instagram in-app browser.
