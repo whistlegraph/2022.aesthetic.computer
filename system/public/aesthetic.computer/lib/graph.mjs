@@ -361,8 +361,21 @@ function blend(fg, bg) {
 
 // Draws a horizontal line. (Should be very fast...)
 function lineh(x0, x1, y) {
-  const startIndex = (x0 + y * width) * 4;
-  const endIndex = (x1 + y * width) * 4;
+  const firstIndex = (x0 + y * width) * 4;
+  const secondIndex = (x1 + y * width) * 4;
+
+  let startIndex, endIndex;
+
+  // Sort indices so we can always draw from left to right.
+  if (firstIndex > secondIndex) {
+    startIndex = secondIndex;
+    endIndex = firstIndex;
+  } else {
+    startIndex = firstIndex;
+    endIndex = secondIndex;
+  }
+
+  // Only use alpha blending if necessary.
   if (c[3] === 255) {
     for (let i = startIndex; i < endIndex; i += 4) pixels.set(c, i);
   } else if (c[3] !== 0) {
