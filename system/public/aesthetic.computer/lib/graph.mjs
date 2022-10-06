@@ -425,8 +425,9 @@ function line3d(a, b) {
   const points = bresenham(x0, y0, x1, y1);
   points.forEach((p, i) => {
     const z = lerp(z0, z1, i / points.length);
-    const range = map(z, 0.9, 1, 255, 0);
+    const range = map(z, 0.80, 0.83, 255, 0);
     color(range, 0, 0);
+    color(255, 0, 0);
     plot(p.x, p.y);
     const index = p.x + p.y * width;
     depthBuffer[index] = z;
@@ -875,8 +876,8 @@ const W = 3;
 
 class Camera {
   matrix;
-  x = 0;
-  y = 0;
+  #x = 0;
+  #y = 0;
   #z = 0;
 
   #perspectiveMatrix;
@@ -887,6 +888,26 @@ class Camera {
     this.#transform();
     //this.#screen();
     this.matrix = this.#transformMatrix;
+  }
+
+  set x(n) {
+    this.#x = n;
+    this.#transform();
+    this.matrix = this.#transformMatrix;
+  }
+
+  get x() {
+    return this.#x;
+  }
+
+  set y(n) {
+    this.#y = n;
+    this.#transform();
+    this.matrix = this.#transformMatrix;
+  }
+
+  get y() {
+    return this.#y;
   }
 
   set z(n) {
@@ -933,7 +954,7 @@ class Camera {
     this.#transformMatrix = mat4.translate(
       mat4.create(),
       this.#perspectiveMatrix,
-      [this.x, this.y, this.#z]
+      [this.#x, this.#y, this.#z]
     );
 
     // Camera rotate:
@@ -943,7 +964,7 @@ class Camera {
 
 // Mesh
 class Form {
-  // #primitive = "triangle";
+  #primitive = "triangle";
 
   // Model
   vertices = [];
@@ -984,6 +1005,9 @@ class Form {
     rotation = [0, 0, 0],
     scale = [1, 1, 1]
   ) {
+    // 0. Set the primitive type.
+    this.#primitive = type;
+
     // 1. Import a Model
 
     // Create new vertices from incoming positions.
@@ -1062,19 +1086,46 @@ class Form {
     });
 
     // TODO: Switch on render type here. Right now it's only triangles.
+    if (this.#primitive === "triangle") {
+      // Loop indices list to draw each triangle.
+      for (let i = 0; i < this.indices.length; i += 3) {
+        // Draw each triangle by applying the screen transform &
+        // perspective divide (with clipping).
+        drawTriangle(
+          transformedVertices[i],
+          transformedVertices[i + 1],
+          transformedVertices[i + 2],
+          // Eventually pass in a "shader" function instead of texture or alpha..
+          this.texture,
+          this.alpha
+        );
+      }
+    }
 
-    // Loop indices list to draw each triangle.
-    for (let i = 0; i < this.indices.length; i += 3) {
-      // Draw each triangle by applying the screen transform &
-      // perspective divide (with clipping).
-      drawTriangle(
-        transformedVertices[i],
-        transformedVertices[i + 1],
-        transformedVertices[i + 2],
-        // Eventually pass in a "shader" function instead of texture or alpha..
-        this.texture,
-        this.alpha
-      );
+    if (this.#primitive === "line") {
+      // Loop indices list to draw each triangle.
+      for (let i = 0; i < this.indices.length; i += 2) {
+        // Draw each line by applying the screen transform &
+        // perspective divide (with clipping).
+
+        const v1 = transformedVertices[i];
+        const v2 = transformedVertices[i + 1];
+
+        // TODO: How to perform better clipping here?
+        if (isInsideViewFrustum(v1.pos) && isInsideViewFrustum(v2.pos)) {
+
+          const screenMatrix = initScreenSpaceTransformMatrix(
+            width / 2,
+            height / 2,
+            mat4
+          );
+
+          const a = v1.transform(screenMatrix).perspectiveDivide();
+          const b = v2.transform(screenMatrix).perspectiveDivide();
+
+          line3d(a, b);
+        }
+      }
     }
   }
 
@@ -1658,9 +1709,6 @@ function drawScanLine(gradients, left, right, j, texture, alpha) {
 
       copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
     }
-
-    //color(255, 0, 0);
-    //plot(i, j);
 
     vec4.add(gradientColor, gradientColor, gradients.colorXStep);
     texCoordX += texCoordXXStep;

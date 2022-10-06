@@ -36,8 +36,10 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** 3D Rasterizer ***
-  - [🃏] Draw a bresenham line in 3d.
+*** 3D Rasterizer (3dline) ***
+  - [ ] Optimize 3d line geometry / make a polyline function. 
+  - [ ] Make it all way faster?
+  - [x] Draw a bresenham line in 3d.
 
 *** Whistlegraph (wg) ***
   - [] Use `wg` to improve dynamic metadata descriptions for link previews.

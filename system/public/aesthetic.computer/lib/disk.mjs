@@ -202,6 +202,7 @@ const $updateApi = {};
 
 // Pre-fab models:
 const SQUARE = {
+  type: "triangle",
   positions: [
     // Triangle 1 (Left Side)
     [-1, -1, 0, 1], // Bottom Left
@@ -222,6 +223,7 @@ const SQUARE = {
 };
 
 const TRIANGLE = {
+  type: "triangle",
   positions: [
     [-1, -1, 0, 1], // Bottom Left
     [0, 1, 0, 1], // Top Left
@@ -229,6 +231,21 @@ const TRIANGLE = {
     // Triangle 2 (Right Side)
   ],
   indices: [0, 1, 2],
+};
+
+const SEGMENT = {
+  type: "line",
+  positions: [
+    [0, 0, 0, 1], // Center
+    [0.2, -0.25, 0, 1], // Top Right
+    [0, 0, 0, 1], // Center 
+    [-0.15, 0.25, 0.1, 1], // ?
+    [0, 0, 0, 1], // Center
+    [0, -0.5, 0, 1], // ?
+    [0, 0, 0, 1], // Center
+    [0.1, 0.1, 0.2, 1], // ?
+  ],
+  indices: [0, 1, 2, 3, 4, 5, 6, 7],
 };
 
 // Inputs: (r, g, b), (r, g, b, a) or an array of those.
@@ -286,6 +303,7 @@ const $paintApi = {
   Form: graph.Form,
   TRIANGLE,
   SQUARE,
+  SEGMENT,
 };
 
 const $paintApiUnwrapped = {
