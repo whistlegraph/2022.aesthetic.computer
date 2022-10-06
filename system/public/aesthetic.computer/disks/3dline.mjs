@@ -1,7 +1,7 @@
 // 3D Line, 22.10.05.11.01
 // A test for developing software rasterized 3D lines.
 
-let cam, tri, l3d;
+let cam, tri, l3d, dolly;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ resize, painting, Form, Camera, TRIANGLE, SEGMENT, screen }) {
@@ -24,40 +24,84 @@ function boot({ resize, painting, Form, Camera, TRIANGLE, SEGMENT, screen }) {
     [1, 1, 1] // scale
   );
 
-  cam = new Camera(104); // fov
+  cam = new Camera(80); // camera with fov
   cam.z = 1;
-  //cam.y = 0.25;
+
+  dolly = new Dolly(); // moves the camera 
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim($api) {
-  tri.rotation[1] = (tri.rotation[1] - 0.5) % 360; // Rotate Y axis.
-  l3d.rotation[1] = (l3d.rotation[1] + 1.5) % 360; // Rotate Y axis.
-  l3d.rotation[0] = (l3d.rotation[0] - 0.1) % 360; // Rotate Y axis.
-  l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Y axis.
-  // console.log("Triangle Y Rotation:", tri.rotation[1]);
+
+  // Object rotation.
+  //tri.rotation[1] = (tri.rotation[1] - 0.5) % 360; // Rotate Y axis.
+  //l3d.rotation[1] = (l3d.rotation[1] + 1.5) % 360; // Rotate Y axis.
+  //l3d.rotation[0] = (l3d.rotation[0] - 0.1) % 360; // Rotate Y axis.
+  //l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Y axis.
+
+  // Camera controls.
+  dolly.sim();
+  cam.x += dolly.xVel;
+  cam.y += dolly.yVel;
+  cam.z += dolly.zVel;
+
+  if (wHeld) dolly.push({ z: -0.001 });
+  if (sHeld) dolly.push({ z: 0.001 });
+  if (aHeld) dolly.push({ x: 0.001 });
+  if (dHeld) dolly.push({ x: -0.001 });
+
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint($api) {
-  $api.ink(0, 0, 0, 30);
-  $api.box(0, 0, $api.screen.width, $api.screen.height); // Draw a black background. (RGBA)
-  $api.form(l3d, cam);
-  //$api.form(tri, cam);
-  //return false; // You can return false to draw only once!
+function paint({ ink, screen, num: { randIntRange } }) {
+  ink(0, 30).box(0, 0, screen.width, screen.height).form(l3d, cam);
 }
+
+class Dolly {
+  xVel = 0;
+  yVel = 0;
+  zVel = 0;
+  dec = 0.90;
+
+  constructor() {
+  }
+
+  sim () {
+    this.xVel *= this.dec;
+    this.yVel *= this.dec;
+    this.zVel *= this.dec;
+  }
+
+  push ({x, y, z}) {
+    this.xVel += x || 0;
+    this.yVel += y || 0;
+    this.zVel += z || 0;
+  }
+
+}
+
+let wHeld, sHeld, aHeld, dHeld;
 
 // ✒ Act (Runs once per user interaction)
 function act({ event }) {
-  if (event.is("keyboard:down:w")) {
-    cam.z -= 0.1;
-    console.log("Camera Z:", cam.z);
-  }
-  if (event.is("keyboard:down:s")) {
-    cam.z += 0.1;
-    console.log("Camera Z:", cam.z);
-  }
+  if (event.is("keyboard:down:w")) wHeld = true;
+  if (event.is("keyboard:down:s")) sHeld = true;
+  if (event.is("keyboard:down:a")) aHeld = true; 
+  if (event.is("keyboard:down:d")) dHeld = true; 
+
+  if (event.is("keyboard:up:w")) wHeld = false;
+  if (event.is("keyboard:up:s")) sHeld = false;
+  if (event.is("keyboard:up:a")) aHeld = false; 
+  if (event.is("keyboard:up:d")) dHeld = false; 
+
   // Respond to user input here.
+  if (event.is("draw")) {
+    //cam.rotation[1] += event.delta.x; // Look left and right.
+     cam.rotX += event.delta.y;
+     cam.rotY += event.delta.x;
+    //cam.rotation[3] += event.delta.x; // Look up and down.
+  }
+
 }
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)

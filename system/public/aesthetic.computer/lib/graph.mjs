@@ -114,18 +114,9 @@ function plot() {
 
   if (alpha === 255) {
     // No alpha blending, just copy.
-    pixels[i] = c[0];
-    pixels[i + 1] = c[1];
-    pixels[i + 2] = c[2];
-    pixels[i + 3] = c[3];
+    pixels.set(c, i);
   } else if (alpha !== 0) {
-    // Lerp to blend.
-    pixels[i] = lerp(pixels[i], c[0], alpha / 255);
-    pixels[i + 1] = lerp(pixels[i + 1], c[1], alpha / 255);
-    pixels[i + 2] = lerp(pixels[i + 2], c[2], alpha / 255);
-    // TODO: Is this the best way to alpha blend? What kind is this? 2021.12.10.15.43
-    pixels[i + 3] = Math.min(255, pixels[i + 3] + c[3]);
-    //pixels[i + 3] = floor(255, (pixels[i + 3] + c[3]) / 2);
+    pixels.set(blend(c, pixels.slice(i, i + 4)), i);
   }
 }
 
@@ -355,9 +346,36 @@ function paste(from, destX = 0, destY = 0, scale = 1) {
   }
 }
 
+// A fast alpha blending function.
+// Transcribed from C++: https://stackoverflow.com/a/12016968
+function blend(fg, bg) {
+  const alpha = fg[3] + 1;
+  const invAlpha = 256 - alpha;
+  return [
+    (alpha * fg[0] + invAlpha * bg[0]) >> 8,
+    (alpha * fg[1] + invAlpha * bg[1]) >> 8,
+    (alpha * fg[2] + invAlpha * bg[2]) >> 8,
+    0xff,
+  ];
+}
+
+// Draws a horizontal line. (Should be very fast...)
+function lineh(x0, x1, y) {
+  const startIndex = (x0 + y * width) * 4;
+  const endIndex = (x1 + y * width) * 4;
+  if (c[3] === 255) {
+    for (let i = startIndex; i < endIndex; i += 4) pixels.set(c, i);
+  } else if (c[3] !== 0) {
+    for (let i = startIndex; i < endIndex; i += 4) {
+      pixels.set(blend(c, pixels.slice(i, i + 4)), i);
+    }
+  }
+}
+
 // Draws a line
 // (2) p1, p2: pairs of {x, y} or [x, y]
 // (4) x0, y0, x1, y1
+// TODO: Automatically use lineh if possible. 22.10.05.18.27
 function line() {
   let x0, y0, x1, y1;
 
@@ -403,13 +421,12 @@ function line() {
   x1 += panTranslation.x;
   y1 += panTranslation.y;
 
-  // TODO: Check if line is perfectly horizontal and then skip bresenham and
-  //       optimize by filling the whole buffer with the current color.
-  //bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
-
-  bresenham(x0, y0, x1, y1).forEach((p) => {
-    plot(p.x, p.y);
-  });
+  // Check if line is perfectly horizontal, otherwise run bresenham.
+  if (y0 === y1) {
+    lineh(x0, x1, y0);
+  } else {
+    bresenham(x0, y0, x1, y1).forEach((p) => plot(p.x, p.y));
+  }
 }
 
 function lineAngle(x1, y1, dist, degrees) {
@@ -425,9 +442,8 @@ function line3d(a, b) {
   const points = bresenham(x0, y0, x1, y1);
   points.forEach((p, i) => {
     const z = lerp(z0, z1, i / points.length);
-    const range = map(z, 0.80, 0.83, 255, 0);
+    const range = map(z, 0.4, 0.98, 255, 0);
     color(range, 0, 0);
-    color(255, 0, 0);
     plot(p.x, p.y);
     const index = p.x + p.y * width;
     depthBuffer[index] = z;
@@ -633,13 +649,9 @@ function box() {
   } else if (mode === "fill") {
     w -= 1;
     if (sign(height) === 1) {
-      for (let row = 0; row < h; row += 1) {
-        line(x, y + row, x + w, y + row);
-      }
+      for (let row = 0; row < h; row += 1) line(x, y + row, x + w, y + row);
     } else {
-      for (let row = 0; row > h; row -= 1) {
-        line(x, y + row, x + w, y + row);
-      }
+      for (let row = 0; row > h; row -= 1) line(x, y + row, x + w, y + row);
     }
   }
 }
@@ -877,7 +889,9 @@ const W = 3;
 class Camera {
   matrix;
   #x = 0;
+  #rotX = 0;
   #y = 0;
+  #rotY = 0;
   #z = 0;
 
   #perspectiveMatrix;
@@ -888,6 +902,26 @@ class Camera {
     this.#transform();
     //this.#screen();
     this.matrix = this.#transformMatrix;
+  }
+
+  set rotX(n) {
+    this.#rotX = n;
+    this.#transform();
+    this.matrix = this.#transformMatrix;
+  }
+
+  get rotX() {
+    return this.#rotX;
+  }
+
+  set rotY(n) {
+    this.#rotY = n;
+    this.#transform();
+    this.matrix = this.#transformMatrix;
+  }
+
+  get rotY() {
+    return this.#rotY;
   }
 
   set x(n) {
@@ -950,15 +984,27 @@ class Camera {
   }
 
   #transform() {
-    // Camera pan / move:
-    this.#transformMatrix = mat4.translate(
+    // Camera rotate:
+    const rotXMatrix = mat4.rotate(
       mat4.create(),
       this.#perspectiveMatrix,
-      [this.#x, this.#y, this.#z]
+      radians(this.#rotX),
+      [1, 0, 0]
     );
 
-    // Camera rotate:
-    // mat4.rotate(perspective, perspective, radians(cr), [0, 0, 1]);
+    const rotYMatrix = mat4.rotate(
+      mat4.create(),
+      rotXMatrix,
+      radians(this.#rotY),
+      [0, 1, 0]
+    );
+
+    // Camera pan / move:
+    this.#transformMatrix = mat4.translate(mat4.create(), rotYMatrix, [
+      this.#x,
+      this.#y,
+      this.#z,
+    ]);
   }
 }
 
@@ -1113,7 +1159,6 @@ class Form {
 
         // TODO: How to perform better clipping here?
         if (isInsideViewFrustum(v1.pos) && isInsideViewFrustum(v2.pos)) {
-
           const screenMatrix = initScreenSpaceTransformMatrix(
             width / 2,
             height / 2,
