@@ -3,8 +3,6 @@
 
 import { vec2 } from "../lib/num.mjs";
 
-//import { vec2 } from "../lib/vec2.mjs";
-
 let cam, tri, l3d, dolly;
 
 // 🥾 Boot (Runs once before first paint and sim)

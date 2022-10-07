@@ -1236,11 +1236,11 @@ function makeFrame({ data: { type, content } }) {
 
             const parts = e.split(":");
 
-            if (parts.length > 1) {
-              // Check for an exact match.
+            if (parts.length > 2) {
+              // Check for an exact match if `keyboard:action:?`
               return data.name === e;
             } else {
-              // Or a subtring match.
+              // Or a subtring match if `keyboard:action`
               return data.name.indexOf(e) === 0;
             }
 
