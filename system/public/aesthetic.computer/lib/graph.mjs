@@ -361,6 +361,11 @@ function blend(fg, bg) {
 
 // Draws a horizontal line. (Should be very fast...)
 function lineh(x0, x1, y) {
+
+  x0 = floor(x0);
+  x1 = floor(x1);
+  y = floor(y);
+
   const firstIndex = (x0 + y * width) * 4;
   const secondIndex = (x1 + y * width) * 4;
 
@@ -377,9 +382,9 @@ function lineh(x0, x1, y) {
 
   // Only use alpha blending if necessary.
   if (c[3] === 255) {
-    for (let i = startIndex; i < endIndex; i += 4) pixels.set(c, i);
+    for (let i = startIndex; i <= endIndex; i += 4) pixels.set(c, i);
   } else if (c[3] !== 0) {
-    for (let i = startIndex; i < endIndex; i += 4) {
+    for (let i = startIndex; i <= endIndex; i += 4) {
       pixels.set(blend(c, pixels.slice(i, i + 4)), i);
     }
   }
@@ -455,7 +460,7 @@ function line3d(a, b) {
   const points = bresenham(x0, y0, x1, y1);
   points.forEach((p, i) => {
     const z = lerp(z0, z1, i / points.length);
-    const range = map(z, 0.4, 0.98, 255, 0);
+    const range = map(z, 0.4, 0.98, 255, 127);
     color(range, 0, 0);
     plot(p.x, p.y);
     const index = p.x + p.y * width;
@@ -906,12 +911,14 @@ class Camera {
   #y = 0;
   #rotY = 0;
   #z = 0;
+  fov;
 
   #perspectiveMatrix;
   #transformMatrix;
 
-  constructor(fov) {
-    this.#perspective(fov);
+  constructor(fov = 80) {
+    this.fov = fov;
+    this.#perspective(this.fov);
     this.#transform();
     //this.#screen();
     this.matrix = this.#transformMatrix;
@@ -919,6 +926,7 @@ class Camera {
 
   set rotX(n) {
     this.#rotX = n;
+    this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
   }
@@ -929,6 +937,7 @@ class Camera {
 
   set rotY(n) {
     this.#rotY = n;
+    this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
   }
@@ -939,6 +948,7 @@ class Camera {
 
   set x(n) {
     this.#x = n;
+    this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
   }
@@ -949,6 +959,7 @@ class Camera {
 
   set y(n) {
     this.#y = n;
+    this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
   }
@@ -959,6 +970,7 @@ class Camera {
 
   set z(n) {
     this.#z = n;
+    this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
   }
@@ -969,6 +981,7 @@ class Camera {
 
   forward(n) {
     this.#z -= n;
+    this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
   }
@@ -991,33 +1004,38 @@ class Camera {
     const ten = (-zNear - zFar) / zRange;
     const eleven = (2 * zFar * zNear) / zRange;
 
-    this.#perspectiveMatrix[10] = ten; // Set this Z component to 0.
+    this.#perspectiveMatrix[10] = ten; // Zero the Z component. 
     this.#perspectiveMatrix[14] = eleven;
     this.#perspectiveMatrix[11] = 1; // Flip the Y so we see things rightside up.
   }
 
   #transform() {
-    // Camera rotate:
-    const rotXMatrix = mat4.rotate(
-      mat4.create(),
-      this.#perspectiveMatrix,
-      radians(this.#rotX),
-      [1, 0, 0]
-    );
-
-    const rotYMatrix = mat4.rotate(
-      mat4.create(),
-      rotXMatrix,
-      radians(this.#rotY),
-      [0, 1, 0]
-    );
-
-    // Camera pan / move:
-    this.#transformMatrix = mat4.translate(mat4.create(), rotYMatrix, [
+    // Translation.
+    const panned = mat4.translate(mat4.create(), mat4.create(), [
       this.#x,
       this.#y,
       this.#z,
     ]);
+
+    const rotY = mat4.fromYRotation(
+      mat4.create(),
+      radians(this.#rotY)
+    );
+
+    const rotX = mat4.fromXRotation(
+      mat4.create(),
+      radians(this.#rotX)
+    );
+
+    const rotatedY = mat4.multiply(mat4.create(), rotY, panned);
+    const rotatedX = mat4.multiply(mat4.create(), rotX, rotatedY);
+
+    // Perspective
+    this.#transformMatrix = mat4.multiply(
+      mat4.create(),
+      this.#perspectiveMatrix,
+      rotatedX, 
+    );
   }
 }
 
@@ -1032,6 +1050,7 @@ class Form {
   // TODO: Texture and color should be optional, and perhaps based on type.
   // TODO: Should this use a parameter called shader?
   texture; // = makeBuffer(32, 32);
+  color;
 
   #gradientColors = [
     [1.0, 0.0, 0.0, 1.0],
@@ -1095,9 +1114,8 @@ class Form {
     this.indices = indices;
 
     // Assign texture or color.
-    if (fill.texture) {
-      this.texture = fill.texture;
-    }
+    if (fill?.texture) this.texture = fill.texture;
+    if (fill?.color) this.color = fill.color;
 
     // TODO: Set this.#type here from type.
 
@@ -1110,6 +1128,7 @@ class Form {
     // Build a matrix to represent this form's position, rotation and scale.
 
     const translate = mat4.fromTranslation(mat4.create(), this.position);
+
     const rotateY = mat4.fromYRotation(
       mat4.create(),
       radians(this.rotation[Y])
@@ -1136,6 +1155,7 @@ class Form {
 
     // Apply the camera matrix.
     mat4.mul(matrix, cameraMatrix, matrix);
+    //mat4.mul(matrix, matrix, cameraMatrix);
 
     const transformedVertices = [];
 

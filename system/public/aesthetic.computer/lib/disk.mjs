@@ -1233,10 +1233,17 @@ function makeFrame({ data: { type, content } }) {
         Object.assign(data, {
           device: "keyboard",
           is: (e) => {
-            //const parts = e.split(":");
-            //console.log("Parts", parts, "Name", data.name);
 
-            return data.name.indexOf(e) === 0;
+            const parts = e.split(":");
+
+            if (parts.length > 1) {
+              // Check for an exact match.
+              return data.name === e;
+            } else {
+              // Or a subtring match.
+              return data.name.indexOf(e) === 0;
+            }
+
           },
         });
         $api.event = data;
