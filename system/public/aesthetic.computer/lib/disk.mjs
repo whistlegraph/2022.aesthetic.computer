@@ -1233,9 +1233,7 @@ function makeFrame({ data: { type, content } }) {
         Object.assign(data, {
           device: "keyboard",
           is: (e) => {
-
             const parts = e.split(":");
-
             if (parts.length > 2) {
               // Check for an exact match if `keyboard:action:?`
               return data.name === e;

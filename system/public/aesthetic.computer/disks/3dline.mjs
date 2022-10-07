@@ -48,8 +48,8 @@ function boot({
 function sim($api) {
   // Object rotation.
   //tri.rotation[1] = (tri.rotation[1] - 0.25) % 360; // Rotate Y axis.
-  //l3d.rotation[1] = (l3d.rotation[1] + 0.5) % 360; // Rotate Y axis.
   //l3d.rotation[0] = (l3d.rotation[0] - 0.1) % 360; // Rotate Y axis.
+  //l3d.rotation[1] = (l3d.rotation[1] + 0.5) % 360; // Rotate Y axis.
   //l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Y axis.
 
   // Camera controls.
@@ -89,7 +89,8 @@ function sim($api) {
 // 🎨 Paint (Executes every display frame)
 function paint({ ink, screen, num: { randIntRange }, form }) {
   ink(0, 0, 100).box(0, 0, screen.width, screen.height);
-  form(l3d, cam).form(tri, cam);
+  form(l3d, cam)
+  form(tri, cam);
   ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
 }
 

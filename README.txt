@@ -37,8 +37,15 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 *** 3D Rasterizer (3dline) ***
-  - [ ] Optimize 3d line geometry / make a polyline function. 
-  - [ ] Make it all way faster?
+  - [] Add an X on the ground... and maybe a horizon?
+  - [] Add WebXR session.
+  - [] Draw a line in webXR.
+  - [] Optimize 3d line geometry / make a polyline function. 
+  - [x] Add triangle clipping.
+  - [x] Add line clipping.
+  - [x] Optimize screenMatrix.
+  - [x] Basic FPS Camera.
+  - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
 
 *** Whistlegraph (wg) ***

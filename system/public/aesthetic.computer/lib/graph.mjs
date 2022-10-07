@@ -8,6 +8,7 @@ import {
   lerp,
   map,
   randIntRange,
+  clamp,
 } from "./num.mjs";
 const { abs, sign, ceil, floor, sin, cos } = Math;
 
@@ -361,10 +362,14 @@ function blend(fg, bg) {
 
 // Draws a horizontal line. (Should be very fast...)
 function lineh(x0, x1, y) {
-
   x0 = floor(x0);
   x1 = floor(x1);
   y = floor(y);
+
+  if (y < 0 || y >= height) return;
+
+  x0 = clamp(x0, 0, width);
+  x1 = clamp(x1, 0, width);
 
   const firstIndex = (x0 + y * width) * 4;
   const secondIndex = (x1 + y * width) * 4;
@@ -455,6 +460,9 @@ function lineAngle(x1, y1, dist, degrees) {
 
 // Take two vertices and plot a 3d line with depth information.
 function line3d(a, b) {
+  a = a.transform(screenMatrix).perspectiveDivide();
+  b = b.transform(screenMatrix).perspectiveDivide();
+
   const [x0, y0, z0] = a.pos;
   const [x1, y1, z1] = b.pos;
   const points = bresenham(x0, y0, x1, y1);
@@ -463,8 +471,9 @@ function line3d(a, b) {
     const range = map(z, 0.4, 0.98, 255, 127);
     color(range, 0, 0);
     plot(p.x, p.y);
+
     const index = p.x + p.y * width;
-    depthBuffer[index] = z;
+    if (depthBuffer[index] !== undefined) depthBuffer[index] = z;
   });
 }
 
@@ -901,6 +910,7 @@ const X = 0;
 const Y = 1;
 const Z = 2;
 const W = 3;
+let screenMatrix;
 
 // b. Geometric Abstractions
 
@@ -994,8 +1004,8 @@ class Camera {
       mat4.create(),
       radians(fov),
       width / height,
-      0.1,
-      1000
+      zNear,
+      zFar
     );
 
     // See: https://github.com/BennyQBD/3DSoftwareRenderer/blob/641f59125351d9565e744a90ad86256c3970a724/src/Matrix4f.java#L89
@@ -1004,7 +1014,7 @@ class Camera {
     const ten = (-zNear - zFar) / zRange;
     const eleven = (2 * zFar * zNear) / zRange;
 
-    this.#perspectiveMatrix[10] = ten; // Zero the Z component. 
+    this.#perspectiveMatrix[10] = ten; // Zero the Z component.
     this.#perspectiveMatrix[14] = eleven;
     this.#perspectiveMatrix[11] = 1; // Flip the Y so we see things rightside up.
   }
@@ -1017,15 +1027,9 @@ class Camera {
       this.#z,
     ]);
 
-    const rotY = mat4.fromYRotation(
-      mat4.create(),
-      radians(this.#rotY)
-    );
+    const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY));
 
-    const rotX = mat4.fromXRotation(
-      mat4.create(),
-      radians(this.#rotX)
-    );
+    const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
 
     const rotatedY = mat4.multiply(mat4.create(), rotY, panned);
     const rotatedX = mat4.multiply(mat4.create(), rotX, rotatedY);
@@ -1034,7 +1038,7 @@ class Camera {
     this.#transformMatrix = mat4.multiply(
       mat4.create(),
       this.#perspectiveMatrix,
-      rotatedX, 
+      rotatedX
     );
   }
 }
@@ -1164,6 +1168,12 @@ class Form {
       transformedVertices.push(vertex.transform(matrix));
     });
 
+    screenMatrix = initScreenSpaceTransformMatrix(
+      width / 2,
+      height / 2,
+      mat4
+    );
+
     // TODO: Switch on render type here. Right now it's only triangles.
     if (this.#primitive === "triangle") {
       // Loop indices list to draw each triangle.
@@ -1186,23 +1196,7 @@ class Form {
       for (let i = 0; i < this.indices.length; i += 2) {
         // Draw each line by applying the screen transform &
         // perspective divide (with clipping).
-
-        const v1 = transformedVertices[i];
-        const v2 = transformedVertices[i + 1];
-
-        // TODO: How to perform better clipping here?
-        if (isInsideViewFrustum(v1.pos) && isInsideViewFrustum(v2.pos)) {
-          const screenMatrix = initScreenSpaceTransformMatrix(
-            width / 2,
-            height / 2,
-            mat4
-          );
-
-          const a = v1.transform(screenMatrix).perspectiveDivide();
-          const b = v2.transform(screenMatrix).perspectiveDivide();
-
-          line3d(a, b);
-        }
+        drawLine3d(transformedVertices[i], transformedVertices[i + 1]);
       }
     }
   }
@@ -1237,6 +1231,14 @@ class Vertex {
 
   get y() {
     return this.pos[Y];
+  }
+
+  get z() {
+    return this.pos[Z];
+  }
+
+  get w() {
+    return this.pos[W];
   }
 
   get color24bit() {
@@ -1275,6 +1277,18 @@ class Vertex {
       this.color,
       this.texCoords
     );
+  }
+
+  lerp(other, lerpAmt) {
+    const pos = vec4.lerp(vec4.create(), this.pos, other.pos, lerpAmt);
+    const col = vec4.lerp(vec4.create(), this.color, other.color, lerpAmt);
+    const texCoords = vec4.lerp(
+      vec4.create(),
+      this.texCoords,
+      other.texCoords,
+      lerpAmt
+    );
+    return new Vertex(pos, col, texCoords);
   }
 }
 
@@ -1593,22 +1607,50 @@ class Gradients {
   }
 }
 
+// ?. Line Rendering
+
+function drawLine3d(a, b) {
+  const aInside = isInsideViewFrustum(a.pos);
+  const bInside = isInsideViewFrustum(b.pos);
+
+  if (aInside && bInside) {
+    line3d(a, b);
+    return;
+  }
+
+  // Don't draw anything if we are completely outside.
+  //if (!aInside && !bInside) return;
+
+  const vertices = [a, b];
+  const auxillaryList = [];
+
+  if (
+    clipPolygonAxis(vertices, auxillaryList, 0) &&
+    clipPolygonAxis(vertices, auxillaryList, 1) &&
+    clipPolygonAxis(vertices, auxillaryList, 2)
+  ) {
+    const initialVertex = vertices[0];
+    for (let i = 1; i < vertices.length - 1; i += 1) {
+      line3d(initialVertex, vertices[i]);
+    }
+  }
+}
+
 // d. Triangle Rendering
 
 function drawTriangle(v1, v2, v3, texture, alpha) {
-  if (
-    isInsideViewFrustum(v1.pos) &&
-    isInsideViewFrustum(v2.pos) &&
-    isInsideViewFrustum(v3.pos)
-  ) {
+  const v1Inside = isInsideViewFrustum(v1.pos);
+  const v2Inside = isInsideViewFrustum(v2.pos);
+  const v3Inside = isInsideViewFrustum(v3.pos);
+
+  if (v1Inside && v2Inside && v3Inside) {
     fillTriangle(v1, v2, v3, texture, alpha);
     return;
   }
 
-  // TODO: Fix clipping.
-  // return;
+  // Don't draw anyhing if we are completely outside.
+  // if (!v1Inside && !v2Inside && !v3Inside) return;
 
-  /*
   const vertices = [v1, v2, v3];
   const auxillaryList = [];
 
@@ -1622,16 +1664,9 @@ function drawTriangle(v1, v2, v3, texture, alpha) {
       fillTriangle(initialVertex, vertices[i], vertices[i + 1], texture, alpha);
     }
   }
-   */
 }
 
 function fillTriangle(minYVert, midYVert, maxYVert, texture, alpha) {
-  const screenMatrix = initScreenSpaceTransformMatrix(
-    width / 2,
-    height / 2,
-    mat4
-  );
-
   minYVert = minYVert.transform(screenMatrix).perspectiveDivide();
   midYVert = midYVert.transform(screenMatrix).perspectiveDivide();
   maxYVert = maxYVert.transform(screenMatrix).perspectiveDivide();
@@ -1768,7 +1803,7 @@ function drawScanLine(gradients, left, right, j, texture, alpha) {
 
     //console.log(depthBuffer[index]);
 
-    if (depth < depthBuffer[index]) {
+    if (depth < depthBuffer[index] && depthBuffer[index] !== undefined) {
       depthBuffer[index] = depth;
 
       // TODO: Add color and fog.
@@ -1817,20 +1852,20 @@ function clipPolygonComponent(
   result
 ) {
   let prevVertex = vertices[vertices.length - 1];
-  let prevComponent = prevVertex[componentIndex] * componentFactor;
-  let prevInside = prevComponent <= prevVertex[W];
+  let prevComponent = prevVertex.pos[componentIndex] * componentFactor;
+  let prevInside = prevComponent <= prevVertex.w;
 
   for (let i = 0; i < vertices.length; i += 1) {
     const curVertex = vertices[i];
-    const curComponent = curVertex[componentIndex] * componentFactor;
+    const curComponent = curVertex.pos[componentIndex] * componentFactor;
 
-    const curInside = curComponent <= curVertex[W];
+    const curInside = curComponent <= curVertex.w;
 
-    if (curInside ? !prevInside : prevInside) {
+    if (curInside ^ prevInside) {
       const lerpAmount =
-        (prevVertex[W] - prevComponent) /
-        (prevVertex[W] - prevComponent - (curVertex[W] - curComponent));
-      result.push(vec4.lerp(vec4.create(), prevVertex, curVertex, lerpAmount));
+        (prevVertex.w - prevComponent) /
+        (prevVertex.w - prevComponent - (curVertex.w - curComponent));
+      result.push(prevVertex.lerp(curVertex, lerpAmount));
     }
 
     if (curInside) {
