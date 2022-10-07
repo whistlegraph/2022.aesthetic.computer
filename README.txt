@@ -37,7 +37,11 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 *** 3D Rasterizer (3dline) ***
-  - [] Add an X on the ground... and maybe a horizon?
+  - [🟡] Add an X on the ground... and maybe a horizon?
+  - [] Make a good wasd / mouse fps camera.
+    - [] Also add keyboard-only controls.
+    - [] And touch-only controls.
+  - [] Draw a line from the 3d cursor in 3d space.
   - [] Add WebXR session.
   - [] Draw a line in webXR.
   - [] Optimize 3d line geometry / make a polyline function. 
@@ -47,6 +51,9 @@ Welcome to...
   - [x] Basic FPS Camera.
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
+
+*** WASM ***
+  - [] Add wasm infrastructure speed up for blend function.
 
 *** Whistlegraph (wg) ***
   - [] Use `wg` to improve dynamic metadata descriptions for link previews.

@@ -3,7 +3,7 @@
 
 import { vec2 } from "../lib/num.mjs";
 
-let cam, tri, l3d, dolly;
+let cam, tri, ground, l3d, dolly;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
@@ -14,17 +14,21 @@ function boot({
   Camera,
   TRIANGLE,
   SEGMENT,
+  SQUARE
   screen,
 }) {
   // Perform basic setup here.
-  // resize(50, 20); // Add a custom resolution.
-  //resize(320, 240);
-
-  // glaze({on: true});
-
   tri = new Form(
     TRIANGLE,
     { texture: painting(16, 16, (p) => p.wipe(0, 0, 255, 30)) },
+    [0, 0, 1], // x, y, z
+    [0, 0, 0], // rotation
+    [1, 1, 1] // scale
+  );
+
+  ground = new Form(
+    SQUARE,
+    { texture: painting(16, 16, (p) => p.noise16DIGITPAIN()) },
     [0, 0, 1], // x, y, z
     [0, 0, 0], // rotation
     [1, 1, 1] // scale
@@ -48,9 +52,9 @@ function boot({
 function sim($api) {
   // Object rotation.
   //tri.rotation[1] = (tri.rotation[1] - 0.25) % 360; // Rotate Y axis.
-  //l3d.rotation[0] = (l3d.rotation[0] - 0.1) % 360; // Rotate Y axis.
-  //l3d.rotation[1] = (l3d.rotation[1] + 0.5) % 360; // Rotate Y axis.
-  //l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Y axis.
+  l3d.rotation[0] = (l3d.rotation[0] - 0.1) % 360; // Rotate Y axis.
+  l3d.rotation[1] = (l3d.rotation[1] + 0.5) % 360; // Rotate Y axis.
+  l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Y axis.
 
   // Camera controls.
   dolly.sim();
@@ -91,6 +95,7 @@ function paint({ ink, screen, num: { randIntRange }, form }) {
   ink(0, 0, 100).box(0, 0, screen.width, screen.height);
   form(l3d, cam)
   form(tri, cam);
+  form(ground, cam);
   ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
 }
 
@@ -144,8 +149,8 @@ function act({ event }) {
   if (event.is("draw")) {
     //cam.rotation[1] += event.delta.x; // Look left and right.
     //cam.rotX += event.delta.y;
-    cam.rotY += event.delta.x / 4;
-    cam.rotX += event.delta.y / 4;
+    cam.rotY -= event.delta.x / 3.5;
+    cam.rotX -= event.delta.y / 3.5;
     //cam.rotation[3] += event.delta.x; // Look up and down.
   }
 }
