@@ -27,6 +27,7 @@ Practical and conceptual notes weaved together.
   browser editor?
 
 🧑‍💻 Text Editor / Shell Notes
+- [] https://github.com/ggandor/leap.nvim
 - [] Start a blog or journal of some kind - that is sourced from
      this repository?
 - [] Add hybrid bindings to fish: https://github.com/fish-shell/fish-shell/blob/master/share/functions/fish_hybrid_key_bindings.fish

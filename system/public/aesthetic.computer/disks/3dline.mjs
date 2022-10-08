@@ -14,7 +14,6 @@ function boot({
   Camera,
   TRIANGLE,
   SEGMENT,
-  screen,
 }) {
   // Perform basic setup here.
   // resize(50, 20); // Add a custom resolution.
@@ -89,7 +88,7 @@ function sim($api) {
 // 🎨 Paint (Executes every display frame)
 function paint({ ink, screen, num: { randIntRange }, form }) {
   ink(0, 0, 100).box(0, 0, screen.width, screen.height);
-  form(l3d, cam)
+  form(l3d, cam);
   form(tri, cam);
   ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
 }
