@@ -37,7 +37,7 @@ Welcome to...
 🌟 Projects In Progress 🌟
 
 *** 3D Rasterizer (3dline) ***
-  - [🟡] Add an X on the ground... and maybe a horizon?
+  - [] WASMify the `blend` function to see if it can be any faster.
   - [] Make a good wasd / mouse fps camera.
     - [] Also add keyboard-only controls.
     - [] And touch-only controls.
@@ -45,6 +45,7 @@ Welcome to...
   - [] Add WebXR session.
   - [] Draw a line in webXR.
   - [] Optimize 3d line geometry / make a polyline function. 
+  - [x] Add an X on the ground... and maybe a horizon?
   - [x] Add triangle clipping.
   - [x] Add line clipping.
   - [x] Optimize screenMatrix.

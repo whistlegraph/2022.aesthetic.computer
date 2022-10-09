@@ -1,9 +1,7 @@
 // 3D Line, 22.10.05.11.01
 // A test for developing software rasterized 3D lines.
-
 import { vec2 } from "../lib/num.mjs";
-
-let cam, tri, ground, l3d, dolly;
+let cam, tri, ground, plane, l3d, dolly;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
@@ -14,30 +12,52 @@ function boot({
   Camera,
   TRIANGLE,
   SEGMENT,
-  SQUARE
+  SQUARE,
   screen,
 }) {
+
+  //resize(320, 240, 0);
+
+  //resize(128, 128);
+  //glaze({on: true});
   // Perform basic setup here.
   tri = new Form(
     TRIANGLE,
-    { texture: painting(16, 16, (p) => p.wipe(0, 0, 255, 30)) },
-    [0, 0, 1], // x, y, z
+    //{ texture: painting(16, 16, (p) => p.wipe(0, 255, 0, 50)) },
+    { texture: painting(16, 16, (p) => p.noise16()) },
+    [0, 0.1, 1], // x, y, z
     [0, 0, 0], // rotation
     [1, 1, 1] // scale
   );
 
+  tri.alpha = 0.5;
+
+  plane = new Form(
+    SQUARE,
+    {
+      texture: painting(2, 2, (p) => p.wipe(0, 0, 200)),
+    },
+    [0, -1, 1], // x, y, z
+    [90, 0, 0], // rotation
+    [4, 4, 4] // scale
+  );
+
   ground = new Form(
     SQUARE,
-    { texture: painting(16, 16, (p) => p.noise16DIGITPAIN()) },
-    [0, 0, 1], // x, y, z
-    [0, 0, 0], // rotation
+    {
+      texture: painting(16, 16, (p) =>
+        p.ink(255, 0, 0).line(0, 0, 16, 16).line(16, 0, 0, 16)
+      ),
+    },
+    [0, -0.9, 1], // x, y, z
+    [90, 0, 0], // rotation
     [1, 1, 1] // scale
   );
 
   l3d = new Form(
     SEGMENT,
     undefined, // No fill is set, so a default would be used.
-    [0, 0, 1], // x, y, z // TODO: These positions don't work yet...
+    [0, 1.1, 1], // x, y, z // TODO: These positions don't work yet...
     [0, 0, 0], // rotation
     [1, 1, 1] // scale
   );
@@ -51,7 +71,7 @@ function boot({
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim($api) {
   // Object rotation.
-  //tri.rotation[1] = (tri.rotation[1] - 0.25) % 360; // Rotate Y axis.
+  tri.rotation[1] = (tri.rotation[1] - 0.25) % 360; // Rotate Y axis.
   l3d.rotation[0] = (l3d.rotation[0] - 0.1) % 360; // Rotate Y axis.
   l3d.rotation[1] = (l3d.rotation[1] + 0.5) % 360; // Rotate Y axis.
   l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Y axis.
@@ -92,10 +112,15 @@ function sim($api) {
 
 // 🎨 Paint (Executes every display frame)
 function paint({ ink, screen, num: { randIntRange }, form }) {
-  ink(0, 0, 100).box(0, 0, screen.width, screen.height);
+  ink(0, 0, 127).box(0, 0, screen.width, screen.height);
+
+  // Dumb ground plane.
+  // ink(0, 127, 127).box(0, screen.height / 2, screen.width, screen.height / 2);
+
+  form(plane, cam);
+  form(ground, cam);
   form(l3d, cam);
   form(tri, cam);
-  form(ground, cam);
   ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
 }
 

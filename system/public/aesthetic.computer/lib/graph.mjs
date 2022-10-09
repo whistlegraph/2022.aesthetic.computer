@@ -117,7 +117,7 @@ function plot() {
     // No alpha blending, just copy.
     pixels.set(c, i);
   } else if (alpha !== 0) {
-    pixels.set(blend(c, pixels.slice(i, i + 4)), i);
+    blend(c, pixels, 0, i);
   }
 }
 
@@ -179,7 +179,7 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   srcX = Math.round(srcX);
   srcY = Math.round(srcY);
 
-  // Skip pixels that are offscreen.
+  // Skip pixels that are offscreen or outside the src buffer.
   // TODO: Is this necessary? How slow is it?
   if (
     destX < 0 ||
@@ -194,42 +194,35 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
     return;
   }
 
-  const destIndex = (destX + destY * width) * 4;
-  const srcIndex = (srcX + srcY * src.width) * 4;
+  const di = (destX + destY * width) * 4;
+  const si = (srcX + srcY * src.width) * 4;
 
-  const srcAlpha = src.pixels[srcIndex + 3] / 255;
-
-  // if (alpha === 1) {
+  //const srcPixel = src.pixels.subarray(si, si + 4);
 
   /*
-  pixels[destIndex] = src.pixels[srcIndex] * alpha; // R
-  pixels[destIndex + 1] = src.pixels[srcIndex + 1] * alpha; // G
-  pixels[destIndex + 2] = src.pixels[srcIndex + 2] * alpha; // B
-  pixels[destIndex + 3] = src.pixels[srcIndex + 3]; // A
+  const srcPixel = [
+    src.pixels[si],
+    src.pixels[si + 1],
+    src.pixels[si + 2],
+    src.pixels[si + 3]
+  ];
+
+  const dstPixel = [
+    pixels[di],
+    pixels[di + 1],
+    pixels[di + 2],
+    pixels[di + 3]
+  ]
   */
 
-  // console.log(srcAlpha);
+  // debugger;
+  // Mix global alpha into src alpha before blending.
+  //srcPixel[3] = srcPixel[3] * alpha;
 
-  pixels[destIndex] =
-    lerp(pixels[destIndex], src.pixels[srcIndex], srcAlpha) * alpha;
-  pixels[destIndex + 1] =
-    lerp(pixels[destIndex + 1], src.pixels[srcIndex + 1], srcAlpha) * alpha;
-  pixels[destIndex + 2] =
-    lerp(pixels[destIndex + 2], src.pixels[srcIndex + 2], srcAlpha) * alpha;
-  pixels[destIndex + 3] = 255;
-
-  // TODO: Blend alpha.
-  /*
-  pixels[i + 1] = lerp(pixels[i + 1], c[1], alpha / 255);
-  pixels[i + 2] = lerp(pixels[i + 2], c[2], alpha / 255);
-  // TODO: Is this the best way to alpha blend? What kind is this? 2021.12.10.15.43
-  // pixels[i + 3] = Math.min(255, pixels[i + 3] + c[3]);
-  pixels[i + 3] = floor(255, (pixels[i + 3] + c[3]) / 2);
-   */
-
-  //} else {
-  //  console.warn("Copy alpha not available.");
-  //}
+  //pixels.set(blend(src.pixels, pixels, si, di, alpha), di);
+  blend(src.pixels, pixels, si, di, alpha);
+  //pixels.set(blend(srcPixel, [255, 255, 255, 255]), di);
+  //pixels.set(blend(srcPixel, pixels.slice(di, di + 4)), di);
 }
 
 /*
@@ -349,15 +342,13 @@ function paste(from, destX = 0, destY = 0, scale = 1) {
 
 // A fast alpha blending function.
 // Transcribed from C++: https://stackoverflow.com/a/12016968
-function blend(fg, bg) {
-  const alpha = fg[3] + 1;
+function blend(src, dst, si, di, alphaIn = 1) {
+  const alpha = src[si + 3] * alphaIn + 1;
   const invAlpha = 256 - alpha;
-  return [
-    (alpha * fg[0] + invAlpha * bg[0]) >> 8,
-    (alpha * fg[1] + invAlpha * bg[1]) >> 8,
-    (alpha * fg[2] + invAlpha * bg[2]) >> 8,
-    0xff,
-  ];
+  dst[di] = (alpha * src[si + 0] + invAlpha * dst[di + 0]) >> 8;
+  dst[di + 1] = (alpha * src[si + 1] + invAlpha * dst[di + 1]) >> 8;
+  dst[di + 2] = (alpha * src[si + 2] + invAlpha * dst[di + 2]) >> 8;
+  dst[di + 3] = 0xff; 
 }
 
 // Draws a horizontal line. (Should be very fast...)
@@ -387,10 +378,16 @@ function lineh(x0, x1, y) {
 
   // Only use alpha blending if necessary.
   if (c[3] === 255) {
-    for (let i = startIndex; i <= endIndex; i += 4) pixels.set(c, i);
+    for (let i = startIndex; i <= endIndex; i += 4) {
+      //pixels.set(c, i);
+      pixels[i] = c[0];
+      pixels[i + 1] = c[1];
+      pixels[i + 2] = c[2];
+      pixels[i + 3] = 255;
+    }
   } else if (c[3] !== 0) {
     for (let i = startIndex; i <= endIndex; i += 4) {
-      pixels.set(blend(c, pixels.slice(i, i + 4)), i);
+      blend(c, pixels, 0, i);
     }
   }
 }
@@ -1168,11 +1165,7 @@ class Form {
       transformedVertices.push(vertex.transform(matrix));
     });
 
-    screenMatrix = initScreenSpaceTransformMatrix(
-      width / 2,
-      height / 2,
-      mat4
-    );
+    screenMatrix = initScreenSpaceTransformMatrix(width / 2, height / 2, mat4);
 
     // TODO: Switch on render type here. Right now it's only triangles.
     if (this.#primitive === "triangle") {
@@ -1253,9 +1246,7 @@ class Vertex {
   ) {
     this.pos = vec4.fromValues(...pos);
     this.color = vec4.fromValues(...color);
-    // if (Array.isArray(texCoords)) {
     this.texCoords = vec4.fromValues(...texCoords);
-    // }
   }
 
   transform(matrix) {
@@ -1352,6 +1343,7 @@ class Edge {
     const yPrestep = this.#yStart - minYVert.y;
 
     this.#xStep = xDist / yDist;
+
     this.#x = minYVert.x + yPrestep * this.#xStep;
 
     const xPrestep = this.#x - minYVert.x;
@@ -1750,9 +1742,10 @@ function scanTriangle(
 
   scanEdges(gradients, topToBottom, topToMiddle, handedness, texture, alpha);
   scanEdges(gradients, topToBottom, middleToBottom, handedness, texture, alpha);
+
 }
 
-function scanEdges(gradients, a, b, handedness, texture, alpha) {
+function scanEdges(gradients, a, b, handedness, texture, alpha, render = true) {
   let left = a;
   let right = b;
   if (handedness) {
@@ -1765,13 +1758,15 @@ function scanEdges(gradients, a, b, handedness, texture, alpha) {
   const yEnd = b.yEnd;
 
   for (let i = yStart; i < yEnd; i += 1) {
-    drawScanLine(gradients, left, right, i, texture, alpha);
+    if (render) {
+      drawScanLine(gradients, left, right, i, texture, alpha, render);
+    }
     left.step();
     right.step();
   }
 }
 
-function drawScanLine(gradients, left, right, j, texture, alpha) {
+function drawScanLine(gradients, left, right, j, texture, alpha, render = true) {
   const xMin = ceil(left.x);
   const xMax = ceil(right.x);
 
@@ -1798,12 +1793,13 @@ function drawScanLine(gradients, left, right, j, texture, alpha) {
     vec4.scale(vec4.create(), gradients.colorXStep, xPrestep)
   );
 
+  //console.log(xMin, xMax, j)
+
   for (let i = xMin; i < xMax; i += 1) {
     const index = i + j * width;
 
-    //console.log(depthBuffer[index]);
-
-    if (depth < depthBuffer[index] && depthBuffer[index] !== undefined) {
+    //if (index < depthBuffer.length && depth < depthBuffer[index]) {
+    if (depth < depthBuffer[index]) {
       depthBuffer[index] = depth;
 
       // TODO: Add color and fog.
@@ -1820,10 +1816,15 @@ function drawScanLine(gradients, left, right, j, texture, alpha) {
       const srcX = texCoordX * z * (texture.width - 1) + 0.5;
       const srcY = texCoordY * z * (texture.height - 1) + 0.5;
 
-      copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
+      //console.log(alpha);
+
+      //pixels.set(blend(c, pixels.slice(i, i + 4)), i);
+      if (render) {
+        copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
+      }
     }
 
-    vec4.add(gradientColor, gradientColor, gradients.colorXStep);
+    //vec4.add(gradientColor, gradientColor, gradients.colorXStep);
     texCoordX += texCoordXXStep;
     texCoordY += texCoordYXStep;
     oneOverZ += oneOverZXStep;
@@ -1868,9 +1869,7 @@ function clipPolygonComponent(
       result.push(prevVertex.lerp(curVertex, lerpAmount));
     }
 
-    if (curInside) {
-      result.push(curVertex);
-    }
+    if (curInside) result.push(curVertex);
 
     prevVertex = curVertex;
     prevComponent = curComponent;
