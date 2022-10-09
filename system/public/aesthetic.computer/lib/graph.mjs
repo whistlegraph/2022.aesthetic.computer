@@ -174,13 +174,14 @@ function unpan() {
 }
 
 function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
-  destX = Math.round(destX);
-  destY = Math.round(destY);
-  srcX = Math.round(srcX);
-  srcY = Math.round(srcY);
+  destX = Math.floor(destX);
+  destY = Math.floor(destY);
+  srcX = Math.floor(srcX);
+  srcY = Math.floor(srcY);
 
   // Skip pixels that are offscreen or outside the src buffer.
   // TODO: Is this necessary? How slow is it?
+  /*
   if (
     destX < 0 ||
     destX >= width ||
@@ -193,6 +194,7 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   ) {
     return;
   }
+  */
 
   const di = (destX + destY * width) * 4;
   const si = (srcX + srcY * src.width) * 4;
@@ -221,6 +223,7 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
 
   //pixels.set(blend(src.pixels, pixels, si, di, alpha), di);
   blend(src.pixels, pixels, si, di, alpha);
+  
   //pixels.set(blend(srcPixel, [255, 255, 255, 255]), di);
   //pixels.set(blend(srcPixel, pixels.slice(di, di + 4)), di);
 }
@@ -340,11 +343,21 @@ function paste(from, destX = 0, destY = 0, scale = 1) {
   }
 }
 
+//let stipple = 0;
+
 // A fast alpha blending function.
 // Transcribed from C++: https://stackoverflow.com/a/12016968
 function blend(src, dst, si, di, alphaIn = 1) {
+  //stipple += 1;
+  //if (stipple < 4) { return; }
+  //stipple = 0;
+  if (src[si + 3] === 0) return;
   const alpha = src[si + 3] * alphaIn + 1;
   const invAlpha = 256 - alpha;
+  //dst[di] = src[si];
+  //dst[di + 1] = src[si + 1];
+  //dst[di + 2] = src[si + 2];
+  //dst[di + 3] = 0xff;
   dst[di] = (alpha * src[si + 0] + invAlpha * dst[di + 0]) >> 8;
   dst[di + 1] = (alpha * src[si + 1] + invAlpha * dst[di + 1]) >> 8;
   dst[di + 2] = (alpha * src[si + 2] + invAlpha * dst[di + 2]) >> 8;
@@ -1641,7 +1654,7 @@ function drawTriangle(v1, v2, v3, texture, alpha) {
   }
 
   // Don't draw anyhing if we are completely outside.
-  // if (!v1Inside && !v2Inside && !v3Inside) return;
+  //if (!v1Inside && !v2Inside && !v3Inside) return;
 
   const vertices = [v1, v2, v3];
   const auxillaryList = [];
@@ -1696,27 +1709,23 @@ function fillTriangle(minYVert, midYVert, maxYVert, texture, alpha) {
   // TODO: How to accurately outline a triangle?
   // in drawScanLine: Add border at xMin and xMax and also use j to know if we are at the bottom.
 
-  // const tempColor = c.slice();
-  // color(127, 127, 127);
-
-  // line3d(minYVert, midYVert);
-  // line3d(midYVert, maxYVert);
-  // line3d(minYVert, maxYVert);
+  //const tempColor = c.slice();
+  //color(127, 127, 127);
 
   //line(minYVert.x, minYVert.y, midYVert.x, midYVert.y);
   //line(midYVert.x, midYVert.y, maxYVert.x, maxYVert.y);
   //line(minYVert.x, minYVert.y, maxYVert.x, maxYVert.y);
 
-  // color(...tempColor);
+  //color(...tempColor);
 
-  // color(...minYVert.color24bit);
-  // plot(minYVert.x, minYVert.y);
+  //color(...minYVert.color24bit);
+  //plot(minYVert.x, minYVert.y);
 
-  // color(...midYVert.color24bit);
-  // plot(midYVert.x, midYVert.y);
+  //color(...midYVert.color24bit);
+  //plot(midYVert.x, midYVert.y);
 
-  // color(...maxYVert.color24bit);
-  // plot(maxYVert.x, maxYVert.y);
+  //color(...maxYVert.color24bit);
+  //plot(maxYVert.x, maxYVert.y);
 }
 
 function triangleAreaDouble(a, b, c) {
@@ -1757,6 +1766,7 @@ function scanEdges(gradients, a, b, handedness, texture, alpha, render = true) {
   const yStart = b.yStart;
   const yEnd = b.yEnd;
 
+  //console.log(yStart, yEnd)
   for (let i = yStart; i < yEnd; i += 1) {
     if (render) {
       drawScanLine(gradients, left, right, i, texture, alpha, render);
@@ -1799,8 +1809,8 @@ function drawScanLine(gradients, left, right, j, texture, alpha, render = true) 
     const index = i + j * width;
 
     //if (index < depthBuffer.length && depth < depthBuffer[index]) {
-    if (depth < depthBuffer[index]) {
-      depthBuffer[index] = depth;
+    //if (depth < depthBuffer[index]) {
+    //  depthBuffer[index] = depth;
 
       // TODO: Add color and fog.
       // const stretchedDepth = 1 - (depth - 0.9) * 10;
@@ -1821,8 +1831,9 @@ function drawScanLine(gradients, left, right, j, texture, alpha, render = true) 
       //pixels.set(blend(c, pixels.slice(i, i + 4)), i);
       if (render) {
         copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
+        //plot(i, j);
       }
-    }
+    //}
 
     //vec4.add(gradientColor, gradientColor, gradients.colorXStep);
     texCoordX += texCoordXXStep;

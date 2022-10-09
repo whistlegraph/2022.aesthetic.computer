@@ -15,12 +15,8 @@ function boot({
   SQUARE,
   screen,
 }) {
-
-  //resize(320, 240, 0);
-
-  //resize(128, 128);
   //glaze({on: true});
-  // Perform basic setup here.
+
   tri = new Form(
     TRIANGLE,
     //{ texture: painting(16, 16, (p) => p.wipe(0, 255, 0, 50)) },
@@ -35,7 +31,7 @@ function boot({
   plane = new Form(
     SQUARE,
     {
-      texture: painting(2, 2, (p) => p.wipe(0, 0, 200)),
+      texture: painting(32, 32, (p) => p.wipe(0, 0, 200)),
     },
     [0, -1, 1], // x, y, z
     [90, 0, 0], // rotation
@@ -71,7 +67,7 @@ function boot({
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim($api) {
   // Object rotation.
-  tri.rotation[1] = (tri.rotation[1] - 0.25) % 360; // Rotate Y axis.
+  //tri.rotation[1] = (tri.rotation[1] - 0.25) % 360; // Rotate Y axis.
   l3d.rotation[0] = (l3d.rotation[0] - 0.1) % 360; // Rotate Y axis.
   l3d.rotation[1] = (l3d.rotation[1] + 0.5) % 360; // Rotate Y axis.
   l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Y axis.
@@ -88,10 +84,10 @@ function sim($api) {
 
   let fForce = 0,
     hForce = 0;
-  if (wHeld) fForce = -0.001;
-  if (sHeld) fForce = 0.001;
-  if (aHeld) hForce = 0.001;
-  if (dHeld) hForce = -0.001;
+  if (wHeld) fForce = -0.004;
+  if (sHeld) fForce = 0.004;
+  if (aHeld) hForce = 0.004;
+  if (dHeld) hForce = -0.004;
 
   if (wHeld || sHeld || aHeld || dHeld) {
     const dir = radians(cam.rotY); // 90 degrees from current direction.
@@ -117,10 +113,12 @@ function paint({ ink, screen, num: { randIntRange }, form }) {
   // Dumb ground plane.
   // ink(0, 127, 127).box(0, screen.height / 2, screen.width, screen.height / 2);
 
+  // TODO: Could forms be rendered in three.js and then get sent back here?
   form(plane, cam);
   form(ground, cam);
   form(l3d, cam);
   form(tri, cam);
+
   ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
 }
 
@@ -172,11 +170,8 @@ function act({ event }) {
 
   // Respond to user input here.
   if (event.is("draw")) {
-    //cam.rotation[1] += event.delta.x; // Look left and right.
-    //cam.rotX += event.delta.y;
     cam.rotY -= event.delta.x / 3.5;
     cam.rotX -= event.delta.y / 3.5;
-    //cam.rotation[3] += event.delta.x; // Look up and down.
   }
 }
 

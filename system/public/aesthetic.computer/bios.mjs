@@ -11,7 +11,7 @@ import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
 import * as Store from "./lib/store.mjs";
 
-//import * as FFmpeg from "./dep/ffmpeg/ffmpeg.min.js";
+// import * as ThreeD from "./lib/3d.mjs"; 
 
 const { assign } = Object;
 const { round, floor, min, max } = Math;
@@ -319,6 +319,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const bumper = document.createElement("div");
       bumper.id = "bumper";
       modal.append(bumper);
+
+      // wrapper.append(ThreeD.domElement);
 
       wrapper.append(uiCanvas);
       document.body.append(wrapper);

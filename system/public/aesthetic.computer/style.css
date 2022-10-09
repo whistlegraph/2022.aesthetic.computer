@@ -62,7 +62,7 @@ input {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 3;
+  z-index: 4;
   pointer-events: all;
   touch-action: manipulation;
   display: flex;
@@ -72,7 +72,7 @@ input {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 4;
+  z-index: 5;
   pointer-events: all;
   touch-action: manipulation;
   background: gray;
@@ -134,7 +134,8 @@ canvas {
 }
 
 canvas[data-type="ui"],
-canvas[data-type="glaze"] {
+canvas[data-type="glaze"]
+/* canvas[data-type="3d"] */ {
   position: absolute;
   top: 0;
   left: 0;
@@ -150,11 +151,11 @@ canvas[data-type="glaze"] {
 }
 
 canvas[data-type="glaze"] {
-  z-index: 1;
+  z-index: 2;
 }
 
 canvas[data-type="freeze"] {
-  z-index: 2;
+  z-index: 3;
 }
 
 canvas[data-type="freeze"] {
@@ -165,3 +166,9 @@ canvas[data-type="ui"] {
   z-index: 6;
   filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
 }
+
+/*
+canvas[data-type="3d"] {
+  z-index: 1;
+}
+*/

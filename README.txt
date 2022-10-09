@@ -36,6 +36,18 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** ThreeJS Hacking ***
+  + Now
+    - [] Make it so that "form" calls render in 3js and return the pixels back.
+      - [] Add a "render type" parameter to form.
+    - [] A single "form" call should be able to send over multiple objects.
+      - [] See if this is faster than the software renderer?
+    - [] Only load threejs if necessary.
+  + Later
+  - [] Implement these examples:
+    - [] https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
+    - [] https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
+
 *** 3D Rasterizer (3dline) ***
   - [] WASMify the `blend` function to see if it can be any faster.
   - [] Make a good wasd / mouse fps camera.
@@ -65,11 +77,6 @@ Welcome to...
 
 *** A-frame Hacking ***
   - [] Finish routing input events?
-
-*** ThreeJS Hacking ***
-  - [] Implement these examples:
-    - [] https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
-    - [] https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
 
 *** In-App Browsers ***
   - [] The back button does not work in the Instagram in-app browser.
