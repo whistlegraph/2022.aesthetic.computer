@@ -2,21 +2,28 @@ import * as THREE from "../dep/three/three.module.js";
 import { radians } from "./num.mjs";
 
 const renderer = new THREE.WebGLRenderer({ alpha: true });
+let target;
+let pixels;
+let camera;
 
 export function bake({ cam, forms }, { width, height }) {
   renderer.setSize(width, height);
 
   // TODO: Only make target if necessary.
-  const target = new THREE.WebGLRenderTarget(width, height);
-  renderer.setRenderTarget(target);
+
+  if (!target || target.width !== width || target.height !== target.height) {
+    target = new THREE.WebGLRenderTarget(width, height) || target;
+    renderer.setRenderTarget(target);
+    pixels = new Uint8Array(width * height * 4);
+    const fov = 80;
+    const aspect = width / height;
+    const near = 0.1;
+    const far = 1000;
+    camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  }
 
   // TODO: Instantiate camera from `cam`.
   // 🎥 Camera
-  const fov = 80;
-  const aspect = width / height;
-  const near = 0.1;
-  const far = 1000;
-  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
   camera.rotation.order = "YXZ";
   camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
@@ -62,9 +69,6 @@ export function bake({ cam, forms }, { width, height }) {
   });
 
   renderer.render(scene, camera);
-
-  const pixels = new Uint8Array(width * height * 4);
   renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
-
   return pixels;
 }

@@ -829,7 +829,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       send({
         type: "forms:baked",
         content: { width: screen.width, height: screen.height, pixels },
-      });
+      }, [pixels]);
 
       return;
     }

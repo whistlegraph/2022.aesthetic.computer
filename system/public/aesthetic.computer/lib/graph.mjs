@@ -339,6 +339,10 @@ function paste(from, destX = 0, destY = 0, scale = 1) {
           copy(destX + x, destY + y, x, y, from);
         }
       }
+
+      // TODO: Copy in rows...
+
+
     }
   }
 }

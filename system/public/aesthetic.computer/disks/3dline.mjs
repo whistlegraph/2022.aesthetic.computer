@@ -124,7 +124,7 @@ function paint({ ink, screen, num: { randIntRange }, form }) {
   // Render in Three.js
   //form([plane, ground, l3d, tri], cam); // Get this to render in order.
   form([plane], cam); // Get this to render in order.
-  form(plane, cam);
+  //form(plane, cam);
   //form(tri, cam);
 
   ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
