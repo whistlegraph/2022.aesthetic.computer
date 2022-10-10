@@ -109,6 +109,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   const ffCtx = freezeFrameCan.getContext("2d");
   freezeFrameCan.dataset.type = "freeze";
 
+
   let imageData;
   let fixedWidth, fixedHeight;
   let projectedWidth, projectedHeight;
@@ -116,6 +117,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   let glaze = { on: false };
   let currentGlaze;
+
+  const glazeComposite = document.createElement("canvas");
+  const glazeCompositeCtx = glazeComposite.getContext("2d");
 
   let needsReframe = false;
   let needsReappearance = false;
@@ -267,6 +271,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     canvas.width = width;
     canvas.height = height;
 
+    glazeComposite.width = canvas.width;
+    glazeComposite.height = canvas.height;
+
     uiCanvas.width = projectedWidth * window.devicePixelRatio;
     uiCanvas.height = projectedHeight * window.devicePixelRatio;
 
@@ -320,7 +327,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       bumper.id = "bumper";
       modal.append(bumper);
 
-      // wrapper.append(ThreeD.domElement);
+      wrapper.append(ThreeD.domElement);
 
       wrapper.append(uiCanvas);
       document.body.append(wrapper);
@@ -722,6 +729,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         function (needsRender, updateTimes) {
           // console.log(updateTimes); // Note: No updates happen yet before a render.
           diskSupervisor.requestFrame?.(needsRender, updateTimes);
+          ThreeD.render();
         }
       );
     }
@@ -817,6 +825,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   let contentFrame;
 
+  const bakedCan = document.createElement('canvas', {willReadFrequently: true});
+  const bakedCtx = bakedCan.getContext('2d');
+
   async function receivedChange({ data: { type, content } }) {
     // *** Route to different functions if this change is not a full frame update.
 
@@ -824,12 +835,29 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // console.log(type, content.forms, content.cam);
 
       // TODO: Measure the time this takes.
-      const pixels = ThreeD.bake(content, screen);
+      //const pixels = ThreeD.bake(content, screen);
 
+      ThreeD.bake(content, screen, {width: projectedWidth, height: projectedHeight});
+
+      //const pixels = ThreeD.bake(content, screen, {width: projectedWidth, height: projectedHeight});
+
+      // bakedCan.width = screen.width;
+      // bakedCan.height = screen.height;
+
+      // bakedCtx.drawImage(ThreeD.domElement, 0, 0);
+
+      // const pixels = bakedCtx.getImageData(0, 0, screen.width, screen.height).data;
+
+      send({
+        type: "forms:baked",
+        content: true });
+
+      /*
       send({
         type: "forms:baked",
         content: { width: screen.width, height: screen.height, pixels },
       }, [pixels]);
+      */
 
       return;
     }
@@ -1601,13 +1629,18 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         if (glaze.on) Glaze.update(dirtyBoxBitmapCan, db.x, db.y);
       } else if (pixelsDidChange) {
         ctx.putImageData(imageData, 0, 0); // Comment out for a `dirtyBox` visualization.
-        if (glaze.on) Glaze.update(imageData);
+        if (glaze.on) {
+
+          glazeCompositeCtx.drawImage(ThreeD.domElement, 0, 0);
+          glazeCompositeCtx.drawImage(canvas, 0, 0);
+          Glaze.update(glazeComposite);
+          //Glaze.update(imageData);
+        }
         // TODO: Is this actually updating with a blank image at first? How to prevent the glaze.clear flicker? 2022.6.8
       }
 
       if (glaze.on) {
         Glaze.render(
-          ctx.canvas,
           timePassed,
           pen.normalizedPosition(canvasRect)
         );

@@ -36,15 +36,28 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+***Cursors***
+  - [] View current custom cursor css examples.
+  - "Chromium cursor images are restricted to 128x128 pixels by default, but it is
+    recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
+  - [] Sidetrack: Hack in an SVG cursor really quick.
+  - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
+  - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
+
 *** ThreeJS Hacking ***
   + Now
-    - [] Disable backface culling.
-    - [] Get textures in there.
-    - [] Enable all objects.
     - [] Get lines working.
-    - [] Optimize pixel array sending.
+      (The transform is strange?)
+    - [] Broken on load.
+    - [] Make sure picture ratios match up perfectly.
     - [] See if this is faster than the software renderer as-is?
     - [] Only load threejs if necessary.
+    - [] Write a better compositor.
+      Bottom up: 3DPIX, 2DPIX, Glaze, UI (dom), CURSOR (svg)
+    - [x] Get textures in there.
+    - [x] Enable all objects.
+    - [x] Optimize pixel array sending. (Had to make an extra layer)
+    - [x] Disable backface culling.
     - [x] Make it so that "form" calls that take an array, render in 3js and return the pixels back.
     - [x] A single "form" call should be able to send over multiple objects.
   + Later
@@ -390,14 +403,6 @@ Welcome to...
 
 ***Terminal***
   - [] Make `function terminal()` to render to a text mode layer.
-
-***Cursors***
-  - [] View current custom cursor css examples.
-  - "Chromium cursor images are restricted to 128x128 pixels by default, but it is
-    recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
-  - [] Sidetrack: Hack in an SVG cursor really quick.
-  - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
-  - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
 ***JtoA***
   - [] Use web speech recognition API to make a program so that Artur and I can 

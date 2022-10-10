@@ -70,8 +70,6 @@ let gl, canvas;
 let glaze;
 let passthrough;
 
-// TODO: Replace this with custom code.
-
 import { pathEnd, wrapNotArray } from "./helpers.mjs";
 
 export function init(wrapper) {
@@ -79,7 +77,7 @@ export function init(wrapper) {
   canvas.dataset.type = "glaze";
 
   gl = canvas.getContext("webgl2", {
-    alpha: true,
+    alpha: false,
     depth: false,
     stencil: false,
     desynchronized: true,
@@ -383,7 +381,7 @@ export function unfreeze() {
   if (canvas) canvas.style.removeProperty("opacity");
 }
 
-export function render(canvasTexture, time, mouse) {
+export function render(time, mouse) {
   if (glaze === undefined || glaze.loaded === false) return;
 
   // 🅰️ Render Surface

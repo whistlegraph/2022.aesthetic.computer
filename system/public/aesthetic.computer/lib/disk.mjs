@@ -405,7 +405,7 @@ class Painting {
   }
 
   // Paints every layer.
-  async paint() {
+  async paint(immediate = false) {
     /*
     this.#layers.forEach((layer) => {
       //layer.forEach(async (paint) => await paint());
@@ -418,8 +418,11 @@ class Painting {
 
     for (const layer of this.#layers) {
       for (const paint of layer) {
-        await paint();
-        //paint();
+        if (immediate) {
+          paint();
+        } else {
+          await paint();
+        }
       }
     }
 
@@ -908,7 +911,11 @@ async function makeFrame({ data: { type, content } }) {
   if (type === "forms:baked") {
     //console.log("🍞 Forms baked:", content);
     //noPaint = false;
-    graph.paste(content);
+
+    if (content.pixels) {
+      graph.paste(content, 0, 0, 1, true);
+    }
+
     paintFormsResolution?.();
     return;
   }
@@ -1379,7 +1386,7 @@ async function makeFrame({ data: { type, content } }) {
 
       // TODO: Disable the depth buffer for now... it doesn't need to be
       //       regenerated on every frame.
-      graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
+      //graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
 
       $api.screen = screen;
 

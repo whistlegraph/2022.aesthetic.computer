@@ -39,7 +39,7 @@ function makeBuffer(width, height, fillProcess, painting) {
     const api = { width, height, pixels };
     Object.assign(api, painting.api);
     fillProcess(api); // Every fill process gets a painting API.
-    painting.paint();
+    painting.paint(true);
     // Restore old buffer and color.
     setBuffer(savedBuffer);
     color(...rc);
@@ -199,33 +199,7 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   const di = (destX + destY * width) * 4;
   const si = (srcX + srcY * src.width) * 4;
 
-  //const srcPixel = src.pixels.subarray(si, si + 4);
-
-  /*
-  const srcPixel = [
-    src.pixels[si],
-    src.pixels[si + 1],
-    src.pixels[si + 2],
-    src.pixels[si + 3]
-  ];
-
-  const dstPixel = [
-    pixels[di],
-    pixels[di + 1],
-    pixels[di + 2],
-    pixels[di + 3]
-  ]
-  */
-
-  // debugger;
-  // Mix global alpha into src alpha before blending.
-  //srcPixel[3] = srcPixel[3] * alpha;
-
-  //pixels.set(blend(src.pixels, pixels, si, di, alpha), di);
   blend(src.pixels, pixels, si, di, alpha);
-
-  //pixels.set(blend(srcPixel, [255, 255, 255, 255]), di);
-  //pixels.set(blend(srcPixel, pixels.slice(di, di + 4)), di);
 }
 
 /*
@@ -256,7 +230,7 @@ function copyRow(destX, destY, srcX, srcY, src) {
 
 // TODO: Some of these routes are incompatible. 22.10.01.11.57
 // TODO: Replace with more generic algorithm?
-function paste(from, destX = 0, destY = 0, scale = 1) {
+function paste(from, destX = 0, destY = 0, scale = 1, blit = false) {
   if (scale !== 1) {
     grid(
       {
@@ -279,7 +253,6 @@ function paste(from, destX = 0, destY = 0, scale = 1) {
     // TODO: This could be sped up quite a bit by going row by row.
     for (let x = 0; x < from.crop.w; x += 1) {
       for (let y = 0; y < from.crop.h; y += 1) {
-        // console.log(destX, destY, from.crop.x, from.crop.y);
         copy(
           destX + x,
           destY + y,
@@ -290,59 +263,17 @@ function paste(from, destX = 0, destY = 0, scale = 1) {
       }
     }
   } else {
-    // A regular copy.
-
-    // Check to see if we can perform a full copy here.
-    if (
-      false
-      // destX === 0 &&
-      // destY === 0 &&
-      // width === from.width &&
-      // height === from.height
-    ) {
+    // Check to see if we can perform a full copy here, 
+    // with no alpha blending.
+    if (blit) {
       pixels.set(from.pixels, 0);
     } else {
-      // TODO: Otherwise, copy in "cropped" rows.
-      // TODO: Fix row algorithm... 2022.04.07.04.36
-      // TODO: Get copy by row working!
-      /*
-      let fromY = 0;
-
-      if (destY < 0) {
-        fromY = Math.abs(destY);
-      }
-
-      let fromHeight = from.height - Math.abs(destY);
-
-      for (let fy = fromY; fy < fromHeight; fy += 1) {
-        let fromX = Math.abs(destX);
-        let fromWidth = from.width - Math.abs(destX);
-
-        const fromXIndex = (fromX + fy * from.width) * 4;
-
-        const sub = from.pixels.subarray(
-          fromXIndex,
-          fromXIndex + fromWidth * 4
-        );
-
-        const destIndex = (destX + destY * width) * 4;
-
-        pixels.set(sub, fromXIndex);
-
-        //copyRow(destX, destY + y, fromX, fromWidth, from);
-      }
-      */
-      // console.log(destX);
-      // Pixel by pixel fallback.
+      // Or go pixel by pixel, with blending. 
       for (let x = 0; x < from.width; x += 1) {
         for (let y = 0; y < from.height; y += 1) {
           copy(destX + x, destY + y, x, y, from);
         }
       }
-
-      // TODO: Copy in rows...
-
-
     }
   }
 }
@@ -358,10 +289,6 @@ function blend(src, dst, si, di, alphaIn = 1) {
   if (src[si + 3] === 0) return;
   const alpha = src[si + 3] * alphaIn + 1;
   const invAlpha = 256 - alpha;
-  //dst[di] = src[si];
-  //dst[di + 1] = src[si + 1];
-  //dst[di + 2] = src[si + 2];
-  //dst[di + 3] = 0xff;
   dst[di] = (alpha * src[si + 0] + invAlpha * dst[di + 0]) >> 8;
   dst[di + 1] = (alpha * src[si + 1] + invAlpha * dst[di + 1]) >> 8;
   dst[di + 2] = (alpha * src[si + 2] + invAlpha * dst[di + 2]) >> 8;
@@ -396,7 +323,6 @@ function lineh(x0, x1, y) {
   // Only use alpha blending if necessary.
   if (c[3] === 255) {
     for (let i = startIndex; i <= endIndex; i += 4) {
-      //pixels.set(c, i);
       pixels[i] = c[0];
       pixels[i + 1] = c[1];
       pixels[i + 2] = c[2];

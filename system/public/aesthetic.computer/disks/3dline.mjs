@@ -15,7 +15,7 @@ function boot({
   SQUARE,
   screen,
 }) {
-  //glaze({on: true});
+  // glaze({on: true});
 
   tri = new Form(
     TRIANGLE,
@@ -28,42 +28,46 @@ function boot({
 
   tri.alpha = 0.5;
 
-  plane = new Form(
-    SQUARE,
-    {
-      texture: painting(32, 32, (p) => p.wipe(0, 255, 0, 100)),
-    },
-    [0, -0.5, 0], // x, y, z
-    [0, 0, 0], // rotation
-    [1, 1, 1] // scale
-  );
-
   ground = new Form(
     SQUARE,
     {
-      texture: painting(16, 16, (p) =>
-        p.ink(255, 0, 0).line(0, 0, 16, 16).line(16, 0, 0, 16)
+      texture: painting(
+        16,
+        16,
+        (p) => {
+          p.ink(255, 0, 0).line(0, 0, 16, 16).line(16, 0, 0, 16);
+        }
       ),
     },
-    [0, -0.1, 1], // x, y, z
+    [0, 0.2, 1], // x, y, z
     [90, 0, 0], // rotation
+    [1, 1, 1] // scale
+  );
+
+  plane = new Form(
+    SQUARE,
+    {
+      texture: painting(32, 32, (p) => p.noise16(0)),
+    },
+    [0, 0, -1], // x, y, z
+    [0, 0, 0], // rotation
     [1, 1, 1] // scale
   );
 
   l3d = new Form(
     SEGMENT,
     undefined, // No fill is set, so a default would be used.
-    [0, 1.1, 1], // x, y, z // TODO: These positions don't work yet...
+    [0, -1.1, -1], // x, y, z // TODO: These positions don't work yet...
     [0, 0, 0], // rotation
     [1, 1, 1] // scale
   );
 
   cam = new Camera(80); // camera with fov
 
-  cam.x = 1;
+  cam.x = 0;
   cam.y = 0;
   cam.z = 2;
-  cam.rotX = 10;
+  cam.rotX = 0;
 
   dolly = new Dolly(); // moves the camera
 }
@@ -111,23 +115,29 @@ function sim($api) {
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ ink, screen, num: { randIntRange }, form }) {
-  ink(0, 0, 127, 255).box(0, 0, screen.width, screen.height);
+function paint({ wipe, ink, screen, num: { randIntRange }, form, paintCount }) {
+
+  if (paintCount % 2 === 0) {
+  //  ink(0, 0, 127, 5).box(0, 0, screen.width, screen.height);
+    wipe(0, 255, 0, 10);
+  }
+
+  //ink(255, 255, 0).line(0, 0, screen.width, screen.height);
 
   // Dumb ground plane.
   // ink(0, 127, 127).box(0, screen.height / 2, screen.width, screen.height / 2);
 
   // Render in software.
   //form(ground, cam);
-  //form(l3d, cam);
+  form(l3d, cam);
 
+  form(tri, cam);
   // Render in Three.js
   //form([plane, ground, l3d, tri], cam); // Get this to render in order.
-  form([plane], cam); // Get this to render in order.
+  form([plane, ground, l3d, tri], cam); // Get this to render in order.
   //form(plane, cam);
-  //form(tri, cam);
 
-  ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
+  //ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
 
   //console.log("Software Projection:", cam.perspective);
 
