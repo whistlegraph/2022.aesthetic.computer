@@ -223,7 +223,7 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
 
   //pixels.set(blend(src.pixels, pixels, si, di, alpha), di);
   blend(src.pixels, pixels, si, di, alpha);
-  
+
   //pixels.set(blend(srcPixel, [255, 255, 255, 255]), di);
   //pixels.set(blend(srcPixel, pixels.slice(di, di + 4)), di);
 }
@@ -361,7 +361,7 @@ function blend(src, dst, si, di, alphaIn = 1) {
   dst[di] = (alpha * src[si + 0] + invAlpha * dst[di + 0]) >> 8;
   dst[di + 1] = (alpha * src[si + 1] + invAlpha * dst[di + 1]) >> 8;
   dst[di + 2] = (alpha * src[si + 2] + invAlpha * dst[di + 2]) >> 8;
-  dst[di + 3] = 0xff; 
+  dst[di + 3] = 0xff;
 }
 
 // Draws a horizontal line. (Should be very fast...)
@@ -933,7 +933,10 @@ class Camera {
   #z = 0;
   fov;
 
-  #perspectiveMatrix;
+  position = [0, 0, 0];
+  rotation = [0, 0, 0];
+
+  perspectiveMatrix;
   #transformMatrix;
 
   constructor(fov = 80) {
@@ -949,6 +952,7 @@ class Camera {
     this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
+    this.rotation[0] = n;
   }
 
   get rotX() {
@@ -960,6 +964,7 @@ class Camera {
     this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
+    this.rotation[1] = n;
   }
 
   get rotY() {
@@ -971,6 +976,7 @@ class Camera {
     this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
+    this.position[0] = n;
   }
 
   get x() {
@@ -982,6 +988,7 @@ class Camera {
     this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
+    this.position[1] = n;
   }
 
   get y() {
@@ -993,6 +1000,7 @@ class Camera {
     this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
+    this.position[2] = n;
   }
 
   get z() {
@@ -1010,7 +1018,7 @@ class Camera {
     const zNear = 0.1;
     const zFar = 1000;
 
-    this.#perspectiveMatrix = mat4.perspective(
+    this.perspectiveMatrix = mat4.perspective(
       mat4.create(),
       radians(fov),
       width / height,
@@ -1020,26 +1028,44 @@ class Camera {
 
     // See: https://github.com/BennyQBD/3DSoftwareRenderer/blob/641f59125351d9565e744a90ad86256c3970a724/src/Matrix4f.java#L89
     // And compare it with: https://glmatrix.net/docs/mat4.js.html#line1508
-    const zRange = zNear - zFar;
-    const ten = (-zNear - zFar) / zRange;
-    const eleven = (2 * zFar * zNear) / zRange;
+    //const zRange = zNear - zFar;
 
-    this.#perspectiveMatrix[10] = ten; // Zero the Z component.
-    this.#perspectiveMatrix[14] = eleven;
-    this.#perspectiveMatrix[11] = 1; // Flip the Y so we see things rightside up.
+    //const ten = (-zNear - zFar) / zRange;
+    //const ten = -(zFar + zNear) / (zFar - zNear);
+    //const fourteen = (2 * zFar * zNear) / zRange;
+    //const fourteen = (-2 * zFar * zNear) / (zFar - zNear);
+
+    //this.perspectiveMatrix[10] = ten; // Zero the Z component.
+    //this.perspectiveMatrix[14] = fourteen;
+
+    //this.perspectiveMatrix[11] = -1; // Flip the Y so we see things rightside up.
+    //console.log(this.#perspectiveMatrix);
+  }
+
+  get perspective() {
+    return this.perspectiveMatrix;
   }
 
   #transform() {
+    // TODO: Why does this and the FPS camera control need to be inverted?
+    //       Can't I just somehow invert the matrix to avoid all the swapping?
+    //       Maybe it has something to do with rotation order?
+    //       The default in three.js is XYZ, but here I'm using YXZ which I 
+    //       had to override there. 22.10.09.20.31
+
     // Translation.
     const panned = mat4.translate(mat4.create(), mat4.create(), [
-      this.#x,
-      this.#y,
-      this.#z,
+      this.#x * -1,
+      this.#y * -1,
+      this.#z * -1,
     ]);
 
-    const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY));
+    // Rotation
+    const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX) * -1);
+    const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY) * -1);
 
-    const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
+    //const rotatedX = mat4.multiply(mat4.create(), rotX, panned);
+    //const rotatedY = mat4.multiply(mat4.create(), rotY, rotatedX);
 
     const rotatedY = mat4.multiply(mat4.create(), rotY, panned);
     const rotatedX = mat4.multiply(mat4.create(), rotX, rotatedY);
@@ -1047,7 +1073,7 @@ class Camera {
     // Perspective
     this.#transformMatrix = mat4.multiply(
       mat4.create(),
-      this.#perspectiveMatrix,
+      this.perspectiveMatrix,
       rotatedX
     );
   }
@@ -1055,7 +1081,8 @@ class Camera {
 
 // Mesh
 class Form {
-  #primitive = "triangle";
+  primitive = "triangle";
+  type = "triangle";
 
   // Model
   vertices = [];
@@ -1097,10 +1124,14 @@ class Form {
     rotation = [0, 0, 0],
     scale = [1, 1, 1]
   ) {
-    // 0. Set the primitive type.
-    this.#primitive = type;
+    // Set the primitive type.
+    this.primitive = type;
+    this.type = type;
 
-    // 1. Import a Model
+    // Take into account form -> primitive relationships.
+    if (type === "quad") this.primitive = "triangle";
+
+    // "Import" a model...
 
     // Create new vertices from incoming positions.
     for (let i = 0; i < positions.length; i++) {
@@ -1181,7 +1212,7 @@ class Form {
     screenMatrix = initScreenSpaceTransformMatrix(width / 2, height / 2, mat4);
 
     // TODO: Switch on render type here. Right now it's only triangles.
-    if (this.#primitive === "triangle") {
+    if (this.primitive === "triangle") {
       // Loop indices list to draw each triangle.
       for (let i = 0; i < this.indices.length; i += 3) {
         // Draw each triangle by applying the screen transform &
@@ -1197,7 +1228,7 @@ class Form {
       }
     }
 
-    if (this.#primitive === "line") {
+    if (this.primitive === "line") {
       // Loop indices list to draw each triangle.
       for (let i = 0; i < this.indices.length; i += 2) {
         // Draw each line by applying the screen transform &
@@ -1299,7 +1330,7 @@ class Vertex {
 function initScreenSpaceTransformMatrix(halfWidth, halfHeight) {
   const m = mat4.create();
   mat4.translate(m, m, [halfWidth - 0.5, halfHeight - 0.5, 0]);
-  mat4.scale(m, m, [halfWidth, -halfHeight, 1]);
+  mat4.scale(m, m, [halfWidth, halfHeight, 1]);
   return m;
 }
 
@@ -1751,7 +1782,6 @@ function scanTriangle(
 
   scanEdges(gradients, topToBottom, topToMiddle, handedness, texture, alpha);
   scanEdges(gradients, topToBottom, middleToBottom, handedness, texture, alpha);
-
 }
 
 function scanEdges(gradients, a, b, handedness, texture, alpha, render = true) {
@@ -1776,7 +1806,15 @@ function scanEdges(gradients, a, b, handedness, texture, alpha, render = true) {
   }
 }
 
-function drawScanLine(gradients, left, right, j, texture, alpha, render = true) {
+function drawScanLine(
+  gradients,
+  left,
+  right,
+  j,
+  texture,
+  alpha,
+  render = true
+) {
   const xMin = ceil(left.x);
   const xMax = ceil(right.x);
 
@@ -1812,27 +1850,27 @@ function drawScanLine(gradients, left, right, j, texture, alpha, render = true) 
     //if (depth < depthBuffer[index]) {
     //  depthBuffer[index] = depth;
 
-      // TODO: Add color and fog.
-      // const stretchedDepth = 1 - (depth - 0.9) * 10;
-      // console.log(stretchedDepth);
-      // const r = Math.floor(gradientColor[X] * 255 + 0.5);
-      // const g = Math.floor(gradientColor[Y] * 255 + 0.5);
-      // const b = Math.floor(gradientColor[Z] * 255 + 0.5);
-      // color(255 * stretchedDepth, 255 * stretchedDepth, 255 * stretchedDepth);
-      // plot(i, j);
+    // TODO: Add color and fog.
+    // const stretchedDepth = 1 - (depth - 0.9) * 10;
+    // console.log(stretchedDepth);
+    // const r = Math.floor(gradientColor[X] * 255 + 0.5);
+    // const g = Math.floor(gradientColor[Y] * 255 + 0.5);
+    // const b = Math.floor(gradientColor[Z] * 255 + 0.5);
+    // color(255 * stretchedDepth, 255 * stretchedDepth, 255 * stretchedDepth);
+    // plot(i, j);
 
-      const z = 1 / oneOverZ;
+    const z = 1 / oneOverZ;
 
-      const srcX = texCoordX * z * (texture.width - 1) + 0.5;
-      const srcY = texCoordY * z * (texture.height - 1) + 0.5;
+    const srcX = texCoordX * z * (texture.width - 1) + 0.5;
+    const srcY = texCoordY * z * (texture.height - 1) + 0.5;
 
-      //console.log(alpha);
+    //console.log(alpha);
 
-      //pixels.set(blend(c, pixels.slice(i, i + 4)), i);
-      if (render) {
-        copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
-        //plot(i, j);
-      }
+    //pixels.set(blend(c, pixels.slice(i, i + 4)), i);
+    if (render) {
+      copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
+      //plot(i, j);
+    }
     //}
 
     //vec4.add(gradientColor, gradientColor, gradients.colorXStep);

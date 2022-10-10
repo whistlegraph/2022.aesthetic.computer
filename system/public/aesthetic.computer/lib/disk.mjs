@@ -202,7 +202,7 @@ const $updateApi = {};
 
 // Pre-fab models:
 const SQUARE = {
-  type: "triangle",
+  type: "quad",
   positions: [
     // Triangle 1 (Left Side)
     [-1, -1, 0, 1], // Bottom Left
@@ -238,7 +238,7 @@ const SEGMENT = {
   positions: [
     [0, 0, 0, 1], // Center
     [0.2, -0.25, 0, 1], // Top Right
-    [0, 0, 0, 1], // Center 
+    [0, 0, 0, 1], // Center
     [-0.15, 0.25, 0.1, 1], // ?
     [0, 0, 0, 1], // Center
     [0, -0.5, 0, 1], // ?
@@ -333,8 +333,18 @@ const $paintApiUnwrapped = {
   grid: graph.grid,
   draw: graph.draw,
   printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
+
   form: function (f, cam) {
-    f.graph(cam);
+    if (Array.isArray(f)) {
+      // Render each of these forms in a hardware rasterizer.
+      send({ type: "forms", content: { forms: f, cam } });
+
+      return new Promise((resolve) => {
+        paintFormsResolution = resolve;
+      });
+    } else {
+      f.graph(cam); // Render this form in the software rasterizer.
+    }
   },
   pan: graph.pan,
   unpan: graph.unpan,
@@ -344,6 +354,8 @@ const $paintApiUnwrapped = {
   noiseTinted: graph.noiseTinted,
   // glaze: ...
 };
+
+let paintFormsResolution;
 
 // TODO: Eventually restructure this a bit. 2021.12.16.16.0
 //       Should global state like color and transform be stored here?
@@ -363,7 +375,10 @@ class Painting {
         // Wrap and then transfer to #api.
         p.api[k] = function () {
           if (notArray(p.#layers[p.#layer])) p.#layers[p.#layer] = [];
-          p.#layers[p.#layer].push(() => $paintApiUnwrapped[k](...arguments)); // deferred action called as paint() below.
+          // deferred action called as paint() below.
+          p.#layers[p.#layer].push(async () => {
+            await $paintApiUnwrapped[k](...arguments);
+          });
           return p.api;
         };
       }
@@ -390,10 +405,24 @@ class Painting {
   }
 
   // Paints every layer.
-  paint() {
+  async paint() {
+    /*
     this.#layers.forEach((layer) => {
-      layer.forEach((paint) => paint());
+      //layer.forEach(async (paint) => await paint());
+      for (const paint of layer) {
+        console.log(paint);
+        await paint();
+      }
     });
+    */
+
+    for (const layer of this.#layers) {
+      for (const paint of layer) {
+        await paint();
+        //paint();
+      }
+    }
+
     this.#layers.length = 0;
     this.#layer = 0;
   }
@@ -561,7 +590,8 @@ async function load(
     }
 
     // Don't do anything if there is no change and no gap update.
-    if (screen.width === width && screen.height === height && gap === undefined) return;
+    if (screen.width === width && screen.height === height && gap === undefined)
+      return;
 
     // width = width || currentDisplay.innerWidth;
     // height = height || currentDisplay.innerHeight;
@@ -872,8 +902,16 @@ class Content {
 // TODO: Try to remove as many API calls from here as possible.
 const signals = [];
 let reframed = false;
-function makeFrame({ data: { type, content } }) {
+async function makeFrame({ data: { type, content } }) {
   // console.log("Frame:", type);
+
+  if (type === "forms:baked") {
+    //console.log("🍞 Forms baked:", content);
+    //noPaint = false;
+    graph.paste(content);
+    paintFormsResolution?.();
+    return;
+  }
 
   if (type === "transcode-progress") {
     if (debug) console.log("📼 Recorder: Transcoding", content);
@@ -1241,7 +1279,6 @@ function makeFrame({ data: { type, content } }) {
               // Or a subtring match if `keyboard:action`
               return data.name.indexOf(e) === 0;
             }
-
           },
         });
         $api.event = data;
@@ -1479,7 +1516,7 @@ function makeFrame({ data: { type, content } }) {
           paintOut === false || (paintOut !== undefined && paintOut !== true);
 
         // Run everything that was queued to be painted, then devour paintLayers.
-        painting.paint();
+        await painting.paint();
         painted = true;
         paintCount = paintCount + 1n;
 

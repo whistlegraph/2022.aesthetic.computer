@@ -31,11 +31,11 @@ function boot({
   plane = new Form(
     SQUARE,
     {
-      texture: painting(32, 32, (p) => p.wipe(0, 0, 200)),
+      texture: painting(32, 32, (p) => p.wipe(0, 255, 0, 100)),
     },
-    [0, -1, 1], // x, y, z
-    [90, 0, 0], // rotation
-    [4, 4, 4] // scale
+    [0, -0.5, 0], // x, y, z
+    [0, 0, 0], // rotation
+    [1, 1, 1] // scale
   );
 
   ground = new Form(
@@ -45,7 +45,7 @@ function boot({
         p.ink(255, 0, 0).line(0, 0, 16, 16).line(16, 0, 0, 16)
       ),
     },
-    [0, -0.9, 1], // x, y, z
+    [0, -0.1, 1], // x, y, z
     [90, 0, 0], // rotation
     [1, 1, 1] // scale
   );
@@ -59,7 +59,11 @@ function boot({
   );
 
   cam = new Camera(80); // camera with fov
-  cam.z = 1;
+
+  cam.x = 1;
+  cam.y = 0;
+  cam.z = 2;
+  cam.rotX = 10;
 
   dolly = new Dolly(); // moves the camera
 }
@@ -86,11 +90,11 @@ function sim($api) {
     hForce = 0;
   if (wHeld) fForce = -0.004;
   if (sHeld) fForce = 0.004;
-  if (aHeld) hForce = 0.004;
-  if (dHeld) hForce = -0.004;
+  if (aHeld) hForce = -0.004;
+  if (dHeld) hForce = 0.004;
 
   if (wHeld || sHeld || aHeld || dHeld) {
-    const dir = radians(cam.rotY); // 90 degrees from current direction.
+    const dir = radians(-cam.rotY); // 90 degrees from current direction.
     const v2 = vec2.rotate(
       vec2.create(),
       vec2.fromValues(hForce, fForce),
@@ -100,26 +104,34 @@ function sim($api) {
     dolly.push({ x: v2[0], z: v2[1] });
   }
 
-  if (auHeld) cam.rotX += 1;
-  if (adHeld) cam.rotX -= 1;
+  if (auHeld) cam.rotX -= 1;
+  if (adHeld) cam.rotX += 1;
   if (alHeld) cam.rotY += 1;
   if (arHeld) cam.rotY -= 1;
 }
 
 // 🎨 Paint (Executes every display frame)
 function paint({ ink, screen, num: { randIntRange }, form }) {
-  ink(0, 0, 127).box(0, 0, screen.width, screen.height);
+  ink(0, 0, 127, 255).box(0, 0, screen.width, screen.height);
 
   // Dumb ground plane.
   // ink(0, 127, 127).box(0, screen.height / 2, screen.width, screen.height / 2);
 
-  // TODO: Could forms be rendered in three.js and then get sent back here?
+  // Render in software.
+  //form(ground, cam);
+  //form(l3d, cam);
+
+  // Render in Three.js
+  //form([plane, ground, l3d, tri], cam); // Get this to render in order.
+  form([plane], cam); // Get this to render in order.
   form(plane, cam);
-  form(ground, cam);
-  form(l3d, cam);
-  form(tri, cam);
+  //form(tri, cam);
 
   ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
+
+  //console.log("Software Projection:", cam.perspective);
+
+  //return false;
 }
 
 class Dolly {
@@ -171,7 +183,7 @@ function act({ event }) {
   // Respond to user input here.
   if (event.is("draw")) {
     cam.rotY -= event.delta.x / 3.5;
-    cam.rotX -= event.delta.y / 3.5;
+    cam.rotX += event.delta.y / 3.5;
   }
 }
 

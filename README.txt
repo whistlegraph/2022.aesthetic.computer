@@ -38,11 +38,15 @@ Welcome to...
 
 *** ThreeJS Hacking ***
   + Now
-    - [] Make it so that "form" calls render in 3js and return the pixels back.
-      - [] Add a "render type" parameter to form.
-    - [] A single "form" call should be able to send over multiple objects.
-      - [] See if this is faster than the software renderer?
+    - [] Disable backface culling.
+    - [] Get textures in there.
+    - [] Enable all objects.
+    - [] Get lines working.
+    - [] Optimize pixel array sending.
+    - [] See if this is faster than the software renderer as-is?
     - [] Only load threejs if necessary.
+    - [x] Make it so that "form" calls that take an array, render in 3js and return the pixels back.
+    - [x] A single "form" call should be able to send over multiple objects.
   + Later
   - [] Implement these examples:
     - [] https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html

@@ -11,7 +11,7 @@ import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
 import * as Store from "./lib/store.mjs";
 
-// import * as ThreeD from "./lib/3d.mjs"; 
+import * as ThreeD from "./lib/3d.mjs";
 
 const { assign } = Object;
 const { round, floor, min, max } = Math;
@@ -819,6 +819,20 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   async function receivedChange({ data: { type, content } }) {
     // *** Route to different functions if this change is not a full frame update.
+
+    if (type === "forms") {
+      // console.log(type, content.forms, content.cam);
+
+      // TODO: Measure the time this takes.
+      const pixels = ThreeD.bake(content, screen);
+
+      send({
+        type: "forms:baked",
+        content: { width: screen.width, height: screen.height, pixels },
+      });
+
+      return;
+    }
 
     if (type === "content-create") {
       // Create a DOM container, if it doesn't already exist,

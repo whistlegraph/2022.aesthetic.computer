@@ -1,85 +1,70 @@
 import * as THREE from "../dep/three/three.module.js";
+import { radians } from "./num.mjs";
 
 const renderer = new THREE.WebGLRenderer({ alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(0.25);
 
-const size = new THREE.Vector2();
-renderer.getDrawingBufferSize(size);
+export function bake({ cam, forms }, { width, height }) {
+  renderer.setSize(width, height);
 
-const target = new THREE.WebGLRenderTarget(size.width, size.height);
-renderer.setRenderTarget(target);
+  // TODO: Only make target if necessary.
+  const target = new THREE.WebGLRenderTarget(width, height);
+  renderer.setRenderTarget(target);
 
-// 🎥 Camera
-const fov = 75;
-const aspect = window.innerWidth / window.innerHeight;
-const near = 0.1;
-const far = 500;
-const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  // TODO: Instantiate camera from `cam`.
+  // 🎥 Camera
+  const fov = 80;
+  const aspect = width / height;
+  const near = 0.1;
+  const far = 1000;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
-camera.position.set(0, 0, 2);
-//camera.position.z = 2;
+  camera.rotation.order = "YXZ";
+  camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
+  camera.position.set(...cam.position);
 
-camera.lookAt(0, 0, 0);
+  const scene = new THREE.Scene();
 
-const scene = new THREE.Scene();
+  forms.forEach((f) => {
+    if (f.type === "triangle") {
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      // TODO: I could be sending alot less data over the wire.
+      const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const tri = new THREE.Mesh(geometry, material);
+      scene.add(tri);
+    }
 
-// Cube
-{
-  const width = 1; // ui: width
-  const height = 1; // ui: height
-  const depth = 1; // ui: depth
-  const material = new THREE.MeshPhongMaterial({ color: 0x00ffff });
-  const geometry = new THREE.BoxGeometry(width, height, depth);
-  const cube = new THREE.Mesh(geometry, material);
+    if (f.type === "quad") {
+      const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      const plane = new THREE.Mesh(geometry, material);
+      scene.add(plane);
 
-  cube.rotation.x = 3;
-  cube.rotation.y = 2;
+      // Could these inverted transforms be fixed on the matrix level?
+      plane.translateX(f.position[0]);
+      plane.translateY(f.position[1]);
+      plane.translateZ(f.position[2]);
+      plane.rotateX(radians(f.rotation[0]));
+      plane.rotateY(radians(f.rotation[1]));
+      plane.rotateZ(radians(f.rotation[2]));
 
-  scene.add(cube);
+      plane.scale.set(...f.scale);
+    }
+
+    if (f.type === "line") {
+      const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
+      // TODO: I could be sending alot less data over the wire.
+      const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const line = new THREE.Line(geometry, material);
+      scene.add(line);
+    }
+  });
+
+  renderer.render(scene, camera);
+
+  const pixels = new Uint8Array(width * height * 4);
+  renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
+
+  return pixels;
 }
-
-// Line
-{
-  const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
-
-  const points = [];
-  points.push(new THREE.Vector3(-1, 0, 0));
-  points.push(new THREE.Vector3(0, 1, 0));
-  points.push(new THREE.Vector3(1, 0, 0));
-
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-  const line = new THREE.Line(geometry, material);
-  scene.add(line);
-}
-
-// Light
-{
-  const color = 0xffffff;
-  const intensity = 1;
-  const light = new THREE.DirectionalLight(color, intensity);
-  light.position.set(-1, 2, 4);
-  scene.add(light);
-}
-
-renderer.render(scene, camera);
-
-const pixels = new Uint8Array(size.width * size.height * 4);
-
-// Read all pixels
-renderer.readRenderTargetPixels(
-  target,
-  0,
-  0,
-  size.width,
-  size.height,
-  pixels
-);
-
-console.log("Baked pixels: ", pixels);
-
-const domElement = renderer.domElement;
-domElement.dataset.type = "3d";
-
-export { domElement };
