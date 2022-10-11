@@ -15,11 +15,13 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.domElement.dataset.type = "3d";
 
-let target;
-let pixels;
+const disposal = [];
+
 let camera;
 let scene;
-let needsRender = false;
+
+let target;
+// let pixels;
 
 export function bake({ cam, forms }, { width, height }, size) {
   // Only make instantiate new buffers if necessary.
@@ -28,7 +30,7 @@ export function bake({ cam, forms }, { width, height }, size) {
     renderer.setSize(size.width, size.height);
     renderer.setPixelRatio(1 / 2.2);
     // renderer.setRenderTarget(target); // For rendering offsceen.
-    pixels = new Uint8Array(width * height * 4);
+    // pixels = new Uint8Array(width * height * 4);
     const fov = 80;
     const aspect = width / height;
     const near = 0.1;
@@ -46,16 +48,16 @@ export function bake({ cam, forms }, { width, height }, size) {
   forms.forEach((f) => {
     if (f.type === "triangle") {
       // Add texture.
-      const triDataTex = new THREE.DataTexture(
+      const tex = new THREE.DataTexture(
         f.texture.pixels,
         f.texture.width,
         f.texture.height,
         THREE.RGBAFormat
       );
 
-      triDataTex.needsUpdate = true;
+      tex.needsUpdate = true;
 
-      const material = new THREE.MeshBasicMaterial({ map: triDataTex });
+      const material = new THREE.MeshBasicMaterial({ map: tex });
       material.side = THREE.DoubleSide;
       material.transparent = true;
       material.opacity = f.alpha;
@@ -81,19 +83,21 @@ export function bake({ cam, forms }, { width, height }, size) {
       tri.scale.set(...f.scale);
 
       scene.add(tri);
+
+      disposal.push(tex, material, geometry);
     }
 
     if (f.type === "quad") {
       // Add texture.
-      const dummyDataTex = new THREE.DataTexture(
+      const tex = new THREE.DataTexture(
         f.texture.pixels,
         f.texture.width,
         f.texture.height,
         THREE.RGBAFormat
       );
-      dummyDataTex.needsUpdate = true;
+      tex.needsUpdate = true;
 
-      const material = new THREE.MeshBasicMaterial({ map: dummyDataTex });
+      const material = new THREE.MeshBasicMaterial({ map: tex });
       material.side = THREE.DoubleSide;
       //material.transparent = true;
       material.opacity = f.alpha;
@@ -114,6 +118,8 @@ export function bake({ cam, forms }, { width, height }, size) {
       plane.rotateY(radians(f.rotation[1]));
       plane.rotateZ(radians(f.rotation[2]));
       plane.scale.set(...f.scale);
+
+      disposal.push(tex, material, geometry);
     }
 
     if (f.type === "line") {
@@ -136,6 +142,7 @@ export function bake({ cam, forms }, { width, height }, size) {
       line.scale.set(...f.scale);
 
       scene.add(line);
+      disposal.push(material, geometry);
     }
   });
 
@@ -143,14 +150,19 @@ export function bake({ cam, forms }, { width, height }, size) {
   //renderer.render(scene, camera);
   //renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
   //return pixels;
-
-  //if (needsRender) renderer.render(scene, camera);
-  needsRender = true;
 }
 
 export function render() {
-  if (needsRender) renderer.render(scene, camera);
-  needsRender = false;
+  if (scene != undefined) {
+    renderer.render(scene, camera);
+    disposal.forEach((d) => d.dispose()); // Free memory from forms.
+    disposal.length = 0;
+    scene = undefined; // Dispose of scene.
+  }
+}
+
+export function clear() {
+  renderer.clear();
 }
 
 export const domElement = renderer.domElement;

@@ -109,7 +109,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   const ffCtx = freezeFrameCan.getContext("2d");
   freezeFrameCan.dataset.type = "freeze";
 
-
   let imageData;
   let fixedWidth, fixedHeight;
   let projectedWidth, projectedHeight;
@@ -825,39 +824,41 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   let contentFrame;
 
-  const bakedCan = document.createElement('canvas', {willReadFrequently: true});
-  const bakedCtx = bakedCan.getContext('2d');
+  const bakedCan = document.createElement("canvas", {
+    willReadFrequently: true,
+  });
+  const bakedCtx = bakedCan.getContext("2d");
 
   async function receivedChange({ data: { type, content } }) {
     // *** Route to different functions if this change is not a full frame update.
 
     if (type === "forms") {
-      // console.log(type, content.forms, content.cam);
+
+      const willBake = content.cam !== undefined;
+
+      if (willBake) {
+        ThreeD.bake(content, screen, {
+          width: projectedWidth,
+          height: projectedHeight,
+        });
+      }
+
+      send({
+        type: "forms:baked",
+        content: willBake,
+      });
 
       // TODO: Measure the time this takes.
-      //const pixels = ThreeD.bake(content, screen);
-
-      ThreeD.bake(content, screen, {width: projectedWidth, height: projectedHeight});
-
       //const pixels = ThreeD.bake(content, screen, {width: projectedWidth, height: projectedHeight});
-
       // bakedCan.width = screen.width;
       // bakedCan.height = screen.height;
-
       // bakedCtx.drawImage(ThreeD.domElement, 0, 0);
-
       // const pixels = bakedCtx.getImageData(0, 0, screen.width, screen.height).data;
 
-      send({
-        type: "forms:baked",
-        content: true });
-
-      /*
-      send({
-        type: "forms:baked",
-        content: { width: screen.width, height: screen.height, pixels },
-      }, [pixels]);
-      */
+      // send({
+      //   type: "forms:baked",
+      //   content: { width: screen.width, height: screen.height, pixels },
+      // }, [pixels]);
 
       return;
     }
@@ -1444,13 +1445,15 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     if (type === "disk-loaded") {
       // Show an "audio engine: off" message.
-
       setMetatags(content.meta);
 
       //if (content.noBeat === false && audioContext?.state !== "running") {
       //bumper.innerText = "audio engine off";
       //modal.classList.add("on");
       //}
+
+      // Clear the ThreeD buffer.
+      // ThreeD.clear();
 
       // Emit a push state for the old disk if it was not the first. This is so
       // a user can use browser history to switch between disks.
@@ -1485,6 +1488,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Reset preloading.
       window.waitForPreload = false;
       window.preloaded = false;
+
+      // Clear any 3D content.
+      ThreeD.clear();
 
       // Clear any DOM content that was added by a piece.
       contentFrame?.remove(); // Remove the contentFrame if it exists.
@@ -1630,7 +1636,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       } else if (pixelsDidChange) {
         ctx.putImageData(imageData, 0, 0); // Comment out for a `dirtyBox` visualization.
         if (glaze.on) {
-
           glazeCompositeCtx.drawImage(ThreeD.domElement, 0, 0);
           glazeCompositeCtx.drawImage(canvas, 0, 0);
           Glaze.update(glazeComposite);
@@ -1640,10 +1645,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
 
       if (glaze.on) {
-        Glaze.render(
-          timePassed,
-          pen.normalizedPosition(canvasRect)
-        );
+        Glaze.render(timePassed, pen.normalizedPosition(canvasRect));
       } else {
         Glaze.off();
       }

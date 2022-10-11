@@ -122,7 +122,7 @@ function paint({ wipe, ink, form, screen }) {
   // Render in Three.js
   form([plane, tri, ground, l3d], cam);
 
-  wipe(0, 0);
+  wipe(10, 0);
   ink(255, 255, 255, 127).box(screen.width / 2, screen.height / 2, 7, 7, "fill*center");
   //ink(255, 0, 0, 50).box(screen.width / 2, screen.height / 2, 15, 15, "fill*center");
 

@@ -81,6 +81,7 @@ let cursorCode;
 let pieceHistoryIndex = -1; // Gets incremented to 0 when first piece loads.
 let paintCount = 0n;
 let simCount = 0n;
+let booted = false;
 let initialSim = true;
 let noPaint = false;
 
@@ -688,7 +689,7 @@ async function load(
 
   // Automatically connect a socket server if we are in debug mode.
   if (debug) {
-    let receiver;
+    let receiver; // Handles incoming messages from the socket.
 
     socket = new Socket(
       servers.local,
@@ -756,6 +757,7 @@ async function load(
     //console.clear();
     paintCount = 0n;
     simCount = 0n;
+    booted = false;
     initialSim = true;
     activeVideo = null; // reset activeVideo
     bitmapPromises = {};
@@ -912,9 +914,9 @@ async function makeFrame({ data: { type, content } }) {
     //console.log("🍞 Forms baked:", content);
     //noPaint = false;
 
-    if (content.pixels) {
-      graph.paste(content, 0, 0, 1, true);
-    }
+    // if (content.pixels) {
+    //  graph.paste(content, 0, 0, 1, true);
+    // }
 
     paintFormsResolution?.();
     return;
@@ -1160,19 +1162,24 @@ async function makeFrame({ data: { type, content } }) {
         return s * 120; // TODO: Get 120 dynamically from the Loop setting. 2022.01.13.23.28
       };
 
-      if (initialSim) {
-        simCount += 1n;
-        $api.simCount = simCount;
-        sim($api);
-        initialSim = false;
-      } else if (content.updateCount > 0 && paintCount > 0n) {
-        // Update the number of times that are needed.
-        for (let i = content.updateCount; i--; ) {
+      // TODO: A booted check could be higher up the chain here? 
+      // Or this could just move. 22.10.11.01.31
+      if (loading === false && booted) {
+        if (initialSim) {
           simCount += 1n;
           $api.simCount = simCount;
           sim($api);
+          initialSim = false;
+        } else if (content.updateCount > 0 && paintCount > 0n) {
+          // Update the number of times that are needed.
+          for (let i = content.updateCount; i--; ) {
+            simCount += 1n;
+            $api.simCount = simCount;
+            sim($api);
+          }
         }
       }
+
 
       // 📻 Signalling
       $api.signal = (content) => {
@@ -1502,6 +1509,7 @@ async function makeFrame({ data: { type, content } }) {
       if (paintCount === 0n) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
         boot($api);
+        booted = true;
         if (loading === false) send({ type: "disk-loaded-and-booted" });
       }
 

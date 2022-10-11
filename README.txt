@@ -38,11 +38,7 @@ Welcome to...
 
 *** 3D Renderering ***
   + Now
-    - [🟡] Broken on load.
-      - [] Fix `sim` being busted on quick reload.
-    - [] Fix cursor transparency in 3dline.
-         (Make blend function take into account existing alpha.)
-    - [] Only load threejs if necessary.
+    - [🔴] Only load threejs if necessary.
     - [] Write a better (faster) compositor that squashes everything?
         Bottom up: 3DPIX, 2DPIX, Glaze, UI (dom), CURSOR (svg / css cursor)
   + Later
@@ -50,6 +46,11 @@ Welcome to...
     - [] https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
     - [] https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
   + Done
+    - [x] Fix thread boundary conditions related to hot reloading.
+    - [x] Broken on load.
+      - [x] Fix `sim` being busted on quick reload.
+    - [x] Fix cursor transparency in 3dline.
+         (Make blend function take into account existing alpha.)
     - [x] See if this is faster than the software renderer as-is?
     - [x] Make sure picture ratios match up perfectly.
     - [x] Get lines working.
@@ -96,7 +97,6 @@ Welcome to...
   - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
   - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
-
 *** WASM ***
   - [] Add wasm infrastructure speed up for blend function.
 
@@ -116,6 +116,7 @@ Welcome to...
 ***No Paint System***
   + Now
   - [💛] The painting resolution should auto-expand, but not contract.
+    - [] Fix weird negative space / non-drawing issues on startup.
   - [] Add "no" command to the prompt.
     - [] Store two history states?
   - [] Enter for paint and ESC for no.
