@@ -36,36 +36,41 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-***Cursors***
-  - [] View current custom cursor css examples.
-  - "Chromium cursor images are restricted to 128x128 pixels by default, but it is
-    recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
-  - [] Sidetrack: Hack in an SVG cursor really quick.
-  - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
-  - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
-
-*** ThreeJS Hacking ***
+*** 3D Renderering ***
   + Now
-    - [] Get lines working.
-      (The transform is strange?)
-    - [] Broken on load.
-    - [] Make sure picture ratios match up perfectly.
-    - [] See if this is faster than the software renderer as-is?
+    - [🟡] Broken on load.
+      - [] Fix `sim` being busted on quick reload.
+    - [] Fix cursor transparency in 3dline.
+         (Make blend function take into account existing alpha.)
     - [] Only load threejs if necessary.
-    - [] Write a better compositor.
-      Bottom up: 3DPIX, 2DPIX, Glaze, UI (dom), CURSOR (svg)
+    - [] Write a better (faster) compositor that squashes everything?
+        Bottom up: 3DPIX, 2DPIX, Glaze, UI (dom), CURSOR (svg / css cursor)
+  + Later
+  - [] Implement these examples:
+    - [] https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
+    - [] https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
+  + Done
+    - [x] See if this is faster than the software renderer as-is?
+    - [x] Make sure picture ratios match up perfectly.
+    - [x] Get lines working.
+    - [x] Switch the / convert software rasterizer from left handed to right handed
+      rendering.
+      What worked on the software renderer side:
+       - Flip X and Z position of each vertex before transform.
+       - Flip X and Z rotation of each vertex before transform.
+       - Flip Y rotation of the camera before transform.
+       - Rotation matrix multiply order for camera: YXZ.
+       - Rotation matrix multiply order for vertices: XYZ.
+      + Future + Eventually I could look into using the exact same matrix data across both?
     - [x] Get textures in there.
     - [x] Enable all objects.
     - [x] Optimize pixel array sending. (Had to make an extra layer)
     - [x] Disable backface culling.
     - [x] Make it so that "form" calls that take an array, render in 3js and return the pixels back.
     - [x] A single "form" call should be able to send over multiple objects.
-  + Later
-  - [] Implement these examples:
-    - [] https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
-    - [] https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
 
-*** 3D Rasterizer (3dline) ***
+*** (3dline) ***
++ Now
   - [] WASMify the `blend` function to see if it can be any faster.
   - [] Make a good wasd / mouse fps camera.
     - [] Also add keyboard-only controls.
@@ -74,6 +79,7 @@ Welcome to...
   - [] Add WebXR session.
   - [] Draw a line in webXR.
   - [] Optimize 3d line geometry / make a polyline function. 
+  + Done
   - [x] Add an X on the ground... and maybe a horizon?
   - [x] Add triangle clipping.
   - [x] Add line clipping.
@@ -81,6 +87,15 @@ Welcome to...
   - [x] Basic FPS Camera.
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
+
+***Cursors***
+  - [] View current custom cursor css examples.
+  - "Chromium cursor images are restricted to 128x128 pixels by default, but it is
+    recommended to limit the cursor image size to 32x32 pixels" - https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
+  - [] Sidetrack: Hack in an SVG cursor really quick.
+  - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
+  - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
+
 
 *** WASM ***
   - [] Add wasm infrastructure speed up for blend function.

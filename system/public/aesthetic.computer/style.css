@@ -170,9 +170,10 @@ canvas[data-type="freeze"] {
 
 canvas[data-type="ui"] {
   z-index: 6;
-  /* filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5)); */
-  display: none;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
+  /* display: none; */
 }
+
 
 canvas[data-type="3d"] {
   z-index: 0;

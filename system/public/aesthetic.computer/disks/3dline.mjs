@@ -1,73 +1,63 @@
 // 3D Line, 22.10.05.11.01
-// A test for developing software rasterized 3D lines.
+// A test for developing software (and hardware) rasterized 3D lines
+// and other geometry.
+
 import { vec2 } from "../lib/num.mjs";
 let cam, tri, ground, plane, l3d, dolly;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
-  resize,
-  glaze,
   painting,
   Form,
   Camera,
   TRIANGLE,
   SEGMENT,
   SQUARE,
-  screen,
 }) {
-  // glaze({on: true});
 
   tri = new Form(
     TRIANGLE,
-    //{ texture: painting(16, 16, (p) => p.wipe(0, 255, 0, 50)) },
-    { texture: painting(16, 16, (p) => p.noise16()) },
-    [0, 0.1, 1], // x, y, z
+    { texture: painting(1, 8, (p) => p.noise16DIGITPAIN()) },
+    [0, 0, 1], // x, y, z
     [0, 0, 0], // rotation
     [1, 1, 1] // scale
   );
 
-  tri.alpha = 0.5;
+  tri.alpha = 0.75;
 
   ground = new Form(
     SQUARE,
     {
-      texture: painting(
-        16,
-        16,
-        (p) => {
-          p.ink(255, 0, 0).line(0, 0, 16, 16).line(16, 0, 0, 16);
-        }
-      ),
+      texture: painting(16, 16, (p) => {
+        p.ink(255, 0, 0).line(0, 0, 16, 16).line(16, 0, 0, 16);
+      }),
     },
-    [0, 0.2, 1], // x, y, z
-    [90, 0, 0], // rotation
+    [0, -0.99, 1], // x, y, z
+    [-90, 0, 0], // rotation
     [1, 1, 1] // scale
   );
 
   plane = new Form(
     SQUARE,
     {
-      texture: painting(32, 32, (p) => p.noise16(0)),
+      texture: painting(2, 2, (p) => p.wipe(0, 0, 100)),
     },
-    [0, 0, -1], // x, y, z
-    [0, 0, 0], // rotation
-    [1, 1, 1] // scale
+    [0, -1, 1], // x, y, z
+    [-90, 0, 0], // rotation
+    [3, 3, 3] // scale
   );
 
   l3d = new Form(
     SEGMENT,
     undefined, // No fill is set, so a default would be used.
-    [0, -1.1, -1], // x, y, z // TODO: These positions don't work yet...
+    [0, 1, 1], // x, y, z // TODO: These positions don't work yet...
     [0, 0, 0], // rotation
     [1, 1, 1] // scale
   );
 
   cam = new Camera(80); // camera with fov
 
-  cam.x = 0;
-  cam.y = 0;
-  cam.z = 2;
-  cam.rotX = 0;
+  cam.z = 4;
 
   dolly = new Dolly(); // moves the camera
 }
@@ -75,10 +65,10 @@ function boot({
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim($api) {
   // Object rotation.
-  //tri.rotation[1] = (tri.rotation[1] - 0.25) % 360; // Rotate Y axis.
-  l3d.rotation[0] = (l3d.rotation[0] - 0.1) % 360; // Rotate Y axis.
+  tri.rotation[1] = (tri.rotation[1] - 0.25) % 360; // Rotate Y axis.
+  l3d.rotation[0] = (l3d.rotation[0] - 0.5) % 360; // Rotate X axis.
   l3d.rotation[1] = (l3d.rotation[1] + 0.5) % 360; // Rotate Y axis.
-  l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Y axis.
+  l3d.rotation[2] = (l3d.rotation[2] + 0.2) % 360; // Rotate Z axis.
 
   // Camera controls.
   dolly.sim();
@@ -88,17 +78,23 @@ function sim($api) {
   cam.x += dolly.xVel;
   cam.z += dolly.zVel;
 
-  const radY = radians(cam.rotY);
-
   let fForce = 0,
     hForce = 0;
   if (wHeld) fForce = -0.004;
   if (sHeld) fForce = 0.004;
+
+  // This works for my renderer
+  //if (aHeld) hForce = 0.004;
+  //if (dHeld) hForce = -0.004;
+
+  // This works for Three.js
   if (aHeld) hForce = -0.004;
   if (dHeld) hForce = 0.004;
 
   if (wHeld || sHeld || aHeld || dHeld) {
-    const dir = radians(-cam.rotY); // 90 degrees from current direction.
+    //const dir = radians(cam.rotY); // This works for my renderer.
+    const dir = radians(-cam.rotY); // This works for Three JS.
+
     const v2 = vec2.rotate(
       vec2.create(),
       vec2.fromValues(hForce, fForce),
@@ -108,38 +104,27 @@ function sim($api) {
     dolly.push({ x: v2[0], z: v2[1] });
   }
 
-  if (auHeld) cam.rotX -= 1;
-  if (adHeld) cam.rotX += 1;
+  if (auHeld) cam.rotX += 1;
+  if (adHeld) cam.rotX -= 1;
   if (alHeld) cam.rotY += 1;
   if (arHeld) cam.rotY -= 1;
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ wipe, ink, screen, num: { randIntRange }, form, paintCount }) {
-
-  if (paintCount % 2 === 0) {
-  //  ink(0, 0, 127, 5).box(0, 0, screen.width, screen.height);
-    wipe(0, 255, 0, 10);
-  }
-
-  //ink(255, 255, 0).line(0, 0, screen.width, screen.height);
-
-  // Dumb ground plane.
-  // ink(0, 127, 127).box(0, screen.height / 2, screen.width, screen.height / 2);
-
-  // Render in software.
-  //form(ground, cam);
-  form(l3d, cam);
-
-  form(tri, cam);
-  // Render in Three.js
-  //form([plane, ground, l3d, tri], cam); // Get this to render in order.
-  form([plane, ground, l3d, tri], cam); // Get this to render in order.
+function paint({ wipe, ink, form, screen }) {
+  // Render via software rasterizer.
+  //wipe(0);
   //form(plane, cam);
+  //form(ground, cam);
+  //form(l3d, cam);
+  //form(tri, cam);
 
-  //ink(255, 128).box(screen.width / 2, screen.height / 2, 8, 8, "fill*center");
+  // Render in Three.js
+  form([plane, tri, ground, l3d], cam);
 
-  //console.log("Software Projection:", cam.perspective);
+  wipe(0, 0);
+  ink(255, 30).box(screen.width / 2, screen.height / 2, 7, 7, "fill*center");
+  ink(255, 0, 0, 50).box(screen.width / 2, screen.height / 2, 15, 15, "fill*center");
 
   //return false;
 }
@@ -193,7 +178,7 @@ function act({ event }) {
   // Respond to user input here.
   if (event.is("draw")) {
     cam.rotY -= event.delta.x / 3.5;
-    cam.rotX += event.delta.y / 3.5;
+    cam.rotX -= event.delta.y / 3.5;
   }
 }
 

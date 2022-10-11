@@ -263,12 +263,12 @@ function paste(from, destX = 0, destY = 0, scale = 1, blit = false) {
       }
     }
   } else {
-    // Check to see if we can perform a full copy here, 
+    // Check to see if we can perform a full copy here,
     // with no alpha blending.
     if (blit) {
       pixels.set(from.pixels, 0);
     } else {
-      // Or go pixel by pixel, with blending. 
+      // Or go pixel by pixel, with blending.
       for (let x = 0; x < from.width; x += 1) {
         for (let y = 0; y < from.height; y += 1) {
           copy(destX + x, destY + y, x, y, from);
@@ -861,6 +861,7 @@ class Camera {
   #y = 0;
   #rotY = 0;
   #z = 0;
+  #rotZ = 0;
   fov;
 
   position = [0, 0, 0];
@@ -873,7 +874,6 @@ class Camera {
     this.fov = fov;
     this.#perspective(this.fov);
     this.#transform();
-    //this.#screen();
     this.matrix = this.#transformMatrix;
   }
 
@@ -899,6 +899,18 @@ class Camera {
 
   get rotY() {
     return this.#rotY;
+  }
+
+  set rotZ(n) {
+    this.#rotZ = n;
+    this.#perspective(this.fov);
+    this.#transform();
+    this.matrix = this.#transformMatrix;
+    this.rotation[2] = n;
+  }
+
+  get rotZ() {
+    return this.#rotZ;
   }
 
   set x(n) {
@@ -958,18 +970,14 @@ class Camera {
 
     // See: https://github.com/BennyQBD/3DSoftwareRenderer/blob/641f59125351d9565e744a90ad86256c3970a724/src/Matrix4f.java#L89
     // And compare it with: https://glmatrix.net/docs/mat4.js.html#line1508
-    //const zRange = zNear - zFar;
 
-    //const ten = (-zNear - zFar) / zRange;
-    //const ten = -(zFar + zNear) / (zFar - zNear);
-    //const fourteen = (2 * zFar * zNear) / zRange;
-    //const fourteen = (-2 * zFar * zNear) / (zFar - zNear);
+    const zRange = zNear - zFar;
+    const ten = (-zNear - zFar) / zRange;
+    const fourteen = (2 * zFar * zNear) / zRange;
 
-    //this.perspectiveMatrix[10] = ten; // Zero the Z component.
-    //this.perspectiveMatrix[14] = fourteen;
-
-    //this.perspectiveMatrix[11] = -1; // Flip the Y so we see things rightside up.
-    //console.log(this.#perspectiveMatrix);
+    this.perspectiveMatrix[10] = ten; // Zero the Z component.
+    this.perspectiveMatrix[14] = fourteen;
+    this.perspectiveMatrix[11] = 1; // Flip the Y so we see things rightside up.
   }
 
   get perspective() {
@@ -980,31 +988,30 @@ class Camera {
     // TODO: Why does this and the FPS camera control need to be inverted?
     //       Can't I just somehow invert the matrix to avoid all the swapping?
     //       Maybe it has something to do with rotation order?
-    //       The default in three.js is XYZ, but here I'm using YXZ which I 
+    //       The default in three.js is XYZ, but here I'm using YXZ which I
     //       had to override there. 22.10.09.20.31
 
     // Translation.
     const panned = mat4.translate(mat4.create(), mat4.create(), [
-      this.#x * -1,
-      this.#y * -1,
-      this.#z * -1,
+      this.#x,
+      this.#y,
+      this.#z,
     ]);
 
     // Rotation
-    const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX) * -1);
-    const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY) * -1);
-
-    //const rotatedX = mat4.multiply(mat4.create(), rotX, panned);
-    //const rotatedY = mat4.multiply(mat4.create(), rotY, rotatedX);
+    const rotY = mat4.fromYRotation(mat4.create(), radians(-this.#rotY)); // FLIPPED
+    const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
+    const rotZ = mat4.fromZRotation(mat4.create(), radians(this.#rotZ));
 
     const rotatedY = mat4.multiply(mat4.create(), rotY, panned);
     const rotatedX = mat4.multiply(mat4.create(), rotX, rotatedY);
+    const rotatedZ = mat4.multiply(mat4.create(), rotZ, rotatedX);
 
     // Perspective
     this.#transformMatrix = mat4.multiply(
       mat4.create(),
       this.perspectiveMatrix,
-      rotatedX
+      rotatedZ
     );
   }
 }
@@ -1017,6 +1024,8 @@ class Form {
   // Model
   vertices = [];
   indices;
+
+  uvs = [];
 
   // TODO: Texture and color should be optional, and perhaps based on type.
   // TODO: Should this use a parameter called shader?
@@ -1072,11 +1081,13 @@ class Form {
       const texCoord = [
         positions[i][X] / 2 + 0.5,
         positions[i][Y] / 2 + 0.5,
-        0, //positions[i][Z] / 2 + 0.5, // TODO: Is this necessary to calculate for UV?
-        0,
+        //0, //positions[i][Z] / 2 + 0.5, // TODO: Is this necessary to calculate for UV?
+        //0,
       ];
 
-      this.vertices.push(
+      this.uvs.push(...texCoord); // For sending to the GPU.
+
+      this.vertices.push( // For sending to the CPU.
         new Vertex(
           positions[i],
           this.#gradientColors[i % 3],
@@ -1092,8 +1103,6 @@ class Form {
     if (fill?.texture) this.texture = fill.texture;
     if (fill?.color) this.color = fill.color;
 
-    // TODO: Set this.#type here from type.
-
     this.position = position;
     this.rotation = rotation;
     this.scale = scale;
@@ -1102,35 +1111,35 @@ class Form {
   graph({ matrix: cameraMatrix }) {
     // Build a matrix to represent this form's position, rotation and scale.
 
-    const translate = mat4.fromTranslation(mat4.create(), this.position);
+    const panned = mat4.fromTranslation(mat4.create(), [
+      this.position[X] * -1,
+      this.position[Y],
+      this.position[Z] * -1,
+    ]);
 
-    const rotateY = mat4.fromYRotation(
+    const rotY = mat4.fromYRotation(mat4.create(), radians(this.rotation[Y]));
+
+    const rotX = mat4.fromXRotation(
       mat4.create(),
-      radians(this.rotation[Y])
+      radians(this.rotation[X] * -1) // FLIPPED
     );
 
-    const rotateX = mat4.fromXRotation(
+    const rotZ = mat4.fromZRotation(
       mat4.create(),
-      radians(this.rotation[X])
+      radians(this.rotation[Z] * -1) // FLIPPED
     );
 
-    const rotateZ = mat4.fromZRotation(
-      mat4.create(),
-      radians(this.rotation[Z])
-    );
+    const rotatedX = mat4.mul(mat4.create(), panned, rotX);
+    const rotatedY = mat4.mul(mat4.create(), rotatedX, rotY);
+    const rotatedZ = mat4.mul(mat4.create(), rotatedY, rotZ);
 
-    const rotate = mat4.mul(mat4.create(), rotateY, rotateX);
-    mat4.mul(rotate, rotate, rotateZ);
-
-    // Apply translation and rotation.
-    const matrix = mat4.mul(mat4.create(), translate, rotate);
+    let matrix = rotatedZ;
 
     // Apply scale.
     mat4.scale(matrix, matrix, this.scale);
 
     // Apply the camera matrix.
-    mat4.mul(matrix, cameraMatrix, matrix);
-    //mat4.mul(matrix, matrix, cameraMatrix);
+    matrix = mat4.mul(mat4.create(), cameraMatrix, matrix);
 
     const transformedVertices = [];
 
@@ -1139,7 +1148,7 @@ class Form {
       transformedVertices.push(vertex.transform(matrix));
     });
 
-    screenMatrix = initScreenSpaceTransformMatrix(width / 2, height / 2, mat4);
+    screenMatrix = initScreenSpaceTransformMatrix(width / 2, height / 2);
 
     // TODO: Switch on render type here. Right now it's only triangles.
     if (this.primitive === "triangle") {
@@ -1225,7 +1234,17 @@ class Vertex {
 
   transform(matrix) {
     return new Vertex(
-      vec4.transformMat4(vec4.create(), this.pos, matrix),
+      vec4.transformMat4(
+        vec4.create(),
+        [
+          this.pos[X] * -1, // FLIPPED
+          this.pos[Y],
+          this.pos[Z] * -1, // FLIPPED
+          this.pos[W],
+        ],
+        matrix
+      ),
+
       this.color,
       this.texCoords
     );
@@ -1260,7 +1279,7 @@ class Vertex {
 function initScreenSpaceTransformMatrix(halfWidth, halfHeight) {
   const m = mat4.create();
   mat4.translate(m, m, [halfWidth - 0.5, halfHeight - 0.5, 0]);
-  mat4.scale(m, m, [halfWidth, halfHeight, 1]);
+  mat4.scale(m, m, [halfWidth, -halfHeight, 1]);
   return m;
 }
 
