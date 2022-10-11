@@ -11,8 +11,6 @@ import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
 import * as Store from "./lib/store.mjs";
 
-import * as ThreeD from "./lib/3d.mjs";
-
 const { assign } = Object;
 const { round, floor, min, max } = Math;
 
@@ -132,6 +130,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let lastGap = 0;
   let density = 2.2; // added to window.devicePixelRatio
 
+  // *** External Library Dependency Injection ***
+
+  // FFMPEG.WASM
   async function loadFFmpeg() {
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
@@ -148,6 +149,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       document.head.appendChild(script);
     });
+  }
+
+  // THREE.JS (With a thin wrapper called ThreeD).
+  let ThreeD;
+  async function loadThreeD() {
+    ThreeD = await import(`./lib/3d.mjs`);
+    wrapper.append(ThreeD.domElement);
   }
 
   // Used by `disk` to set the metatags by default when a piece loads. It can
@@ -325,8 +333,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const bumper = document.createElement("div");
       bumper.id = "bumper";
       modal.append(bumper);
-
-      wrapper.append(ThreeD.domElement);
 
       wrapper.append(uiCanvas);
       document.body.append(wrapper);
@@ -728,7 +734,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         function (needsRender, updateTimes) {
           // console.log(updateTimes); // Note: No updates happen yet before a render.
           diskSupervisor.requestFrame?.(needsRender, updateTimes);
-          ThreeD.render();
+          ThreeD?.render();
         }
       );
     }
@@ -833,20 +839,21 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     // *** Route to different functions if this change is not a full frame update.
 
     if (type === "forms") {
-
       const willBake = content.cam !== undefined;
 
       if (willBake) {
-        ThreeD.bake(content, screen, {
+        if (ThreeD === undefined) {
+          await loadThreeD();
+        }
+
+        ThreeD?.bake(content, screen, {
           width: projectedWidth,
           height: projectedHeight,
         });
+        send({ type: "forms:baked", content: true });
+      } else {
+        send({ type: "forms:baked", content: false });
       }
-
-      send({
-        type: "forms:baked",
-        content: willBake,
-      });
 
       // TODO: Measure the time this takes.
       //const pixels = ThreeD.bake(content, screen, {width: projectedWidth, height: projectedHeight});
@@ -1490,7 +1497,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       window.preloaded = false;
 
       // Clear any 3D content.
-      ThreeD.clear();
+      ThreeD?.clear();
 
       // Clear any DOM content that was added by a piece.
       contentFrame?.remove(); // Remove the contentFrame if it exists.
@@ -1636,7 +1643,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       } else if (pixelsDidChange) {
         ctx.putImageData(imageData, 0, 0); // Comment out for a `dirtyBox` visualization.
         if (glaze.on) {
-          glazeCompositeCtx.drawImage(ThreeD.domElement, 0, 0);
+          if (ThreeD?.domElement) {
+            glazeCompositeCtx.drawImage(ThreeD.domElement, 0, 0);
+          }
           glazeCompositeCtx.drawImage(canvas, 0, 0);
           Glaze.update(glazeComposite);
           //Glaze.update(imageData);

@@ -31,56 +31,26 @@ Welcome to...
 
 🐞 Major Bugs & Regressions
   - [🆘] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
+  - [] The back button does not work in the Instagram in-app browser.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
 
 🌟 Projects In Progress 🌟
 
-*** 3D Renderering ***
-  + Now
-    - [🔴] Only load threejs if necessary.
-    - [] Write a better (faster) compositor that squashes everything?
-        Bottom up: 3DPIX, 2DPIX, Glaze, UI (dom), CURSOR (svg / css cursor)
-  + Later
-  - [] Implement these examples:
-    - [] https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
-    - [] https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
-  + Done
-    - [x] Fix thread boundary conditions related to hot reloading.
-    - [x] Broken on load.
-      - [x] Fix `sim` being busted on quick reload.
-    - [x] Fix cursor transparency in 3dline.
-         (Make blend function take into account existing alpha.)
-    - [x] See if this is faster than the software renderer as-is?
-    - [x] Make sure picture ratios match up perfectly.
-    - [x] Get lines working.
-    - [x] Switch the / convert software rasterizer from left handed to right handed
-      rendering.
-      What worked on the software renderer side:
-       - Flip X and Z position of each vertex before transform.
-       - Flip X and Z rotation of each vertex before transform.
-       - Flip Y rotation of the camera before transform.
-       - Rotation matrix multiply order for camera: YXZ.
-       - Rotation matrix multiply order for vertices: XYZ.
-      + Future + Eventually I could look into using the exact same matrix data across both?
-    - [x] Get textures in there.
-    - [x] Enable all objects.
-    - [x] Optimize pixel array sending. (Had to make an extra layer)
-    - [x] Disable backface culling.
-    - [x] Make it so that "form" calls that take an array, render in 3js and return the pixels back.
-    - [x] A single "form" call should be able to send over multiple objects.
-
 *** (3dline) ***
-+ Now
-  - [] WASMify the `blend` function to see if it can be any faster.
-  - [] Make a good wasd / mouse fps camera.
-    - [] Also add keyboard-only controls.
+ + Now
+  - [🟡] Make a good wasd / mouse fps camera.
     - [] And touch-only controls.
+    - [] Also add keyboard-only controls.
   - [] Draw a line from the 3d cursor in 3d space.
   - [] Add WebXR session.
+    - [] Use these demos.
+      - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
+      - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
+      - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
   - [] Draw a line in webXR.
   - [] Optimize 3d line geometry / make a polyline function. 
-  + Done
+ + Done
   - [x] Add an X on the ground... and maybe a horizon?
   - [x] Add triangle clipping.
   - [x] Add line clipping.
@@ -97,21 +67,17 @@ Welcome to...
   - [] Replace Canvas 2D cursors with SVGs (or DIVs?).
   - [] Test to see what's the fastest these days? Check for scaling issues on linux (see Figma...)
 
+*** New Compositor ***
+  - [] Write a better (faster) compositor that squashes everything?
+      Bottom up: 3DPIX, 2DPIX, Glaze, UI (dom), CURSOR (svg / css cursor)
+
 *** WASM ***
   - [] Add wasm infrastructure speed up for blend function.
+  - [] WASMify the `blend` function to see if it can be any faster.
 
 *** Whistlegraph (wg) ***
   - [] Use `wg` to improve dynamic metadata descriptions for link previews.
     (Does this mean making a export meta function that can be read on the server and the client both?)
-
-*** Web XR Hacking ***
-  - [] https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
-
-*** A-frame Hacking ***
-  - [] Finish routing input events?
-
-*** In-App Browsers ***
-  - [] The back button does not work in the Instagram in-app browser.
 
 ***No Paint System***
   + Now
@@ -380,10 +346,11 @@ Welcome to...
       
 ***3D Spatial Co-present Drawing***
   ***A-Frame Integration***
-  - Prototype:
+    - [] Finish routing input events?
+    - Prototype:
     - Either way:
       [] Set up an orthographic camera and mouse-enabled drawing for desktop users
-         of the a-frame layer.
+        of the a-frame layer.
       [] Read source code of a-painter: https://aframe.io/a-painter/
 
     -  iframe method:
@@ -394,7 +361,7 @@ Welcome to...
 
     -  Non-iframe method (why would this be better... maybe for recording?) [hold off for now]
         [] Get aframe script tag loading inside of the body then
-           inject the scene.
+          inject the scene.
 ***Explore VR without A-Frame***
   ***Without A-Frame***
    - [] Clone the basic WebXR examples, run them and and read them.
@@ -612,6 +579,33 @@ Welcome to...
 
 
 *Recently ✅ Completed*
+
+*** 3D Renderering ***
+  + Done
+    - [x] Only load threejs if necessary.
+    - [x] Fix thread boundary conditions related to hot reloading.
+    - [x] Broken on load.
+      - [x] Fix `sim` being busted on quick reload.
+    - [x] Fix cursor transparency in 3dline.
+         (Make blend function take into account existing alpha.)
+    - [x] See if this is faster than the software renderer as-is?
+    - [x] Make sure picture ratios match up perfectly.
+    - [x] Get lines working.
+    - [x] Switch the / convert software rasterizer from left handed to right handed
+      rendering.
+      What worked on the software renderer side:
+       - Flip X and Z position of each vertex before transform.
+       - Flip X and Z rotation of each vertex before transform.
+       - Flip Y rotation of the camera before transform.
+       - Rotation matrix multiply order for camera: YXZ.
+       - Rotation matrix multiply order for vertices: XYZ.
+      + Future + Eventually I could look into using the exact same matrix data across both?
+    - [x] Get textures in there.
+    - [x] Enable all objects.
+    - [x] Optimize pixel array sending. (Had to make an extra layer)
+    - [x] Disable backface culling.
+    - [x] Make it so that "form" calls that take an array, render in 3js and return the pixels back.
+    - [x] A single "form" call should be able to send over multiple objects.
 
  *** Resize (gap-density) ***
    - [x] Add "scale" to "paste"
