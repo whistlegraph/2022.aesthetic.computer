@@ -171,6 +171,7 @@ canvas[data-type="freeze"] {
 canvas[data-type="ui"] {
   z-index: 6;
   filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
+  transform: rotateX(0.01deg); /* Make sure we are using the GPU compositor. */
   /* display: none; */
 }
 

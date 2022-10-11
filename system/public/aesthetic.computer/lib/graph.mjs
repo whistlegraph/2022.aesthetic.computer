@@ -292,7 +292,7 @@ function blend(src, dst, si, di, alphaIn = 1) {
   dst[di] = (alpha * src[si + 0] + invAlpha * dst[di + 0]) >> 8;
   dst[di + 1] = (alpha * src[si + 1] + invAlpha * dst[di + 1]) >> 8;
   dst[di + 2] = (alpha * src[si + 2] + invAlpha * dst[di + 2]) >> 8;
-  dst[di + 3] = 0xff;
+  dst[di + 3] = dst[di + 3] + alpha; 
 }
 
 // Draws a horizontal line. (Should be very fast...)

@@ -123,8 +123,8 @@ function paint({ wipe, ink, form, screen }) {
   form([plane, tri, ground, l3d], cam);
 
   wipe(0, 0);
-  ink(255, 30).box(screen.width / 2, screen.height / 2, 7, 7, "fill*center");
-  ink(255, 0, 0, 50).box(screen.width / 2, screen.height / 2, 15, 15, "fill*center");
+  ink(255, 255, 255, 127).box(screen.width / 2, screen.height / 2, 7, 7, "fill*center");
+  //ink(255, 0, 0, 50).box(screen.width / 2, screen.height / 2, 15, 15, "fill*center");
 
   //return false;
 }
