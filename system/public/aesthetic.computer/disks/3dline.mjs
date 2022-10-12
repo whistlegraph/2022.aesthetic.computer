@@ -9,6 +9,7 @@ let floor, cross, tri, lines; // Geometry.
 function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
   cam = new Camera(80, { z: 4 }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
+  lastCenter = cam.center;
 
   floor = new Form(
     QUAD,
@@ -18,7 +19,7 @@ function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
 
   cross = new Form(
     QUAD,
-    { tex: p(16, 16, (g) => g.i(255, 0, 0).l(0, 0, 16, 16).l(16, 0, 0, 16)) },
+    { tex: p(4, 4, (g) => g.noise16DIGITPAIN()) },
     { pos: [0, -0.99, 1], rot: [-90, 0, 0] }
   );
 
@@ -31,14 +32,47 @@ function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
   lines = new Form(LINE, { pos: [0, 1, 1] });
 }
 
+let lastCenter;
+let points = [];
+let isDrawing;
+let marks = [];
+
 // 🎨 Paint (Executes every display frame)
-function paint({ wipe, ink, form, screen }) {
-  ink(0, 0, 255).form([floor, cross, tri, lines], cam); // Renders on GPU layer.
+function paint({ pen, wipe, ink, Form, LINE, form, screen, num: { vec4 } }) {
+  // TODO: Draw a line from the camera to [0, 0].
+
+  if (pen.drawing && pen.pointerType === "mouse") {
+    if (vec4.dist(lastCenter, cam.center) > 0) {
+      points.push(lastCenter, cam.center);
+    }
+  }
+
+  const tie = new Form({
+    type: "line",
+    positions: points,
+  });
+
+  // Put each mark in.
+
+  form([tie, floor, cross, tri, lines], cam);
+
+  lastCenter = cam.center;
+
+  //form(new Form(LINE, { pos: [0, 1, 1] }), cam);
+  //form(lines, cam);
+
+  //wipe(0);
+
+  //ink(0, 0, 255).form([floor, cross, tri, lines], cam); // Renders on GPU layer.
 
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
-  wipe(10, 0).ink(255, 255, 255, 127).box(...screen.center, 7, "fill*center");
+  wipe(10, 0)
+    .ink(255, 255, 255, 127)
+    .box(...screen.center, 7, "fill*center");
 
-  ink(0, 255, 0).form(lines, cam, { cpu: true }); // Render on CPU layer.
+  //ink(0, 255, 0).form(tie, cam, { cpu: true }); // Render on CPU layer.
+
+  //ink(0, 255, 0).form(lines, cam, { cpu: true }); // Render on CPU layer.
 }
 
 let W, S, A, D;

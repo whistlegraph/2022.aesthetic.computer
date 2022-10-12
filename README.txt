@@ -40,6 +40,8 @@ Welcome to...
 *** (3dline) ***
  + Now
   - [🟡] Draw a line from the 3d cursor in 3d space.
+    - [] Break line into separate marks.
+    - [] Stream numbers to the GPU / don't send copies of vertices every frame?
   - [] Add WebXR session.
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html

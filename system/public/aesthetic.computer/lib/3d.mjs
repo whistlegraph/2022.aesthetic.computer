@@ -63,7 +63,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       material.side = THREE.DoubleSide;
       material.transparent = true;
       material.opacity = f.alpha;
-      material.depthWrite = false;
+      material.depthWrite = true;
       material.depthTest = true;
 
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
@@ -130,8 +130,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       });
       material.transparent = true;
       material.opacity = f.alpha;
-      material.depthWrite = false;
-      material.depthTest = true;
+      material.depthWrite = true;
+      //material.depthTest = false;
 
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
       const geometry = new THREE.BufferGeometry().setFromPoints(points);

@@ -2,6 +2,7 @@ import {
   randInt,
   byteInterval17,
   vec2,
+  vec3,
   vec4,
   mat4,
   even,
@@ -11,6 +12,9 @@ import {
   randIntRange,
   clamp,
 } from "./num.mjs";
+
+import { repeat } from "./help.mjs";
+
 const { abs, sign, ceil, floor, sin, cos } = Math;
 
 let width, height, pixels;
@@ -297,7 +301,7 @@ function blend(src, dst, si, di, alphaIn = 1) {
   dst[di] = (alpha * src[si + 0] + invAlpha * dst[di + 0]) >> 8;
   dst[di + 1] = (alpha * src[si + 1] + invAlpha * dst[di + 1]) >> 8;
   dst[di + 2] = (alpha * src[si + 2] + invAlpha * dst[di + 2]) >> 8;
-  dst[di + 3] = dst[di + 3] + alpha; 
+  dst[di + 3] = dst[di + 3] + alpha;
 }
 
 // Draws a horizontal line. (Should be very fast...)
@@ -412,7 +416,7 @@ function line3d(a, b, lineColor) {
   const [x1, y1, z1] = b.pos;
   const points = bresenham(x0, y0, x1, y1);
 
-  const saveColor = c.slice(); 
+  const saveColor = c.slice();
   color(...lineColor); // Set color from lineColor or default to global color.
 
   points.forEach((p, i) => {
@@ -866,6 +870,7 @@ let screenMatrix;
 // b. Geometric Abstractions
 
 // For producing a projection matrix.
+// For matrix & linear algebra help: https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab
 class Camera {
   matrix;
   #x = 0;
@@ -876,13 +881,13 @@ class Camera {
   #rotZ = 0;
   fov;
 
-  position = [0, 0, 0];
+  position = [0, 0, 0, 1];
   rotation = [0, 0, 0];
 
   perspectiveMatrix;
   #transformMatrix;
 
-  constructor(fov = 80, {x, y, z}) {
+  constructor(fov = 80, { x, y, z }) {
     this.fov = fov;
 
     this.x = x;
@@ -999,6 +1004,48 @@ class Camera {
 
   get perspective() {
     return this.perspectiveMatrix;
+  }
+
+  get center() {
+    // See also: https://codersdesiderata.com/2016/09/10/screen-view-to-world-coordinates,
+    //           https://stackoverflow.com/a/31617382/8146077
+
+    // 1. pixels -> Normalized Device Space
+    // Note: This could be generalized from any screen point...
+    // x = 2.0 * screenX / width - 1;
+    // y = 2.0 * screenY / height - 1;
+    const x = 2.0 * 0.5 - 1;
+    const y = 2.0 * 0.5 - 1;
+
+    // 2. NDS -> Homogeneous Space
+    //    (flipped Z, because we are in a left-handed coordinate // system?).
+    const screenPos = vec4.fromValues(x, -y, 1, 1);
+
+    // 3. Camera World Space
+    const translation = mat4.fromTranslation(mat4.create(), this.position); 
+
+    const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
+    const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY));
+    const rotZ = mat4.fromZRotation(mat4.create(), radians(this.#rotZ));
+    const rotatedX = mat4.multiply(mat4.create(), rotX, translation);
+    const rotatedY = mat4.multiply(mat4.create(), rotY, rotatedX);
+    const rotatedZ = mat4.multiply(mat4.create(), rotZ, rotatedY);
+
+    const world = rotatedZ;
+
+    // 4. Camera World Space -> Inverted Perspective Projection
+    const invertedProjection = mat4.invert(
+      mat4.create(),
+      this.perspectiveMatrix
+    );
+
+    // 5. Screen Point -> Inverted World Perspective Projection 
+    const invWorldPersProj = mat4.mul(mat4.create(), world, invertedProjection);
+
+    const xyz = vec4.transformMat4(vec4.create(), screenPos, invWorldPersProj);
+
+    // 6. Subtract transformed point from camera position.
+    return vec4.sub(vec4.create(), this.position, xyz);
   }
 
   #transform() {
@@ -1142,7 +1189,8 @@ class Form {
 
       this.uvs.push(...texCoord); // For sending to the GPU.
 
-      this.vertices.push( // For sending to the CPU.
+      this.vertices.push(
+        // For sending to the CPU.
         new Vertex(
           positions[i],
           this.#gradientColors[i % 3],
@@ -1151,8 +1199,9 @@ class Form {
       );
     }
 
-    // Create indices from pre-indexed positions.
-    this.indices = indices;
+    // Create indices from pre-indexed positions or generate
+    // a linear set of indices based on length.
+    this.indices = indices || repeat(positions.length, (i) => i);
 
     // Switch fill to transform if the was skipped.
     if (fill?.pos || fill?.rot || fill?.scale) {
@@ -1165,9 +1214,9 @@ class Form {
     if (fill?.color) this.color = fill.color;
     if (fill?.alpha) this.alpha = fill.alpha;
 
-    this.position = transform.pos || [0, 0, 0];
-    this.rotation = transform.rot || [0, 0, 0];
-    this.scale = transform.scale || [1, 1, 1];
+    this.position = transform?.pos || [0, 0, 0];
+    this.rotation = transform?.rot || [0, 0, 0];
+    this.scale = transform?.scale || [1, 1, 1];
   }
 
   graph({ matrix: cameraMatrix }) {
@@ -1212,7 +1261,11 @@ class Form {
 
     screenMatrix = initScreenSpaceTransformMatrix(width / 2, height / 2);
 
-    // TODO: Switch on render type here. Right now it's only triangles.
+    // *** Choose a render primitive. ***
+
+    // TODO: Add indexed drawing. Right now only length is used.
+    //       22.10.11.20.21
+
     if (this.primitive === "triangle") {
       // Loop indices list to draw each triangle.
       for (let i = 0; i < this.indices.length; i += 3) {
@@ -1234,7 +1287,11 @@ class Form {
       for (let i = 0; i < this.indices.length; i += 2) {
         // Draw each line by applying the screen transform &
         // perspective divide (with clipping).
-        drawLine3d(transformedVertices[i], transformedVertices[i + 1], this.color);
+        drawLine3d(
+          transformedVertices[i],
+          transformedVertices[i + 1],
+          this.color
+        );
       }
     }
   }
@@ -1245,7 +1302,7 @@ class Form {
     this.rotation[Z] = z;
   }
 
-  turn({x, y, z}) {
+  turn({ x, y, z }) {
     this.rotation[X] = (this.rotation[X] + (x || 0)) % 360;
     this.rotation[Y] = (this.rotation[Y] + (y || 0)) % 360;
     this.rotation[Z] = (this.rotation[Z] + (z || 0)) % 360;

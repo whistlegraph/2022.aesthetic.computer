@@ -1,9 +1,10 @@
 // 🧮 Numbers
 import * as mat4 from "../dep/gl-matrix/mat4.mjs";
 import * as vec2 from "../dep/gl-matrix/vec2.mjs";
+import * as vec3 from "../dep/gl-matrix/vec2.mjs";
 import * as vec4 from "../dep/gl-matrix/vec4.mjs";
 
-export { vec2, vec4, mat4 };
+export { vec2, vec3, vec4, mat4 };
 
 // Returns true if the number is even, and false otherwise.
 export function even(n) {

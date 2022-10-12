@@ -48,9 +48,12 @@ export function each(obj, fn) {
   Object.entries(obj).forEach(([key, obj]) => fn(obj, key));
 }
 
-// Run a function `n` times, passing in `i` on each iteration.
+// Run a function `n` times, passing in `i` on each iteration
+// and returning an array of the results.
 export function repeat(n, fn) {
-  for (let i = 0; i < n; i += 1) fn(i);
+  const reps = [];
+  for (let i = 0; i < n; i += 1) reps.push(fn(i));
+  return reps;
 }
 
 // Find a key value pair match inside an object of objects, 0 levels deep.
