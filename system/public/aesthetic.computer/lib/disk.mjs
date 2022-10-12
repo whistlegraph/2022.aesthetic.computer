@@ -202,7 +202,7 @@ const $updateApi = {};
 // 🖼 Painting
 
 // Pre-fab models:
-const SQUARE = {
+const QUAD = {
   type: "quad",
   positions: [
     // Triangle 1 (Left Side)
@@ -223,7 +223,7 @@ const SQUARE = {
   ],
 };
 
-const TRIANGLE = {
+const TRI = {
   type: "triangle",
   positions: [
     [-1, -1, 0, 1], // Bottom Left
@@ -234,7 +234,7 @@ const TRIANGLE = {
   indices: [0, 1, 2],
 };
 
-const SEGMENT = {
+const LINE = {
   type: "line",
   positions: [
     [0, 0, 0, 1], // Center
@@ -302,12 +302,17 @@ const $paintApi = {
   // 3D Classes & Objects
   Camera: graph.Camera,
   Form: graph.Form,
-  TRIANGLE,
-  SQUARE,
-  SEGMENT,
+  Dolly: graph.Dolly,
+  TRI,
+  QUAD,
+  LINE,
 };
 
 const $paintApiUnwrapped = {
+  // Shortcuts
+  l: graph.line,
+  i: ink,
+  // Defaults
   page: graph.setBuffer,
   ink, // Color
   // 2D
@@ -334,17 +339,15 @@ const $paintApiUnwrapped = {
   grid: graph.grid,
   draw: graph.draw,
   printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
-
-  form: function (f, cam) {
-    if (Array.isArray(f)) {
-      // Render each of these forms in a hardware rasterizer.
-      send({ type: "forms", content: { forms: f, cam } });
-
+  form: function (f, cam, { cpu } = { cpu: false }) {
+    if (cpu === true) {
+      if (Array.isArray(f)) f.forEach((form) => form.graph(cam));
+      else f.graph(cam);
+    } else {
+      send({ type: "forms", content: { forms: f, cam, color: graph.color() } });
       return new Promise((resolve) => {
         paintFormsResolution = resolve;
       });
-    } else {
-      f.graph(cam); // Render this form in the software rasterizer.
     }
   },
   pan: graph.pan,
@@ -1395,7 +1398,12 @@ async function makeFrame({ data: { type, content } }) {
       //       regenerated on every frame.
       //graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
 
-      $api.screen = screen;
+      $api.screen = {
+        pixels: screen.pixels,
+        width: screen.width,
+        height: screen.height,
+        center: [screen.width / 2, screen.height / 2]
+      };
 
       $api.fps = function (newFps) {
         send({ type: "fps-change", content: newFps });

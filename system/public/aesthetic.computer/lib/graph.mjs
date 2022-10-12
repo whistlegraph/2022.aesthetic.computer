@@ -1,8 +1,9 @@
 import {
   randInt,
   byteInterval17,
-  mat4,
+  vec2,
   vec4,
+  mat4,
   even,
   radians,
   lerp,
@@ -64,7 +65,11 @@ function setBuffer(buffer) {
   ({ width, height, pixels } = buffer);
 }
 
+// Set global color.
+// Send 0 arguements to retrieve the current one.
 function color(r, g, b, a = 255) {
+  if (arguments.length === 0) return c;
+
   c[0] = floor(r);
   c[1] = floor(g);
   c[2] = floor(b);
@@ -399,22 +404,28 @@ function lineAngle(x1, y1, dist, degrees) {
 }
 
 // Take two vertices and plot a 3d line with depth information.
-function line3d(a, b) {
+function line3d(a, b, lineColor) {
   a = a.transform(screenMatrix).perspectiveDivide();
   b = b.transform(screenMatrix).perspectiveDivide();
 
   const [x0, y0, z0] = a.pos;
   const [x1, y1, z1] = b.pos;
   const points = bresenham(x0, y0, x1, y1);
+
+  const saveColor = c.slice(); 
+  color(...lineColor); // Set color from lineColor or default to global color.
+
   points.forEach((p, i) => {
     const z = lerp(z0, z1, i / points.length);
     const range = map(z, 0.4, 0.98, 255, 127);
-    color(range, 0, 0);
+
     plot(p.x, p.y);
 
     const index = p.x + p.y * width;
     if (depthBuffer[index] !== undefined) depthBuffer[index] = z;
   });
+
+  color(...saveColor); // Restore color.
 }
 
 // Draws a 1px aliased circle: http://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#C
@@ -854,6 +865,7 @@ let screenMatrix;
 
 // b. Geometric Abstractions
 
+// For producing a projection matrix.
 class Camera {
   matrix;
   #x = 0;
@@ -870,8 +882,13 @@ class Camera {
   perspectiveMatrix;
   #transformMatrix;
 
-  constructor(fov = 80) {
+  constructor(fov = 80, {x, y, z}) {
     this.fov = fov;
+
+    this.x = x;
+    this.y = y;
+    this.z = z;
+
     this.#perspective(this.fov);
     this.#transform();
     this.matrix = this.#transformMatrix;
@@ -913,7 +930,7 @@ class Camera {
     return this.#rotZ;
   }
 
-  set x(n) {
+  set x(n = 0) {
     this.#x = n;
     this.#perspective(this.fov);
     this.#transform();
@@ -925,7 +942,7 @@ class Camera {
     return this.#x;
   }
 
-  set y(n) {
+  set y(n = 0) {
     this.#y = n;
     this.#perspective(this.fov);
     this.#transform();
@@ -937,7 +954,7 @@ class Camera {
     return this.#y;
   }
 
-  set z(n) {
+  set z(n = 0) {
     this.#z = n;
     this.#perspective(this.fov);
     this.#transform();
@@ -1016,6 +1033,46 @@ class Camera {
   }
 }
 
+// For moving a camera round over time.
+// TODO: Add a track? (Rollercoaster / coast)
+// TODO: Only supports sideways movement right now.
+class Dolly {
+  camera;
+
+  xVel = 0;
+  yVel = 0;
+  zVel = 0;
+  dec = 0.9;
+
+  constructor(camera) {
+    this.camera = camera;
+  }
+
+  sim() {
+    this.xVel *= this.dec;
+    this.yVel *= this.dec;
+    this.zVel *= this.dec;
+
+    this.camera.x += this.xVel;
+    // this.camera.y += this.yVel;
+    this.camera.z += this.zVel;
+  }
+
+  push({ x, y, z }) {
+    // Strafe x and z.
+    const xz = vec2.rotate(
+      vec2.create(),
+      vec2.fromValues(x, z),
+      vec2.fromValues(0, 0),
+      radians(-this.camera.rotY) // Take the camera Y axis for strafing.
+    );
+
+    this.xVel += xz[0] || 0;
+    // this.yVel += y || 0;
+    this.zVel += xz[1] || 0;
+  }
+}
+
 // Mesh
 class Form {
   primitive = "triangle";
@@ -1059,9 +1116,7 @@ class Form {
     { type, positions, indices },
     fill,
     // Transform
-    position = [0, 0, 0],
-    rotation = [0, 0, 0],
-    scale = [1, 1, 1]
+    transform
   ) {
     // Set the primitive type.
     this.primitive = type;
@@ -1099,13 +1154,20 @@ class Form {
     // Create indices from pre-indexed positions.
     this.indices = indices;
 
-    // Assign texture or color.
-    if (fill?.texture) this.texture = fill.texture;
-    if (fill?.color) this.color = fill.color;
+    // Switch fill to transform if the was skipped.
+    if (fill?.pos || fill?.rot || fill?.scale) {
+      transform = fill;
+      fill = undefined;
+    }
 
-    this.position = position;
-    this.rotation = rotation;
-    this.scale = scale;
+    // Assign texture or color.
+    if (fill?.tex) this.texture = fill.tex;
+    if (fill?.color) this.color = fill.color;
+    if (fill?.alpha) this.alpha = fill.alpha;
+
+    this.position = transform.pos || [0, 0, 0];
+    this.rotation = transform.rot || [0, 0, 0];
+    this.scale = transform.scale || [1, 1, 1];
   }
 
   graph({ matrix: cameraMatrix }) {
@@ -1172,7 +1234,7 @@ class Form {
       for (let i = 0; i < this.indices.length; i += 2) {
         // Draw each line by applying the screen transform &
         // perspective divide (with clipping).
-        drawLine3d(transformedVertices[i], transformedVertices[i + 1]);
+        drawLine3d(transformedVertices[i], transformedVertices[i + 1], this.color);
       }
     }
   }
@@ -1181,6 +1243,12 @@ class Form {
     this.rotation[X] = x;
     this.rotation[Y] = y;
     this.rotation[Z] = z;
+  }
+
+  turn({x, y, z}) {
+    this.rotation[X] = (this.rotation[X] + (x || 0)) % 360;
+    this.rotation[Y] = (this.rotation[Y] + (y || 0)) % 360;
+    this.rotation[Z] = (this.rotation[Z] + (z || 0)) % 360;
   }
 }
 
@@ -1594,12 +1662,12 @@ class Gradients {
 
 // ?. Line Rendering
 
-function drawLine3d(a, b) {
+function drawLine3d(a, b, color = c) {
   const aInside = isInsideViewFrustum(a.pos);
   const bInside = isInsideViewFrustum(b.pos);
 
   if (aInside && bInside) {
-    line3d(a, b);
+    line3d(a, b, color);
     return;
   }
 
@@ -1616,7 +1684,7 @@ function drawLine3d(a, b) {
   ) {
     const initialVertex = vertices[0];
     for (let i = 1; i < vertices.length - 1; i += 1) {
-      line3d(initialVertex, vertices[i]);
+      line3d(initialVertex, vertices[i], color);
     }
   }
 }
@@ -1875,7 +1943,7 @@ function clipPolygonComponent(
   }
 }
 
-export { Camera, Form };
+export { Camera, Form, Dolly };
 
 // e. Utilities
 

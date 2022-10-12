@@ -39,10 +39,7 @@ Welcome to...
 
 *** (3dline) ***
  + Now
-  - [🟡] Make a good wasd / mouse fps camera.
-    - [] And touch-only controls.
-    - [] Also add keyboard-only controls.
-  - [] Draw a line from the 3d cursor in 3d space.
+  - [🟡] Draw a line from the 3d cursor in 3d space.
   - [] Add WebXR session.
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
@@ -51,6 +48,11 @@ Welcome to...
   - [] Draw a line in webXR.
   - [] Optimize 3d line geometry / make a polyline function. 
  + Done
+  - [x] Clean up the whole code and optimize the API for readability.
+  - [x] Make a good wasd / mouse fps camera.
+    - [x] Refactor existing controls to look nicer.
+    - [x] And basic touch-only controls.
+    - [x] Also add keyboard-only controls.
   - [x] Add an X on the ground... and maybe a horizon?
   - [x] Add triangle clipping.
   - [x] Add line clipping.
@@ -58,6 +60,10 @@ Welcome to...
   - [x] Basic FPS Camera.
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
+
+*** (`turtle` / `spider`) ***
+  - [] Make a spider that can crawl around in 3D and draw.
+       (Use a turtle graphics API)
 
 ***Cursors***
   - [] View current custom cursor css examples.

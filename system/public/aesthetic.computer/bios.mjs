@@ -842,6 +842,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const willBake = content.cam !== undefined;
 
       if (willBake) {
+        send({ type: "forms:baked", content: true });
+
         if (ThreeD === undefined) {
           await loadThreeD();
         }
@@ -850,7 +852,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           width: projectedWidth,
           height: projectedHeight,
         });
-        send({ type: "forms:baked", content: true });
       } else {
         send({ type: "forms:baked", content: false });
       }

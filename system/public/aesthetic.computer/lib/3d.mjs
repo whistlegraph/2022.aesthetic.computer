@@ -7,7 +7,7 @@
 // TODO: Add indices to geometry.
 
 import * as THREE from "../dep/three/three.module.js";
-import { radians } from "./num.mjs";
+import { radians, rgbToHex } from "./num.mjs";
 
 const renderer = new THREE.WebGLRenderer({
   alpha: false,
@@ -23,7 +23,7 @@ let scene;
 let target;
 // let pixels;
 
-export function bake({ cam, forms }, { width, height }, size) {
+export function bake({ cam, forms, color }, { width, height }, size) {
   // Only make instantiate new buffers if necessary.
   if (!target || target.width !== width || target.height !== height) {
     target = new THREE.WebGLRenderTarget(width, height);
@@ -44,6 +44,8 @@ export function bake({ cam, forms }, { width, height }, size) {
   camera.position.set(...cam.position);
 
   scene = new THREE.Scene();
+
+  if (!Array.isArray(forms)) forms = [forms];
 
   forms.forEach((f) => {
     if (f.type === "triangle") {
@@ -123,7 +125,9 @@ export function bake({ cam, forms }, { width, height }, size) {
     }
 
     if (f.type === "line") {
-      const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
+      const material = new THREE.LineBasicMaterial({
+        color: rgbToHex(...(f.color || color)),
+      });
       material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = false;
