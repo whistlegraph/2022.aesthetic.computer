@@ -20,6 +20,9 @@ const disposal = [];
 let camera;
 let scene = new THREE.Scene();
 
+//scene.fog = new THREE.Fog(0x111111, 0.5, 2);
+scene.fog = new THREE.FogExp2(0x030303, 0.5);
+
 let target;
 // let pixels;
 
@@ -127,26 +130,34 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const material = new THREE.LineBasicMaterial({
         color: rgbToHex(...(f.color || color)),
       });
-      material.transparent = true;
+      //material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
-      //material.depthTest = false;
+      material.depthTest = true;
+      material.linewidth = 1;
 
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const geometry = new THREE.BufferGeometry();
 
       // attributes
       const positions = new Float32Array(f.MAX_POINTS * 3); // 3 vertices per point
+
+      for (let i = 0; i < points.length; i += 3) {
+        positions[i] = points[i].x;
+        positions[i + 1] = points[i].y;
+        positions[i + 2] = points[i].z;
+      }
 
       geometry.setAttribute(
         "position",
         new THREE.BufferAttribute(positions, 3)
       );
 
-      // drawcalls
       geometry.setDrawRange(0, points.length);
 
-      const line = new THREE.Line(geometry, material);
+      //const line = new THREE.Line(geometry, material);
+      const line = new THREE.LineSegments(geometry, material);
+      //const line = new THREE.CatmullRomCurve3(geometry, material);
 
       line.translateX(f.position[0]);
       line.translateY(f.position[1]);
@@ -164,49 +175,44 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
     // If we are updating an existing form.
     if (f.update === "add-vertices") {
+      const formUpdate = f;
 
       // TODO: Make this generic / hold onto
       //       IDs for each form.
       //       Should I maintain my own IDs or
       //       actually send the ones
       //       back from Three JS?
-      // 
+      //
       //       Actually I can just use a
       //       dictionary here... 22.10.12.15.30
 
-      const line = scene.getObjectByProperty( 'aestheticID' , f.uid);
+      const form = scene.getObjectByProperty("aestheticID", formUpdate.uid);
 
-      console.log(line?.geometry)
+      // See: https://threejs.org/docs/#manual/en/introduction/How-to-update-things,
+      //      https://jsfiddle.net/t4m85pLr/1
+      if (form) {
+        const positions = form.geometry.attributes.position.array;
 
+        for (let i = 0; i < formUpdate.vertices.length; i += 1) {
+          const posStart = (formUpdate.pastLength + i) * 3;
+          positions[posStart] = formUpdate.vertices[i].pos[0];
+          positions[posStart + 1] = formUpdate.vertices[i].pos[1];
+          positions[posStart + 2] = formUpdate.vertices[i].pos[2];
+        }
 
+        form.geometry.setDrawRange(0, formUpdate.length);
+        form.geometry.attributes.position.needsUpdate = true;
+
+        //form.geometry.computeBoundingBox();
+        form.geometry.computeBoundingSphere();
+      }
     }
-
-    //sconsole.log(forms, scene);
   });
 
   // In case we need to render off screen.
   //renderer.render(scene, camera);
   //renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
   //return pixels;
-}
-
-// See: https://threejs.org/docs/#manual/en/introduction/How-to-update-things,
-//      https://jsfiddle.net/t4m85pLr/1
-function updatePositions(form) {
-  const positions = form.geometry.attributes.position.array;
-
-  let x, y, z, index;
-  x = y = z = index = 0;
-
-  for (let i = 0, l = form.MAX_POINTS; i < l; i++) {
-    positions[index++] = x;
-    positions[index++] = y;
-    positions[index++] = z;
-
-    x += (Math.random() - 0.5) * 30;
-    y += (Math.random() - 0.5) * 30;
-    z += (Math.random() - 0.5) * 30;
-  }
 }
 
 export function render() {

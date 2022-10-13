@@ -363,12 +363,13 @@ const $paintApiUnwrapped = {
           //    needs a partial update.
 
           // Add vertices.
-
           if (form.vertices.length > form.verticesSent) {
             formsToSend.push({
               uid: form.uid,
               update: "add-vertices",
               vertices: form.vertices.slice(form.verticesSent),
+              length: form.vertices.length,
+              pastLength: form.verticesSent,
             });
 
             form.verticesSent = form.vertices.length;

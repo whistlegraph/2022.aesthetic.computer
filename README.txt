@@ -37,22 +37,15 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** Smear *** 
-  - [] Make `smear` file.
-
 *** (3dline) ***
  + Now
-  - [🟡] Draw a line from the 3d cursor in 3d space.
-    - [] Stream numbers to the GPU / don't send copies of vertices every frame?
-      - []  
-      - [x] Add identifiers to each Form.
-
-      - [] Keep track of what identifiers got uploaded to the GPU so far
-           after each form call.
-      - [] Only send new identifiers to the GPU.
-      - [] Also be able to delete stuff.
-
-    - [] Break line into separate marks.
+  - [] Add spline support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
+  - [] Draw with left mouse button while looking with right. (via `pen`)
+  - [] Fix "tri's" turn update.
+  - [] Fix "lines" no longer rendering.
+  - [] Free camera mode / better camera controls.
+  - [] Add color and transparency to line.
+  - [] Add other tools other than line.
   - [] Add WebXR session.
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
@@ -60,7 +53,17 @@ Welcome to...
       - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
   - [] Draw a line in webXR.
   - [] Optimize 3d line geometry / make a polyline function. 
+ + Later
+  - [] Updates on the 3D object pipeline.
+    - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Break line into separate marks.
+  - [x] Draw a line from the 3d cursor in 3d space.
+    - [x] Stream numbers to the GPU / don't send copies of vertices every frame?
+      - [x] Add identifiers to each Form.
+      - [x] Keep track of what identifiers got uploaded to the GPU so far
+           after each form call.
+      - [x] Only send new identifiers to the GPU.
   - [x] Clean up the whole code and optimize the API for readability.
   - [x] Make a good wasd / mouse fps camera.
     - [x] Refactor existing controls to look nicer.

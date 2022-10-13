@@ -87,7 +87,7 @@ function color(r, g, b, a = 255) {
   c[3] = floor(a);
 }
 
-export { makeBuffer, cloneBuffer, setBuffer, depthBuffer, color, pixel, };
+export { makeBuffer, cloneBuffer, setBuffer, depthBuffer, color, pixel };
 
 // 2. 2D Drawing
 
@@ -1185,7 +1185,7 @@ class Form {
 
     // 🌩️ Ingest positions and turn them into vertices.
     // ("Import" a model...)
-    this.positionsToVertices(positions, indices);
+    if (positions?.length > 0) this.addPoints(positions, indices);
 
     // Switch fill to transform if the was skipped.
     if (fill?.pos || fill?.rot || fill?.scale) {
@@ -1203,7 +1203,7 @@ class Form {
     this.scale = transform?.scale || [1, 1, 1];
   }
 
-  positionsToVertices(positions, indices) {
+  addPoints(positions, indices) {
     // Create new vertices from incoming positions.
     for (let i = 0; i < positions.length; i++) {
       // Generate texCoord from position instead of loading.
@@ -1231,7 +1231,8 @@ class Form {
 
     // Create indices from pre-indexed positions or generate
     // a linear set of indices based on length.
-    this.indices = indices || repeat(positions.length, (i) => i);
+    this.indices = indices || repeat(this.vertices.length, (i) => i);
+    console.log(indices, this.indices, positions.length);
 
     // this.verticesSent = this.vertices.length;
   }
@@ -1301,7 +1302,7 @@ class Form {
 
     if (this.primitive === "line") {
       // Loop indices list to draw each triangle.
-      for (let i = 0; i < this.indices.length; i += 2) {
+      for (let i = 0; i < this.indices?.length; i += 2) {
         // Draw each line by applying the screen transform &
         // perspective divide (with clipping).
         drawLine3d(
@@ -1374,6 +1375,7 @@ class Vertex {
     this.texCoords = vec4.fromValues(...texCoords);
   }
 
+  // TODO: Optimize this function for large vertex counts. 22.10.13.00.14
   transform(matrix) {
     return new Vertex(
       vec4.transformMat4(
@@ -1386,7 +1388,6 @@ class Vertex {
         ],
         matrix
       ),
-
       this.color,
       this.texCoords
     );

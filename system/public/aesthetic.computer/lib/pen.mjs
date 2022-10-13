@@ -28,6 +28,7 @@ class Pointer {
   pointerId;
   pointerIndex;
   isPrimary;
+  button;
   untransformedPosition;
   drawing = false;
   penDragStartPos;
@@ -76,6 +77,11 @@ export class Pen {
       }
     );
 
+    // Prevent context click.
+    window.addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+    });
+
     // ***Touch***
     window.addEventListener("pointerdown", (e) => {
 
@@ -108,6 +114,7 @@ export class Pen {
 
         pen.pointers[e.pointerId] = pointer;
       } else {
+        pointer.button = e.button;
         pointer.drawing = true;
         pointer.penDragStartPos = { x: pointer.x, y: pointer.y };
       }
@@ -297,6 +304,7 @@ export class Pen {
       isPrimary: pointer.isPrimary,
       // index: pointer.pointerIndex, // 0 based index of pointers.
       pointer: pointer.pointerIndex + 1, // 1 based index of pointers.
+      button: pointer.button,
       x: pointer.x,
       y: pointer.y,
       px: pointer.px,

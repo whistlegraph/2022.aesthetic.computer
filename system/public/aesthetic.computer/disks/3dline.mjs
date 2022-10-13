@@ -2,6 +2,8 @@
 // A test for developing software (and hardware) rasterized 3D lines
 // and other geometry.
 
+// TODO:
+
 let cam, dolly; // Camera system.
 let floor, cross, tri, lines, tie; // Geometry.
 
@@ -34,15 +36,11 @@ function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
   tie = new Form(
     {
       type: "line",
-      positions: [
-        [0, -1, 0, 1],
-        [0, 1, 0, 1],
-      ],
     },
     { color: [255, 0, 0, 255] }
   );
 
-  tie.MAX_POINTS = 500;
+  tie.MAX_POINTS = 50000;
 }
 
 let lastCenter;
@@ -51,44 +49,27 @@ let isDrawing;
 let marks = [];
 
 // 🎨 Paint (Executes every display frame)
-function paint({ pen, wipe, ink, Form, LINE, form, screen, num: { vec4 } }) {
-  // TODO: Draw a line from the camera to [0, 0].
+function paint({ pen, wipe, ink, Form, LINE, form, screen, num: { vec4 }, paintCount }) {
 
-  if (pen.drawing && pen.pointerType === "mouse") {
+  if (pen.drawing && pen.pointerType === "mouse" && pen.button === 0) {
     if (vec4.dist(lastCenter, cam.center) > 0) {
-
-
-      // TODO: Push these points to `tie` positions...
-      //       then maintain an index so they can be
-      //       streamed to the GPU.
-
-      const updateFromIndex = tie.vertices.length;
-      tie.positionsToVertices([lastCenter, cam.center]);
-
+      // Is it possible to add color here?
+      tie.addPoints([lastCenter, cam.center]);
     }
   }
-
-  form(tie, cam);
-
-  //form([tie, floor, cross, tri, lines], cam);
-
   lastCenter = cam.center;
 
-  //form(new Form(LINE, { pos: [0, 1, 1] }), cam);
-  //form(lines, cam);
-
-  //wipe(0);
-
-  //ink(0, 0, 255).form([floor, cross, tri, lines], cam); // Renders on GPU layer.
+  form([tie, floor, cross, tri, lines], cam);
 
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
   wipe(10, 0)
     .ink(255, 255, 255, 127)
     .box(...screen.center, 7, "fill*center");
 
-  //ink(0, 255, 0).form(tie, cam, { cpu: true }); // Render on CPU layer.
-
-  //ink(0, 255, 0).form(lines, cam, { cpu: true }); // Render on CPU layer.
+  if (paintCount % 20 === 0) {
+    // Get line color to override here?
+    // ink(0, 100, 0, 100).form(tie, cam, { cpu: true }); // Render on CPU layer.
+  }
   // return false;
 }
 
