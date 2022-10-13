@@ -80,6 +80,7 @@ Welcome to...
 *** Pieces in Pieces ***
   - [] Make a layout of more than one piece in the same buffer.
   - [] Like bleep and bubble and line... maybe even melody?
+  - [] Could melody just be imported as the background audio?
   - [] Eventually bring something like bleep into 3D.
   - [x] Make a contrived wrapper example that imports one piece into another.
 
@@ -116,6 +117,8 @@ Welcome to...
 
 ***No Paint System***
   + Now
+  - [] The default "mint" command in aesthetic.computer saves
+       the system wallpaper. Uniqueness is guaranteed? - https://www.google.com/search?q=sha-512+uniqueness&oq=sha-512+uniqueness&aqs=chrome..69i57j0i13i512j0i390l4.4876j0j4&sourceid=chrome&ie=UTF-8
   - [💛] The painting resolution should auto-expand, but not contract.
     - [] Fix weird negative space / non-drawing issues on startup.
   - [] Add "no" command to the prompt.
@@ -129,6 +132,7 @@ Welcome to...
        that's easy to find on mobile iOS but hard to 
        reproduce otherwise.
   - [] Add "sign" command which writes a timestamp with a signature.
+       Should "sign" and mint be the same thing?
   - [] Add "mint" command to trigger a wallet signature request
        and produce a work.
        * Should be able to specify a contract here.
