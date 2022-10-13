@@ -1,4 +1,4 @@
-// Line, 22.09.19.12.44 
+// Line, 22.09.19.12.44
 // Inherits from the "nopaint" system, which predefines boot, act, and leave.
 
 // 🎨
@@ -8,7 +8,7 @@ export function paint({ pen, params, system, page, screen }) {
     params = params.map((str) => parseInt(str));
     page(system.painting).ink(params).line(pen.px, pen.py, pen.x, pen.y);
     page(screen).ink(params).line(pen.px, pen.py, pen.x, pen.y);
-  } 
+  }
 }
 
 export const system = "nopaint";

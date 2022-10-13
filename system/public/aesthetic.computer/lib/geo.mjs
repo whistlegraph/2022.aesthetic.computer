@@ -52,7 +52,11 @@ export class Box {
 
   // Yields a new box that is a copy of an existing old one.
   static copy(box) {
-    return new Box(box.x, box.y, box.w, box.h);
+    if (Array.isArray(box)) {
+      return new Box(...box);
+    } else {
+      return new Box(box.x, box.y, box.w, box.h);
+    }
   }
 
   get area() {

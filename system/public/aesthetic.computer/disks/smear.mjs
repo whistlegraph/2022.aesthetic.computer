@@ -5,14 +5,11 @@
 //       (Remember the path behind what the user draws.)
 // TODO: Add a delay.
 
-const { sin, cos } = Math;
-
-let buffer, radius;
+let radius,
+  sampled = false;
 const samples = [];
-let samplesCaptured = false;
 
-export function paint({
-  painting,
+function paint({
   ink,
   pen,
   pan,
@@ -23,35 +20,30 @@ export function paint({
   pixel,
   screen,
   system,
-  paintCount,
-  num: { radians, randInt: r, randIntRange: rr, clamp },
+  num: { randInt: r, randIntRange: rr },
   geo: { pointFrom },
   help: { repeat },
 }) {
-  if (paintCount === 0) {
+  // Pull in the params and set the radius.
+  if (!radius) {
     params = params.map((str) => parseInt(str));
     radius = params[0] || 16;
-
-    //buffer = painting(screen.width, screen.height, (g) => g.noise16DIGITPAIN());
   }
 
   paste(system.painting);
 
   if (pen.drawing) {
     // Crop the back buffer to the radius of the circle.
-    if (samplesCaptured === false) {
-      if (samples.length > 64) {
-        samples.length = 64;
-      }
-
+    if (sampled === false) {
+      if (samples.length > 64) samples.length = 64; // Chop some samples.
       repeat(128, (i) => {
         const ang = r(360);
         const dst = r(radius);
-        const xy = pointFrom(pen.x, pen.y, r(360), dst);
+        const xy = pointFrom(pen.x, pen.y, ang, dst);
         const sample = new Sample(xy[0] - pen.x, xy[1] - pen.y, pixel(...xy));
         samples.push(sample); // Add sample to the list.
       });
-      samplesCaptured = true;
+      sampled = true;
     }
 
     page(screen);
@@ -64,10 +56,12 @@ export function paint({
     page(system.painting);
     pan(pen.x, pen.y);
     samples.forEach((sample) => {
+      // TODO: Physically drift sample positions based on gesture.
       //sample.x += clamp(sample.x + rr(-1, 1), 0, radius * 2);
       //sample.y += clamp(sample.y + rr(-1, 1), 0, radius * 2);
       sample.x += rr(-1, 1);
       sample.y += rr(-1, 1);
+      // TODO: Drift color.
       //sample.c[0] += rr(-5, 5);
       //sample.c[1] += rr(-5, 5);
       //sample.c[2] += rr(-5, 5);
@@ -77,9 +71,15 @@ export function paint({
   }
 }
 
-export function act({ event }) {
-  if (event.is("lift")) samplesCaptured = false;
+function act({ event }) {
+  if (event.is("lift")) sampled = false;
 }
+
+export { paint, act };
+
+export const system = "nopaint";
+
+// 📚 Library (Useful functions used throughout the piece)
 
 class Sample {
   x;
@@ -92,5 +92,3 @@ class Sample {
     this.c = c;
   }
 }
-
-export const system = "nopaint";

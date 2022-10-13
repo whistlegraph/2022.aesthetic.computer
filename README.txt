@@ -77,6 +77,16 @@ Welcome to...
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
 
+*** Pieces in Pieces ***
+  - [] Make a layout of more than one piece in the same buffer.
+  - [] Like bleep and bubble and line... maybe even melody?
+  - [] Eventually bring something like bleep into 3D.
+  - [x] Make a contrived wrapper example that imports one piece into another.
+
+*** Autopilot / ap ***
+  - [] Consider how this could become the next nopaint?
+  - [] Or even how nopaint could be built on top of a remotely controlled ap?
+
 *** 3D Optimization ***
   - [] Use imageBitmap for textures: https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap
 
