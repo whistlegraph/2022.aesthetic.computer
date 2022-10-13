@@ -149,6 +149,7 @@ const $commonApi = {
   num: {
     even: num.even,
     odd: num.odd,
+    clamp: num.clamp,
     randInt: num.randInt,
     randIntArr: num.randIntArr,
     randIntRange: num.randIntRange,
@@ -169,6 +170,7 @@ const $commonApi = {
     Grid: geo.Grid,
     Circle: geo.Circle,
     linePointsFromAngle: geo.linePointsFromAngle,
+    pointFrom: geo.pointFrom
   },
   ui: {
     Button: ui.Button,
@@ -339,12 +341,46 @@ const $paintApiUnwrapped = {
   grid: graph.grid,
   draw: graph.draw,
   printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
-  form: function (f, cam, { cpu } = { cpu: false }) {
+  form: function (forms, cam, { cpu } = { cpu: false }) {
     if (cpu === true) {
-      if (Array.isArray(f)) f.forEach((form) => form.graph(cam));
-      else f.graph(cam);
+      if (Array.isArray(forms)) forms.forEach((form) => form.graph(cam));
+      else forms.graph(cam);
     } else {
-      send({ type: "forms", content: { forms: f, cam, color: graph.color() } });
+      if (!Array.isArray(forms)) forms = [forms];
+
+      // Build a list of forms to send, ignoring already sent ones by UID.
+      const formsToSend = [];
+
+      forms.forEach((form) => {
+        // A. If the form has not been sent yet...
+        if (formsSent[form.uid] === undefined) {
+          formsToSend.push(form);
+          formsSent[form.uid] = true;
+
+          form.verticesSent = form.vertices.length;
+        } else {
+          // B. If the form has been sent, but the form has changed and
+          //    needs a partial update.
+
+          // Add vertices.
+
+          if (form.vertices.length > form.verticesSent) {
+            formsToSend.push({
+              uid: form.uid,
+              update: "add-vertices",
+              vertices: form.vertices.slice(form.verticesSent),
+            });
+
+            form.verticesSent = form.vertices.length;
+          }
+        }
+      });
+
+      send({
+        type: "forms",
+        content: { forms: formsToSend, cam, color: graph.color() },
+      });
+
       return new Promise((resolve) => {
         paintFormsResolution = resolve;
       });
@@ -359,6 +395,7 @@ const $paintApiUnwrapped = {
   // glaze: ...
 };
 
+let formsSent = {};
 let paintFormsResolution;
 
 // TODO: Eventually restructure this a bit. 2021.12.16.16.0
@@ -392,6 +429,10 @@ class Painting {
     // on top of the base painting API.
     this.api.painting = function () {
       return graph.makeBuffer(...arguments, new Painting());
+    };
+
+    this.api.pixel = function () {
+      return graph.pixel(...arguments); 
     };
 
     // Allows grouping & composing painting order using an AofA (Array of Arrays).
@@ -1165,7 +1206,7 @@ async function makeFrame({ data: { type, content } }) {
         return s * 120; // TODO: Get 120 dynamically from the Loop setting. 2022.01.13.23.28
       };
 
-      // TODO: A booted check could be higher up the chain here? 
+      // TODO: A booted check could be higher up the chain here?
       // Or this could just move. 22.10.11.01.31
       if (loading === false && booted) {
         if (initialSim) {
@@ -1182,7 +1223,6 @@ async function makeFrame({ data: { type, content } }) {
           }
         }
       }
-
 
       // 📻 Signalling
       $api.signal = (content) => {
@@ -1402,7 +1442,7 @@ async function makeFrame({ data: { type, content } }) {
         pixels: screen.pixels,
         width: screen.width,
         height: screen.height,
-        center: [screen.width / 2, screen.height / 2]
+        center: [screen.width / 2, screen.height / 2],
       };
 
       $api.fps = function (newFps) {

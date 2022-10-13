@@ -120,7 +120,7 @@ export class Box {
   }
 
   // Returns true if this box contains the point {x, y}.
-  contains(point = { x: undefined, y: undefined}) {
+  contains(point = { x: undefined, y: undefined }) {
     const { x, y } = point;
     return (
       this.x <= x && x < this.x + this.w && this.y <= y && y < this.y + this.h
@@ -137,7 +137,7 @@ export class Box {
     // Cut index out of the original arr.
     const newArr = arr.slice(0, index).concat(arr.slice(index + 1));
     // If our index is in the box, but it contains no other points, return true.
-    return this.contains(arr[index]) && this.containsNone(newArr)
+    return this.contains(arr[index]) && this.containsNone(newArr);
   }
 
   // The opposite of contains.
@@ -319,4 +319,11 @@ export function linePointsFromAngle(x1, y1, dist, degrees) {
   const x2 = x1 + dist * cos(radians(degrees));
   const y2 = y1 + dist * sin(radians(degrees));
   return [x1, y1, x2, y2];
+}
+
+export function pointFrom(x, y, angle, dist) {
+  return [
+    x + dist * cos(radians(angle)),
+    y + dist * sin(radians(angle)),
+  ];
 }

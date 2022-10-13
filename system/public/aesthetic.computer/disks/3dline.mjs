@@ -3,7 +3,7 @@
 // and other geometry.
 
 let cam, dolly; // Camera system.
-let floor, cross, tri, lines; // Geometry.
+let floor, cross, tri, lines, tie; // Geometry.
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
@@ -30,6 +30,19 @@ function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
   );
 
   lines = new Form(LINE, { pos: [0, 1, 1] });
+
+  tie = new Form(
+    {
+      type: "line",
+      positions: [
+        [0, -1, 0, 1],
+        [0, 1, 0, 1],
+      ],
+    },
+    { color: [255, 0, 0, 255] }
+  );
+
+  tie.MAX_POINTS = 500;
 }
 
 let lastCenter;
@@ -43,18 +56,21 @@ function paint({ pen, wipe, ink, Form, LINE, form, screen, num: { vec4 } }) {
 
   if (pen.drawing && pen.pointerType === "mouse") {
     if (vec4.dist(lastCenter, cam.center) > 0) {
-      points.push(lastCenter, cam.center);
+
+
+      // TODO: Push these points to `tie` positions...
+      //       then maintain an index so they can be
+      //       streamed to the GPU.
+
+      const updateFromIndex = tie.vertices.length;
+      tie.positionsToVertices([lastCenter, cam.center]);
+
     }
   }
 
-  const tie = new Form({
-    type: "line",
-    positions: points,
-  });
+  form(tie, cam);
 
-  // Put each mark in.
-
-  form([tie, floor, cross, tri, lines], cam);
+  //form([tie, floor, cross, tri, lines], cam);
 
   lastCenter = cam.center;
 
@@ -73,6 +89,7 @@ function paint({ pen, wipe, ink, Form, LINE, form, screen, num: { vec4 } }) {
   //ink(0, 255, 0).form(tie, cam, { cpu: true }); // Render on CPU layer.
 
   //ink(0, 255, 0).form(lines, cam, { cpu: true }); // Render on CPU layer.
+  // return false;
 }
 
 let W, S, A, D;

@@ -37,11 +37,22 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** Smear *** 
+  - [] Make `smear` file.
+
 *** (3dline) ***
  + Now
   - [🟡] Draw a line from the 3d cursor in 3d space.
-    - [] Break line into separate marks.
     - [] Stream numbers to the GPU / don't send copies of vertices every frame?
+      - []  
+      - [x] Add identifiers to each Form.
+
+      - [] Keep track of what identifiers got uploaded to the GPU so far
+           after each form call.
+      - [] Only send new identifiers to the GPU.
+      - [] Also be able to delete stuff.
+
+    - [] Break line into separate marks.
   - [] Add WebXR session.
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
@@ -62,6 +73,9 @@ Welcome to...
   - [x] Basic FPS Camera.
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
+
+*** 3D Optimization ***
+  - [] Use imageBitmap for textures: https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap
 
 *** (`turtle` / `spider`) ***
   - [] Make a spider that can crawl around in 3D and draw.

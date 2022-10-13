@@ -18,7 +18,7 @@ renderer.domElement.dataset.type = "3d";
 const disposal = [];
 
 let camera;
-let scene;
+let scene = new THREE.Scene();
 
 let target;
 // let pixels;
@@ -43,10 +43,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
   camera.position.set(...cam.position);
 
-  scene = new THREE.Scene();
-
   if (!Array.isArray(forms)) forms = [forms];
 
+  // Check f.type for adding new forms, or f.update for modifying added forms.
   forms.forEach((f) => {
     if (f.type === "triangle") {
       // Add texture.
@@ -135,6 +134,18 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+      // attributes
+      const positions = new Float32Array(f.MAX_POINTS * 3); // 3 vertices per point
+
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3)
+      );
+
+      // drawcalls
+      geometry.setDrawRange(0, points.length);
+
       const line = new THREE.Line(geometry, material);
 
       line.translateX(f.position[0]);
@@ -147,7 +158,30 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       scene.add(line);
       disposal.push(material, geometry);
+
+      line.aestheticID = f.uid;
     }
+
+    // If we are updating an existing form.
+    if (f.update === "add-vertices") {
+
+      // TODO: Make this generic / hold onto
+      //       IDs for each form.
+      //       Should I maintain my own IDs or
+      //       actually send the ones
+      //       back from Three JS?
+      // 
+      //       Actually I can just use a
+      //       dictionary here... 22.10.12.15.30
+
+      const line = scene.getObjectByProperty( 'aestheticID' , f.uid);
+
+      console.log(line?.geometry)
+
+
+    }
+
+    //sconsole.log(forms, scene);
   });
 
   // In case we need to render off screen.
@@ -156,12 +190,31 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   //return pixels;
 }
 
+// See: https://threejs.org/docs/#manual/en/introduction/How-to-update-things,
+//      https://jsfiddle.net/t4m85pLr/1
+function updatePositions(form) {
+  const positions = form.geometry.attributes.position.array;
+
+  let x, y, z, index;
+  x = y = z = index = 0;
+
+  for (let i = 0, l = form.MAX_POINTS; i < l; i++) {
+    positions[index++] = x;
+    positions[index++] = y;
+    positions[index++] = z;
+
+    x += (Math.random() - 0.5) * 30;
+    y += (Math.random() - 0.5) * 30;
+    z += (Math.random() - 0.5) * 30;
+  }
+}
+
 export function render() {
   if (scene != undefined) {
     renderer.render(scene, camera);
-    disposal.forEach((d) => d.dispose()); // Free memory from forms.
-    disposal.length = 0;
-    scene = undefined; // Dispose of scene.
+    // disposal.forEach((d) => d.dispose()); // Free memory from forms.
+    // disposal.length = 0;
+    // scene = undefined; // Dispose of scene.
   }
 }
 

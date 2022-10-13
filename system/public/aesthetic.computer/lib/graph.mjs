@@ -14,6 +14,7 @@ import {
 } from "./num.mjs";
 
 import { repeat } from "./help.mjs";
+import { nanoid } from "../dep/nanoid/nanoid.js";
 
 const { abs, sign, ceil, floor, sin, cos } = Math;
 
@@ -69,6 +70,12 @@ function setBuffer(buffer) {
   ({ width, height, pixels } = buffer);
 }
 
+// Return a pixel from the main buffer.
+function pixel(x, y) {
+  const i = (floor(x) + floor(y) * width) * 4;
+  return [pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]];
+}
+
 // Set global color.
 // Send 0 arguements to retrieve the current one.
 function color(r, g, b, a = 255) {
@@ -80,7 +87,7 @@ function color(r, g, b, a = 255) {
   c[3] = floor(a);
 }
 
-export { makeBuffer, cloneBuffer, setBuffer, depthBuffer, color };
+export { makeBuffer, cloneBuffer, setBuffer, depthBuffer, color, pixel, };
 
 // 2. 2D Drawing
 
@@ -1022,7 +1029,7 @@ class Camera {
     const screenPos = vec4.fromValues(x, -y, 1, 1);
 
     // 3. Camera World Space
-    const translation = mat4.fromTranslation(mat4.create(), this.position); 
+    const translation = mat4.fromTranslation(mat4.create(), this.position);
 
     const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
     const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY));
@@ -1039,7 +1046,7 @@ class Camera {
       this.perspectiveMatrix
     );
 
-    // 5. Screen Point -> Inverted World Perspective Projection 
+    // 5. Screen Point -> Inverted World Perspective Projection
     const invWorldPersProj = mat4.mul(mat4.create(), world, invertedProjection);
 
     const xyz = vec4.transformMat4(vec4.create(), screenPos, invWorldPersProj);
@@ -1125,11 +1132,13 @@ class Form {
   primitive = "triangle";
   type = "triangle";
 
+  uid = nanoid(); // An id to keep across threads.
+
   // Model
   vertices = [];
   indices;
 
-  uvs = [];
+  verticesSent = 0; // To the GPU.
 
   // TODO: Texture and color should be optional, and perhaps based on type.
   // TODO: Should this use a parameter called shader?
@@ -1149,6 +1158,8 @@ class Form {
     [1.0, 1.0, 0.0, 0.0],
   ];
   */
+
+  uvs = [];
 
   // Transform
   position = [0, 0, 0];
@@ -1172,8 +1183,27 @@ class Form {
     // Take into account form -> primitive relationships.
     if (type === "quad") this.primitive = "triangle";
 
-    // "Import" a model...
+    // 🌩️ Ingest positions and turn them into vertices.
+    // ("Import" a model...)
+    this.positionsToVertices(positions, indices);
 
+    // Switch fill to transform if the was skipped.
+    if (fill?.pos || fill?.rot || fill?.scale) {
+      transform = fill;
+      fill = undefined;
+    }
+
+    // Assign texture or color.
+    if (fill?.tex) this.texture = fill.tex;
+    if (fill?.color) this.color = fill.color;
+    if (fill?.alpha) this.alpha = fill.alpha;
+
+    this.position = transform?.pos || [0, 0, 0];
+    this.rotation = transform?.rot || [0, 0, 0];
+    this.scale = transform?.scale || [1, 1, 1];
+  }
+
+  positionsToVertices(positions, indices) {
     // Create new vertices from incoming positions.
     for (let i = 0; i < positions.length; i++) {
       // Generate texCoord from position instead of loading.
@@ -1203,20 +1233,7 @@ class Form {
     // a linear set of indices based on length.
     this.indices = indices || repeat(positions.length, (i) => i);
 
-    // Switch fill to transform if the was skipped.
-    if (fill?.pos || fill?.rot || fill?.scale) {
-      transform = fill;
-      fill = undefined;
-    }
-
-    // Assign texture or color.
-    if (fill?.tex) this.texture = fill.tex;
-    if (fill?.color) this.color = fill.color;
-    if (fill?.alpha) this.alpha = fill.alpha;
-
-    this.position = transform?.pos || [0, 0, 0];
-    this.rotation = transform?.rot || [0, 0, 0];
-    this.scale = transform?.scale || [1, 1, 1];
+    // this.verticesSent = this.vertices.length;
   }
 
   graph({ matrix: cameraMatrix }) {

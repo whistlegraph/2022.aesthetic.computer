@@ -789,7 +789,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     // TODO: 📏 Measure performance of frame: test with different resolutions.
     startTime = performance.now();
 
-    // Build the data to send back to the disk thread.
     send({
       type: "frame",
       content: {
@@ -848,10 +847,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           await loadThreeD();
         }
 
+        // Add / update forms in and then render them.
         ThreeD?.bake(content, screen, {
           width: projectedWidth,
           height: projectedHeight,
         });
+
+
       } else {
         send({ type: "forms:baked", content: false });
       }
