@@ -891,6 +891,8 @@ class Camera {
   position = [0, 0, 0, 1];
   rotation = [0, 0, 0];
 
+  centerCached; // Saved after each call to `center()`.
+
   perspectiveMatrix;
   #transformMatrix;
 
@@ -1052,7 +1054,10 @@ class Camera {
     const xyz = vec4.transformMat4(vec4.create(), screenPos, invWorldPersProj);
 
     // 6. Subtract transformed point from camera position.
-    return vec4.sub(vec4.create(), this.position, xyz);
+    const center = vec4.sub(vec4.create(), this.position, xyz);
+
+    this.centerCached = center;
+    return center;
   }
 
   #transform() {
@@ -1077,6 +1082,9 @@ class Camera {
     const rotatedY = mat4.multiply(mat4.create(), rotY, panned);
     const rotatedX = mat4.multiply(mat4.create(), rotX, rotatedY);
     const rotatedZ = mat4.multiply(mat4.create(), rotZ, rotatedX);
+
+    // Scale
+    //const scaled = mat4.scale(mat4.create(), rotatedZ, [0.1, 0.1, 0.1])
 
     // Perspective
     this.#transformMatrix = mat4.multiply(
@@ -1139,6 +1147,7 @@ class Form {
   indices;
 
   verticesSent = 0; // To the GPU.
+  gpuFlush = false; // A flag that flushes any extra vertices on GPU end.
 
   // TODO: Texture and color should be optional, and perhaps based on type.
   // TODO: Should this use a parameter called shader?
@@ -1232,8 +1241,6 @@ class Form {
     // Create indices from pre-indexed positions or generate
     // a linear set of indices based on length.
     this.indices = indices || repeat(this.vertices.length, (i) => i);
-    console.log(indices, this.indices, positions.length);
-
     // this.verticesSent = this.vertices.length;
   }
 

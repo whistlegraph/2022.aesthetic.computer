@@ -367,11 +367,15 @@ const $paintApiUnwrapped = {
             formsToSend.push({
               uid: form.uid,
               update: "add-vertices",
+              flush: form.gpuFlush,
               vertices: form.vertices.slice(form.verticesSent),
-              length: form.vertices.length,
+              length: form.vertices.length, // TODO: These aren't being used anymore / they are generated from the GPU.
               pastLength: form.verticesSent,
             });
 
+            // Update form state now that we are sending the message.
+            // TODO: Put these both under a "gpu" object in form.
+            form.gpuFlush = false;
             form.verticesSent = form.vertices.length;
           }
         }
