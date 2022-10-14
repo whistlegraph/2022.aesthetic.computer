@@ -37,21 +37,20 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-** Mood ***
- - [] Select a mood to change the default color palette.
- - [] A scheme map:
-      - Dark / Light Moods
-      - Primary color.
-
 *** (3dline) ***
  + Now
-  - [💆] Add spline support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
+  - [🌲] Disable ThreeD when leaving a piece that loaded it.
+  - [] Add spline support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
+    - [] Add smooth sim. 
+    - [x] Tried and cancelled in favor of doing a lazy nezumi style physical sim in 3D.
+        (Better to filter the data on input)
   - [] Draw with left mouse button while looking with right. (via `pen`)
-  - [] Fix "tri's" turn update.
-  - [] Fix "lines" no longer rendering.
   - [] Free camera mode / better camera controls.
   - [] Add color and transparency to line.
   - [] Add other tools other than line.
+  - [] Add websocket support for other players and their lines.
+    - [] Add a "room" system.
+    - [] Just start with one room but add a layer for it.
   - [] Add WebXR session.
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
@@ -63,6 +62,8 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Fix "tri's" turn update.
+  - [x] Fix "lines" no longer rendering.
   - [x] Break line into separate marks.
   - [x] Draw a line from the 3d cursor in 3d space.
     - [x] Stream numbers to the GPU / don't send copies of vertices every frame?
@@ -83,6 +84,13 @@ Welcome to...
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
 
+** Mood ***
+ - [] Select a mood to change the default color palette.
+ - [] Prototype this work in prompt.
+ - [] A scheme map:
+      - Dark / Light Moods
+      - Primary color.
+
 *** Pieces in Pieces ***
   - [] Make a layout of more than one piece in the same buffer.
   - [] Like bleep and bubble and line... maybe even melody?
@@ -92,6 +100,7 @@ Welcome to...
 
 *** Autopilot / ap ***
   - [] Consider how this could become the next nopaint?
+  - [] Take out the test layers?
   - [] Or even how nopaint could be built on top of a remotely controlled ap?
 
 *** 3D Optimization ***

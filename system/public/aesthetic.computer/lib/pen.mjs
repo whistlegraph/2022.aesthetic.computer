@@ -24,7 +24,7 @@ class Pointer {
   py;
   delta;
   pressure;
-  pointerType;
+  device;
   pointerId;
   pointerIndex;
   isPrimary;
@@ -107,7 +107,7 @@ export class Pen {
 
         pointer.penDragStartPos = { x: pointer.x, y: pointer.y };
 
-        pointer.pointerType = e.pointerType;
+        pointer.device = e.pointerType;
         pointer.pointerId = e.pointerId;
         pointer.isPrimary = e.isPrimary;
         pointer.pointerIndex = this.pointerCount;
@@ -121,7 +121,7 @@ export class Pen {
 
       // Set `pen` globals.
       pen.penCursor = true;
-      if (e.pointerType !== "mouse") pen.penCursor = false;
+      if (e.device !== "mouse") pen.penCursor = false;
       pen.#event("touch", pointer);
     });
 
@@ -139,7 +139,7 @@ export class Pen {
         pointer.untransformedPosition = { x: e.x, y: e.y };
         pointer.pressure = reportPressure(e);
 
-        pointer.pointerType = e.pointerType;
+        pointer.device = e.pointerType;
         pointer.pointerId = e.pointerId;
         pointer.isPrimary = e.isPrimary;
         pointer.pointerIndex = this.pointerCount;
@@ -244,11 +244,11 @@ export class Pen {
         pressure = e.pressure || 1;
         // Unless the device type is a pen, then make it 0. This assumes all pens
         // have pressure sensitivity.
-        if (pen.pointerType === "pen" && pressure === 1) {
+        if (pen.device === "pen" && pressure === 1) {
           pressure = 0;
         }
         // If the device is a mouse, then set it to 1.
-        if (pen.pointerType === "mouse") pressure = 1;
+        if (pen.device === "mouse") pressure = 1;
       }
       return pressure;
     }
@@ -299,7 +299,7 @@ export class Pen {
 
     pen.events.push({
       name,
-      device: pointer.pointerType,
+      device: pointer.device,
       id: pointer.pointerId,
       isPrimary: pointer.isPrimary,
       // index: pointer.pointerIndex, // 0 based index of pointers.

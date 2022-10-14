@@ -2,12 +2,10 @@
 // A test for developing software (and hardware) rasterized 3D lines
 // and other geometry.
 
-// TODO:
-
 let cam, dolly; // Camera system.
 let floor, cross, tri, lines, tie; // Geometry.
 
-// 🥾 Boot (Runs once before first paint and sim)
+// 🥾 Boot
 function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
   cam = new Camera(80, { z: 4 }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
@@ -33,49 +31,40 @@ function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
 
   lines = new Form(LINE, { pos: [0, 1, 1] });
 
-  tie = new Form(
-    {
-      type: "line",
-    },
-    { color: [255, 0, 0, 255] }
-  );
-
-  tie.MAX_POINTS = 50000;
+  tie = new Form({ type: "line:buffered" }, { color: [255, 0, 0, 255] });
 }
 
 let lastCenter;
-let points = [];
-let isDrawing;
-let marks = [];
+let looseEnd;
 
 // 🎨 Paint (Executes every display frame)
-function paint({ pen, wipe, ink, Form, LINE, form, screen, num: { vec4 }, paintCount }) {
-
-  if (pen.drawing && pen.pointerType === "mouse" && pen.button === 0) {
+function paint({ pen, ink, wipe, Form, form, screen, paintCount, num: { vec4 } }) {
+  if (pen.drawing && pen.device === "mouse" && pen.button === 0) {
     if (vec4.dist(lastCenter, cam.center) > 0.3) {
       // Is it possible to add color here?
-      tie.addPoints([lastCenter, cam.center]);
-      lastCenter = cam.center;
+      tie.addPoints([lastCenter, cam.centerCached]);
+      lastCenter = cam.centerCached;
+    } else {
+      looseEnd = new Form(
+        { type: "line", positions: [lastCenter, cam.centerCached] },
+      );
     }
   }
 
-  form([tie, floor, cross, tri, lines], cam);
+  // The lines & the furnitue.
+  ink(255, 0, 0, 255).form([tie, floor, cross, tri, lines], cam);
 
+  // Crosshair
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
   wipe(10, 0)
     .ink(255, 255, 255, 127)
     .box(...screen.center, 7, "fill*center");
 
-  if (paintCount % 20 === 0) {
-    // Get line color to override here?
-    // TODO: How to make a 2D line that is mapped to a 3D point here?
-    //ink(0, 200, 0, 100).form(tie, cam, { cpu: true }); // Render on CPU layer.
-  }
-  // return false;
+  // Tip of drawn line.
+  if (paintCount % 2 === 0) ink(0, 255, 0).form(looseEnd, cam, { cpu: true });
 }
 
-let W, S, A, D;
-let UP, DOWN, LEFT, RIGHT;
+let W, S, A, D, UP, DOWN, LEFT, RIGHT;
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim($api) {
@@ -87,7 +76,6 @@ function sim($api) {
   if (S) forward = 0.004;
   if (A) strafe = -0.004;
   if (D) strafe = 0.004;
-
   if (W || S || A || D) dolly.push({ x: strafe, z: forward });
 
   if (UP) cam.rotX += 1;
@@ -104,6 +92,28 @@ function sim($api) {
 
 // ✒ Act (Runs once per user interaction)
 function act({ event: e, num: { vec4 } }) {
+  // 🖱️ Mouse
+  //Look around while dragging.
+  if (e.is("draw")) {
+    cam.rotY -= e.delta.x / 3.5;
+    cam.rotX -= e.delta.y / 3.5;
+  }
+
+  // Start a mark.
+  if (e.is("touch") && e.device === "mouse") {
+    lastCenter = cam.center;
+    tie.gpuFlush = true;
+  }
+
+  // Finish a mark.
+  if (e.is("lift") && e.device === "mouse") {
+    // Add the last bit of the line to the tie.
+    if (vec4.dist(lastCenter, cam.center) > 0) {
+      tie.addPoints([lastCenter, cam.centerCached]);
+    }
+    looseEnd = undefined;
+  }
+
   // 🖖 Touch
   // Two fingers for move forward.
   if (e.is("touch:2")) W = true;
@@ -133,25 +143,6 @@ function act({ event: e, num: { vec4 } }) {
   if (e.is("keyboard:up:arrowdown")) DOWN = false;
   if (e.is("keyboard:up:arrowleft")) LEFT = false;
   if (e.is("keyboard:up:arrowright")) RIGHT = false;
-
-  // 🖱️ Mouse: Look around while dragging.
-  if (e.is("draw")) {
-    cam.rotY -= e.delta.x / 3.5;
-    cam.rotX -= e.delta.y / 3.5;
-  }
-
-  if (e.is("touch") && e.device === "mouse") {
-    lastCenter = cam.center;
-    tie.gpuFlush = true;
-  }
-
-  if (e.is("lift") && e.device === "mouse") {
-    // Add the last bit of the line.
-    if (vec4.dist(lastCenter, cam.center) > 0) {
-      tie.addPoints([lastCenter, cam.center]);
-    }
-  }
-  
 }
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)

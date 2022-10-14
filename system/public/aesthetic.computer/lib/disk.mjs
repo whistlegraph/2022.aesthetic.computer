@@ -342,6 +342,8 @@ const $paintApiUnwrapped = {
   draw: graph.draw,
   printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
   form: function (forms, cam, { cpu } = { cpu: false }) {
+    if (forms === undefined) return; // Exit silently if forms is undefined.
+
     if (cpu === true) {
       if (Array.isArray(forms)) forms.forEach((form) => form.graph(cam));
       else forms.graph(cam);
@@ -362,11 +364,24 @@ const $paintApiUnwrapped = {
           // B. If the form has been sent, but the form has changed and
           //    needs a partial update.
 
-          // Add vertices.
+          // Transform the geometry.
+          if (form.gpuTransformed === true) {
+            formsToSend.push({
+              update: "form:transform",
+              uid: form.uid,
+              rotation: form.rotation,
+              position: form.position,
+              scale: form.scale
+            });
+
+            form.gpuTransformed = false;
+          }
+
+          // Add vertices to buffered forms.
           if (form.vertices.length > form.verticesSent) {
             formsToSend.push({
+              update: "form:buffered:add-vertices",
               uid: form.uid,
-              update: "add-vertices",
               flush: form.gpuFlush,
               vertices: form.vertices.slice(form.verticesSent),
               length: form.vertices.length, // TODO: These aren't being used anymore / they are generated from the GPU.
@@ -416,6 +431,7 @@ class Painting {
 
     // Filter for and then wrap every rendering behavior of $paintApi into a
     // system to be deferred in groups, using layer.
+    // ⛓️ This wrapper also makes the paint API chainable. 
     for (const k in $paintApiUnwrapped) {
       if (typeof $paintApiUnwrapped[k] === "function") {
         // Wrap and then transfer to #api.

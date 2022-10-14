@@ -1146,13 +1146,17 @@ class Form {
   vertices = [];
   indices;
 
-  verticesSent = 0; // To the GPU.
-  gpuFlush = false; // A flag that flushes any extra vertices on GPU end.
-
   // TODO: Texture and color should be optional, and perhaps based on type.
   // TODO: Should this use a parameter called shader?
   texture; // = makeBuffer(32, 32);
   color;
+
+  // GPU Specific Params & Buffers
+  verticesSent = 0;
+  gpuFlush = false; // A flag that flushes any extra vertices on GPU end.
+  gpuTransformed = false;
+  MAX_POINTS = 100000; // Some buffered geometry gpu calls may use this hint.
+  uvs = [];
 
   #gradientColors = [
     [1.0, 0.0, 0.0, 1.0],
@@ -1160,15 +1164,13 @@ class Form {
     [0.0, 0.0, 1.0, 1.0],
   ];
 
-  /*
+  /* I haven't needed support for this yet so it's left commented. 22.10.13.23.12
   #texCoords = [
     [0.0, 0.0, 0.0, 0.0],
     [0.0, 1.0, 0.0, 0.0],
     [1.0, 1.0, 0.0, 0.0],
   ];
   */
-
-  uvs = [];
 
   // Transform
   position = [0, 0, 0];
@@ -1180,6 +1182,7 @@ class Form {
 
   constructor(
     // Model
+    // type can be "triangle", or "line" or "line:buffered"
     { type, positions, indices },
     fill,
     // Transform
@@ -1191,6 +1194,9 @@ class Form {
 
     // Take into account form -> primitive relationships.
     if (type === "quad") this.primitive = "triangle";
+    if (type === "line:buffered") {
+      this.primitive = "line";
+    }
 
     // 🌩️ Ingest positions and turn them into vertices.
     // ("Import" a model...)
@@ -1233,7 +1239,7 @@ class Form {
         new Vertex(
           positions[i],
           this.#gradientColors[i % 3],
-          texCoord //this.#texCoords[i % 3]
+          texCoord //this.#texCoords[i % 3] // Replace to enable bespoke texture coordinates.
         )
       );
     }
@@ -1241,7 +1247,6 @@ class Form {
     // Create indices from pre-indexed positions or generate
     // a linear set of indices based on length.
     this.indices = indices || repeat(this.vertices.length, (i) => i);
-    // this.verticesSent = this.vertices.length;
   }
 
   graph({ matrix: cameraMatrix }) {
@@ -1325,12 +1330,16 @@ class Form {
     this.rotation[X] = x;
     this.rotation[Y] = y;
     this.rotation[Z] = z;
+
+    this.gpuTransformed = true;
   }
 
   turn({ x, y, z }) {
     this.rotation[X] = (this.rotation[X] + (x || 0)) % 360;
     this.rotation[Y] = (this.rotation[Y] + (y || 0)) % 360;
     this.rotation[Z] = (this.rotation[Z] + (z || 0)) % 360;
+
+    this.gpuTransformed = true;
   }
 }
 
