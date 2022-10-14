@@ -20,6 +20,8 @@ const disposal = [];
 let camera;
 let scene = new THREE.Scene();
 
+let drawingForm;
+
 //scene.fog = new THREE.Fog(0x111111, 0.5, 2);
 scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
@@ -48,8 +50,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
   if (!Array.isArray(forms)) forms = [forms];
 
+  // *** 📐 Geometry ***
   // Check f.type for adding new forms, or f.update for modifying added forms.
   forms.forEach((f) => {
+    // *** 🔺 Triangle ***
     if (f.type === "triangle") {
       // Add texture.
       const tex = new THREE.DataTexture(
@@ -91,6 +95,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       disposal.push(tex, material, geometry);
     }
 
+    // *** 🟥 Quad ***
     if (f.type === "quad") {
       // Add texture.
       const tex = new THREE.DataTexture(
@@ -126,6 +131,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       disposal.push(tex, material, geometry);
     }
 
+    // *** ✏️ Line ***
     if (f.type === "line") {
       const material = new THREE.LineBasicMaterial({
         color: rgbToHex(...(f.color || color)),
@@ -136,11 +142,17 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       material.depthTest = true;
       material.linewidth = 1;
 
-      const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
+      let points = [];
+
+      // Generate a curve for points if there are any at the start.
+      if (f.vertices.length > 0) {
+        points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
+      }
+
       const geometry = new THREE.BufferGeometry();
 
       // attributes
-      const positions = new Float32Array(f.MAX_POINTS * 3); // 3 vertices per point
+      const positions = new Float32Array(f.MAX_POINTS * 3);
 
       for (let i = 0; i < points.length; i += 3) {
         positions[i] = points[i].x;
@@ -155,9 +167,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       geometry.setDrawRange(0, points.length);
 
-      //const line = new THREE.Line(geometry, material);
-      const line = new THREE.LineSegments(geometry, material);
-      //const line = new THREE.CatmullRomCurve3(geometry, material);
+      const line = new THREE.Line(geometry, material);
+
+      line.ac_length = points.length;
+      line.ac_vertsToAdd = [];
 
       line.translateX(f.position[0]);
       line.translateY(f.position[1]);
@@ -187,20 +200,86 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       //       dictionary here... 22.10.12.15.30
 
       const form = scene.getObjectByProperty("aestheticID", formUpdate.uid);
+      drawingForm = form;
 
       // See: https://threejs.org/docs/#manual/en/introduction/How-to-update-things,
       //      https://jsfiddle.net/t4m85pLr/1
       if (form) {
-        const positions = form.geometry.attributes.position.array;
+        // 0. Flush the vertsToAdd cache if necessary.
+        if (formUpdate.flush) form.ac_vertsToAdd.length = 0;
+
+        const points = [];
 
         for (let i = 0; i < formUpdate.vertices.length; i += 1) {
-          const posStart = (formUpdate.pastLength + i) * 3;
-          positions[posStart] = formUpdate.vertices[i].pos[0];
-          positions[posStart + 1] = formUpdate.vertices[i].pos[1];
-          positions[posStart + 2] = formUpdate.vertices[i].pos[2];
+          points.push(new THREE.Vector3(...formUpdate.vertices[i].pos));
         }
 
-        form.geometry.setDrawRange(0, formUpdate.length);
+        // 1. Filter out every duplicated vertex (so the spline has no duplicate data).
+        // take.
+        // (These arrive in pairs of two line segment points.)
+        // [xy1 xy2] [xy2 xy3] [xy3 xy4] (xy4 will always be missed?)
+        //  ^         ^         ^
+        //console.log("Update vertices:", formUpdate.vertices);
+
+        // const end = formUpdate.vertices.length;
+        // const start = form.ac_vertsToAdd.length > 0 ? 1 : 0;
+        // for (let i = start; i < end; i += 2) {
+        //   form.ac_vertsToAdd.push(
+        //     new THREE.Vector3(...formUpdate.vertices[i].pos)
+        //   );
+        // }
+
+        // form.ac_vertsToAdd.push(
+        //   new THREE.Vector3(...formUpdate.vertices[end - 1].pos)
+        // );
+
+        // console.log("Stripped vertices", form.ac_vertsToAdd);
+
+        // 2. Run the spline.
+        //if (form.ac_vertsToAdd.length < 4) return;
+        // const curve = new THREE.CatmullRomCurve3(
+        //   form.ac_vertsToAdd,
+        //   false,
+        //   "chordal",
+        //   0
+        // );
+        // curve.arcLengthDivisions = 100;
+        // const curvePoints = curve.getSpacedPoints(24);
+
+        // console.log("curve points:", curvePoints)
+
+        // 2.5 Skip the spline.
+        //let curvePoints = form.ac_vertsToAdd;
+
+        // 3. Add extra vertex back / unpack into line segment compatible data.
+        // [xy1, xy2, xy3, xy4]
+        //  ^----^*
+        //const points = [];
+        //for (let i = 1; i < curvePoints.length; i += 1) {
+        //  if (i > 0) points.push(curvePoints[i - 1]);
+        //  points.push(curvePoints[i]);
+        //}
+
+        //form.ac_lastPoints = verts.slice(-1);
+        form.ac_vertsToAdd.length = 0; // Ingest added points.
+
+        // Set custom properties on the form to keep track of where we are
+        // in the previously allocated vertex buffer.
+        form.ac_lastLength = form.ac_length;
+        form.ac_length += points.length;
+
+        console.log(form.ac_length);
+
+        const positions = form.geometry.attributes.position.array;
+
+        for (let i = 0; i < points.length; i += 1) {
+          const posStart = (form.ac_lastLength + i) * 3;
+          positions[posStart] = points[i].x;
+          positions[posStart + 1] = points[i].y;
+          positions[posStart + 2] = points[i].z;
+        }
+
+        form.geometry.setDrawRange(0, form.ac_length);
         form.geometry.attributes.position.needsUpdate = true;
 
         //form.geometry.computeBoundingBox();
@@ -208,6 +287,34 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       }
     }
   });
+
+  // Add cursor preview line.
+
+  {
+    if (drawingForm) {
+      const line = drawingForm;
+
+      const positions = line.geometry.attributes.position.array;
+
+      console.log(line.ac_length);
+
+      const lastStart = (line.ac_length - 1) * 3;
+      const previewStart = line.ac_length * 3;
+      const previewEnd = (line.ac_length + 1) * 3;
+
+      positions[previewStart] = positions[lastStart];
+      positions[previewStart + 1] = positions[lastStart + 1];
+      positions[previewStart + 2] = positions[lastStart + 2];
+
+      positions[previewEnd] = cam.centerCached[0];
+      positions[previewEnd + 1] = cam.centerCached[1];
+      positions[previewEnd + 2] = cam.centerCached[2];
+
+      line.geometry.setDrawRange(0, line.ac_length + 2);
+      line.geometry.computeBoundingSphere();
+      line.geometry.attributes.position.needsUpdate = true;
+    }
+  }
 
   // In case we need to render off screen.
   //renderer.render(scene, camera);

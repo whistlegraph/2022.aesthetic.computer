@@ -37,9 +37,15 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+** Mood ***
+ - [] Select a mood to change the default color palette.
+ - [] A scheme map:
+      - Dark / Light Moods
+      - Primary color.
+
 *** (3dline) ***
  + Now
-  - [] Add spline support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
+  - [💆] Add spline support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
   - [] Draw with left mouse button while looking with right. (via `pen`)
   - [] Fix "tri's" turn update.
   - [] Fix "lines" no longer rendering.

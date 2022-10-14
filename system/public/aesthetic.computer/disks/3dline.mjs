@@ -52,12 +52,12 @@ let marks = [];
 function paint({ pen, wipe, ink, Form, LINE, form, screen, num: { vec4 }, paintCount }) {
 
   if (pen.drawing && pen.pointerType === "mouse" && pen.button === 0) {
-    if (vec4.dist(lastCenter, cam.center) > 0) {
+    if (vec4.dist(lastCenter, cam.center) > 0.3) {
       // Is it possible to add color here?
       tie.addPoints([lastCenter, cam.center]);
+      lastCenter = cam.center;
     }
   }
-  lastCenter = cam.center;
 
   form([tie, floor, cross, tri, lines], cam);
 
@@ -68,7 +68,8 @@ function paint({ pen, wipe, ink, Form, LINE, form, screen, num: { vec4 }, paintC
 
   if (paintCount % 20 === 0) {
     // Get line color to override here?
-    // ink(0, 100, 0, 100).form(tie, cam, { cpu: true }); // Render on CPU layer.
+    // TODO: How to make a 2D line that is mapped to a 3D point here?
+    //ink(0, 200, 0, 100).form(tie, cam, { cpu: true }); // Render on CPU layer.
   }
   // return false;
 }
@@ -102,7 +103,7 @@ function sim($api) {
 }
 
 // ✒ Act (Runs once per user interaction)
-function act({ event: e }) {
+function act({ event: e, num: { vec4 } }) {
   // 🖖 Touch
   // Two fingers for move forward.
   if (e.is("touch:2")) W = true;
@@ -138,6 +139,19 @@ function act({ event: e }) {
     cam.rotY -= e.delta.x / 3.5;
     cam.rotX -= e.delta.y / 3.5;
   }
+
+  if (e.is("touch") && e.device === "mouse") {
+    lastCenter = cam.center;
+    tie.gpuFlush = true;
+  }
+
+  if (e.is("lift") && e.device === "mouse") {
+    // Add the last bit of the line.
+    if (vec4.dist(lastCenter, cam.center) > 0) {
+      tie.addPoints([lastCenter, cam.center]);
+    }
+  }
+  
 }
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
