@@ -4,12 +4,14 @@
 
 let cam, dolly; // Camera system.
 let floor, cross, tri, lines, tie; // Geometry.
+let prevCamCenter;
+let end;
 
 // 🥾 Boot
 function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
   cam = new Camera(80, { z: 4 }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
-  lastCenter = cam.center;
+  prevCamCenter = cam.center;
 
   floor = new Form(
     QUAD,
@@ -31,22 +33,29 @@ function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
 
   lines = new Form(LINE, { pos: [0, 1, 1] });
 
-  tie = new Form({ type: "line:buffered" }, { color: [255, 0, 0, 255] });
+  tie = new Form({ type: "line:buffered" }, { color: [255, 0, 0], alpha: 0.3 });
 }
 
-let lastCenter;
-let looseEnd;
-
 // 🎨 Paint (Executes every display frame)
-function paint({ pen, ink, wipe, Form, form, screen, paintCount, num: { vec4 } }) {
+function paint({
+  pen,
+  ink,
+  wipe,
+  Form,
+  form,
+  screen,
+  paintCount,
+  num: { vec4, randIntRange: rr },
+}) {
   if (pen.drawing && pen.device === "mouse" && pen.button === 0) {
-    if (vec4.dist(lastCenter, cam.center) > 0.3) {
+    if (vec4.dist(prevCamCenter, cam.center) > 0.3) {
       // Is it possible to add color here?
-      tie.addPoints([lastCenter, cam.centerCached]);
-      lastCenter = cam.centerCached;
+      tie.addPoints([prevCamCenter, cam.centerCached]);
+      prevCamCenter = cam.centerCached;
     } else {
-      looseEnd = new Form(
-        { type: "line", positions: [lastCenter, cam.centerCached] },
+      end = new Form(
+        { type: "line", positions: [prevCamCenter, cam.centerCached] },
+        { alpha: 1 }
       );
     }
   }
@@ -61,7 +70,8 @@ function paint({ pen, ink, wipe, Form, form, screen, paintCount, num: { vec4 } }
     .box(...screen.center, 7, "fill*center");
 
   // Tip of drawn line.
-  if (paintCount % 2 === 0) ink(0, 255, 0).form(looseEnd, cam, { cpu: true });
+  // if (paintCount % 2 === 0) ink(0, 255, 0).form(end, cam, { cpu: true });
+  ink(rr(200, 255), rr(200, 255), rr(20, 40)).form(end, cam, { keep: false, });
 }
 
 let W, S, A, D, UP, DOWN, LEFT, RIGHT;
@@ -101,17 +111,17 @@ function act({ event: e, num: { vec4 } }) {
 
   // Start a mark.
   if (e.is("touch") && e.device === "mouse") {
-    lastCenter = cam.center;
+    prevCamCenter = cam.center;
     tie.gpuFlush = true;
   }
 
   // Finish a mark.
   if (e.is("lift") && e.device === "mouse") {
     // Add the last bit of the line to the tie.
-    if (vec4.dist(lastCenter, cam.center) > 0) {
-      tie.addPoints([lastCenter, cam.centerCached]);
+    if (vec4.dist(prevCamCenter, cam.center) > 0) {
+      tie.addPoints([prevCamCenter, cam.centerCached]);
     }
-    looseEnd = undefined;
+    end = undefined;
   }
 
   // 🖖 Touch

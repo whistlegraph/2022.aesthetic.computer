@@ -62,6 +62,7 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Fix the deallocator.
   - [x] Fix "tri's" turn update.
   - [x] Fix "lines" no longer rendering.
   - [x] Break line into separate marks.

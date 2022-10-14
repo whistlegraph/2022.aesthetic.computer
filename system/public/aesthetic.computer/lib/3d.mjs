@@ -1,10 +1,7 @@
 // 3D (GPU)
-// Render geometry on the GPU via Three.js.
+// Render geometry and scenes on the GPU via Three.js.
 
-// TODO: Keep track of what forms get added, so they don't have to be
-//       re-instantiated every frame? 22.10.10.21.27
-// TODO: I could be sending alot less data over the wire.
-// TODO: Add indices to geometry.
+// TODO: Make use of indexed geometry at some point...
 
 import * as THREE from "../dep/three/three.module.js";
 import { radians, rgbToHex } from "./num.mjs";
@@ -15,14 +12,11 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.domElement.dataset.type = "3d";
 
-const disposal = [];
-
 let camera;
 let scene = new THREE.Scene();
+let disposal = [];
 
-let drawingForm;
-
-//scene.fog = new THREE.Fog(0x111111, 0.5, 2);
+// scene.fog = new THREE.Fog(0x111111, 0.5, 2); // More basic fog.
 scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
 let target;
@@ -130,7 +124,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       scene.add(plane);
       plane.aestheticID = f.uid;
 
-      disposal.push(tex, material, geometry);
+      disposal.push({ keep: f.gpuKeep, form: plane, resources: [tex, material, geometry] });
     }
 
     // *** ✏️ Line ***
@@ -138,7 +132,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const material = new THREE.LineBasicMaterial({
         color: rgbToHex(...(f.color || color)),
       });
-      //material.transparent = true;
+      material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
@@ -159,14 +153,14 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       scene.add(line);
       line.aestheticID = f.uid;
 
-      disposal.push(material, geometry);
+      disposal.push({ keep: f.gpuKeep, form: line, resources: [material, geometry] });
     }
 
     if (f.type === "line:buffered") {
       const material = new THREE.LineBasicMaterial({
         color: rgbToHex(...(f.color || color)),
       });
-      //material.transparent = true;
+      material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
@@ -213,12 +207,13 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       scene.add(lineb);
       lineb.aestheticID = f.uid;
 
-      disposal.push(material, geometry);
+      disposal.push({ keep: f.gpuKeep, form: lineb, resources: [material, geometry] });
     }
 
     if (f.update === "form:transform") {
       const fu = f; // formUpdate
       const form = scene.getObjectByProperty("aestheticID", fu.uid);
+      if (!form) return;
 
       form.position.set(...fu.position);
 
@@ -226,12 +221,12 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         radians(fu.rotation[0]),
         radians(fu.rotation[1]),
         radians(fu.rotation[2])
-      )
+      );
 
       form.scale.set(...fu.scale);
     }
 
-    // Add vertices to geometry:buffered objects. 
+    // Add vertices to geometry:buffered objects.
     if (f.update === "form:buffered:add-vertices") {
       const formUpdate = f;
 
@@ -245,7 +240,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       //       dictionary here... 22.10.12.15.30
 
       const form = scene.getObjectByProperty("aestheticID", formUpdate.uid);
-      drawingForm = form;
+      if (!form) return;
 
       // See: https://threejs.org/docs/#manual/en/introduction/How-to-update-things,
       //      https://jsfiddle.net/t4m85pLr/1
@@ -293,9 +288,21 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 export function render() {
   if (scene != undefined) {
     renderer.render(scene, camera);
-    // disposal.forEach((d) => d.dispose()); // Free memory from forms.
-    // disposal.length = 0;
-    // scene = undefined; // Dispose of scene.
+
+    // ♻️ De-allocation.
+    // TODO: This should do the trick, but I should still check for leaks. 22.10.14.02.21
+    disposal.forEach((d, i) => {
+      if (d.keep === false) {
+        d.resources.forEach((r) => {
+          r.dispose();
+        });
+        d.form.removeFromParent();
+      }
+      disposal[i] = undefined;
+    }); // Free memory from forms if it's been marked as `keep === false`.
+    disposal = disposal.filter(Boolean);
+
+    // scene = undefined; // TODO: Dispose of scene when necessary?
   }
 }
 

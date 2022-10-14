@@ -341,7 +341,7 @@ const $paintApiUnwrapped = {
   grid: graph.grid,
   draw: graph.draw,
   printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
-  form: function (forms, cam, { cpu } = { cpu: false }) {
+  form: function (forms, cam, { cpu, keep } = { cpu: false, keep: true }) {
     if (forms === undefined) return; // Exit silently if forms is undefined.
 
     if (cpu === true) {
@@ -356,6 +356,10 @@ const $paintApiUnwrapped = {
       forms.forEach((form) => {
         // A. If the form has not been sent yet...
         if (formsSent[form.uid] === undefined) {
+
+          // Set the form to expire automatically if keep is false.
+          if (!keep) { form.gpuKeep = false; }
+
           formsToSend.push(form);
           formsSent[form.uid] = true;
 
@@ -373,7 +377,6 @@ const $paintApiUnwrapped = {
               position: form.position,
               scale: form.scale
             });
-
             form.gpuTransformed = false;
           }
 
