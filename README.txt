@@ -117,6 +117,8 @@ Welcome to...
 
 ***No Paint System***
   + Now
+  - [] Center painting with the transparent backbuffer if a specific
+       size is set and resize is off. (Make crop tool to do this, that can be NOd but automatically runs through.
   - [] The default "mint" command in aesthetic.computer saves
        the system wallpaper. Uniqueness is guaranteed? - https://www.google.com/search?q=sha-512+uniqueness&oq=sha-512+uniqueness&aqs=chrome..69i57j0i13i512j0i390l4.4876j0j4&sourceid=chrome&ie=UTF-8
   - [💛] The painting resolution should auto-expand, but not contract.
