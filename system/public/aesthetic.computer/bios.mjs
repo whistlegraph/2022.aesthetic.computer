@@ -155,7 +155,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let ThreeD;
   async function loadThreeD() {
     ThreeD = await import(`./lib/3d.mjs`);
-    wrapper.append(ThreeD.domElement);
+    ThreeD.initialize(wrapper);
   }
 
   // Used by `disk` to set the metatags by default when a piece loads. It can
@@ -841,11 +841,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const willBake = content.cam !== undefined;
 
       if (willBake) {
-        send({ type: "forms:baked", content: true });
-
-        if (ThreeD === undefined) {
-          await loadThreeD();
-        }
+        if (ThreeD === undefined) await loadThreeD();
+        if (ThreeD.status.alive === false) ThreeD.initialize(wrapper);
 
         // Add / update forms in and then render them.
         ThreeD?.bake(content, screen, {
@@ -853,7 +850,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           height: projectedHeight,
         });
 
-
+        send({ type: "forms:baked", content: true });
       } else {
         send({ type: "forms:baked", content: false });
       }
@@ -1502,6 +1499,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Clear any 3D content.
       ThreeD?.clear();
 
+      // Kill the 3D engine.
+      ThreeD?.kill();
+
       // Clear any DOM content that was added by a piece.
       contentFrame?.remove(); // Remove the contentFrame if it exists.
       contentFrame = undefined;
@@ -1646,9 +1646,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       } else if (pixelsDidChange) {
         ctx.putImageData(imageData, 0, 0); // Comment out for a `dirtyBox` visualization.
         if (glaze.on) {
-          if (ThreeD?.domElement) {
-            glazeCompositeCtx.drawImage(ThreeD.domElement, 0, 0);
-          }
+          ThreeD?.pasteTo(glazeCompositeCtx);
           glazeCompositeCtx.drawImage(canvas, 0, 0);
           Glaze.update(glazeComposite);
           //Glaze.update(imageData);

@@ -37,13 +37,12 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** Bonus ***
+  - [] Detect dark mode and modify the prompt accordingly.
+
 *** (3dline) ***
  + Now
-  - [🌲] Disable ThreeD when leaving a piece that loaded it.
-  - [] Add spline support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
-    - [] Add smooth sim. 
-    - [x] Tried and cancelled in favor of doing a lazy nezumi style physical sim in 3D.
-        (Better to filter the data on input)
+  - [🍁] Clean up smooth sim code.
   - [] Draw with left mouse button while looking with right. (via `pen`)
   - [] Free camera mode / better camera controls.
   - [] Add color and transparency to line.
@@ -62,6 +61,11 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Add spline / smooth drawing support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
+    - [x] Add smooth sim. 
+    - [x] Tried and cancelled in favor of doing a lazy nezumi style physical sim in 3D.
+        (Better to filter the data on input)
+  - [x] Disable ThreeD when leaving a piece that loaded it.
   - [x] Fix the deallocator.
   - [x] Fix "tri's" turn update.
   - [x] Fix "lines" no longer rendering.

@@ -5,7 +5,15 @@
 let cam, dolly; // Camera system.
 let floor, cross, tri, lines, tie; // Geometry.
 let prevCamCenter;
-let end;
+let end, end2;
+
+let lazyCursorPos;
+// let lazyCursorSpeed = 1;
+let lazyCursorSpeed = 20;
+let cursorSize = 1;
+let lazyDist = 0;
+let lazyCursorLast;
+let distConst = 0.005;
 
 // 🥾 Boot
 function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
@@ -33,7 +41,7 @@ function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
 
   lines = new Form(LINE, { pos: [0, 1, 1] });
 
-  tie = new Form({ type: "line:buffered" }, { color: [255, 0, 0], alpha: 0.3 });
+  tie = new Form({ type: "line:buffered" }, { color: [255, 255, 255], alpha: 0.8 });
 }
 
 // 🎨 Paint (Executes every display frame)
@@ -42,13 +50,33 @@ function paint({
   ink,
   wipe,
   Form,
-  form,
   screen,
   paintCount,
   num: { vec4, randIntRange: rr },
 }) {
   if (pen.drawing && pen.device === "mouse" && pen.button === 0) {
-    if (vec4.dist(prevCamCenter, cam.center) > 0.3) {
+
+    const maxd = distConst * cursorSize;
+
+    if (lazyDist >= maxd) {
+      // Is it possible to add color here?
+      tie.addPoints([lazyCursorLast, lazyCursorPos]);
+      lazyDist -= maxd; // Hold onto extra distance for better normalization!
+      lazyCursorLast = lazyCursorPos;
+    }
+
+    end = new Form(
+      { type: "line", positions: [lazyCursorLast, lazyCursorPos] },
+      { alpha: 1 }
+    );
+
+    end2 = new Form(
+      { type: "line", positions: [lazyCursorPos, cam.center] },
+      { alpha: 1 }
+    );
+
+    /*
+    if (vec4.dist(prevCamCenter, cam.center) > maxd) {
       // Is it possible to add color here?
       tie.addPoints([prevCamCenter, cam.centerCached]);
       prevCamCenter = cam.centerCached;
@@ -58,6 +86,8 @@ function paint({
         { alpha: 1 }
       );
     }
+    */
+
   }
 
   // The lines & the furnitue.
@@ -65,19 +95,22 @@ function paint({
 
   // Crosshair
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
+  // const radius = 9;
+  const radius = 9 * cursorSize;
   wipe(10, 0)
-    .ink(255, 255, 255, 127)
-    .box(...screen.center, 7, "fill*center");
+    .ink(200, 0, 0, 255)
+    .circle(...screen.center, radius);
 
   // Tip of drawn line.
   // if (paintCount % 2 === 0) ink(0, 255, 0).form(end, cam, { cpu: true });
-  ink(rr(200, 255), rr(200, 255), rr(20, 40)).form(end, cam, { keep: false, });
+     ink(255, 0, 0).form(end, cam, { keep: false });
+     ink(255, 255, 0).form(end2, cam, { keep: false });
 }
 
 let W, S, A, D, UP, DOWN, LEFT, RIGHT;
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim($api) {
+function sim({num: { vec4 }}) {
   // First person camera controls.
   let forward = 0,
     strafe = 0;
@@ -98,6 +131,14 @@ function sim($api) {
   // Object rotation.
   tri.turn({ y: -0.25 });
   lines.turn({ x: -0.5, y: 0.5, z: 0.2 });
+
+  // Move lazy cursor towards cam.center according to a multiplier.
+  // (And track the distance traveled.)
+  if (lazyCursorPos) {
+    const newlazyCursorPos = vec4.lerp(vec4.create(), lazyCursorPos, cam.center, 0.01 * lazyCursorSpeed);
+    lazyDist += vec4.dist(lazyCursorPos, newlazyCursorPos);
+    lazyCursorPos = newlazyCursorPos;
+  }
 }
 
 // ✒ Act (Runs once per user interaction)
@@ -112,16 +153,32 @@ function act({ event: e, num: { vec4 } }) {
   // Start a mark.
   if (e.is("touch") && e.device === "mouse") {
     prevCamCenter = cam.center;
+    lazyCursorPos = vec4.clone(cam.centerCached);
+    lazyCursorLast = vec4.clone(cam.centerCached);
     tie.gpuFlush = true;
   }
 
   // Finish a mark.
   if (e.is("lift") && e.device === "mouse") {
     // Add the last bit of the line to the tie.
-    if (vec4.dist(prevCamCenter, cam.center) > 0) {
-      tie.addPoints([prevCamCenter, cam.centerCached]);
+
+    // With smoothing...
+    /*
+    if (lazyDist > 0) {
+      tie.addPoints([lazyCursorLast, lazyCursorPos]);
+      lazyCursorLast = lazyCursorPos;
+      lazyDist = 0;
     }
+    */
+    lazyDist = 0;
+
+    // Without smoothing...
+    // if (vec4.dist(prevCamCenter, cam.center) > 0) {
+    //   tie.addPoints([prevCamCenter, cam.centerCached]);
+    // }
+
     end = undefined;
+    end2 = undefined;
   }
 
   // 🖖 Touch
@@ -153,6 +210,9 @@ function act({ event: e, num: { vec4 } }) {
   if (e.is("keyboard:up:arrowdown")) DOWN = false;
   if (e.is("keyboard:up:arrowleft")) LEFT = false;
   if (e.is("keyboard:up:arrowright")) RIGHT = false;
+
+  if (e.is("keyboard:down:k")) cursorSize += 0.1;
+  if (e.is("keyboard:down:j")) cursorSize -= 0.1;
 }
 
 // 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)

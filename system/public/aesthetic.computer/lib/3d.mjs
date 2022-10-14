@@ -1,26 +1,35 @@
 // 3D (GPU)
 // Render geometry and scenes on the GPU via Three.js.
 
+// TODO: Keep the renderer / scene alive when returning to the prompt, but
+//       destroy it if the user doesn't return?
+
 // TODO: Make use of indexed geometry at some point...
 
 import * as THREE from "../dep/three/three.module.js";
 import { radians, rgbToHex } from "./num.mjs";
 
-const renderer = new THREE.WebGLRenderer({
-  alpha: false,
-  preserveDrawingBuffer: true,
-});
-renderer.domElement.dataset.type = "3d";
-
-let camera;
-let scene = new THREE.Scene();
-let disposal = [];
-
-// scene.fog = new THREE.Fog(0x111111, 0.5, 2); // More basic fog.
-scene.fog = new THREE.FogExp2(0x030303, 0.5);
-
-let target;
+let scene, renderer, camera, disposal = [], target;
 // let pixels;
+
+export const status = { alive: false };
+
+export function initialize(wrapper) {
+  renderer = new THREE.WebGLRenderer({
+    alpha: false,
+    preserveDrawingBuffer: true,
+  });
+
+  renderer.domElement.dataset.type = "3d";
+
+  scene = new THREE.Scene();
+
+  // scene.fog = new THREE.Fog(0x111111, 0.5, 2); // More basic fog.
+  scene.fog = new THREE.FogExp2(0x030303, 0.5);
+
+  wrapper.append(renderer.domElement);
+  status.alive = true;
+}
 
 export function bake({ cam, forms, color }, { width, height }, size) {
   // Only make instantiate new buffers if necessary.
@@ -124,7 +133,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       scene.add(plane);
       plane.aestheticID = f.uid;
 
-      disposal.push({ keep: f.gpuKeep, form: plane, resources: [tex, material, geometry] });
+      disposal.push({
+        keep: f.gpuKeep,
+        form: plane,
+        resources: [tex, material, geometry],
+      });
     }
 
     // *** ✏️ Line ***
@@ -153,7 +166,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       scene.add(line);
       line.aestheticID = f.uid;
 
-      disposal.push({ keep: f.gpuKeep, form: line, resources: [material, geometry] });
+      disposal.push({
+        keep: f.gpuKeep,
+        form: line,
+        resources: [material, geometry],
+      });
     }
 
     if (f.type === "line:buffered") {
@@ -207,7 +224,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       scene.add(lineb);
       lineb.aestheticID = f.uid;
 
-      disposal.push({ keep: f.gpuKeep, form: lineb, resources: [material, geometry] });
+      disposal.push({
+        keep: f.gpuKeep,
+        form: lineb,
+        resources: [material, geometry],
+      });
     }
 
     if (f.update === "form:transform") {
@@ -286,6 +307,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 }
 
 export function render() {
+  // TODO: If keeping the renderer alive between pieces, then make sure to
+  //       top rendering! 22.10.14.13.05
   if (scene != undefined) {
     renderer.render(scene, camera);
 
@@ -306,8 +329,18 @@ export function render() {
   }
 }
 
+export function pasteTo(ctx) {
+  ctx.drawImage(renderer.domElement, 0, 0);
+}
+
 export function clear() {
   renderer.clear();
 }
 
-export const domElement = renderer.domElement;
+export function kill() {
+  renderer.domElement.remove();
+  renderer.dispose();
+  scene = undefined;
+  target = undefined;
+  status.alive = false;
+}
