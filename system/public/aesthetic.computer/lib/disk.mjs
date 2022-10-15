@@ -18,7 +18,7 @@ const servers = {
   local: "localhost:8082",
   julias: "192.168.1.120:8082",
   lucias: "192.168.1.245:8082",
-  ashland_mbp: "192.168.1.18",
+  ashland_mbp: "192.168.1.18"
 };
 
 let ROOT_PIECE = "prompt"; // This gets set straight from the host html file for the ac.
@@ -90,9 +90,28 @@ let storeRetrievalResolution, storeDeletionResolution;
 let socket;
 let pen = {};
 
+// *** Dark Mode ***
+// Pass `true` or `false` to override or `default` to the system setting. 
+function darkMode(enabled = !$commonApi.dark) {
+  if (enabled === "default") { // default
+    store.delete("dark-mode");
+    console.log("🌜 Dark mode:", $commonApi.dark);
+    return $commonApi.dark;
+  } else { // true or false
+    store["dark-mode"] = enabled;
+    store.persist("dark-mode");
+    $commonApi.dark = enabled;
+    console.log("🌜 Dark mode:", $commonApi.dark);
+    return enabled;
+  }
+}
+
 // *** Store ***
 // This object is used to store and retrieve data across disks
 // The `local` method encodes everything as a JSON string.
+
+// Note: It strangely also contains an API which could be redefined
+//       unintentionally. 22.10.15.01.57 (The methods should be refactored.)
 const store = {
   persist: function (key, method = "local") {
     // Send data over the thread through a key in this object.
@@ -145,6 +164,8 @@ let loadFailure;
 
 // For every function to access.
 const $commonApi = {
+  dark: true, // Dark mode. (Gets set on startup and on any change.)
+  darkMode, // Toggle dark mode or set to `true` or `false`.
   // content: added programmatically: see Content class
   num: {
     even: num.even,
@@ -170,7 +191,7 @@ const $commonApi = {
     Grid: geo.Grid,
     Circle: geo.Circle,
     linePointsFromAngle: geo.linePointsFromAngle,
-    pointFrom: geo.pointFrom
+    pointFrom: geo.pointFrom,
   },
   ui: {
     Button: ui.Button,
@@ -356,9 +377,10 @@ const $paintApiUnwrapped = {
       forms.forEach((form) => {
         // A. If the form has not been sent yet...
         if (formsSent[form.uid] === undefined) {
-
           // Set the form to expire automatically if keep is false.
-          if (!keep) { form.gpuKeep = false; }
+          if (!keep) {
+            form.gpuKeep = false;
+          }
 
           formsToSend.push(form);
           formsSent[form.uid] = true;
@@ -375,7 +397,7 @@ const $paintApiUnwrapped = {
               uid: form.uid,
               rotation: form.rotation,
               position: form.position,
-              scale: form.scale
+              scale: form.scale,
             });
             form.gpuTransformed = false;
           }
@@ -434,7 +456,7 @@ class Painting {
 
     // Filter for and then wrap every rendering behavior of $paintApi into a
     // system to be deferred in groups, using layer.
-    // ⛓️ This wrapper also makes the paint API chainable. 
+    // ⛓️ This wrapper also makes the paint API chainable.
     for (const k in $paintApiUnwrapped) {
       if (typeof $paintApiUnwrapped[k] === "function") {
         // Wrap and then transfer to #api.
@@ -456,7 +478,7 @@ class Painting {
     };
 
     this.api.pixel = function () {
-      return graph.pixel(...arguments); 
+      return graph.pixel(...arguments);
     };
 
     // Allows grouping & composing painting order using an AofA (Array of Arrays).
@@ -785,6 +807,11 @@ async function load(
 
   // Artificially imposed loading by at least 1/4 sec.
   setTimeout(async () => {
+
+    // Read current dark mode.
+    const dark = await store.retrieve("dark-mode");  
+    if (dark === true || dark === false) $commonApi.dark = dark;
+
     // Redefine the default event functions if they exist in the module.
     // Or... inherit an existing `system` (just nopaint for now).
     if (module.system === "nopaint" || text === "prompt") {
@@ -977,6 +1004,16 @@ const signals = [];
 let reframed = false;
 async function makeFrame({ data: { type, content } }) {
   // console.log("Frame:", type);
+
+  if (type === "dark-mode") {
+    const current = await store.retrieve("dark-mode");
+    if (current !== null) {
+      darkMode(current);
+    } else {
+      darkMode(content.enabled);
+    }
+    return;
+  }
 
   if (type === "forms:baked") {
     //console.log("🍞 Forms baked:", content);

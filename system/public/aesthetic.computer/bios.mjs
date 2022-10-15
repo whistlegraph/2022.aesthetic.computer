@@ -709,6 +709,28 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         });
       }
 
+      // 🌒 Detect light or dark mode.
+      // See also: https://flaviocopes.com/javascript-detect-dark-mode,
+      //           https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
+
+      if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        send({ type: "dark-mode", content: { enabled: true } });
+      }
+
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (event) => {
+          if (event.matches) {
+            send({ type: "dark-mode", content: { enabled: true } });
+          } else {
+            send({ type: "dark-mode", content: { enabled: false } });
+          }
+        });
+
+
       // 🖥️ Display
       frame(resolution?.width, resolution?.height);
 

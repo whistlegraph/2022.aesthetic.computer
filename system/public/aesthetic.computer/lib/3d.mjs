@@ -9,8 +9,14 @@
 import * as THREE from "../dep/three/three.module.js";
 import { radians, rgbToHex } from "./num.mjs";
 
-let scene, renderer, camera, disposal = [], target;
+let scene,
+  renderer,
+  camera,
+  disposal = [],
+  target;
+
 // let pixels;
+let jiggleForm;
 
 export const status = { alive: false };
 
@@ -263,6 +269,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const form = scene.getObjectByProperty("aestheticID", formUpdate.uid);
       if (!form) return;
 
+      jiggleForm = form;
+
       // See: https://threejs.org/docs/#manual/en/introduction/How-to-update-things,
       //      https://jsfiddle.net/t4m85pLr/1
       if (form) {
@@ -310,6 +318,22 @@ export function render() {
   // TODO: If keeping the renderer alive between pieces, then make sure to
   //       top rendering! 22.10.14.13.05
   if (scene != undefined) {
+    // CTO Rapter's line jiggling request:
+    if (jiggleForm) {
+      const positions = jiggleForm.geometry.attributes.position.array;
+
+      const jiggleLevel = 0.1;
+
+      for (let i = 0; i < positions.length; i += 3) {
+        //positions[i] += jiggleLevel / 2 - Math.random() * jiggleLevel;
+        positions[i + 1] += jiggleLevel / 2 - Math.random() * jiggleLevel;
+        //positions[i + 2] += jiggleLevel / 2 - Math.random() * jiggleLevel;
+      }
+
+      jiggleForm.geometry.setDrawRange(0, jiggleForm.ac_length);
+      jiggleForm.geometry.attributes.position.needsUpdate = true;
+    }
+
     renderer.render(scene, camera);
 
     // ♻️ De-allocation.

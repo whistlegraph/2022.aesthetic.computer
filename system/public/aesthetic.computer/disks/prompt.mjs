@@ -98,16 +98,32 @@ function sim({ seconds, needsPaint, gizmo: { Hourglass } }) {
   if (flashPresent) flash.step();
 }
 
+const scheme =  {
+  dark: {
+    fg: [255, 100],
+    bg: [70, 50, 100],
+    block: [200, 30, 100],
+    line: [0, 0, 255, 64]
+  },
+  light: {
+    fg: [0, 200],
+    bg: [170, 150, 200], 
+    block: [30, 200, 200],
+    line: [0, 0, 0, 128]
+  }
+}
+
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ box, screen, wipe, ink, paste, store }) {
-  //console.log("paint");
+function paint({ box, screen, wipe, ink, paste, store, dark }) {
+  const pal = scheme[dark ? "dark" : "light"];
 
   if (store["painting"]) {
     paste(store["painting"]);
-    ink(70, 50, 100, 127).box(screen); // Backdrop
+
+    ink(...pal.bg, 127).box(screen); // Backdrop
     //wipe(70, 50, 100);
   } else {
-    wipe(70, 50, 100);
+    wipe(...pal.bg);
   }
 
   const prompt = new Prompt(6, 6);
@@ -117,15 +133,15 @@ function paint({ box, screen, wipe, ink, paste, store }) {
     //ink(255, 255, 0, 20).box(prompt.pos); // Paint a highlight background.
     // And the letter if it is present.
     const pic = glyphs[char];
-    if (pic) ink(255, 100).draw(pic, prompt.pos.x, prompt.pos.y, prompt.scale);
+    if (pic) ink(...pal.fg).draw(pic, prompt.pos.x, prompt.pos.y, prompt.scale);
     // Only move the cursor forward if we matched a character or typed a space.
     if (pic || char === " ") prompt.forward();
   }
 
   if (canType) {
-    ink(0, 0, 255, 64).line(prompt.gutter, 0, prompt.gutter, screen.height); // Ruler
+    ink(...pal.line).line(prompt.gutter, 0, prompt.gutter, screen.height); // Ruler
     ink(127).box(0, 0, screen.width, screen.height, "inline"); // Focus
-    if (showBlink) ink(200, 30, 100).box(prompt.pos); // Draw blinking cursor.
+    if (showBlink) ink(...pal.block).box(prompt.pos); // Draw blinking cursor.
   }
 
   // Trigger a red or green screen flash with a timer.
@@ -139,7 +155,7 @@ function paint({ box, screen, wipe, ink, paste, store }) {
 let promptHistoryDepth = 0;
 
 // ✒ Act (Runs once per user interaction, after boot.)
-async function act({ event: e, needsPaint, load, store, download }) {
+async function act({ event: e, needsPaint, load, store, download, darkMode }) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
   //if (e.is("move")) needsPaint();
@@ -195,6 +211,24 @@ async function act({ event: e, needsPaint, load, store, download }) {
           showFlash = true;
           input = "";
           needsPaint();
+        } else if (input === "dark" || input === "dark:reset") {
+          if (input === "dark:reset") {
+            store.delete("dark-mode");
+            darkMode("default");
+            flashColor = [127, 127, 127]; // Gray for system setting.
+          } else {
+            let current = await store.retrieve("dark-mode");
+            current = current === true ? false : true;
+            darkMode(current);
+            if (current) {
+              flashColor = [0, 0, 0]; // Black for dark mode enabled.
+            } else {
+              flashColor = [255, 255, 255]; // White for dark mode disabled.
+            }
+          }
+          flashPresent = true;
+          showFlash = true;
+          input = "";
         } else {
           // 🟠 Local and remote pieces...
           load(parse(input.replaceAll(" ", "~"))); // Execute the current command.

@@ -30,15 +30,14 @@ Welcome to...
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
+  - [] Zooming in on the page a lot will make the margin too large
+       and squash the main display.
   - [🆘] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
   - [] The back button does not work in the Instagram in-app browser.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
 
 🌟 Projects In Progress 🌟
-
-*** Bonus ***
-  - [] Detect dark mode and modify the prompt accordingly.
 
 *** (3dline) ***
  + Now
@@ -47,6 +46,8 @@ Welcome to...
   - [] Free camera mode / better camera controls.
   - [] Add color and transparency to line.
   - [] Add other tools other than line.
+  - [] Bring `microphone` amplitude into `3dline`. 
+       (Draw a linear wave form spatially)
   - [] Add websocket support for other players and their lines.
     - [] Add a "room" system.
     - [] Just start with one room but add a layer for it.
@@ -61,6 +62,7 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Density field idea / jiggle lines.
   - [x] Add spline / smooth drawing support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
     - [x] Add smooth sim. 
     - [x] Tried and cancelled in favor of doing a lazy nezumi style physical sim in 3D.
@@ -89,12 +91,22 @@ Welcome to...
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
 
+*** Help / Learn / Doc ***
+  - [] ! What about just adding a "?" at the end of any command?
+  - [] Decide on a command to read howto.
+  - [] `howto line`
+  - [] `doc line`
+
+*** Bonus ***
+  - [x] Change `ap` -> `test`. (Rapter)
+  - [x] Detect dark mode and modify the prompt accordingly.
+
 ** Mood ***
  - [] Select a mood to change the default color palette.
  - [] Prototype this work in prompt.
  - [] A scheme map:
-      - Dark / Light Moods
-      - Primary color.
+      - [x] Dark / Light Moods (via prompt)
+      - [] Primary or major colors.
 
 *** Pieces in Pieces ***
   - [] Make a layout of more than one piece in the same buffer.
