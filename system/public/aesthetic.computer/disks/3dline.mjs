@@ -4,22 +4,32 @@
 
 let cam, dolly; // Camera system.
 let floor, cross, tri, lines, tie; // Geometry.
-let prevCamCenter;
-let end, end2;
+let race, tail, tail2; // Lazy line control with preview lines.
 
-let lazyCursorPos;
-// let lazyCursorSpeed = 1;
-let lazyCursorSpeed = 20;
-let cursorSize = 1;
-let lazyDist = 0;
-let lazyCursorLast;
-let distConst = 0.005;
+// These values can be parametrically adjusted to change
+// the step size of the line and the speed of the lazy cursor.
+const step = 0.005;
+const smoothing = true;
+const speed = 20; // Only used if smoothing is true.
+
+let W, S, A, D, UP, DOWN, LEFT, RIGHT;
 
 // 🥾 Boot
-function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
+function boot({
+  painting: p,
+  Camera,
+  Dolly,
+  Form,
+  QUAD,
+  TRI,
+  LINE,
+  geo: { Race, Quantizer },
+}) {
   cam = new Camera(80, { z: 4 }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
-  prevCamCenter = cam.center;
+
+  race =
+    smoothing === true ? new Race({ step, speed }) : new Quantizer({ step });
 
   floor = new Form(
     QUAD,
@@ -41,76 +51,32 @@ function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, LINE }) {
 
   lines = new Form(LINE, { pos: [0, 1, 1] });
 
-  tie = new Form({ type: "line:buffered" }, { color: [255, 255, 255], alpha: 0.8 });
+  tie = new Form(
+    { type: "line:buffered" },
+    { color: [255, 255, 255], alpha: 0.8 }
+  );
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({
-  pen,
-  ink,
-  wipe,
-  Form,
-  screen,
-  paintCount,
-  num: { vec4, randIntRange: rr },
-}) {
-  if (pen.drawing && pen.device === "mouse" && pen.button === 0) {
-
-    const maxd = distConst * cursorSize;
-
-    if (lazyDist >= maxd) {
-      // Is it possible to add color here?
-      tie.addPoints([lazyCursorLast, lazyCursorPos]);
-      lazyDist -= maxd; // Hold onto extra distance for better normalization!
-      lazyCursorLast = lazyCursorPos;
-    }
-
-    end = new Form(
-      { type: "line", positions: [lazyCursorLast, lazyCursorPos] },
-      { alpha: 1 }
-    );
-
-    end2 = new Form(
-      { type: "line", positions: [lazyCursorPos, cam.center] },
-      { alpha: 1 }
-    );
-
-    /*
-    if (vec4.dist(prevCamCenter, cam.center) > maxd) {
-      // Is it possible to add color here?
-      tie.addPoints([prevCamCenter, cam.centerCached]);
-      prevCamCenter = cam.centerCached;
-    } else {
-      end = new Form(
-        { type: "line", positions: [prevCamCenter, cam.centerCached] },
-        { alpha: 1 }
-      );
-    }
-    */
-
-  }
-
+function paint({ ink, wipe, screen }) {
   // The lines & the furnitue.
   ink(255, 0, 0, 255).form([tie, floor, cross, tri, lines], cam);
 
   // Crosshair
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
-  // const radius = 9;
-  const radius = 9 * cursorSize;
+  const radius = 9;
   wipe(10, 0)
     .ink(200, 0, 0, 255)
     .circle(...screen.center, radius);
 
   // Tip of drawn line.
-  // if (paintCount % 2 === 0) ink(0, 255, 0).form(end, cam, { cpu: true });
-     ink(255, 0, 0).form(end, cam, { keep: false });
-     ink(255, 255, 0).form(end2, cam, { keep: false });
+  // ink(0, 255, 0).form(end, cam, { cpu: true }); // "cpu" switches renderers.
+  ink(255, 255, 0).form(tail, cam, { keep: false });
+  ink(255, 0, 0).form(tail2, cam, { keep: false });
 }
 
-let W, S, A, D, UP, DOWN, LEFT, RIGHT;
-
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim({num: { vec4 }}) {
+function sim({ pen, Form, num: { dist3d } }) {
   // First person camera controls.
   let forward = 0,
     strafe = 0;
@@ -128,16 +94,31 @@ function sim({num: { vec4 }}) {
 
   dolly.sim();
 
-  // Object rotation.
+  // Rotate some scenery.
   tri.turn({ y: -0.25 });
   lines.turn({ x: -0.5, y: 0.5, z: 0.2 });
 
-  // Move lazy cursor towards cam.center according to a multiplier.
-  // (And track the distance traveled.)
-  if (lazyCursorPos) {
-    const newlazyCursorPos = vec4.lerp(vec4.create(), lazyCursorPos, cam.center, 0.01 * lazyCursorSpeed);
-    lazyDist += vec4.dist(lazyCursorPos, newlazyCursorPos);
-    lazyCursorPos = newlazyCursorPos;
+  // Draw a line.
+  if (pen.drawing && pen.device === "mouse" && pen.button === 0) {
+    const preview = race.to(cam.center);
+
+    if (preview.add) tie.addPoints([preview.last, preview.current]);
+
+    // Preview from last to current.
+    if (dist3d(preview.current, preview.last)) {
+      tail = new Form(
+        { type: "line", positions: [preview.last, preview.current] },
+        { alpha: 1 }
+      );
+    }
+
+    // Preview from current camera cursor / pointer.
+    if (dist3d(preview.current, cam.centerCached)) {
+      tail2 = new Form(
+        { type: "line", positions: [preview.current, cam.centerCached] },
+        { alpha: 1 }
+      );
+    }
   }
 }
 
@@ -152,33 +133,15 @@ function act({ event: e, num: { vec4 } }) {
 
   // Start a mark.
   if (e.is("touch") && e.device === "mouse") {
-    prevCamCenter = cam.center;
-    lazyCursorPos = vec4.clone(cam.centerCached);
-    lazyCursorLast = vec4.clone(cam.centerCached);
+    race.start(cam.center);
     tie.gpuFlush = true;
   }
 
   // Finish a mark.
   if (e.is("lift") && e.device === "mouse") {
-    // Add the last bit of the line to the tie.
-
-    // With smoothing...
-    /*
-    if (lazyDist > 0) {
-      tie.addPoints([lazyCursorLast, lazyCursorPos]);
-      lazyCursorLast = lazyCursorPos;
-      lazyDist = 0;
-    }
-    */
-    lazyDist = 0;
-
-    // Without smoothing...
-    // if (vec4.dist(prevCamCenter, cam.center) > 0) {
-    //   tie.addPoints([prevCamCenter, cam.centerCached]);
-    // }
-
-    end = undefined;
-    end2 = undefined;
+    race.reset?.();
+    tail = undefined;
+    tail2 = undefined;
   }
 
   // 🖖 Touch

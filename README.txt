@@ -41,11 +41,11 @@ Welcome to...
 
 *** (3dline) ***
  + Now
-  - [🍁] Clean up smooth sim code.
-  - [] Draw with left mouse button while looking with right. (via `pen`)
-  - [] Free camera mode / better camera controls.
-  - [] Add color and transparency to line.
-  - [] Add other tools other than line.
+  - [🆗] Add color and transparency to line.
+    - [] Use default params to change the color on load.
+  - [] Draw in 2D draw with the mouse and project out the lines.
+       - How to switch to an orthographic camera for this?
+  - [] Free camera mode / better camera controls on keyboard and mouse.
   - [] Bring `microphone` amplitude into `3dline`. 
        (Draw a linear wave form spatially)
   - [] Add websocket support for other players and their lines.
@@ -57,11 +57,15 @@ Welcome to...
       - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
       - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
   - [] Draw a line in webXR.
-  - [] Optimize 3d line geometry / make a polyline function. 
+  - [] Bring in font rendering from the plotted system font.
+  - [] Touch controls.
+  - [] Add other tools other than line.
  + Later
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Clean up smooth sim code.
+  - [x] Draw with left mouse button while looking with right. (via `pen`)
   - [x] Density field idea / jiggle lines.
   - [x] Add spline / smooth drawing support: https://threejs.org/docs/#api/en/extras/curves/CatmullRomCurve3
     - [x] Add smooth sim. 

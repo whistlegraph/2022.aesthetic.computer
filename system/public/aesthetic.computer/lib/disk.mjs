@@ -176,12 +176,14 @@ const $commonApi = {
     randIntRange: num.randIntRange,
     multiply: num.multiply,
     dist: num.dist,
+    dist3d: num.dist3d,
     radians: num.radians,
     lerp: num.lerp,
     map: num.map,
     Track: num.Track,
     timestamp: num.timestamp,
     vec2: num.vec2,
+    vec3: num.vec3,
     vec4: num.vec4,
     mat4: num.mat4,
   },
@@ -192,6 +194,8 @@ const $commonApi = {
     Circle: geo.Circle,
     linePointsFromAngle: geo.linePointsFromAngle,
     pointFrom: geo.pointFrom,
+    Race: geo.Race,
+    Quantizer: geo.Quantizer
   },
   ui: {
     Button: ui.Button,

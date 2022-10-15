@@ -70,6 +70,15 @@ export function dist() {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+export function dist3d(p1, p2) {
+  // Convert everything to 4 decimal places.
+  // Drop some precision here so vec3.dist (Math.hypot) doesn't go crazy
+  // on my Float32Array values.
+  p1 = p1.map(p => p.toFixed(4));
+  p2 = p2.map(p => p.toFixed(4));
+  return vec3.dist(p1, p2);
+}
+
 // Converts degrees to radians.
 export function radians(deg) {
   return deg * (Math.PI / 180);

@@ -319,20 +319,22 @@ export function render() {
   //       top rendering! 22.10.14.13.05
   if (scene != undefined) {
     // CTO Rapter's line jiggling request:
+    /*
     if (jiggleForm) {
       const positions = jiggleForm.geometry.attributes.position.array;
 
-      const jiggleLevel = 0.1;
+      const jiggleLevel = 0.001;
 
       for (let i = 0; i < positions.length; i += 3) {
-        //positions[i] += jiggleLevel / 2 - Math.random() * jiggleLevel;
+        positions[i] += jiggleLevel / 2 - Math.random() * jiggleLevel;
         positions[i + 1] += jiggleLevel / 2 - Math.random() * jiggleLevel;
-        //positions[i + 2] += jiggleLevel / 2 - Math.random() * jiggleLevel;
+        positions[i + 2] += jiggleLevel / 2 - Math.random() * jiggleLevel;
       }
 
       jiggleForm.geometry.setDrawRange(0, jiggleForm.ac_length);
       jiggleForm.geometry.attributes.position.needsUpdate = true;
     }
+    */
 
     renderer.render(scene, camera);
 

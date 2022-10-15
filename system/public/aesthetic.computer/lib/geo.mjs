@@ -1,7 +1,7 @@
 // 🧮 Geometry
 
 const { abs, cos, sin, floor } = Math;
-import { dist, radians, randIntRange } from "./num.mjs";
+import { dist, vec4, radians, randIntRange } from "./num.mjs";
 
 // A generic circle model for algorithmic use.
 export class Circle {
@@ -330,4 +330,82 @@ export function pointFrom(x, y, angle, dist) {
     x + dist * cos(radians(angle)),
     y + dist * sin(radians(angle)),
   ];
+}
+
+// TODO: Could `Race` extend `Quantizer` or should they be kept separate?
+// TODO: It would be nice to layer them, especially when it comes to making
+//       turtle graphics.
+
+// Follows a point.
+export class Race {
+  pos;
+  step;
+
+  last;
+  speed;
+  dist = 0;
+
+  constructor(opts = {}) {
+    this.speed = opts.speed || 20;
+    this.step = opts.step || 0.005;
+  }
+
+  to(point) {
+    if (!this.pos) return false;
+
+    const newPos = vec4.lerp(vec4.create(), this.pos, point, 0.01 * this.speed);
+    this.dist += vec4.dist(this.pos, newPos);
+    this.pos = newPos;
+
+    let out;
+
+    if (this.dist >= this.step) {
+      // Is it possible to add color here?
+      out = { last: vec4.clone(this.last), current: this.pos, add: true };
+      this.dist -= this.step; // Hold on for better normalization!
+      this.last = this.pos;
+    } else {
+      out = { last: this.last, current: this.pos };
+    }
+
+    return out;
+  }
+
+  start(point) {
+    this.pos = vec4.clone(point);
+    this.last = vec4.clone(point);
+  }
+
+  reset() {
+    this.dist = 0;
+  }
+}
+
+// A simple model without lazy following.
+export class Quantizer {
+  pos;
+  step;
+
+  constructor(opts) {
+    this.step = opts.step;
+  }
+
+  to(point) {
+    if (!this.pos) return false;
+
+    let out;
+
+    if (vec4.dist(this.pos, point) >= this.step) {
+      out = { last: this.pos, current: point, add: true };
+      this.pos = point;
+    } else {
+      out = { last: this.pos, current: point };
+    }
+
+    return out;
+  }
+
+  start(point) {
+    this.pos = vec4.clone(point);
+  }
 }
