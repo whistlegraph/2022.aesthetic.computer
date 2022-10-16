@@ -26,6 +26,8 @@ export function initialize(wrapper) {
     preserveDrawingBuffer: true,
   });
 
+  renderer.sortObjects = false;
+
   renderer.domElement.dataset.type = "3d";
 
   scene = new THREE.Scene();
@@ -183,28 +185,41 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const material = new THREE.LineBasicMaterial({
         color: rgbToHex(...(f.color || color)),
       });
+      material.side = THREE.DoubleSide;
       material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
       material.linewidth = 1;
+      material.vertexColors = true;
+      material.vertexAlphas = true;
 
-      let points = [];
+      const points = [];
+      const pointColors = [];
 
       // Generate a curve for points if there are any at the start.
       if (f.vertices.length > 0) {
         points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
+        pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
       }
 
       const geometry = new THREE.BufferGeometry();
 
       // attributes
       const positions = new Float32Array(f.MAX_POINTS * 3);
+      const colors = new Float32Array(f.MAX_POINTS * 4);
 
-      for (let i = 0; i < points.length; i += 3) {
+      for (let i = 0; i < points.length; i += 1) {
         positions[i] = points[i].x;
         positions[i + 1] = points[i].y;
         positions[i + 2] = points[i].z;
+      }
+
+      for (let i = 0; i < pointColors.length; i += 1) {
+        colors[i] = pointColors[i] / 255;
+        colors[i + 1] = pointColors[i + 1] / 255;
+        colors[i + 2] = pointColors[i + 2] / 255;
+        colors[i + 3] = pointColors[i + 3] / 255;
       }
 
       geometry.setAttribute(
@@ -212,7 +227,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         new THREE.BufferAttribute(positions, 3)
       );
 
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
+
       geometry.setDrawRange(0, points.length);
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
 
       const lineb = new THREE.LineSegments(geometry, material);
 
@@ -278,9 +297,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         if (formUpdate.flush) form.ac_vertsToAdd.length = 0;
 
         const points = [];
+        const pointColors = [];
 
         for (let i = 0; i < formUpdate.vertices.length; i += 1) {
           points.push(new THREE.Vector3(...formUpdate.vertices[i].pos));
+          pointColors.push(new THREE.Vector4(...formUpdate.vertices[i].color));
         }
 
         form.ac_vertsToAdd.length = 0; // Ingest added points.
@@ -291,6 +312,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         form.ac_length += points.length;
 
         const positions = form.geometry.attributes.position.array;
+        const colors = form.geometry.attributes.color.array;
 
         for (let i = 0; i < points.length; i += 1) {
           const posStart = (form.ac_lastLength + i) * 3;
@@ -299,10 +321,19 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           positions[posStart + 2] = points[i].z;
         }
 
+        for (let i = 0; i < pointColors.length; i += 1) {
+          const colStart = (form.ac_lastLength + i) * 4;
+          colors[colStart] = pointColors[i].x / 255;
+          colors[colStart + 1] = pointColors[i].y / 255;
+          colors[colStart + 2] = pointColors[i].z / 255;
+          colors[colStart + 3] = pointColors[i].w / 255;
+        }
+
         form.geometry.setDrawRange(0, form.ac_length);
         form.geometry.attributes.position.needsUpdate = true;
+        form.geometry.attributes.color.needsUpdate = true;
 
-        //form.geometry.computeBoundingBox();
+        form.geometry.computeBoundingBox();
         form.geometry.computeBoundingSphere();
       }
     }

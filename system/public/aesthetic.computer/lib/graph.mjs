@@ -1183,7 +1183,7 @@ class Form {
   constructor(
     // Model
     // type can be "triangle", or "line" or "line:buffered"
-    { type, positions, indices },
+    { type, positions, colors, indices },
     fill,
     // Transform
     transform
@@ -1200,7 +1200,7 @@ class Form {
 
     // 🌩️ Ingest positions and turn them into vertices.
     // ("Import" a model...)
-    if (positions?.length > 0) this.addPoints(positions, indices);
+    if (positions?.length > 0) this.addPoints({ positions, colors }, indices);
 
     // Switch fill to transform if the was skipped.
     if (fill?.pos || fill?.rot || fill?.scale) {
@@ -1218,16 +1218,18 @@ class Form {
     this.scale = transform?.scale || [1, 1, 1];
   }
 
-  addPoints(positions, indices) {
+  // TODO: This needs to support color (and eventually N vertex attributes).
+
+  addPoints(attributes, indices) {
     // Create new vertices from incoming positions.
-    for (let i = 0; i < positions.length; i++) {
+    for (let i = 0; i < attributes.positions.length; i++) {
       // Generate texCoord from position instead of loading.
       // (Vertex / 2) + 0.5 // Vertex to UV
       // See also: (Vertex - 0.5) * 2 // UV to Vertex
       // TODO: This only works for quads right now.
       const texCoord = [
-        positions[i][X] / 2 + 0.5,
-        positions[i][Y] / 2 + 0.5,
+        attributes.positions[i][X] / 2 + 0.5,
+        attributes.positions[i][Y] / 2 + 0.5,
         //0, //positions[i][Z] / 2 + 0.5, // TODO: Is this necessary to calculate for UV?
         //0,
       ];
@@ -1237,8 +1239,9 @@ class Form {
       this.vertices.push(
         // For sending to the CPU.
         new Vertex(
-          positions[i],
-          this.#gradientColors[i % 3],
+          attributes.positions[i],
+          attributes?.colors?.[i],
+          // this.#gradientColors[i % 3],
           texCoord //this.#texCoords[i % 3] // Replace to enable bespoke texture coordinates.
         )
       );

@@ -18,7 +18,7 @@ const servers = {
   local: "localhost:8082",
   julias: "192.168.1.120:8082",
   lucias: "192.168.1.245:8082",
-  ashland_mbp: "192.168.1.18"
+  ashland_mbp: "192.168.1.18",
 };
 
 let ROOT_PIECE = "prompt"; // This gets set straight from the host html file for the ac.
@@ -91,13 +91,15 @@ let socket;
 let pen = {};
 
 // *** Dark Mode ***
-// Pass `true` or `false` to override or `default` to the system setting. 
+// Pass `true` or `false` to override or `default` to the system setting.
 function darkMode(enabled = !$commonApi.dark) {
-  if (enabled === "default") { // default
+  if (enabled === "default") {
+    // default
     store.delete("dark-mode");
     console.log("🌜 Dark mode:", $commonApi.dark);
     return $commonApi.dark;
-  } else { // true or false
+  } else {
+    // true or false
     store["dark-mode"] = enabled;
     store.persist("dark-mode");
     $commonApi.dark = enabled;
@@ -195,7 +197,7 @@ const $commonApi = {
     linePointsFromAngle: geo.linePointsFromAngle,
     pointFrom: geo.pointFrom,
     Race: geo.Race,
-    Quantizer: geo.Quantizer
+    Quantizer: geo.Quantizer,
   },
   ui: {
     Button: ui.Button,
@@ -279,7 +281,8 @@ const LINE = {
 // Inputs: (r, g, b), (r, g, b, a) or an array of those.
 //         (rgb) for grayscale or (rgb, a) for grayscale with alpha.
 // TODO: Zero arguments should also randomly pick values.
-function ink() {
+
+function color() {
   let args = arguments;
 
   if (args.length === 1 && args[0] !== undefined) {
@@ -289,7 +292,7 @@ function ink() {
 
     // If it's not a Number or Array or String, then assume it's an object,
     // randomly pick a key & re-run.
-    if (!isNumber() && !isArray() && !isString()) return ink(help.any(args[0]));
+    if (!isNumber() && !isArray() && !isString()) return color(help.any(args[0]));
 
     // If single argument is a number then replicate it across the first 3 fields.
     if (isNumber()) {
@@ -298,7 +301,7 @@ function ink() {
     } else if (isArray()) {
       // Or if it's an array, then spread it out and re-ink.
       // args = args[0];
-      return ink(...args[0]);
+      return color(...args[0]);
     } else if (isString()) {
       // If it's a string, then try to match it to a table.
       const colors = {
@@ -320,12 +323,18 @@ function ink() {
     args = num.randIntArr(255, 4);
   }
 
-  graph.color(...args);
+  if (args.length === 3) args = [...args, 255]; // Always be sure we have alpha.
+  return args;
+}
+
+function ink() {
+  graph.color(...color(...arguments));
 }
 
 const $paintApi = {
   // Image Utilities
   clonePixels: graph.cloneBuffer,
+  color,
   // 3D Classes & Objects
   Camera: graph.Camera,
   Form: graph.Form,
@@ -366,6 +375,9 @@ const $paintApiUnwrapped = {
   grid: graph.grid,
   draw: graph.draw,
   printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
+
+  // Rendering of 3D forms.
+  // `cpu: true` enabled software rendering
   form: function (forms, cam, { cpu, keep } = { cpu: false, keep: true }) {
     if (forms === undefined) return; // Exit silently if forms is undefined.
 
@@ -389,7 +401,7 @@ const $paintApiUnwrapped = {
           formsToSend.push(form);
           formsSent[form.uid] = true;
 
-          form.verticesSent = form.vertices.length;
+          form.gpuVerticesSent = form.vertices.length;
         } else {
           // B. If the form has been sent, but the form has changed and
           //    needs a partial update.
@@ -407,20 +419,20 @@ const $paintApiUnwrapped = {
           }
 
           // Add vertices to buffered forms.
-          if (form.vertices.length > form.verticesSent) {
+          if (form.vertices.length > form.gpuVerticesSent) {
             formsToSend.push({
               update: "form:buffered:add-vertices",
               uid: form.uid,
               flush: form.gpuFlush,
-              vertices: form.vertices.slice(form.verticesSent),
+              vertices: form.vertices.slice(form.gpuVerticesSent),
               length: form.vertices.length, // TODO: These aren't being used anymore / they are generated from the GPU.
-              pastLength: form.verticesSent,
+              pastLength: form.gpuVerticesSent,
             });
 
             // Update form state now that we are sending the message.
             // TODO: Put these both under a "gpu" object in form.
             form.gpuFlush = false;
-            form.verticesSent = form.vertices.length;
+            form.gpuVerticesSent = form.vertices.length;
           }
         }
       });
@@ -811,9 +823,8 @@ async function load(
 
   // Artificially imposed loading by at least 1/4 sec.
   setTimeout(async () => {
-
     // Read current dark mode.
-    const dark = await store.retrieve("dark-mode");  
+    const dark = await store.retrieve("dark-mode");
     if (dark === true || dark === false) $commonApi.dark = dark;
 
     // Redefine the default event functions if they exist in the module.

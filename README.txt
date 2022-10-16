@@ -41,16 +41,19 @@ Welcome to...
 
 *** (3dline) ***
  + Now
-  - [🆗] Add color and transparency to line.
-    - [] Use default params to change the color on load.
+  - [] Add final red tail preview to point on `lift`.
+  - [] Save the buffered lines to indexedDB... and/or to the remote room?
+    - [] Start with store in indexedDB.
+    - [] Then add store["remote"] as a layer over sockets?
+    - [] How would remote drawings work within rooms?
+  - [] Add websocket support for other players and their lines.
+    - [] Add a "room" system.
+    - [] Just start with one room but add a layer for it.
   - [] Draw in 2D draw with the mouse and project out the lines.
        - How to switch to an orthographic camera for this?
   - [] Free camera mode / better camera controls on keyboard and mouse.
   - [] Bring `microphone` amplitude into `3dline`. 
        (Draw a linear wave form spatially)
-  - [] Add websocket support for other players and their lines.
-    - [] Add a "room" system.
-    - [] Just start with one room but add a layer for it.
   - [] Add WebXR session.
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
@@ -64,6 +67,8 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Add color and transparency to line.
+    - [x] Use default params to change the color on load.
   - [x] Clean up smooth sim code.
   - [x] Draw with left mouse button while looking with right. (via `pen`)
   - [x] Density field idea / jiggle lines.

@@ -3,7 +3,7 @@
 // and other geometry.
 
 let cam, dolly; // Camera system.
-let floor, cross, tri, lines, tie; // Geometry.
+let floor, cross, tri, triTop, drawing; // Geometry.
 let race, tail, tail2; // Lazy line control with preview lines.
 
 // These values can be parametrically adjusted to change
@@ -11,6 +11,8 @@ let race, tail, tail2; // Lazy line control with preview lines.
 const step = 0.005;
 const smoothing = true;
 const speed = 20; // Only used if smoothing is true.
+
+let colorParams;
 
 let W, S, A, D, UP, DOWN, LEFT, RIGHT;
 
@@ -24,7 +26,11 @@ function boot({
   TRI,
   LINE,
   geo: { Race, Quantizer },
+  params,
 }) {
+  // Grab params for color.
+  colorParams = params.map((str) => parseInt(str));
+
   cam = new Camera(80, { z: 4 }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
 
@@ -49,34 +55,33 @@ function boot({
     { pos: [0, 0, 1] }
   );
 
-  lines = new Form(LINE, { pos: [0, 1, 1] });
+  triTop = new Form(LINE, { pos: [0, 1, 1] });
 
-  tie = new Form(
+  // An empty buffer that gets populated in `sim()`.
+  drawing = new Form(
     { type: "line:buffered" },
-    { color: [255, 255, 255], alpha: 0.8 }
+    { color: [255, 255, 255, 255] }
   );
 }
 
 // 🎨 Paint (Executes every display frame)
 function paint({ ink, wipe, screen }) {
   // The lines & the furnitue.
-  ink(255, 0, 0, 255).form([tie, floor, cross, tri, lines], cam);
+  ink(0, 255, 0, 255).form([floor, cross, tri, triTop, drawing], cam);
 
   // Crosshair
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
-  const radius = 9;
   wipe(10, 0)
     .ink(200, 0, 0, 255)
-    .circle(...screen.center, radius);
+    .circle(...screen.center, 9);
 
   // Tip of drawn line.
-  // ink(0, 255, 0).form(end, cam, { cpu: true }); // "cpu" switches renderers.
   ink(255, 255, 0).form(tail, cam, { keep: false });
   ink(255, 0, 0).form(tail2, cam, { keep: false });
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim({ pen, Form, num: { dist3d } }) {
+function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
   // First person camera controls.
   let forward = 0,
     strafe = 0;
@@ -92,17 +97,26 @@ function sim({ pen, Form, num: { dist3d } }) {
   if (LEFT) cam.rotY += 1;
   if (RIGHT) cam.rotY -= 1;
 
-  dolly.sim();
+  dolly.sim(); // Move the camera.
 
   // Rotate some scenery.
   tri.turn({ y: -0.25 });
-  lines.turn({ x: -0.5, y: 0.5, z: 0.2 });
+  triTop.turn({ x: -0.5, y: 0.5, z: 0.2 });
 
-  // Draw a line.
+  // 🖱️ Add to the drawing.
   if (pen.drawing && pen.device === "mouse" && pen.button === 0) {
     const preview = race.to(cam.center);
+    if (!preview) return;
 
-    if (preview.add) tie.addPoints([preview.last, preview.current]);
+    if (preview.add) {
+      let vertexColor = color(...colorParams);
+      drawing.addPoints(
+        {
+          positions: [preview.last, preview.current],
+          colors: [vertexColor, vertexColor]
+        }
+      );
+    }
 
     // Preview from last to current.
     if (dist3d(preview.current, preview.last)) {
@@ -122,26 +136,25 @@ function sim({ pen, Form, num: { dist3d } }) {
   }
 }
 
-// ✒ Act (Runs once per user interaction)
+// ✒ Act
 function act({ event: e, num: { vec4 } }) {
   // 🖱️ Mouse
   //Look around while dragging.
   if (e.is("draw")) {
-    cam.rotY -= e.delta.x / 3.5;
     cam.rotX -= e.delta.y / 3.5;
+    cam.rotY -= e.delta.x / 3.5;
   }
 
   // Start a mark.
   if (e.is("touch") && e.device === "mouse") {
     race.start(cam.center);
-    tie.gpuFlush = true;
+    drawing.gpuFlush = true;
   }
 
-  // Finish a mark.
+  // End a mark.
   if (e.is("lift") && e.device === "mouse") {
     race.reset?.();
-    tail = undefined;
-    tail2 = undefined;
+    tail = tail2 = undefined; // Stop rendering tails when a mark ends.
   }
 
   // 🖖 Touch
@@ -178,16 +191,16 @@ function act({ event: e, num: { vec4 } }) {
   if (e.is("keyboard:down:j")) cursorSize -= 0.1;
 }
 
-// 💗 Beat (Runs once per bpm, starting when the audio engine is activated.)
+// 💗 Beat
 function beat($api) {
   // Make sound here.
 }
 
-// 👋 Leave (Runs once before the piece is unloaded)
+// 👋 Leave
 function leave($api) {
   // Pass data to the next piece here.
 }
 
 export { boot, sim, paint, act, beat, leave };
 
-// 📚 Library (Useful functions used throughout the piece)
+// 📚 Library
