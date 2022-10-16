@@ -258,7 +258,7 @@ async function act({ event: e, needsPaint, load, store, download, darkMode }) {
   if (e.is("typing-input-ready")) {
     canType = true;
     input = "";
-    blink.flip(true);
+    blink?.flip(true);
   }
 
   // TODO: Do I still need these events?

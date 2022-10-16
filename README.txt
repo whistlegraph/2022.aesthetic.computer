@@ -41,7 +41,7 @@ Welcome to...
 
 *** (3dline) ***
  + Now
-  - [] Add final red tail preview to point on `lift`.
+  - [22.10.15.22.26] Add final red tail preview to point on `lift`.
   - [] Save the buffered lines to indexedDB... and/or to the remote room?
     - [] Start with store in indexedDB.
     - [] Then add store["remote"] as a layer over sockets?
