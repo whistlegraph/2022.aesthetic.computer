@@ -32,6 +32,7 @@ Welcome to...
 🐞 Major Bugs & Regressions
   - [] Zooming in on the page a lot will make the margin too large
        and squash the main display.
+  - [] (Related to reloading.) Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
   - [🆘] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
   - [] The back button does not work in the Instagram in-app browser.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
@@ -39,9 +40,13 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** SSH (code.aesthetic.computer) ***
+  - [] Set up a developers / "pieces" SSH server.
+  - [] Developers should be able to mint their pieces from here.
+
 *** (3dline) ***
  + Now
-  - [22.10.15.22.26] Add final red tail preview to point on `lift`.
+  - [🟡] Should `Race` lines be more quantized / regulated?
   - [] Save the buffered lines to indexedDB... and/or to the remote room?
     - [] Start with store in indexedDB.
     - [] Then add store["remote"] as a layer over sockets?
@@ -67,6 +72,7 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Add final red tail preview to point on `lift`.
   - [x] Add color and transparency to line.
     - [x] Use default params to change the color on load.
   - [x] Clean up smooth sim code.

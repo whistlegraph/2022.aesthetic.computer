@@ -354,7 +354,7 @@ export function render() {
     if (jiggleForm) {
       const positions = jiggleForm.geometry.attributes.position.array;
 
-      const jiggleLevel = 0.001;
+      const jiggleLevel = 0.01;
 
       for (let i = 0; i < positions.length; i += 3) {
         positions[i] += jiggleLevel / 2 - Math.random() * jiggleLevel;

@@ -9,7 +9,7 @@ let race, tail, tail2; // Lazy line control with preview lines.
 // These values can be parametrically adjusted to change
 // the step size of the line and the speed of the lazy cursor.
 const step = 0.005;
-const smoothing = true;
+const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
 const speed = 20; // Only used if smoothing is true.
 
 let colorParams;
@@ -110,12 +110,10 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
 
     if (preview.add) {
       let vertexColor = color(...colorParams);
-      drawing.addPoints(
-        {
-          positions: [preview.last, preview.current],
-          colors: [vertexColor, vertexColor]
-        }
-      );
+      drawing.addPoints({
+        positions: [preview.last, preview.current],
+        colors: [vertexColor, vertexColor],
+      });
     }
 
     // Preview from last to current.
@@ -137,7 +135,7 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
 }
 
 // ✒ Act
-function act({ event: e, num: { vec4 } }) {
+function act({ event: e, color, num: { vec4 } }) {
   // 🖱️ Mouse
   //Look around while dragging.
   if (e.is("draw")) {
@@ -153,8 +151,16 @@ function act({ event: e, num: { vec4 } }) {
 
   // End a mark.
   if (e.is("lift") && e.device === "mouse") {
-    race.reset?.();
-    tail = tail2 = undefined; // Stop rendering tails when a mark ends.
+    race.reset?.(); // Reset the lazy cursor.
+
+    // Draw the tails if they exist, then clear them.
+    [tail, tail2].filter(Boolean).forEach((t) => {
+      drawing.addPoints({
+        positions: t.vertices.map((v) => v.pos),
+        colors: Array(2).fill(color(...colorParams)),
+      });
+    });
+    tail = tail2 = undefined;
   }
 
   // 🖖 Touch
