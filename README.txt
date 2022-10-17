@@ -44,6 +44,10 @@ Welcome to...
   - [] Set up a developers / "pieces" SSH server.
   - [] Developers should be able to mint their pieces from here.
 
+*** Physics ***
+ - [] Add jumping / movement speed.
+      https://sites.google.com/site/zdrytchx/how-to/strafe-jumping-physics-the-real-mathematics
+
 *** (3dline) ***
  + Now
   - [🟡] Should `Race` lines be more quantized / regulated?
@@ -70,6 +74,7 @@ Welcome to...
   - [] Touch controls.
   - [] Add other tools other than line.
  + Later
+  - [] Shrink three.js filesize: https://github.com/mrdoob/three.js/issues/19148
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done

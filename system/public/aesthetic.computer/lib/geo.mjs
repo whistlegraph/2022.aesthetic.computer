@@ -359,6 +359,7 @@ export class Race {
 
     let out;
 
+    // TODO: Turn this into a while loop to output more quantized points...
     if (this.dist >= this.step) {
       // Is it possible to add color here?
       out = { last: vec4.clone(this.last), current: this.pos, add: true };
@@ -395,6 +396,7 @@ export class Quantizer {
 
     let out;
 
+    // TODO: Turn this into a while loop to output more quantized points...
     if (vec4.dist(this.pos, point) >= this.step) {
       out = { last: this.pos, current: point, add: true };
       this.pos = point;
