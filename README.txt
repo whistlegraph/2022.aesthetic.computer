@@ -48,9 +48,10 @@ Welcome to...
  + Now
   - [🟡] Should `Race` lines be more quantized / regulated?
   - [] Save the buffered lines to indexedDB... and/or to the remote room?
-    - [] Start with store in indexedDB.
+    - [🟢] Store and reload from indexedDB.
     - [] Then add store["remote"] as a layer over sockets?
     - [] How would remote drawings work within rooms?
+    - [x] Save and load with ram storage.
   - [] Add websocket support for other players and their lines.
     - [] Add a "room" system.
     - [] Just start with one room but add a layer for it.

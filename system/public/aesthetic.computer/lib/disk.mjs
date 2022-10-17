@@ -390,7 +390,7 @@ const $paintApiUnwrapped = {
       // Build a list of forms to send, ignoring already sent ones by UID.
       const formsToSend = [];
 
-      forms.forEach((form) => {
+      forms.filter(Boolean).forEach((form) => {
         // A. If the form has not been sent yet...
         if (formsSent[form.uid] === undefined) {
           // Set the form to expire automatically if keep is false.
@@ -424,6 +424,7 @@ const $paintApiUnwrapped = {
               update: "form:buffered:add-vertices",
               uid: form.uid,
               flush: form.gpuFlush,
+              reset: form.gpuReset,
               vertices: form.vertices.slice(form.gpuVerticesSent),
               length: form.vertices.length, // TODO: These aren't being used anymore / they are generated from the GPU.
               pastLength: form.gpuVerticesSent,
@@ -431,7 +432,10 @@ const $paintApiUnwrapped = {
 
             // Update form state now that we are sending the message.
             // TODO: Put these both under a "gpu" object in form.
+            // TODO: Both gpuFlush and gpuReset could have better names
+            //       once I start scaling the renderer. 22.10.16.20.49
             form.gpuFlush = false;
+            form.gpuReset = false;
             form.gpuVerticesSent = form.vertices.length;
           }
         }

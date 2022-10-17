@@ -27,6 +27,7 @@ function boot({
   LINE,
   geo: { Race, Quantizer },
   params,
+  store,
 }) {
   // Grab params for color.
   colorParams = params.map((str) => parseInt(str));
@@ -58,8 +59,14 @@ function boot({
   triTop = new Form(LINE, { pos: [0, 1, 1] });
 
   // An empty buffer that gets populated in `sim()`.
+
+  const stored = store["sculpture"];
   drawing = new Form(
-    { type: "line:buffered" },
+    {
+      type: "line:buffered",
+      vertices: stored?.vertices,
+      indices: stored?.indices,
+    },
     { color: [255, 255, 255, 255] }
   );
 }
@@ -153,8 +160,8 @@ function act({ event: e, color, num: { vec4 } }) {
   if (e.is("lift") && e.device === "mouse") {
     race.reset?.(); // Reset the lazy cursor.
 
-    // Draw the tails if they exist, then clear them.
-    [tail, tail2].filter(Boolean).forEach((t) => {
+    // Draw the second tail if it exists, then clear both.
+    [tail2].filter(Boolean).forEach((t) => {
       drawing.addPoints({
         positions: t.vertices.map((v) => v.pos),
         colors: Array(2).fill(color(...colorParams)),
@@ -203,8 +210,11 @@ function beat($api) {
 }
 
 // 👋 Leave
-function leave($api) {
+function leave({ store }) {
   // Pass data to the next piece here.
+  store["sculpture"] = drawing;
+  console.log(drawing);
+  //store.persist("sculpture", "local:db");
 }
 
 export { boot, sim, paint, act, beat, leave };

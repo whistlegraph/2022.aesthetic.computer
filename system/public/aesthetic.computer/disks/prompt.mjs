@@ -252,7 +252,7 @@ async function act({ event: e, needsPaint, load, store, download, darkMode }) {
       }
     }
 
-    blink.flip(true);
+    blink?.flip(true);
   }
 
   if (e.is("typing-input-ready")) {

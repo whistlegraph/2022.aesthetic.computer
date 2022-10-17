@@ -194,8 +194,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       material.vertexColors = true;
       material.vertexAlphas = true;
 
-      const points = [];
-      const pointColors = [];
+      let points = [];
+      let pointColors = [];
 
       // Generate a curve for points if there are any at the start.
       if (f.vertices.length > 0) {
@@ -210,16 +210,19 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const colors = new Float32Array(f.MAX_POINTS * 4);
 
       for (let i = 0; i < points.length; i += 1) {
-        positions[i] = points[i].x;
-        positions[i + 1] = points[i].y;
-        positions[i + 2] = points[i].z;
+        const posStart = i * 3;
+        positions[posStart] = points[i].x;
+        positions[posStart + 1] = points[i].y;
+        positions[posStart + 2] = points[i].z;
       }
 
+
       for (let i = 0; i < pointColors.length; i += 1) {
-        colors[i] = pointColors[i] / 255;
-        colors[i + 1] = pointColors[i + 1] / 255;
-        colors[i + 2] = pointColors[i + 2] / 255;
-        colors[i + 3] = pointColors[i + 3] / 255;
+        const colStart = i * 4;
+        colors[colStart] = pointColors[i].x / 255;
+        colors[colStart + 1] = pointColors[i].y / 255;
+        colors[colStart + 2] = pointColors[i].z / 255;
+        colors[colStart + 3] = pointColors[i].w / 255;
       }
 
       geometry.setAttribute(
@@ -229,14 +232,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
 
-      geometry.setDrawRange(0, points.length);
-      geometry.attributes.position.needsUpdate = true;
-      geometry.attributes.color.needsUpdate = true;
-
       const lineb = new THREE.LineSegments(geometry, material);
 
       lineb.ac_length = points.length;
-      lineb.ac_vertsToAdd = [];
+      lineb.ac_lastLength = lineb.ac_length;
+      //lineb.ac_vertsToAdd = [];
 
       lineb.translateX(f.position[0]);
       lineb.translateY(f.position[1]);
@@ -248,6 +248,12 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       scene.add(lineb);
       lineb.aestheticID = f.uid;
+
+      geometry.setDrawRange(0, points.length);
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
 
       disposal.push({
         keep: f.gpuKeep,
@@ -294,7 +300,12 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       //      https://jsfiddle.net/t4m85pLr/1
       if (form) {
         // 0. Flush the vertsToAdd cache if necessary.
-        if (formUpdate.flush) form.ac_vertsToAdd.length = 0;
+        //if (formUpdate.flush) form.ac_vertsToAdd.length = 0;
+
+        if (formUpdate.reset) {
+          form.ac_length = 0;
+          form.ac_lastLength = 0;
+        }
 
         const points = [];
         const pointColors = [];
@@ -304,7 +315,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           pointColors.push(new THREE.Vector4(...formUpdate.vertices[i].color));
         }
 
-        form.ac_vertsToAdd.length = 0; // Ingest added points.
+        //form.ac_vertsToAdd.length = 0; // Ingest added points.
 
         // Set custom properties on the form to keep track of where we are
         // in the previously allocated vertex buffer.

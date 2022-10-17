@@ -1153,7 +1153,8 @@ class Form {
 
   // GPU Specific Params & Buffers
   verticesSent = 0;
-  gpuFlush = false; // A flag that flushes any extra vertices on GPU end.
+  gpuFlush = false; // A flag that flushes any left over vertices to add.
+  gpuReset = false; // Assumes this object is being recreated on the GPU. 
   gpuTransformed = false;
   MAX_POINTS = 100000; // Some buffered geometry gpu calls may use this hint.
   uvs = [];
@@ -1182,8 +1183,9 @@ class Form {
 
   constructor(
     // Model
-    // type can be "triangle", or "line" or "line:buffered"
-    { type, positions, colors, indices },
+    // `type` can be "triangle", or "line" or "line:buffered"
+    // `positions` and colors can be sent and then verticies will be generated
+    { type, vertices, uvs = [], positions, colors, indices },
     fill,
     // Transform
     transform
@@ -1194,13 +1196,19 @@ class Form {
 
     // Take into account form -> primitive relationships.
     if (type === "quad") this.primitive = "triangle";
-    if (type === "line:buffered") {
-      this.primitive = "line";
-    }
+    if (type === "line:buffered") this.primitive = "line";
 
     // 🌩️ Ingest positions and turn them into vertices.
     // ("Import" a model...)
+
     if (positions?.length > 0) this.addPoints({ positions, colors }, indices);
+
+    // Or just set vertices directly.
+    if (vertices?.length > 0) {
+      this.vertices = vertices;
+      this.uvs = uvs;
+      this.indices = indices;
+    }
 
     // Switch fill to transform if the was skipped.
     if (fill?.pos || fill?.rot || fill?.scale) {
