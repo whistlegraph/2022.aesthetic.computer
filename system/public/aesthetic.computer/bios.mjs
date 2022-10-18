@@ -756,7 +756,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         function (needsRender, updateTimes) {
           // console.log(updateTimes); // Note: No updates happen yet before a render.
           diskSupervisor.requestFrame?.(needsRender, updateTimes);
-          ThreeD?.render();
+          //if (needsRender) ThreeD?.render();
         }
       );
     }
@@ -1594,7 +1594,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     // BIOS:RENDER
-    // 🌟 Assume that `type` is "render" from now on.
+    // 🌟 Assume `type === render` from now on.
 
     // Check for a change in resolution.
     if (content.reframe) {
@@ -1707,6 +1707,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (typeof resizeToStreamCanvas === "function") {
         resizeToStreamCanvas();
       }
+      ThreeD?.render();
     }
 
     if (pixelsDidChange || pen.changedInPiece) {

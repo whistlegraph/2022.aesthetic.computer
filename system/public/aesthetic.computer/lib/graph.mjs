@@ -1155,6 +1155,7 @@ class Form {
   verticesSent = 0;
   gpuFlush = false; // A flag that flushes any left over vertices to add.
   gpuReset = false; // Assumes this object is being recreated on the GPU. 
+  gpuKeep = true;
   gpuTransformed = false;
   MAX_POINTS = 100000; // Some buffered geometry gpu calls may use this hint.
   uvs = [];
@@ -1185,7 +1186,7 @@ class Form {
     // Model
     // `type` can be "triangle", or "line" or "line:buffered"
     // `positions` and colors can be sent and then verticies will be generated
-    { type, vertices, uvs = [], positions, colors, indices },
+    { type, vertices, uvs = [], positions, colors, indices, keep = true },
     fill,
     // Transform
     transform
@@ -1193,6 +1194,9 @@ class Form {
     // Set the primitive type.
     this.primitive = type;
     this.type = type;
+
+    // Decide whether to throw this away after being drawn once
+    this.gpuKeep = keep;    
 
     // Take into account form -> primitive relationships.
     if (type === "quad") this.primitive = "triangle";

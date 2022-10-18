@@ -6,10 +6,10 @@ let cam, dolly; // Camera system.
 let floor, cross, tri, triTop, drawing; // Geometry.
 let race, tail, tail2; // Lazy line control with preview lines.
 
-// These values can be parametrically adjusted to change
-// the step size of the line and the speed of the lazy cursor.
-const step = 0.005;
+// *** Markmaking Configuration ***
+const step = 0.025; // Step size of regulated line / minimum cut-off.
 const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
+const quantizedSmoothing = true; // Regulate all segments while still smoothing.
 const speed = 20; // Only used if smoothing is true.
 
 let colorParams;
@@ -36,7 +36,9 @@ function boot({
   dolly = new Dolly(cam); // moves the camera
 
   race =
-    smoothing === true ? new Race({ step, speed }) : new Quantizer({ step });
+    smoothing === true
+      ? new Race({ step, speed, quantized: quantizedSmoothing })
+      : new Quantizer({ step });
 
   floor = new Form(
     QUAD,
@@ -72,19 +74,30 @@ function boot({
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ ink, wipe, screen }) {
+function paint({ ink, wipe, screen, Form }) {
   // The lines & the furnitue.
   ink(0, 255, 0, 255).form([floor, cross, tri, triTop, drawing], cam);
 
   // Crosshair
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
+  // Tip of drawn line.
+
+  // console.log(tail?.vertices[0], tail?.vertices[1])
+  // ink(255, 0, 0).form(tail2, cam, { keep: false });
   wipe(10, 0)
     .ink(200, 0, 0, 255)
     .circle(...screen.center, 9);
 
-  // Tip of drawn line.
-  ink(255, 255, 0).form(tail, cam, { keep: false });
-  ink(255, 0, 0).form(tail2, cam, { keep: false });
+  // I'm rendering multiple times before simming again, which means tail
+  ink(...colorParams).form(
+    new Form({ type: "line", positions: tail, keep: false }, { alpha: 1 }),
+    cam
+  );
+
+  ink(255, 0, 0).form(
+    new Form({ type: "line", positions: tail2, keep: false }, { alpha: 1 }),
+    cam
+  );
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
@@ -112,37 +125,30 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
 
   // 🖱️ Add to the drawing.
   if (pen.drawing && pen.device === "mouse" && pen.button === 0) {
-    const preview = race.to(cam.center);
-    if (!preview) return;
+    const path = race.to(cam.center);
+    if (!path) return;
 
-    if (preview.add) {
-      let vertexColor = color(...colorParams);
-      drawing.addPoints({
-        positions: [preview.last, preview.current],
-        colors: [vertexColor, vertexColor],
+    if (path.out?.length > 0) {
+      const colors = [];
+      path.out.forEach((p) => {
+        const vertexColor = color(...colorParams);
+        colors.push(vertexColor, vertexColor);
       });
+
+      drawing.addPoints({ positions: path.out, colors });
     }
 
-    // Preview from last to current.
-    if (dist3d(preview.current, preview.last)) {
-      tail = new Form(
-        { type: "line", positions: [preview.last, preview.current] },
-        { alpha: 1 }
-      );
-    }
+    if (dist3d(path.last, path.current)) tail = [path.last, path.current];
 
     // Preview from current camera cursor / pointer.
-    if (dist3d(preview.current, cam.centerCached)) {
-      tail2 = new Form(
-        { type: "line", positions: [preview.current, cam.centerCached] },
-        { alpha: 1 }
-      );
+    if (dist3d(path.current, cam.centerCached)) {
+      tail2 = [path.current, cam.centerCached];
     }
   }
 }
 
 // ✒ Act
-function act({ event: e, color, num: { vec4 } }) {
+function act({ event: e, color, num: { vec4 }, geo: { Quantizer } }) {
   // 🖱️ Mouse
   //Look around while dragging.
   if (e.is("draw")) {
@@ -161,12 +167,25 @@ function act({ event: e, color, num: { vec4 } }) {
     race.reset?.(); // Reset the lazy cursor.
 
     // Draw the second tail if it exists, then clear both.
-    [tail2].filter(Boolean).forEach((t) => {
-      drawing.addPoints({
-        positions: t.vertices.map((v) => v.pos),
-        colors: Array(2).fill(color(...colorParams)),
-      });
-    });
+    const start = tail?.[0] || tail2?.[0];
+    const end = tail2?.[1];
+
+    if (start && end) {
+      const q = new Quantizer({ step });
+      q.start(start);
+      const path = q.to(end);
+
+      if (path.out.length > 0) {
+        const colors = []; // Note: Could this whole color loop be shorter?
+        path.out.forEach((p) => {
+          const vertexColor = color(...colorParams);
+          colors.push(vertexColor, vertexColor);
+        });
+
+        drawing.addPoints({ positions: path.out, colors });
+      }
+    }
+
     tail = tail2 = undefined;
   }
 

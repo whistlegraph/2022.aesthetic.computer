@@ -292,7 +292,8 @@ function color() {
 
     // If it's not a Number or Array or String, then assume it's an object,
     // randomly pick a key & re-run.
-    if (!isNumber() && !isArray() && !isString()) return color(help.any(args[0]));
+    if (!isNumber() && !isArray() && !isString())
+      return color(help.any(args[0]));
 
     // If single argument is a number then replicate it across the first 3 fields.
     if (isNumber()) {
@@ -331,6 +332,7 @@ function ink() {
   graph.color(...color(...arguments));
 }
 
+// 🔎 PAINTAPI (for searching)
 const $paintApi = {
   // Image Utilities
   clonePixels: graph.cloneBuffer,
@@ -378,8 +380,9 @@ const $paintApiUnwrapped = {
 
   // Rendering of 3D forms.
   // `cpu: true` enabled software rendering
-  form: function (forms, cam, { cpu, keep } = { cpu: false, keep: true }) {
-    if (forms === undefined) return; // Exit silently if forms is undefined.
+  form: function (forms, cam, { cpu } = { cpu: false, keep: true }) {
+    // Exit silently if no forms are present.
+    if (forms === undefined || forms?.length === 0) return;
 
     if (cpu === true) {
       if (Array.isArray(forms)) forms.forEach((form) => form.graph(cam));
@@ -394,9 +397,6 @@ const $paintApiUnwrapped = {
         // A. If the form has not been sent yet...
         if (formsSent[form.uid] === undefined) {
           // Set the form to expire automatically if keep is false.
-          if (!keep) {
-            form.gpuKeep = false;
-          }
 
           formsToSend.push(form);
           formsSent[form.uid] = true;
@@ -440,6 +440,8 @@ const $paintApiUnwrapped = {
           }
         }
       });
+
+      if (formsToSend.length === 0) return;
 
       send({
         type: "forms",
@@ -876,6 +878,7 @@ async function load(
     activeVideo = null; // reset activeVideo
     bitmapPromises = {};
     noPaint = false;
+    formsSent = {}; // Clear 3D list.
     currentPath = path;
     currentHost = host;
     currentSearch = search;

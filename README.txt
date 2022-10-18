@@ -40,17 +40,11 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** SSH (code.aesthetic.computer) ***
-  - [] Set up a developers / "pieces" SSH server.
-  - [] Developers should be able to mint their pieces from here.
-
-*** Physics ***
- - [] Add jumping / movement speed.
-      https://sites.google.com/site/zdrytchx/how-to/strafe-jumping-physics-the-real-mathematics
+*** (Camera) ***
+  - [] Pitch shifting / screaming / voice modulation recorder.
 
 *** (3dline) ***
  + Now
-  - [🟡] Should `Race` lines be more quantized / regulated?
   - [] Save the buffered lines to indexedDB... and/or to the remote room?
     - [🟢] Store and reload from indexedDB.
     - [] Then add store["remote"] as a layer over sockets?
@@ -59,6 +53,9 @@ Welcome to...
   - [] Add websocket support for other players and their lines.
     - [] Add a "room" system.
     - [] Just start with one room but add a layer for it.
+  - [] Jiggle every two vertices the same amount so each segment
+       drifts as one and maintains its integrity / add jiggle or break-apart
+       as a toggle.
   - [] Draw in 2D draw with the mouse and project out the lines.
        - How to switch to an orthographic camera for this?
   - [] Free camera mode / better camera controls on keyboard and mouse.
@@ -73,11 +70,26 @@ Welcome to...
   - [] Bring in font rendering from the plotted system font.
   - [] Touch controls.
   - [] Add other tools other than line.
+  - [] Add a 3d prompt so you can change tools / be more active without going 2d.
  + Later
   - [] Shrink three.js filesize: https://github.com/mrdoob/three.js/issues/19148
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Should `Race` lines be more quantized / regulated?
+  - [x] Synchronization error on 144hz displays with keep: false.
+    (Notes)
+    - The sim rate is locked at 120fps so on a 144hz display, we are gonna be
+      rendering multiple times per sim which means things like `keep: false`
+      will fail on Forms that are defined in sim. 
+    - Garbage cannot be collected after each render unless
+      the next sim has occurred... or we'll see flickering.
+    - And it cannot be collected after each sim, because the next render
+      may need it and sometimes sims only run once per frame, always before
+      a render.
+    - We can know if a render is first or a repeat since each sim.
+    - If a render is first, then we can collect any garbage from the last
+      frame before rendering.
   - [x] Add final red tail preview to point on `lift`.
   - [x] Add color and transparency to line.
     - [x] Use default params to change the color on load.
@@ -111,6 +123,18 @@ Welcome to...
   - [x] Basic FPS Camera.
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
+
+*** SSH (code.aesthetic.computer) ***
+  - [] Set up a developers / "pieces" SSH server.
+  - [] Developers should be able to mint their pieces from here.
+
+*** Physics ***
+ - [] Add jumping / movement speed.
+      https://sites.google.com/site/zdrytchx/how-to/strafe-jumping-physics-the-real-mathematics
+
+*** Native Apps ***
+  - Research: https://capacitorjs.com
+  - And/or continue to use my own shim?
 
 *** Help / Learn / Doc ***
   - [] ! What about just adding a "?" at the end of any command?

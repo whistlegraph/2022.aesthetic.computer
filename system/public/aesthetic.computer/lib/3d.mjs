@@ -11,6 +11,7 @@ import { radians, rgbToHex } from "./num.mjs";
 
 let scene,
   renderer,
+  renders,
   camera,
   disposal = [],
   target;
@@ -39,8 +40,10 @@ export function initialize(wrapper) {
   status.alive = true;
 }
 
+// Should all bakes be batched together, messages combined?
+// (Maybe not yet... unless there becomes tons of calls in a piece.)
 export function bake({ cam, forms, color }, { width, height }, size) {
-  // Only make instantiate new buffers if necessary.
+  // Only instantiate some things once.
   if (!target || target.width !== width || target.height !== height) {
     target = new THREE.WebGLRenderTarget(width, height);
     renderer.setSize(size.width, size.height);
@@ -216,7 +219,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         positions[posStart + 2] = points[i].z;
       }
 
-
       for (let i = 0; i < pointColors.length; i += 1) {
         const colStart = i * 4;
         colors[colStart] = pointColors[i].x / 255;
@@ -230,7 +232,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         new THREE.BufferAttribute(positions, 3)
       );
 
-      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
+      geometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(colors, 4, true)
+      );
 
       const lineb = new THREE.LineSegments(geometry, material);
 
@@ -359,8 +364,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 export function render() {
   // TODO: If keeping the renderer alive between pieces, then make sure to
   //       top rendering! 22.10.14.13.05
-  if (scene != undefined) {
+  if (scene) {
     // CTO Rapter's line jiggling request:
+
     /*
     if (jiggleForm) {
       const positions = jiggleForm.geometry.attributes.position.array;
@@ -379,21 +385,7 @@ export function render() {
     */
 
     renderer.render(scene, camera);
-
-    // ♻️ De-allocation.
-    // TODO: This should do the trick, but I should still check for leaks. 22.10.14.02.21
-    disposal.forEach((d, i) => {
-      if (d.keep === false) {
-        d.resources.forEach((r) => {
-          r.dispose();
-        });
-        d.form.removeFromParent();
-      }
-      disposal[i] = undefined;
-    }); // Free memory from forms if it's been marked as `keep === false`.
-    disposal = disposal.filter(Boolean);
-
-    // scene = undefined; // TODO: Dispose of scene when necessary?
+    collectGarbage();
   }
 }
 
@@ -403,6 +395,20 @@ export function pasteTo(ctx) {
 
 export function clear() {
   renderer.clear();
+}
+
+export function collectGarbage() {
+  // ♻️ De-allocation.
+  // Note: This should do the trick, but I should still
+  //       check for leaks. 22.10.14.02.21
+  disposal.forEach((d, i) => {
+    if (d.keep === false) {
+      d.resources.forEach((r) => r.dispose());
+      d.form.removeFromParent();
+    }
+    disposal[i] = undefined;
+  }); // Free memory from forms if it's been marked as `keep === false`.
+  disposal = disposal.filter(Boolean);
 }
 
 export function kill() {

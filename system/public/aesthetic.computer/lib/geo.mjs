@@ -326,15 +326,8 @@ export function linePointsFromAngle(x1, y1, dist, degrees) {
 }
 
 export function pointFrom(x, y, angle, dist) {
-  return [
-    x + dist * cos(radians(angle)),
-    y + dist * sin(radians(angle)),
-  ];
+  return [x + dist * cos(radians(angle)), y + dist * sin(radians(angle))];
 }
-
-// TODO: Could `Race` extend `Quantizer` or should they be kept separate?
-// TODO: It would be nice to layer them, especially when it comes to making
-//       turtle graphics.
 
 // Follows a point.
 export class Race {
@@ -345,34 +338,57 @@ export class Race {
   speed;
   dist = 0;
 
-  constructor(opts = {}) {
+  quantizer;
+
+  constructor(opts = { quantized: true }) {
     this.speed = opts.speed || 20;
     this.step = opts.step || 0.005;
+    if (opts.quantized) this.quantizer = new Quantizer({ step: this.step });
   }
 
   to(point) {
     if (!this.pos) return false;
-
-    const newPos = vec4.lerp(vec4.create(), this.pos, point, 0.01 * this.speed);
-    this.dist += vec4.dist(this.pos, newPos);
-    this.pos = newPos;
-
     let out;
 
-    // TODO: Turn this into a while loop to output more quantized points...
-    if (this.dist >= this.step) {
-      // Is it possible to add color here?
-      out = { last: vec4.clone(this.last), current: this.pos, add: true };
-      this.dist -= this.step; // Hold on for better normalization!
-      this.last = this.pos;
+    // Quantization ON (regulated segments)
+    if (this.quantizer) {
+      const newPos = vec4.lerp(
+        vec4.create(),
+        this.pos,
+        point,
+        0.01 * this.speed
+      );
+      out = this.quantizer.to(newPos);
+      this.pos = newPos;
     } else {
-      out = { last: this.last, current: this.pos };
+      // Quantization OFF (longer, less regulated segments)
+      const newPos = vec4.lerp(
+        vec4.create(),
+        this.pos,
+        point,
+        0.01 * this.speed
+      );
+      this.dist += vec4.dist(this.pos, newPos);
+      this.pos = newPos;
+
+      if (this.dist >= this.step) {
+        out = {
+          last: vec4.clone(this.last),
+          current: this.pos,
+          out: [this.last, this.pos],
+        };
+        this.dist -= this.step; // Hold on for better normalization!
+        this.last = this.pos;
+      } else {
+        out = { last: this.last, current: this.pos };
+      }
     }
 
     return out;
   }
 
   start(point) {
+    this.quantizer?.start(point);
     this.pos = vec4.clone(point);
     this.last = vec4.clone(point);
   }
@@ -383,28 +399,41 @@ export class Race {
 }
 
 // A simple model without lazy following.
+// Originally programmed for `3dline`.
+// TODO: Generalize the output so only individual points
+//       (not line segment vertices with repeated points)
+//       can be returned. 22.10.18.11.10
 export class Quantizer {
   pos;
   step;
+  dist = 0;
 
   constructor(opts) {
     this.step = opts.step;
   }
 
+  // Returns an array of [lastPoint, nextPoint...]
   to(point) {
     if (!this.pos) return false;
 
-    let out;
+    let out = [];
+    this.dist = vec4.dist(this.pos, point);
+    let lastPoint = this.pos;
 
-    // TODO: Turn this into a while loop to output more quantized points...
-    if (vec4.dist(this.pos, point) >= this.step) {
-      out = { last: this.pos, current: point, add: true };
-      this.pos = point;
-    } else {
-      out = { last: this.pos, current: point };
+    while (this.dist >= this.step) {
+      const nextPoint = vec4.lerp(
+        vec4.create(),
+        lastPoint,
+        point,
+        this.step / this.dist
+      );
+      out.push(lastPoint, nextPoint);
+      lastPoint = nextPoint;
+      this.dist -= this.step; // Hold on for better normalization!
     }
 
-    return out;
+    this.pos = lastPoint;
+    return { last: this.pos, current: point, out };
   }
 
   start(point) {
