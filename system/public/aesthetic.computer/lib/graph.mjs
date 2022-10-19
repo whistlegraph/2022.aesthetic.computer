@@ -196,8 +196,7 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   srcY = Math.floor(srcY);
 
   // Skip pixels that are offscreen or outside the src buffer.
-  // TODO: Is this necessary? How slow is it?
-  /*
+  // Used in `paste`.
   if (
     destX < 0 ||
     destX >= width ||
@@ -210,7 +209,6 @@ function copy(destX, destY, srcX, srcY, src, alpha = 1.0) {
   ) {
     return;
   }
-  */
 
   const di = (destX + destY * width) * 4;
   const si = (srcX + srcY * src.width) * 4;

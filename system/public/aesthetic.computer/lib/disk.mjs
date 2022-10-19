@@ -40,18 +40,30 @@ const defaults = {
   leave: () => false, // Before unload.
 };
 
+// 🔎 NoPaint
 // Inheritable via `export const system = "nopaint"` from any piece.
 // Boilerplate for a distributed raster editor.
 const nopaint = {
-  boot: function boot({ paste, system }) {
+  boot: function boot({ paste, painting, system: sys }) {
     //if (!screen.load("painting")) wipe(64); // Load painting or wipe to gray.
-    paste(system.painting);
+    nopaint_adjust(paste, screen, sys, painting);
   },
-  act: function act({ event: e }) {
+  act: function act({
+    event: e,
+    system: sys,
+    painting,
+    download,
+    paste,
+    num,
+    screen,
+  }) {
     if (e.is("keyboard:down:enter")) {
-      console.log("Save image!");
+      download(`painting-${num.timestamp()}.png`, sys.painting);
       // TODO: Should be able to save a `.png` here...
+      // TODO: Crop images when saving.
     }
+
+    if (e.is("reframed")) nopaint_adjust(paste, screen, sys, painting);
   },
   leave: function leave({ store, screen, system }) {
     store["painting"] = system.painting;
@@ -59,6 +71,19 @@ const nopaint = {
     //screen.save("painting");
   },
 };
+
+// Helper
+function nopaint_adjust(paste, screen, sys, painting) {
+  if (
+    screen.width > sys.painting.width ||
+    screen.height > sys.painting.height
+  ) {
+    sys.painting = painting(screen.width, screen.height, (p) => {
+      p.wipe(64).paste(sys.painting);
+    });
+  }
+  paste(sys.painting);
+}
 
 let boot = defaults.boot;
 let sim = defaults.sim;
@@ -848,7 +873,7 @@ async function load(
       sim = module.sim || defaults.sim;
       paint = module.paint || defaults.paint;
       beat = module.beat || defaults.beat;
-      act = module.act || defaults.act;
+      act = module.act || nopaint.act;
       leave = module.leave || nopaint.leave;
 
       $commonApi.system = {
@@ -856,7 +881,9 @@ async function load(
         painting:
           store["painting"] ||
           painting.api.painting(screen.width, screen.height, ({ wipe }) => {
-            wipe(64, 0, 0);
+            // wipe(0, 0, 0, 0);
+            wipe(64);
+            // TODO: Enable working with transparency.
           }),
       };
     } else {

@@ -74,6 +74,7 @@ Welcome to...
  + Now
   - [🟡] Add user connected messages.
   - [] Better mouse and keyboard controls.
+  - [] Automatically reload the socket server?
   - [] Does each player bring their lines with them?
        (This would make their presence very important.)
   - [] Quickly going back and forth between 3dline and itself / prompt
@@ -95,6 +96,7 @@ Welcome to...
       - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
     - [] Future specs: https://immersive-web.github.io/raw-camera-access
   - [] Draw a line in webXR.
+  - [] How to hear someone else's audio stream? https://stackoverflow.com/a/61438244/8146077
   - [x] Save the buffered lines to indexedDB... and/or to the remote room?
     - [x] Store and reload from indexedDB.
     - [x] Save and load with ram storage.
@@ -232,10 +234,9 @@ Welcome to...
 ***No Paint System***
   + Now
   - [] Center painting with the transparent backbuffer if a specific
-       size is set and resize is off. (Make crop tool to do this, that can be NOd but automatically runs through.
+       size is set (which would turn resize off). (Make crop tool to do this, that can be NOd but automatically runs through.
   - [] The default "mint" command in aesthetic.computer saves
        the system wallpaper. Uniqueness is guaranteed? - https://www.google.com/search?q=sha-512+uniqueness&oq=sha-512+uniqueness&aqs=chrome..69i57j0i13i512j0i390l4.4876j0j4&sourceid=chrome&ie=UTF-8
-  - [💛] The painting resolution should auto-expand, but not contract.
     - [] Fix weird negative space / non-drawing issues on startup.
   - [] Add "no" command to the prompt.
     - [] Store two history states?
@@ -257,11 +258,12 @@ Welcome to...
     - [] What if turns could be negotiated?
   - [] Add `nopaint` template for Sage, Casey and Niki.
     - [x] Sage
+  + Done
   - [x] Set up a glitch account / editing situation for Sage.
   - [x] Write `rect` tool, which necessitates an extra buffer.
   - [x️] Write boilerplate for painting tool.
   - [x] Make a glaze appear instantly after it loads the first time?
-  + Done
+  - [x] The painting resolution should auto-expand, but not contract.
   - [x] Jumping from prompt to a nopaint brush removes the gap.
   - [x] Cache the current painting to indexedDB.
   - [x] Either use the added `umd.js` in dep or what's below:

@@ -98,20 +98,20 @@ function sim({ seconds, needsPaint, gizmo: { Hourglass } }) {
   if (flashPresent) flash.step();
 }
 
-const scheme =  {
+const scheme = {
   dark: {
     fg: [255, 100],
     bg: [70, 50, 100],
     block: [200, 30, 100],
-    line: [0, 0, 255, 64]
+    line: [0, 0, 255, 64],
   },
   light: {
     fg: [0, 200],
-    bg: [170, 150, 200], 
+    bg: [170, 150, 200],
     block: [30, 200, 200],
-    line: [0, 0, 0, 128]
-  }
-}
+    line: [0, 0, 0, 128],
+  },
+};
 
 // 🎨 Paint (Runs once per display refresh rate)
 function paint({ box, screen, wipe, ink, paste, store, dark }) {
@@ -155,7 +155,15 @@ function paint({ box, screen, wipe, ink, paste, store, dark }) {
 let promptHistoryDepth = 0;
 
 // ✒ Act (Runs once per user interaction, after boot.)
-async function act({ event: e, needsPaint, load, store, download, darkMode }) {
+async function act({
+  event: e,
+  needsPaint,
+  load,
+  store,
+  download,
+  darkMode,
+  num,
+}) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
   //if (e.is("move")) needsPaint();
@@ -188,7 +196,7 @@ async function act({ event: e, needsPaint, load, store, download, darkMode }) {
         // 🍎 In-prompt commands...
         if (input === "dl" || input === "download") {
           if (store["painting"]) {
-            download("image.png", store["painting"]);
+            download(`painting-${num.timestamp()}.png`, store["painting"]);
             // Show a green flash if we succesfully download the file.
             flashColor = [0, 255, 0];
           } else {
