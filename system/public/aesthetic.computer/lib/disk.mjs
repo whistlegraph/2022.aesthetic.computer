@@ -305,8 +305,8 @@ const LINE = {
 
 // Inputs: (r, g, b), (r, g, b, a) or an array of those.
 //         (rgb) for grayscale or (rgb, a) for grayscale with alpha.
-// TODO: Zero arguments should also randomly pick values.
-
+//         Or hex with "#000000" or "0x000000" or 0x000000.
+// TODO: Add better hex support via: https://stackoverflow.com/a/53936623/8146077
 function color() {
   let args = arguments;
 
@@ -320,23 +320,37 @@ function color() {
     if (!isNumber() && !isArray() && !isString())
       return color(help.any(args[0]));
 
-    // If single argument is a number then replicate it across the first 3 fields.
+    // Single number argument.
     if (isNumber()) {
-      args = Array.from(args);
-      args.push(args[0], args[0]);
+      // Treat as raw hex if we hit a certain limit.
+      if (args[0] > 255) {
+        args = num.hexToRgb(args[0])
+      } else {
+        // Otherwise, replicate the first number across all three fields.
+        args = Array.from(args);
+        args.push(args[0], args[0]);
+      }
+
     } else if (isArray()) {
       // Or if it's an array, then spread it out and re-ink.
       // args = args[0];
       return color(...args[0]);
     } else if (isString()) {
-      // If it's a string, then try to match it to a table.
-      const colors = {
-        red: [255, 0, 0],
-        green: [0, 255, 0],
-        blue: [0, 0, 255],
-      };
 
-      args = colors[args[0]];
+      // See if it's a hex.
+      const cleanedHex = args[0].replace("#", "").replace("0x", "");
+      if (num.isHexString(cleanedHex) === true) {
+        args = num.hexToRgb(cleanedHex);
+      } else {
+        // Try to match it to a table.
+        const colors = {
+          red: [255, 0, 0],
+          green: [0, 255, 0],
+          blue: [0, 0, 255],
+        };
+        args = colors[args[0]];
+      }
+
       // TODO: Add an error message here. 22.08.29.13.03
     }
   } else if (args.length === 2) {

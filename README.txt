@@ -40,35 +40,11 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** Camera Pieces ***
-  - [] Pitch shifting / screaming / voice modulation recorder.
-  - [] Ambient color suport for networked / multi-monitor setups / desktop.
-       (Also works with foveated / peripheral rendering)
-
-*** Tongue ***
-  - [] Make a tongue tracking game where you catch snowflakes.
-  
-*** Pieces in Pieces ***
-  - [] Bring `bleep` into 3D.
-  - [] Make a layout of more than one piece in the same buffer.
-  - [] Like bleep and bubble and line... maybe even melody?
-  - [] Could melody just be imported as the background audio?
-  - [x] Make a contrived wrapper example that imports one piece into another.
-
-*** Slider ***
-  - [] How to tie a slider on your phone to a value in a param.
-      1. On a device, type `slider 0-255` or just `slider` for the default. 
-      2. The slider will give you a special code. 
-      3. Use that code while entering parameters like `line CODE 255 255`
-          (Pieces do not accept remote controlled parameters fail to load.) 
-          - The piece needs to send a request to the server to join
-            the slider's room.
-      4. The slider can message the piece with a new value. 
-      5. The piece can return other data, like color, for the slider.
-
 *** SSH (code.aesthetic.computer) ***
-  - [🍏] Set up a developers / "pieces" SSH server.
-  - [] Developers should be able to mint their pieces from here.
+ + Now
+   - [x] Set up a developers / "pieces" SSH server.
+ + Later
+   - [] People should be able to mint / submit their pieces from here.
 
 *** (3dline) ***
  + Now
@@ -178,6 +154,33 @@ Welcome to...
  - [] Add jumping / movement speed.
       https://sites.google.com/site/zdrytchx/how-to/strafe-jumping-physics-the-real-mathematics
 
+*** Camera Pieces ***
+  - [] Pitch shifting / screaming / voice modulation recorder.
+  - [] Audio and video recording test.
+  - [] Ambient color suport for networked / multi-monitor setups / desktop.
+       (Also works with foveated / peripheral rendering)
+
+*** Tongue ***
+  - [] Make a tongue tracking game where you catch snowflakes.
+  
+*** Pieces in Pieces ***
+  - [] Bring `bleep` into 3D.
+  - [] Make a layout of more than one piece in the same buffer.
+  - [] Like bleep and bubble and line... maybe even melody?
+  - [] Could melody just be imported as the background audio?
+  - [x] Make a contrived wrapper example that imports one piece into another.
+
+*** Slider ***
+  - [] How to tie a slider on your phone to a value in a param.
+      1. On a device, type `slider 0-255` or just `slider` for the default. 
+      2. The slider will give you a special code. 
+      3. Use that code while entering parameters like `line CODE 255 255`
+          (Pieces do not accept remote controlled parameters fail to load.) 
+          - The piece needs to send a request to the server to join
+            the slider's room.
+      4. The slider can message the piece with a new value. 
+      5. The piece can return other data, like color, for the slider.
+
 *** Native Apps ***
   - Research: https://capacitorjs.com
   - And/or continue to use my own shim?
@@ -188,9 +191,8 @@ Welcome to...
   - [] `howto line`
   - [] `doc line`
 
-*** Bonus ***
-  - [x] Change `ap` -> `test`. (Rapter)
-  - [x] Detect dark mode and modify the prompt accordingly.
+*** Graphics API ***
+  - [] Add better hex support to color via: https://stackoverflow.com/a/53936623/8146077
 
 ** Mood ***
  - [] Select a mood to change the default color palette.
@@ -736,6 +738,13 @@ Welcome to...
 
 
 *Recently ✅ Completed*
+
+*** Hex Support ***
+  - [x] Add hex support to color inputs.
+
+*** Bonus ***
+  - [x] Change `ap` -> `test`. (Rapter)
+  - [x] Detect dark mode and modify the prompt accordingly.
 
 *** 3D Renderering ***
   + Done

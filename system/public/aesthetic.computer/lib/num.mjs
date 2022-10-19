@@ -74,8 +74,8 @@ export function dist3d(p1, p2) {
   // Convert everything to 4 decimal places.
   // Drop some precision here so vec3.dist (Math.hypot) doesn't go crazy
   // on my Float32Array values.
-  p1 = p1.map(p => p.toFixed(4));
-  p2 = p2.map(p => p.toFixed(4));
+  p1 = p1.map((p) => p.toFixed(4));
+  p2 = p2.map((p) => p.toFixed(4));
   return vec3.dist(p1, p2);
 }
 
@@ -96,7 +96,7 @@ export function lerp(a, b, amount) {
 
 // Maps a number within a range to a new range.
 // https://stackoverflow.com/a/23202637/8146077
-export function map (num, inMin, inMax, outMin, outMax) {
+export function map(num, inMin, inMax, outMin, outMax) {
   return ((num - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
 
@@ -140,6 +140,25 @@ export class Track {
   }
 }
 
+function cleanHexString(h) {
+  return h.replace("#", "").replace("0x", "");
+}
+
+// Determines if a string is a valid hex value.
+export function isHexString(h) {
+  h = cleanHexString(h);
+  const a = parseInt(h, 16);
+  return a.toString(16) === h.toLowerCase();
+}
+
+// Convert separate rgb values to a single integer.
 export function rgbToHex(r, g, b) {
-  return  ((1 << 24) + (r << 16) + (g << 8) + b);
+  return (1 << 24) + (r << 16) + (g << 8) + b;
+}
+
+// Takes either a string hex or a number hex and outputs and [RGB] array.
+// TODO: Take in alpha.
+export function hexToRgb(h) {
+  const int = typeof h === "string" ? parseInt(cleanHexString(h), 16) : h;
+  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
 }
