@@ -1639,7 +1639,7 @@ async function makeFrame({ data: { type, content } }) {
 
       if (paintCount === 0n) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
-        boot($api);
+        await boot($api);
         booted = true;
         if (loading === false) send({ type: "disk-loaded-and-booted" });
       }

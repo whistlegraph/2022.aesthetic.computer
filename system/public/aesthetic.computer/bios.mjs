@@ -973,8 +973,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // TODO: Implement basic indexedDB storage and retrieval for the
       //       painting / array buffer.
       if (content.method === "local:db") {
-        const set = await Store.set(content.key, content.data);
-        const get = await Store.get(content.key);
+        await Store.set(content.key, content.data);
+        // const set = await Store.set(content.key, content.data);
+        // const get = await Store.get(content.key);
         if (debug) console.log("📦 Persisted on local:db:", content);
       }
 

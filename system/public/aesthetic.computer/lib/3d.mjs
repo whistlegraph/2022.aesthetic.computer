@@ -212,6 +212,33 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const positions = new Float32Array(f.MAX_POINTS * 3);
       const colors = new Float32Array(f.MAX_POINTS * 4);
 
+      // CTO Rapter Notes:
+
+      /*
+
+      *** Optimized Vertex Model for Dynamic Data ***
+
+      - Future line renderer...
+
+      - Each position is a Float32 right now.
+      - These need to be carved up to store more data.
+      - So `positions` should just become `vertices`.
+
+      - Of the 32 bits.
+        - 24 bits per x, y or z 
+        - 1 byte left over
+          - 0-8 would be indexed color that pulls from a shader const
+          - 0-8 for alpha
+
+          - (1bit) flag properties
+            blinking
+          
+          - oscillating / lerping
+
+          -  left for everything else
+
+      */
+
       for (let i = 0; i < points.length; i += 1) {
         const posStart = i * 3;
         positions[posStart] = points[i].x;

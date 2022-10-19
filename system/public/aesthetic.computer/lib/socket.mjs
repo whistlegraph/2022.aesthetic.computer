@@ -1,4 +1,5 @@
 export class Socket {
+  id; // Will be filled in with the user identifier after the first message.
   #killSocket = false;
   #ws;
   #reconnectTime = 1000;
@@ -58,10 +59,21 @@ export class Socket {
   }
 
   // Before passing messages to disk code, handle some system messages here.
-  // Note: "reload" should only be defined when developing.
+  // Note: "reload" should only be defined when in development / debug mode.
   #preReceive({ id, type, content }, receive, reload) {
     if (type === "message") {
-      console.log(`📡 ${content}`);
+      // 🔴 TODO: Catch this JSON.parse error.
+      const c = JSON.parse(content);
+
+      if (c.text) {
+        // Someone else has connected as...
+        console.log(`📡 ${c.text}`);
+      } else {
+        // Send a self-connection message here. (You are connected as...)
+        console.log(`${c.ip} → 🤹${c.playerCount} : @${c.id}`);
+        this.id = c.id; // Set the user identifier.
+      }
+
     } else if (type === "reload" && reload) {
       if (content === "disk") {
         console.log("💾️ Reloading disk...");
@@ -72,7 +84,7 @@ export class Socket {
         reload("refresh"); // Reload the whole page.
       }
     } else {
-      receive?.(id, type, content);
+      receive?.(id, type, content); // Finally send the message to the client.
     }
   }
 }

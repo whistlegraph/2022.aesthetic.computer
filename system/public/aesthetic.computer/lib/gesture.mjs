@@ -3,7 +3,7 @@
 
 import { lerp, dist } from "./num.mjs";
 import * as vec2 from "../dep/gl-matrix/vec2.mjs";
-const { floor, round, pow, max } = Math;
+const { round, pow, max } = Math;
 
 // Takes and keeps a set of input points and yields a processed spline as
 // a single mark gets drawn.
@@ -23,7 +23,7 @@ export class Mark {
   #segmentLength;
   #rawInputIndex = 0;
 
-  constructor({ minDist }) {
+  constructor(minDist = 8) {
     this.#minDist = minDist;
     this.#segmentLength = 16;
   }

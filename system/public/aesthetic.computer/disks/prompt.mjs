@@ -211,6 +211,19 @@ async function act({ event: e, needsPaint, load, store, download, darkMode }) {
           showFlash = true;
           input = "";
           needsPaint();
+        } else if (input === "3dline:reset") {
+          const deleted = await store.delete("3dline:drawing", "local:db");
+
+          if (deleted) {
+            flashColor = [0, 0, 255]; // Blue for succesful deletion.
+          } else {
+            flashColor = [255, 0, 0]; // Red if delete failed.
+          }
+
+          flashPresent = true;
+          showFlash = true;
+          input = "";
+          needsPaint();
         } else if (input === "dark" || input === "dark:reset") {
           if (input === "dark:reset") {
             store.delete("dark-mode");

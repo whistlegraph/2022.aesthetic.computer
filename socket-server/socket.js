@@ -3,8 +3,6 @@
 // TODO: 🔐 Setup client<->server identity validation for both anonymous users and
 //          authenticated ones.
 
-import { createServer } from "https";
-import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
@@ -59,9 +57,11 @@ wss.on("connection", (ws, req) => {
   const id = connectionId;
 
   // Send a single welcome message for every new client connection.
-  const content = `${ip} → 🤹${wss.clients.size} : ${connectionId}`;
+  // TODO: This message should be a JSON encoded object and be displayed on
+  //       the client instead.
+  const content = { ip, id, playerCount: wss.clients.size };
 
-  ws.send(pack("message", content));
+  ws.send(pack("message", JSON.stringify(content)));
 
   // Send a message to all other clients except this one.
   function others(string) {
@@ -70,7 +70,12 @@ wss.on("connection", (ws, req) => {
     });
   }
 
-  others(pack("message", `🤖 ${ip} : ${connectionId} has joined.`));
+  others(
+    pack(
+      "message",
+      JSON.stringify({ text: `🤖 ${ip} : ${connectionId} has joined.` })
+    )
+  );
 
   connectionId += 1;
 
@@ -79,8 +84,10 @@ wss.on("connection", (ws, req) => {
     // Parse incoming message and attach client identifier.
     const msg = JSON.parse(data.toString());
     msg.id = id; // TODO: When sending a server generated message, use a special id.
-    console.log(msg);
+    // console.log(msg);
+    // TODO: Why not always use "others" here?
     everyone(JSON.stringify(msg));
+    // others(JSON.stringify(msg));
   });
 
   /* Note: for some reason pinging was disconnecting users over and over again...
@@ -112,7 +119,8 @@ function everyone(string) {
   });
 }
 
-// 🚧 Development Mode
+// 🚧 File Watching in Development Mode
+// TODO: Extend this feature to the SSH server for developers. 22.10.18.21.48
 // File watching uses: https://github.com/paulmillr/chokidar
 // TODO: Stop logging every file and instead count them up and report a number.
 if (process.env.NODE_ENV === "development") {

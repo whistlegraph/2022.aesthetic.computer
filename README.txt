@@ -40,42 +40,90 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** (Camera) ***
+*** Camera Pieces ***
   - [] Pitch shifting / screaming / voice modulation recorder.
+  - [] Ambient color suport for networked / multi-monitor setups / desktop.
+       (Also works with foveated / peripheral rendering)
+
+*** Tongue ***
+  - [] Make a tongue tracking game where you catch snowflakes.
+  
+*** Pieces in Pieces ***
+  - [] Bring `bleep` into 3D.
+  - [] Make a layout of more than one piece in the same buffer.
+  - [] Like bleep and bubble and line... maybe even melody?
+  - [] Could melody just be imported as the background audio?
+  - [x] Make a contrived wrapper example that imports one piece into another.
+
+*** Slider ***
+  - [] How to tie a slider on your phone to a value in a param.
+      1. On a device, type `slider 0-255` or just `slider` for the default. 
+      2. The slider will give you a special code. 
+      3. Use that code while entering parameters like `line CODE 255 255`
+          (Pieces do not accept remote controlled parameters fail to load.) 
+          - The piece needs to send a request to the server to join
+            the slider's room.
+      4. The slider can message the piece with a new value. 
+      5. The piece can return other data, like color, for the slider.
+
+*** SSH (code.aesthetic.computer) ***
+  - [🍏] Set up a developers / "pieces" SSH server.
+  - [] Developers should be able to mint their pieces from here.
 
 *** (3dline) ***
  + Now
-  - [] Save the buffered lines to indexedDB... and/or to the remote room?
-    - [🟢] Store and reload from indexedDB.
-    - [] Then add store["remote"] as a layer over sockets?
-    - [] How would remote drawings work within rooms?
-    - [x] Save and load with ram storage.
-  - [] Add websocket support for other players and their lines.
-    - [] Add a "room" system.
-    - [] Just start with one room but add a layer for it.
-  - [] Jiggle every two vertices the same amount so each segment
-       drifts as one and maintains its integrity / add jiggle or break-apart
-       as a toggle.
-  - [] Draw in 2D draw with the mouse and project out the lines.
-       - How to switch to an orthographic camera for this?
-  - [] Free camera mode / better camera controls on keyboard and mouse.
-  - [] Bring `microphone` amplitude into `3dline`. 
-       (Draw a linear wave form spatially)
+  - [🟡] Add user connected messages.
+  - [] Better mouse and keyboard controls.
+  - [] Does each player bring their lines with them?
+       (This would make their presence very important.)
+  - [] Quickly going back and forth between 3dline and itself / prompt
+       will cause errors. 
+  - [] Add a "room" system.
+    - [] Just start with one room but add an abstraction layer for it soon.
+    - [] Save buffered lines via store["remote"] to the remote room.
+         (Delete everything once all clients disconnect for a certain amount
+          of time.)
+      - [] Perhaps this can just use the system ram, then dump to S3 after
+           clients disconnect?
+
+  >--------<
+
   - [] Add WebXR session.
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
       - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
       - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
+    - [] Future specs: https://immersive-web.github.io/raw-camera-access
   - [] Draw a line in webXR.
+  - [x] Save the buffered lines to indexedDB... and/or to the remote room?
+    - [x] Store and reload from indexedDB.
+    - [x] Save and load with ram storage.
+  - [] Jiggle every two vertices the same amount so each segment
+       drifts as one and maintains its integrity / add jiggle or break-apart
+       as a toggle.
+  - [] Add ability to delete lines / limit lines.
+  - [] 🎖️ Pass the Whistlegraph accessibility/latency threshold.
+    (Must work on a wide range of devices with various connections, and
+     be fast enough or communicable enough to work.)
+    - [] Sockets can always be a fallback.
+    - [] Will require UDP over WebRTC.
+    - [] Experiment with http/3 transport as well.
+  - [] Draw in 2D draw with the mouse and project out the lines.
+       - How to switch to an orthographic camera for this?
+  - [] Free camera mode / better camera controls on keyboard and mouse.
+  - [] Bring `microphone` amplitude into `3dline`. 
+       (Draw a linear wave form spatially)
   - [] Bring in font rendering from the plotted system font.
   - [] Touch controls.
   - [] Add other tools other than line.
   - [] Add a 3d prompt so you can change tools / be more active without going 2d.
  + Later
+  - [] Line thickness.
   - [] Shrink three.js filesize: https://github.com/mrdoob/three.js/issues/19148
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Add websocket support for other players and their lines.
   - [x] Should `Race` lines be more quantized / regulated?
   - [x] Synchronization error on 144hz displays with keep: false.
     (Notes)
@@ -124,10 +172,6 @@ Welcome to...
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
 
-*** SSH (code.aesthetic.computer) ***
-  - [] Set up a developers / "pieces" SSH server.
-  - [] Developers should be able to mint their pieces from here.
-
 *** Physics ***
  - [] Add jumping / movement speed.
       https://sites.google.com/site/zdrytchx/how-to/strafe-jumping-physics-the-real-mathematics
@@ -152,13 +196,6 @@ Welcome to...
  - [] A scheme map:
       - [x] Dark / Light Moods (via prompt)
       - [] Primary or major colors.
-
-*** Pieces in Pieces ***
-  - [] Make a layout of more than one piece in the same buffer.
-  - [] Like bleep and bubble and line... maybe even melody?
-  - [] Could melody just be imported as the background audio?
-  - [] Eventually bring something like bleep into 3D.
-  - [x] Make a contrived wrapper example that imports one piece into another.
 
 *** Autopilot / ap ***
   - [] Consider how this could become the next nopaint?

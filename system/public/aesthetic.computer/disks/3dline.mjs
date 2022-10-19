@@ -6,18 +6,20 @@ let cam, dolly; // Camera system.
 let floor, cross, tri, triTop, drawing; // Geometry.
 let race, tail, tail2; // Lazy line control with preview lines.
 
+let client; // Network.
+
 // *** Markmaking Configuration ***
 const step = 0.025; // Step size of regulated line / minimum cut-off.
 const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
 const quantizedSmoothing = true; // Regulate all segments while still smoothing.
 const speed = 20; // Only used if smoothing is true.
 
-let colorParams;
+let colorParams = [0, 0, 0, 0];
 
 let W, S, A, D, UP, DOWN, LEFT, RIGHT;
 
 // 🥾 Boot
-function boot({
+async function boot({
   painting: p,
   Camera,
   Dolly,
@@ -28,9 +30,24 @@ function boot({
   geo: { Race, Quantizer },
   params,
   store,
+  net,
 }) {
-  // Grab params for color.
-  colorParams = params.map((str) => parseInt(str));
+  // Connect to the network.
+  client = net.socket((id, type, content) => {
+    // Instantiate painters (clients) based on their `id` attribute.
+    //painters[id] = painters[id] || new Painter(id);
+    // Record the action.
+    //actions.push({ id, type, content });
+    //console.log(content);
+
+    // Just in case we are sending messages to "everyone" / receiving our
+    // own messages.
+    if (client.id !== id) drawing.addPoints(content); // Add points locally.
+
+    //console.log(id, type, content);
+  });
+
+  colorParams = params.map((str) => parseInt(str)); // Set params for color.
 
   cam = new Camera(80, { z: 4 }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
@@ -62,7 +79,12 @@ function boot({
 
   // An empty buffer that gets populated in `sim()`.
 
-  const stored = store["sculpture"];
+  // Load a drawing from RAM if it already exists, or from the indexedDB,
+  // otherwise start an empty one.
+  const stored = (store["3dline:drawing"] =
+    store["3dline:drawing"] ||
+    (await store.retrieve("3dline:drawing", "local:db")));
+
   drawing = new Form(
     {
       type: "line:buffered",
@@ -135,7 +157,14 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
         colors.push(vertexColor, vertexColor);
       });
 
+      // Add points locally.
       drawing.addPoints({ positions: path.out, colors });
+
+      // Send vertices to the cloud.
+      client.send("add", {
+        positions: path.out.map((vertex) => [...vertex]),
+        colors,
+      });
     }
 
     if (dist3d(path.last, path.current)) tail = [path.last, path.current];
@@ -231,9 +260,8 @@ function beat($api) {
 // 👋 Leave
 function leave({ store }) {
   // Pass data to the next piece here.
-  store["sculpture"] = drawing;
-  console.log(drawing);
-  //store.persist("sculpture", "local:db");
+  store["3dline:drawing"] = drawing;
+  store.persist("3dline:drawing", "local:db");
 }
 
 export { boot, sim, paint, act, beat, leave };

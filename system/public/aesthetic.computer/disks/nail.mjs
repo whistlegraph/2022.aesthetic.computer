@@ -164,7 +164,7 @@ class Painter {
 
   // Runs on every recorded point.
   point(p) {
-    this.currentMark = this.currentMark || new Mark({ minDist: 4 });
+    this.currentMark = this.currentMark || new Mark(4);
     this.currentMark.input(p);
   }
 
