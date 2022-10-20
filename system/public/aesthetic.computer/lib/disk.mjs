@@ -324,19 +324,17 @@ function color() {
     if (isNumber()) {
       // Treat as raw hex if we hit a certain limit.
       if (args[0] > 255) {
-        args = num.hexToRgb(args[0])
+        args = num.hexToRgb(args[0]);
       } else {
         // Otherwise, replicate the first number across all three fields.
         args = Array.from(args);
         args.push(args[0], args[0]);
       }
-
     } else if (isArray()) {
       // Or if it's an array, then spread it out and re-ink.
       // args = args[0];
       return color(...args[0]);
     } else if (isString()) {
-
       // See if it's a hex.
       const cleanedHex = args[0].replace("#", "").replace("0x", "");
       if (num.isHexString(cleanedHex) === true) {
@@ -394,7 +392,7 @@ const $paintApiUnwrapped = {
   ink, // Color
   // 2D
   wipe: function () {
-    if (arguments.length > 0) ink(...arguments);
+    ink(...arguments);
     graph.clear();
   },
   copy: graph.copy,

@@ -42,7 +42,8 @@ Welcome to...
 
 *** SSH (code.aesthetic.computer) ***
  + Now
-   - [x] Set up a developers / "pieces" SSH server.
+   - [WIP] Set up a developers / "pieces" SSH server.
+   - Prototype live editing with SSH and live share?
  + Later
    - [] People should be able to mint / submit their pieces from here.
 
