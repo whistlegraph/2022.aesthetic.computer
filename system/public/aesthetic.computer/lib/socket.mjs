@@ -78,7 +78,7 @@ export class Socket {
       }
     } else if (type === "reload" && reload) {
       const c = JSON.parse(content);
-      if (c.piece === "*refresh*") this.kill();
+      this.kill();
       reload(JSON.parse(content));
     } else {
       receive?.(id, type, content); // Finally send the message to the client.
