@@ -626,6 +626,8 @@ async function load(
     host = originalHost;
   }
 
+  console.log(path, host, search, params, hash, text);
+
   loadFailure = undefined;
   host = host.replace(/\/$/, ""); // Remove any trailing slash from host. Note: This fixes a preview bug on teia.art. 2022.04.07.03.00
   lastHost = host; // Memoize the host.
@@ -673,6 +675,25 @@ async function load(
   // 🅰️ Start the socket server before we load the disk, in case of needing
   // to reload remotely on failure.
   let receiver; // Handles incoming messages from the socket.
+
+  // Add reload to the common api.
+  $commonApi.reload = ({ piece }) => {
+    if (piece === "*refresh*") {
+      console.log("💥️ Restarting system...");
+      send({ type: "refresh" }); // Refresh the browser.
+    } else if (piece === "*" || piece === undefined || currentText === piece) {
+      console.log("💾️ Reloading piece...", piece);
+      // Reload the disk.
+      load({
+        path: currentPath,
+        host: currentHost,
+        search: currentSearch,
+        params: currentParams,
+        hash: currentHash,
+        text: currentText,
+      });
+    }
+  };
 
   socket = new Socket(
     debug === true ? servers.local : servers.main,
@@ -725,26 +746,7 @@ async function load(
   // $commonApi.meta = (data) => {
   //  send({ type: "meta", content: data });
   // };
-
-  // Add reload to the common api.
-  $commonApi.reload = ({ piece }) => {
-    if (piece === "*refresh*") {
-      console.log("💥️ Restarting system...");
-      send({ type: "refresh" }); // Refresh the browser.
-    } else if (piece === "*" || piece === undefined || currentText === piece) {
-      console.log("💾️ Reloading piece...", piece);
-      // Reload the disk.
-      load({
-        path: currentPath,
-        host: currentHost,
-        search: currentSearch,
-        params: currentParams,
-        hash: currentHash,
-        text: currentText,
-      });
-    }
-  };
-
+ 
   // *** Resize ***
   // Accepts width, height and gap either as numbers or as
   // an object with those keys.
