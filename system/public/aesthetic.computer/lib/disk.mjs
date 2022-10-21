@@ -1,5 +1,4 @@
 // 👩‍💻 Disk (Jockey) aka the tape / piece player?
-
 import * as graph from "./graph.mjs";
 import * as num from "./num.mjs";
 import * as geo from "./geo.mjs";
@@ -389,6 +388,7 @@ const $paintApiUnwrapped = {
   i: ink,
   // Defaults
   page: graph.setBuffer,
+  edit: graph.changePixels, // Edit pixels by pasing a callback.
   ink, // Color
   // 2D
   wipe: function () {

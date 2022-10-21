@@ -70,6 +70,10 @@ function setBuffer(buffer) {
   ({ width, height, pixels } = buffer);
 }
 
+function changePixels(changer) {
+  changer(pixels, width, height)
+}
+
 // Return a pixel from the main buffer.
 function pixel(x, y) {
   const i = (floor(x) + floor(y) * width) * 4;
@@ -87,7 +91,7 @@ function color(r, g, b, a = 255) {
   c[3] = floor(a);
 }
 
-export { makeBuffer, cloneBuffer, setBuffer, depthBuffer, color, pixel };
+export { makeBuffer, cloneBuffer, setBuffer, changePixels, depthBuffer, color, pixel };
 
 // 2. 2D Drawing
 

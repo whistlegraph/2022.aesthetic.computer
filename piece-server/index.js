@@ -26,7 +26,7 @@ import got from 'got';
 import chokidar from 'chokidar';
 
 chokidar
-  .watch(["/home/digitpain/pieces", "/home/deafbeef/pieces"])
+  .watch(["/home/digitpain/pieces", "/home/deafbeef/pieces", "/home/p1xelfool/pieces"])
   .on("all", async (event, path) => {
     if (event === "change") {
 

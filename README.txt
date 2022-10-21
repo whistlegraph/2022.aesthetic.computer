@@ -41,6 +41,9 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** p1xelfool additions ***
+ - [] Add ability to directly manipulate the buffer again.
+
 *** (3dline) ***
  + Now
   - [🌀] Quickly going back and forth between 3dline and itself / prompt
@@ -146,6 +149,10 @@ Welcome to...
   - [x] Basic FPS Camera.
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
+
+*** Friendlier Developer Logs ***
+  - [] Optimize the console.log output in production to be
+       more terse, and make common sense.
 
 *** Physics ***
  - [] Add jumping / movement speed.

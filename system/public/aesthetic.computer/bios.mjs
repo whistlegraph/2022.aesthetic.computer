@@ -602,6 +602,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       console.error(
         "🟡 Disk module workers unsupported. Continuing with dynamic import..."
       );
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
       const module = await import(`./lib/disk.mjs`);
       module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
       send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
