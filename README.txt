@@ -42,13 +42,21 @@ Welcome to...
 
 *** SSH (code.aesthetic.computer) ***
  + Now
-   - [WIP] Set up a developers / "pieces" SSH server.
-   - Prototype live editing with SSH and live share?
+   - [] Enable live reloading from the SSH server somehow...
+        (Run a node server from `digitpain` directory that watches
+         for file changes and sends a message from that server to the main
+         server which will send a socket message to all clients to reload the
+         file if `export const reload = true;`
  + Later
    - [] People should be able to mint / submit their pieces from here.
+  + Done
+   - [x] Set up a developers / "pieces" SSH server.
+   - [x] Prototype live editing with SSH and live share?
 
 *** (3dline) ***
  + Now
+  - [] Export an array of camera data from user, in addition to,
+       where each step / frame is not duplicated and has a time delay.
   - [🟡] Add user connected messages.
   - [] Better mouse and keyboard controls.
   - [] Automatically reload the socket server?

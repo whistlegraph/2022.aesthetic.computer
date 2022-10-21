@@ -3,12 +3,41 @@
 // TODO: 🔐 Setup client<->server identity validation for both anonymous users and
 //          authenticated ones.
 
+import Fastify from 'fastify'
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
 import "dotenv/config";
 
-let wss, port;
+// File Watching for Remote Development Mode (HTTP Server)
+const fastify = Fastify({
+  logger: true
+})
+
+// Declare a route...
+fastify.post('/update', async (request, reply) => {
+  // Send message to all connected users to reload a piece that's being coded.
+  everyone(pack("reload", request.body.piece));
+})
+
+let port = 8080;
+if (process.env.NODE_ENV === "development") port = 8082;
+
+// Run the http server!
+const start = async () => {
+  try {
+    await fastify.listen({ port })
+  } catch (err) {
+    fastify.log.error(err)
+    process.exit(1)
+  }
+}
+start();
+
+const server = fastify.server;
+
+// Web Socket Server
+let wss;
 const connections = {};
 
 let connectionId = 0; // TODO: Eventually replace with a username arrived at through
@@ -27,17 +56,16 @@ if (process.env.NODE_ENV === "development") {
       `🤖 server.aesthetic.computer (Development) socket: wss://${ip.address()}:${port}`
     );
   });
-  wss = new WebSocketServer({ server });
   */
-  port = 8082;
-  wss = new WebSocketServer({ port });
+  wss = new WebSocketServer({ server });
+  //wss = new WebSocketServer({ port });
   console.log(
     `🤖 server.aesthetic.computer (Development) socket: ws://${ip.address()}:${port}`
   );
 } else {
   // And assume that in production we are already behind an https proxy.
-  port = 8080;
-  wss = new WebSocketServer({ port });
+  wss = new WebSocketServer({ server });
+  //wss = new WebSocketServer({ port });
   console.log(
     `🤖 server.aesthetic.computer (Production) socket: wss://${ip.address()}:${port}`
   );
@@ -119,7 +147,7 @@ function everyone(string) {
   });
 }
 
-// 🚧 File Watching in Development Mode
+// 🚧 File Watching in Local Development Mode
 // TODO: Extend this feature to the SSH server for developers. 22.10.18.21.48
 // File watching uses: https://github.com/paulmillr/chokidar
 // TODO: Stop logging every file and instead count them up and report a number.
