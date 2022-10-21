@@ -18,8 +18,9 @@ const server = createServer((req, res) => {
   // Testing this....
   if (port === 8082) console.log(req.method, req.url);
 
-  // TODO: Check if request is a post request going to the /upload route.
+  // TODO: Check if request is a post request going to the /update route.
   if (req.method === 'POST') {
+    console.log(req.url);
     if (req.url === "/update") {
       let body = '';
       req.on('data', (data) => body += data);
