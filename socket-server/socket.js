@@ -20,7 +20,7 @@ const server = createServer((req, res) => {
 
   // TODO: Check if request is a post request going to the /update route.
   if (req.method === 'POST') {
-    console.log(req);
+    console.log(req.url);
     if (req.url === "/update") {
       let body = '';
       req.on('data', (data) => body += data);
