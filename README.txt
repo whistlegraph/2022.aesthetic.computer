@@ -49,6 +49,7 @@ Welcome to...
          file if `export const reload = true;`
  + Later
    - [] People should be able to mint / submit their pieces from here.
+   - [] Parameterize "npm run reload-piece". 
   + Done
    - [x] Set up a developers / "pieces" SSH server.
    - [x] Prototype live editing with SSH and live share?

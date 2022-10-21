@@ -846,7 +846,7 @@ async function load(
       debug === true ? servers.local : servers.main,
       (id, type, content) => receiver?.(id, type, content),
       $commonApi.reload,
-      "ws"
+      debug === true ? "ws" : "wss"
     );
 
     $commonApi.net.socket = function (receive) {
