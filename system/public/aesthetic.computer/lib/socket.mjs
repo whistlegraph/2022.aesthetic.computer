@@ -77,9 +77,9 @@ export class Socket {
         this.id = c.id; // Set the user identifier.
       }
     } else if (type === "reload" && reload) {
-      const c = JSON.parse(content);
+      const c = typeof content === "string" ? JSON.parse(content) : content;
       this.kill();
-      reload(JSON.parse(content));
+      reload(c);
     } else {
       receive?.(id, type, content); // Finally send the message to the client.
     }

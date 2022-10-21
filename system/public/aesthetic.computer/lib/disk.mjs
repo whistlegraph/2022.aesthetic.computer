@@ -670,6 +670,24 @@ async function load(
 
   if (debug) console.log("🕸", fullUrl);
 
+  // 🅰️ Start the socket server before we load the disk, in case of needing
+  // to reload remotely on failure.
+  let receiver; // Handles incoming messages from the socket.
+
+  socket = new Socket(
+    debug === true ? servers.local : servers.main,
+    (id, type, content) => receiver?.(id, type, content),
+    $commonApi.reload,
+    debug === true ? "ws" : "wss"
+  );
+
+  $commonApi.net.socket = function (receive) {
+    //console.log("📡 Mapping receiver.");
+    receiver = receive;
+    return socket;
+  };
+
+  // 🅱️ Load the piece.
   // TODO: What happens if source is undefined?
   // const moduleLoadTime = performance.now();
   const module = await import(fullUrl).catch((err) => {
@@ -724,7 +742,7 @@ async function load(
         hash: currentHash,
         text: currentText,
       });
-    } 
+    }
   };
 
   // *** Resize ***
@@ -838,31 +856,14 @@ async function load(
     send({ type: "preload-ready", content: true }); // Tell the browser that all preloading is done.
   };
 
-  // Automatically connect a socket server if we are in debug mode.
-  //if (debug) {
-    let receiver; // Handles incoming messages from the socket.
-
-    socket = new Socket(
-      debug === true ? servers.local : servers.main,
-      (id, type, content) => receiver?.(id, type, content),
-      $commonApi.reload,
-      debug === true ? "ws" : "wss"
-    );
-
-    $commonApi.net.socket = function (receive) {
-      //console.log("📡 Mapping receiver.");
-      receiver = receive;
-      return socket;
-    };
-  //} else {
-    //$commonApi.net.socket = function (receive, host = servers.main) {
-    //  socket = new Socket(host, receive);
-    //  return socket;
-    //};
-  //}
-
   // TODO: Add the rest of the $api to "leave" ... refactor API. 22.08.22.07.34
-  if (firstLoad === false) leave({ store, screen, system: $commonApi.system }); // Trigger leave.
+  if (firstLoad === false) {
+    try {
+      leave({ store, screen, system: $commonApi.system }); // Trigger leave.
+    } catch {
+      console.warn("👋 Leave failure...");
+    }
+  }
 
   // Artificially imposed loading by at least 1/4 sec.
   setTimeout(async () => {
@@ -1192,7 +1193,11 @@ async function makeFrame({ data: { type, content } }) {
       */
     };
 
-    beat($api);
+    try {
+      beat($api);
+    } catch {
+      console.warn(" 💗 Beat failure...");
+    }
 
     send({ type: "beat", content: { bpm: content.bpm, squares, bubbles } }, [
       content.bpm,
@@ -1334,14 +1339,22 @@ async function makeFrame({ data: { type, content } }) {
         if (initialSim) {
           simCount += 1n;
           $api.simCount = simCount;
-          sim($api);
+          try {
+            sim($api);
+          } catch {
+            console.warn("🧮 Sim failure...");
+          }
           initialSim = false;
         } else if (content.updateCount > 0 && paintCount > 0n) {
           // Update the number of times that are needed.
-          for (let i = content.updateCount; i--; ) {
+          for (let i = content.updateCount; i--;) {
             simCount += 1n;
             $api.simCount = simCount;
-            sim($api);
+            try {
+              sim($api);
+            } catch {
+              console.warn("🧮 Sim failure...");
+            }
           }
         }
       }
@@ -1442,7 +1455,11 @@ async function makeFrame({ data: { type, content } }) {
 
         //console.log(data)
         $api.event = data;
-        act($api);
+        try {
+          act($api);
+        } catch {
+          console.warn("️ ✒ Act failure...");
+        }
       });
 
       // Ingest all keyboard input events by running act for each event.
@@ -1678,7 +1695,11 @@ async function makeFrame({ data: { type, content } }) {
 
       if (paintCount === 0n) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
-        await boot($api);
+        try {
+          boot($api);
+        } catch {
+          console.warn("🥾 Boot failure...")
+        }
         booted = true;
         if (loading === false) send({ type: "disk-loaded-and-booted" });
       }
@@ -1694,7 +1715,14 @@ async function makeFrame({ data: { type, content } }) {
       let dirtyBox;
 
       if (noPaint === false) {
-        const paintOut = paint($api); // Returns `undefined`, `false`, or `DirtyBox`.
+
+        let paintOut;
+
+        try {
+          paintOut = paint($api); // Returns `undefined`, `false`, or `DirtyBox`.
+        } catch {
+          console.warn("🎨 Paint failure...");
+        }
 
         // `DirtyBox` and `undefined` always set `noPaint` to `true`.
         noPaint =

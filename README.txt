@@ -41,29 +41,6 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
-*** SSH (code.aesthetic.computer) ***
- + Now
-   - [] Deploy piece-server updates more easily... add an npm command?
-   - [] Make live reloading better.
-        (Catch piece errors... see if errors can be reported?)
- + Later
-   - [] Add ping-pinging back to socket server.
-   - [] Only send reload messages to all clients if `export const reload = true`; ?
-   - [] Start moving individual glitch accounts over to pieces.aesthetic.computer.
-   - [] People should be able to mint / submit their pieces from here.
-   - [] Parameterize "npm run reload-piece". 
-  + Done
-   - [x] Put piece-server code into this repository.
-   - [x] Make sure server can reboot and pm2 is re-enabled.
-   - [x] Fix the @digitpain/hello no refresh bug.
-   - [x] Enable live reloading from the SSH server somehow...
-        (Run a node server from `digitpain` directory that watches
-         for file changes and sends a message from that server to the main
-         server which will send a socket message to all clients to reload the
-         file if `export const reload = true;`
-   - [x] Set up a developers / "pieces" SSH server.
-   - [x] Prototype live editing with SSH and live share?
-
 *** (3dline) ***
  + Now
   - [] Export an array of camera data from user, in addition to,
@@ -308,6 +285,29 @@ Welcome to...
          after firing.
   - [] Make a shaker using the average of all that data.
   - [] Make a spatial linear curve to fit the data based on some device orientation.
+  
+*** SSH (code.aesthetic.computer) ***
+ + Later
+   - [] Add ping-pinging back to socket server.
+   - [] Only send reload messages to all clients if `export const reload = true`; ?
+   - [] Start moving individual glitch accounts over to pieces.aesthetic.computer.
+   - [] People should be able to mint / submit their pieces from here.
+   - [] Parameterize "npm run reload-piece". 
+  + Done
+   - [x] Make live reloading better.
+        (Catch piece errors... see if errors can be reported?)
+   - [x] Deploy piece-server updates more easily.
+   - [x] Put piece-server code into this repository.
+   - [x] Make sure server can reboot and pm2 is re-enabled.
+   - [x] Fix the @digitpain/hello no refresh bug.
+   - [x] Enable live reloading from the SSH server somehow...
+        (Run a node server from `digitpain` directory that watches
+         for file changes and sends a message from that server to the main
+         server which will send a socket message to all clients to reload the
+         file if `export const reload = true;`
+   - [x] Set up a developers / "pieces" SSH server.
+   - [x] Prototype live editing with SSH and live share?
+
 
 *** Image Support ***
   *** Save ***
