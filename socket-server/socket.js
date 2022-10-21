@@ -3,20 +3,20 @@
 // TODO: 🔐 Setup client<->server identity validation for both anonymous users and
 //          authenticated ones.
 
-//import Fastify from 'fastify';
+import Fastify from 'fastify';
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
 import "dotenv/config";
 
 // File Watching for Remote Development Mode (HTTP Server)
-//const fastify = Fastify();
+const fastify = Fastify();
 
 // Declare a route...
-//fastify.post('/update', async (request, reply) => {
+fastify.post('/update', async (request, reply) => {
   // Send message to all connected users to reload a piece that's being coded.
-//  everyone(pack("reload", request.body.piece));
-//})
+  everyone(pack("reload", request.body.piece));
+})
 
 let port = 8080;
 if (process.env.NODE_ENV === "development") port = 8082;
