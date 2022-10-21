@@ -27,6 +27,7 @@ if (process.env.NODE_ENV === "development") port = 8082;
 const start = async () => {
   try {
     await fastify.listen({ port })
+    console.log("Fastify server online!", port);
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
