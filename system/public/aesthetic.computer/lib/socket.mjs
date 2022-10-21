@@ -62,7 +62,7 @@ export class Socket {
   // Note: "reload" should only be defined when in development / debug mode.
   #preReceive({ id, type, content }, receive, reload) {
 
-    console.log("Socket message:", id, type, content);
+    // console.log("Socket message:", id, type, content);
 
     if (type === "message") {
       // 🔴 TODO: Catch this JSON.parse error.
@@ -77,7 +77,12 @@ export class Socket {
         this.id = c.id; // Set the user identifier.
       }
     } else if (type === "reload" && reload) {
-      const c = typeof content === "string" ? JSON.parse(content) : content;
+      let c;
+      if (typeof content === "object") {
+        c = content;
+      } else {
+        c = JSON.parse(content);
+      }
       this.kill();
       reload(c);
     } else {

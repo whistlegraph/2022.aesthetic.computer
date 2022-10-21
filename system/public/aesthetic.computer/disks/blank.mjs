@@ -28,7 +28,7 @@ function boot({ resize }) {
 
 // 🎨 Paint (Executes every display frame)
 function paint($api) {
-  $api.wipe(10, 50, 180); // Draw a pink background. (You can also use hex.)
+  $api.wipe(10, 150, 10); // Draw a pink background. (You can also use hex.)
   //return false; // You can return false to draw only once!
 }
 
