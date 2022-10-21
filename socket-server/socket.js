@@ -3,16 +3,14 @@
 // TODO: 🔐 Setup client<->server identity validation for both anonymous users and
 //          authenticated ones.
 
-import Fastify from 'fastify'
+import Fastify from 'fastify';
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
 import "dotenv/config";
 
 // File Watching for Remote Development Mode (HTTP Server)
-const fastify = Fastify({
-  logger: true
-})
+const fastify = Fastify();
 
 // Declare a route...
 fastify.post('/update', async (request, reply) => {
@@ -29,11 +27,12 @@ const start = async () => {
     await fastify.listen({ port })
     console.log("Fastify server online!", port);
   } catch (err) {
+    console.log("Error!");
     fastify.log.error(err)
     process.exit(1)
   }
 }
-start();
+await start();
 
 const server = fastify.server;
 
