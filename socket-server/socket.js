@@ -16,25 +16,23 @@ const fastify = Fastify();
 fastify.post('/update', async (request, reply) => {
   // Send message to all connected users to reload a piece that's being coded.
   everyone(pack("reload", request.body.piece));
-})
+});
 
 let port = 8080;
 if (process.env.NODE_ENV === "development") port = 8082;
 
 // Run the http server!
-//const start = async () => {
-//  try {
-//    await fastify.listen({ port })
-//    console.log("Fastify server online!", port);
-//  } catch (err) {
-//    console.log("Error!");
-//    fastify.log.error(err)
-//    process.exit(1)
-//  }
-//}
-//await start();
-
-//const server = fastify.server;
+const start = async () => {
+  try {
+    await fastify.listen({ port })
+    console.log("Fastify server online!", port);
+  } catch (err) {
+    console.log("Error!");
+    fastify.log.error(err)
+    process.exit(1)
+  }
+}
+await start();
 
 // Web Socket Server
 let wss;
@@ -57,14 +55,14 @@ if (process.env.NODE_ENV === "development") {
     );
   });
   */
-  wss = new WebSocketServer({ port });
+  wss = new WebSocketServer({ server: fastify.server });
   //wss = new WebSocketServer({ port });
   console.log(
     `🤖 server.aesthetic.computer (Development) socket: ws://${ip.address()}:${port}`
   );
 } else {
   // And assume that in production we are already behind an https proxy.
-  wss = new WebSocketServer({ port });
+  wss = new WebSocketServer({ server: fastify.server });
   //wss = new WebSocketServer({ port });
   console.log(
     `🤖 server.aesthetic.computer (Production) socket: wss://${ip.address()}:${port}`
