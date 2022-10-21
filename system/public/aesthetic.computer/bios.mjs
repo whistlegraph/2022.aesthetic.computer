@@ -186,12 +186,15 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // Cache the current canvas if needed.
     if (freezeFrame && imageData && !document.body.contains(freezeFrameCan)) {
-      console.log(
-        "🥶 Freezing:",
-        freezeFrame,
-        imageData.width,
-        imageData.height
-      );
+
+      if (debug) {
+        console.log(
+          "🥶 Freezing:",
+          freezeFrame,
+          imageData.width,
+          imageData.height
+        );
+      }
 
       freezeFrameCan.style.width = canvas.getBoundingClientRect().width + "px";
       freezeFrameCan.style.height =

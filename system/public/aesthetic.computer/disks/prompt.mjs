@@ -189,7 +189,7 @@ async function act({
         // Push input to a history stack, avoiding repeats.
         if (store[key][0] !== input) store[key].unshift(input);
 
-        console.log("📚 Stored history:", store[key]);
+        if (debug) console.log("📚 Stored prompt history:", store[key]);
 
         store.persist(key); // Persist the history stack across tabs.
 

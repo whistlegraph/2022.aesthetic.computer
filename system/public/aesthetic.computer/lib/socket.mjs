@@ -27,7 +27,7 @@ export class Socket {
 
     // Recursively re-connect after every second upon close or failed connection.
     ws.onclose = (e) => {
-      console.warn("📡 Disconnected...", e.reason);
+      if (debug) console.warn("📡 Disconnected...", e.reason);
       // Only reconnect if we are not killing the socket and not in development mode.
       if (this.#killSocket === false) {
         console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
@@ -35,6 +35,7 @@ export class Socket {
           this.#connect(host, receive, reload);
         }, this.#reconnectTime);
         this.#reconnectTime = Math.min(this.#reconnectTime * 2, 32000);
+      } else {
       }
     };
 
@@ -73,7 +74,7 @@ export class Socket {
         console.log(`📡 ${c.text}`);
       } else {
         // Send a self-connection message here. (You are connected as...)
-        console.log(`${c.ip} → 🤹${c.playerCount} : @${c.id}`);
+        console.log(`${c.ip} → 🤹 ${c.playerCount} : @${c.id}`);
         this.id = c.id; // Set the user identifier.
       }
     } else if (type === "reload" && reload) {
