@@ -177,7 +177,20 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
 }
 
 // ✒ Act
-function act({ event: e, color, num: { vec4 }, geo: { Quantizer } }) {
+function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quantizer } }) {
+  // Functions
+  if (e.is("keyboard:down:enter")) {
+    // Pack up and download the vertices in an array of arrays.
+    download(`sculpture-${timestamp()}.json`, JSON.stringify(
+      drawing.vertices.map(v => [
+        [v.pos["0"], v.pos["1"], v.pos["2"]],
+        [...v.color]
+      ]))
+    );
+  }
+
+  // Controls
+
   // 🖱️ Mouse
   //Look around while dragging.
   if (e.is("draw")) {

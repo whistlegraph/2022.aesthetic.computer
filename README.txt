@@ -43,15 +43,13 @@ Welcome to...
 
 *** (3dline) ***
  + Now
-  - [] Export an array of camera data from user, in addition to,
-       where each step / frame is not duplicated and has a time delay.
-  - [🟡] Add user connected messages.
+  - [🌀] Quickly going back and forth between 3dline and itself / prompt
+       will cause errors. 
+  - [] Add user connected messages.
   - [] Better mouse and keyboard controls.
   - [] Automatically reload the socket server?
   - [] Does each player bring their lines with them?
        (This would make their presence very important.)
-  - [] Quickly going back and forth between 3dline and itself / prompt
-       will cause errors. 
   - [] Add a "room" system.
     - [] Just start with one room but add an abstraction layer for it soon.
     - [] Save buffered lines via store["remote"] to the remote room.
@@ -98,6 +96,8 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Export an array of camera data from user, in addition to,
+       where each step / frame is not duplicated and has a time delay.
   - [x] Add websocket support for other players and their lines.
   - [x] Should `Race` lines be more quantized / regulated?
   - [x] Synchronization error on 144hz displays with keep: false.
@@ -285,7 +285,7 @@ Welcome to...
          after firing.
   - [] Make a shaker using the average of all that data.
   - [] Make a spatial linear curve to fit the data based on some device orientation.
-  
+
 *** SSH (code.aesthetic.computer) ***
  + Later
    - [] Add ping-pinging back to socket server.
