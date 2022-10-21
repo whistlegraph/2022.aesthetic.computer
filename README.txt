@@ -30,10 +30,10 @@ Welcome to...
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
-  - [] Zooming in on the page a lot will make the margin too large
-       and squash the main display.
   - [] (Related to reloading.) Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
   - [🆘] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
+  - [] Zooming in on the page a lot will make the margin too large
+       and squash the main display.
   - [] The back button does not work in the Instagram in-app browser.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
@@ -42,15 +42,21 @@ Welcome to...
 
 *** SSH (code.aesthetic.computer) ***
  + Now
-   - [🍏] Enable live reloading from the SSH server somehow...
+   - [] Make sure server can reboot and pm2 is re-enabled.
+   - [] Fix the @digitpain/hello no refresh bug.
+   - [] Make live reloading better.
+        (Catch piece errors... see if errors can be reported?)
+   - [] Put piece-server code into this repository.
+        (Deploy it automatically?)
+   - [x] Enable live reloading from the SSH server somehow...
         (Run a node server from `digitpain` directory that watches
          for file changes and sends a message from that server to the main
          server which will send a socket message to all clients to reload the
          file if `export const reload = true;`
-   - [] Add ping-pinging back to socket server.
-   - [] Put piece-server code into this repository.
-        (Deploy it automatically?)
  + Later
+   - [] Add ping-pinging back to socket server.
+   - [] Only send reload messages to all clients if `export const reload = true`; ?
+   - [] Start moving individual glitch accounts over to pieces.aesthetic.computer.
    - [] People should be able to mint / submit their pieces from here.
    - [] Parameterize "npm run reload-piece". 
   + Done

@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === "development") port = 8082;
 const server = createServer((req, res) => {
 
   // Log the request.
-  console.log("Request: ", req.method, "from: ", req.url);
+  // console.log("Request: ", req.method, "from: ", req.url);
 
   if (req.method === 'POST') {
     if (req.url === "/reload") {
