@@ -30,19 +30,25 @@ Welcome to...
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
+  - [🎇] Fix Firefox not working.
   - [] Is there a memory leak in `prompt`?
   - [] (Related to reloading.) Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
-  - [🆘] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
   - [] Zooming in on the page a lot will make the margin too large
        and squash the main display.
   - [] The back button does not work in the Instagram in-app browser.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
+  + Done
+  - [x] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
 
 🌟 Projects In Progress 🌟
 
 *** p1xelfool additions ***
- - [] Add ability to directly manipulate the buffer again.
+ - [] Complete TODOS @p1xelgool/blank. 
+ - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
+
+*** Logging ***
+- [🆘] Add `debug` as an import for the API.
 
 *** (3dline) ***
  + Now

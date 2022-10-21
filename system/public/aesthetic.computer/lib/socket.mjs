@@ -27,7 +27,7 @@ export class Socket {
 
     // Recursively re-connect after every second upon close or failed connection.
     ws.onclose = (e) => {
-      console.warn("📡 Disconnected...", e.reason);
+      // console.warn("📡 Disconnected...", e.reason);
       // Only reconnect if we are not killing the socket and not in development mode.
       if (this.#killSocket === false) {
         console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
