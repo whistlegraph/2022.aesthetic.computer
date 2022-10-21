@@ -61,6 +61,9 @@ export class Socket {
   // Before passing messages to disk code, handle some system messages here.
   // Note: "reload" should only be defined when in development / debug mode.
   #preReceive({ id, type, content }, receive, reload) {
+
+    console.log("MESSAGE", id, type, content);
+
     if (type === "message") {
       // 🔴 TODO: Catch this JSON.parse error.
       const c = JSON.parse(content);
@@ -75,6 +78,9 @@ export class Socket {
       }
 
     } else if (type === "reload" && reload) {
+
+      console.log("RELOAD", id, type, content);
+
       if (content === "disk") {
         console.log("💾️ Reloading disk...");
         this.kill();

@@ -837,11 +837,11 @@ async function load(
   };
 
   // Automatically connect a socket server if we are in debug mode.
-  if (debug) {
+  //if (debug) {
     let receiver; // Handles incoming messages from the socket.
 
     socket = new Socket(
-      servers.local,
+      debug === true ? servers.local : servers.main,
       (id, type, content) => receiver?.(id, type, content),
       $commonApi.reload,
       "ws"
@@ -852,14 +852,12 @@ async function load(
       receiver = receive;
       return socket;
     };
-  } else {
-    $commonApi.net.socket = function (receive, host = servers.main) {
-      // TODO: Flesh out the rest of reload functionality here to extract it from
-      //       Socket. 21.1.5
-      socket = new Socket(host, receive);
-      return socket;
-    };
-  }
+  //} else {
+    //$commonApi.net.socket = function (receive, host = servers.main) {
+    //  socket = new Socket(host, receive);
+    //  return socket;
+    //};
+  //}
 
   // TODO: Add the rest of the $api to "leave" ... refactor API. 22.08.22.07.34
   if (firstLoad === false) leave({ store, screen, system: $commonApi.system }); // Trigger leave.
