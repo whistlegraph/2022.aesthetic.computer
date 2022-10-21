@@ -26,7 +26,7 @@ const server = createServer((req, res) => {
       req.on('end', () => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         everyone(pack("reload", body, "pieces"));
-        res.end("Reload request sent!");
+        res.end(JSON.stringify({ msg: "Reload request sent!" }));
       });
     } else {
       res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -34,7 +34,7 @@ const server = createServer((req, res) => {
     }
   } else {
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end('🏀 Sorry. Please visit aesthetic.computer!');
+    res.end(JSON.stringify({ msg: "🏀 Sorry. Please visit aesthetic.computer!" }));
   }
 
 });
