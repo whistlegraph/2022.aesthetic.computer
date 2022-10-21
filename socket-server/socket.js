@@ -15,13 +15,11 @@ if (process.env.NODE_ENV === "development") port = 8082;
 
 const server = createServer((req, res) => {
 
-  // Testing this....
-  if (port === 8082) console.log(req.method, req.url);
+  // Log the request.
+  console.log("Request: ", req.method, "from: ", req.url);
 
-  // TODO: Check if request is a post request going to the /update route.
   if (req.method === 'POST') {
-    console.log(req.url);
-    if (req.url === "/update") {
+    if (req.url === "/reload") {
       let body = '';
       req.on('data', (data) => body += data);
       req.on('end', () => {

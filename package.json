@@ -6,7 +6,7 @@
   "scripts": {
     "code": "cd system; npm run codespaces-dev",
     "new-piece": "f() { cd system/public/aesthetic.computer/disks; cp blank.mjs $1.mjs; };f",
-    "reload-piece": "curl -X POST -H \"Content-Type: application/json\" -d '{\"piece\": \"@digitpain/hello\"}' http://localhost:8082/update",
+    "reload-piece": "curl -X POST -H \"Content-Type: application/json\" -d '{\"piece\": \"@digitpain/hello\"}' http://localhost:8082/reload",
     "server:socket": "cd socket-server; npm run server",
     "install:system": "cd system; npm install",
     "install:socket-server": "cd socket-server; npm install",
