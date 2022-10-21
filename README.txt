@@ -42,11 +42,14 @@ Welcome to...
 
 *** SSH (code.aesthetic.computer) ***
  + Now
-   - [] Enable live reloading from the SSH server somehow...
+   - [🍏] Enable live reloading from the SSH server somehow...
         (Run a node server from `digitpain` directory that watches
          for file changes and sends a message from that server to the main
          server which will send a socket message to all clients to reload the
          file if `export const reload = true;`
+   - [] Add ping-pinging back to socket server.
+   - [] Put piece-server code into this repository.
+        (Deploy it automatically?)
  + Later
    - [] People should be able to mint / submit their pieces from here.
    - [] Parameterize "npm run reload-piece". 

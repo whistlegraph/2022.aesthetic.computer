@@ -29,7 +29,7 @@ export class Socket {
     ws.onclose = (e) => {
       console.warn("📡 Disconnected...", e.reason);
       // Only reconnect if we are not killing the socket and not in development mode.
-      if (this.#killSocket === false && reload === undefined) {
+      if (this.#killSocket === false) {
         console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
         setTimeout(() => {
           this.#connect(host, receive, reload);
@@ -62,7 +62,7 @@ export class Socket {
   // Note: "reload" should only be defined when in development / debug mode.
   #preReceive({ id, type, content }, receive, reload) {
 
-    console.log(id, type, content);
+    console.log("Socket message:", id, type, content);
 
     if (type === "message") {
       // 🔴 TODO: Catch this JSON.parse error.
