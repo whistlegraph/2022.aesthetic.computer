@@ -3,36 +3,43 @@
 // TODO: 🔐 Setup client<->server identity validation for both anonymous users and
 //          authenticated ones.
 
-import Fastify from 'fastify';
+import { createServer } from 'http';
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
 import "dotenv/config";
 
 // File Watching for Remote Development Mode (HTTP Server)
-const fastify = Fastify();
-
-// Declare a route...
-fastify.post('/update', async (request, reply) => {
-  // Send message to all connected users to reload a piece that's being coded.
-  everyone(pack("reload", request.body.piece));
-});
-
 let port = 8080;
 if (process.env.NODE_ENV === "development") port = 8082;
 
-// Run the http server!
-const start = async () => {
-  try {
-    await fastify.listen({ port })
-    console.log("Fastify server online!", port);
-  } catch (err) {
-    console.log("Error!");
-    fastify.log.error(err)
-    process.exit(1)
+const server = createServer((req, res) => {
+
+  // Testing this....
+  if (port === 8082) console.log(req.method, req.url);
+
+  // TODO: Check if request is a post request going to the /upload route.
+  if (req.method === 'POST') {
+    if (req.url === "/update") {
+      let body = '';
+      req.on('data', (data) => body += data);
+      req.on('end', () => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        everyone(pack("reload", body, "pieces"));
+        res.end("Reload request sent!");
+      });
+    } else {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end('Sorry.');
+    }
+  } else {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end('🏀 Sorry. Please visit aesthetic.computer!');
   }
-}
-await start();
+
+});
+
+server.listen(port);
 
 // Web Socket Server
 let wss;
@@ -55,14 +62,14 @@ if (process.env.NODE_ENV === "development") {
     );
   });
   */
-  wss = new WebSocketServer({ server: fastify.server });
+  wss = new WebSocketServer({ server });
   //wss = new WebSocketServer({ port });
   console.log(
     `🤖 server.aesthetic.computer (Development) socket: ws://${ip.address()}:${port}`
   );
 } else {
   // And assume that in production we are already behind an https proxy.
-  wss = new WebSocketServer({ server: fastify.server });
+  wss = new WebSocketServer({ server });
   //wss = new WebSocketServer({ port });
   console.log(
     `🤖 server.aesthetic.computer (Production) socket: wss://${ip.address()}:${port}`
@@ -70,8 +77,8 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Pack messages into a simple object protocol of `{type, content}`.
-function pack(type, content) {
-  return JSON.stringify({ type, content });
+function pack(type, content, id) {
+  return JSON.stringify({ type, content, id });
 }
 
 // Construct the server.
@@ -87,7 +94,7 @@ wss.on("connection", (ws, req) => {
   //       the client instead.
   const content = { ip, id, playerCount: wss.clients.size };
 
-  ws.send(pack("message", JSON.stringify(content)));
+  ws.send(pack("message", JSON.stringify(content), id));
 
   // Send a message to all other clients except this one.
   function others(string) {
@@ -99,7 +106,8 @@ wss.on("connection", (ws, req) => {
   others(
     pack(
       "message",
-      JSON.stringify({ text: `🤖 ${ip} : ${connectionId} has joined.` })
+      JSON.stringify({ text: `🤖 ${ip} : ${connectionId} has joined.` }),
+      id
     )
   );
 
@@ -155,7 +163,7 @@ if (process.env.NODE_ENV === "development") {
     .watch("../system/public/aesthetic.computer/disks")
     .on("all", (event, path) => {
       console.log("Disk:", event, path);
-      if (event === "change") everyone(pack("reload", "disk"));
+      if (event === "change") everyone(pack("reload", { piece: "*" }, "local"));
     });
 
   // 2. Watch base system files.
@@ -168,6 +176,6 @@ if (process.env.NODE_ENV === "development") {
     ])
     .on("all", (event, path) => {
       console.log("System:", event, path);
-      if (event === "change") everyone(pack("reload", "system"));
+      if (event === "change") everyone(pack("reload", { piece: "*refresh*" }, "local"));
     });
 }

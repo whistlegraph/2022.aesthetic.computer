@@ -709,10 +709,12 @@ async function load(
   // };
 
   // Add reload to the common api.
-  $commonApi.reload = (type) => {
-    if (type === "refresh") {
+  $commonApi.reload = ({ piece }) => {
+    if (piece === "*refresh*") {
+      console.log("💥️ Restarting system...");
       send({ type: "refresh" }); // Refresh the browser.
-    } else {
+    } else if (piece === "*" || piece === undefined || currentText === piece) {
+      console.log("💾️ Reloading piece...", piece);
       // Reload the disk.
       load({
         path: currentPath,
@@ -722,7 +724,7 @@ async function load(
         hash: currentHash,
         text: currentText,
       });
-    }
+    } 
   };
 
   // *** Resize ***

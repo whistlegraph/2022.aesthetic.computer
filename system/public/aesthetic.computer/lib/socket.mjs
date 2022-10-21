@@ -61,9 +61,6 @@ export class Socket {
   // Before passing messages to disk code, handle some system messages here.
   // Note: "reload" should only be defined when in development / debug mode.
   #preReceive({ id, type, content }, receive, reload) {
-
-    console.log("MESSAGE", id, type, content);
-
     if (type === "message") {
       // 🔴 TODO: Catch this JSON.parse error.
       const c = JSON.parse(content);
@@ -76,19 +73,10 @@ export class Socket {
         console.log(`${c.ip} → 🤹${c.playerCount} : @${c.id}`);
         this.id = c.id; // Set the user identifier.
       }
-
     } else if (type === "reload" && reload) {
-
-      console.log("RELOAD", id, type, content);
-
-      if (content === "disk") {
-        console.log("💾️ Reloading disk...");
-        this.kill();
-        reload(); // TODO: Should reload be passed all the way in here?
-      } else if (content === "system" && reload) {
-        console.log("💥️ Restarting system...");
-        reload("refresh"); // Reload the whole page.
-      }
+      const c = JSON.parse(content);
+      if (c.piece === "*refresh*") this.kill();
+      reload(JSON.parse(content));
     } else {
       receive?.(id, type, content); // Finally send the message to the client.
     }

@@ -21,6 +21,6 @@
     "utf-8-validate": "^5.0.8"
   },
   "devDependencies": {
-    "prettier": "^2.5.1"
+    "prettier": "^2.7.1"
   }
 }
