@@ -626,8 +626,6 @@ async function load(
     host = originalHost;
   }
 
-  console.log(path, host, search, params, hash, text);
-
   loadFailure = undefined;
   host = host.replace(/\/$/, ""); // Remove any trailing slash from host. Note: This fixes a preview bug on teia.art. 2022.04.07.03.00
   lastHost = host; // Memoize the host.

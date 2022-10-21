@@ -1493,6 +1493,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // a user can use browser history to switch between disks.
       if (content.pieceCount > 0) {
         if (content.fromHistory === false) {
+
+         
+          console.log("History push:", content);
+
           history.pushState(
             "",
             document.title,
