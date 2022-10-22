@@ -744,7 +744,7 @@ async function load(
   // $commonApi.meta = (data) => {
   //  send({ type: "meta", content: data });
   // };
- 
+
   // *** Resize ***
   // Accepts width, height and gap either as numbers or as
   // an object with those keys.
@@ -866,21 +866,13 @@ async function load(
   }
 
   // Artificially imposed loading by at least 1/4 sec.
-  setTimeout(async () => {
-    // Read current dark mode.
-    const dark = await store.retrieve("dark-mode");
-    if (dark === true || dark === false) $commonApi.dark = dark;
+  setTimeout(() => {
 
     // Redefine the default event functions if they exist in the module.
-    // Or... inherit an existing `system` (just nopaint for now).
-    if (module.system === "nopaint" || text === "prompt") {
-      store["painting"] =
-        store["painting"] || (await store.retrieve("painting", "local:db"));
-    }
-
     if (module.system === "nopaint") {
       // If there is no painting is in ram, then grab it from the local store,
       // or generate one.
+      $commonApi.system = { name: "nopaint" };
 
       boot = module.boot || nopaint.boot;
       sim = module.sim || defaults.sim;
@@ -888,17 +880,6 @@ async function load(
       beat = module.beat || defaults.beat;
       act = module.act || nopaint.act;
       leave = module.leave || nopaint.leave;
-
-      $commonApi.system = {
-        name: "nopaint",
-        painting:
-          store["painting"] ||
-          painting.api.painting(screen.width, screen.height, ({ wipe }) => {
-            // wipe(0, 0, 0, 0);
-            wipe(64);
-            // TODO: Enable working with transparency.
-          }),
-      };
     } else {
       boot = module.boot || defaults.boot;
       sim = module.sim || defaults.sim;
@@ -1693,15 +1674,37 @@ async function makeFrame({ data: { type, content } }) {
       // Right now, in `line` there is a paintCount check to work around this.
       // 22.09.19.20.45
 
-      if (paintCount === 0n) {
+      if (paintCount === 0n && loading === false) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
+        // Read current dark mode.
+
+        //const dark = await store.retrieve("dark-mode");
+        //if (dark === true || dark === false) $commonApi.dark = dark;
+
+        // System specific preloaders.
+        if ($commonApi?.system?.name === "nopaint" || currentText === "prompt") {
+          store["painting"] =
+            store["painting"] || (await store.retrieve("painting", "local:db"));
+        }
+
+        if ($commonApi?.system?.name === "nopaint") {
+          $commonApi.system.painting =
+            store["painting"] ||
+            painting.api.painting(screen.width, screen.height, ({ wipe }) => {
+              // wipe(0, 0, 0, 0);
+              wipe(64);
+              // TODO: Enable working with transparency.
+            });
+
+        }
+
         try {
           boot($api);
         } catch {
           console.warn("🥾 Boot failure...")
         }
         booted = true;
-        if (loading === false) send({ type: "disk-loaded-and-booted" });
+        send({ type: "disk-loaded-and-booted" });
       }
 
       // We no longer need the preload api for painting.

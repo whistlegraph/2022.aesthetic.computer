@@ -515,6 +515,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       await audioContext.audioWorklet.addModule(
         "/aesthetic.computer/lib/speaker.mjs"
       );
+
       const soundProcessor = new AudioWorkletNode(
         audioContext,
         "sound-processor",
@@ -586,6 +587,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   //  type: "module",
   //});
   const fullPath = "/aesthetic.computer/lib/disk.mjs" + "#" + Date.now(); // bust the cache. This prevents an error related to Safari loading workers from memory.
+
   const worker = new Worker(new URL(fullPath, window.location.href), {
     type: "module",
   });
@@ -602,8 +604,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       err.message ===
       "SyntaxError: import declarations may only appear at top level of a module"
     ) {
-      console.error(
-        "🟡 Disk module workers unsupported. Continuing with dynamic import..."
+      console.warn(
+        "🟡 Disk module workers unsupported in this browser. Using a dynamic import..."
       );
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
       const module = await import(`./lib/disk.mjs`);

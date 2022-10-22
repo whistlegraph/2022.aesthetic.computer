@@ -30,30 +30,26 @@ Welcome to...
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
-  - [🎇] Fix Firefox not working.
-  - [] Is there a memory leak in `prompt`?
+  - [🍽️] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
+    - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
   - [] (Related to reloading.) Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+- [🆘] Add `debug` as an import for the API.
+  - [] Is there a memory leak in `prompt`?
   - [] Zooming in on the page a lot will make the margin too large
        and squash the main display.
   - [] The back button does not work in the Instagram in-app browser.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
-  - [] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
   + Done
+  - [x] Fix Firefox not working.
   - [x] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
 
 🌟 Projects In Progress 🌟
-
-*** p1xelfool additions ***
- - [] Complete TODOS @p1xelgool/blank. 
- - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
-
-*** Logging ***
-- [🆘] Add `debug` as an import for the API.
 
 *** (3dline) ***
  + Now
   - [🌀] Quickly going back and forth between 3dline and itself / prompt
        will cause errors. 
+    - [] Get 3dline working on Firefox too.
   - [] Add user connected messages.
   - [] Better mouse and keyboard controls.
   - [] Automatically reload the socket server?
@@ -159,6 +155,10 @@ Welcome to...
 *** Friendlier Developer Logs ***
   - [] Optimize the console.log output in production to be
        more terse, and make common sense.
+
+*** p1xelfool additions ***
+ - [] Complete TODOS @p1xelgool/blank. 
+ - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
 
 *** Physics ***
  - [] Add jumping / movement speed.
