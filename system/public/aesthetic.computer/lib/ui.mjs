@@ -2,6 +2,7 @@ import { Box } from "./geo.mjs";
 import { radians } from "./num.mjs";
 const { round } = Math;
 
+// Loading icon.
 function spinner(ctx, timePassed) {
   const gap = 20,
     s = 8;
@@ -28,12 +29,17 @@ function spinner(ctx, timePassed) {
   ctx.restore();
 }
 
+// Paused icon.
 function cached(ctx) {
   const gap = 4,
     s = 20;
 
   ctx.save();
-  ctx.translate(round(gap / 2) + 6, round(gap / 2) + 4); // TODO: Translate before clearing to save some lines? 2022.02.02.03.30
+  ctx.translate(round(gap / 2) + 6, round(gap / 2) + 4);
+
+  // Bottom Left option.
+  ctx.translate(0, round((ctx.canvas.height / window.devicePixelRatio) - (s * 2) + 2));
+
 
   ctx.beginPath();
 

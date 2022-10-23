@@ -31,7 +31,7 @@ Welcome to...
 
 🐞 Major Bugs & Regressions
   - [🍽️] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
-    - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
+  - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
   - [] (Related to reloading.) Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
 - [🆘] Add `debug` as an import for the API.
   - [] Is there a memory leak in `prompt`?
@@ -45,11 +45,28 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** Palette ***
+  - [] Create a basic palette that enables one finger drawing. 
+  - [] Add tools to palette that utilize existing toolset.
+  - [] Add save button to palette. (Fix `tracker` buttions?)
+  - [] Add "sign" and "mint" to palette as well.
+
+*** p1xelfool additions ***
+ - [] Complete TODOS @p1xelgool/blank. 
+ - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
+
 *** (3dline) ***
  + Now
-  - [🌀] Quickly going back and forth between 3dline and itself / prompt
-       will cause errors. 
-    - [] Get 3dline working on Firefox too.
+  - [] Add WebXR session.
+    - [] Use these demos.
+      - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
+      - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
+      - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
+    - [] Future specs: https://immersive-web.github.io/raw-camera-access
+
+  >--------<
+
+  - [] Draw a line in webXR.
   - [] Add user connected messages.
   - [] Better mouse and keyboard controls.
   - [] Automatically reload the socket server?
@@ -62,16 +79,6 @@ Welcome to...
           of time.)
       - [] Perhaps this can just use the system ram, then dump to S3 after
            clients disconnect?
-
-  >--------<
-
-  - [] Add WebXR session.
-    - [] Use these demos.
-      - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
-      - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
-      - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
-    - [] Future specs: https://immersive-web.github.io/raw-camera-access
-  - [] Draw a line in webXR.
   - [] How to hear someone else's audio stream? https://stackoverflow.com/a/61438244/8146077
   - [x] Save the buffered lines to indexedDB... and/or to the remote room?
     - [x] Store and reload from indexedDB.
@@ -101,6 +108,10 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Get 3dline working on Firefox too.
+  - [x] Auto-expand buffer at the start of prompt.
+  - [x] Quickly going back and forth between 3dline and itself / prompt
+       will cause errors. 
   - [x] Export an array of camera data from user, in addition to,
        where each step / frame is not duplicated and has a time delay.
   - [x] Add websocket support for other players and their lines.
@@ -152,13 +163,19 @@ Welcome to...
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
 
+***Android Day***
+  - [] Fix keyboard controls not working (this should also fix Meta Quest 2).
+  + Done
+  - [x] Provision Android phone.
+
+***Firefox Day***
+ - [] Cursor
+ - [] 3dline loading
+ - [] Smooth out everything.
+
 *** Friendlier Developer Logs ***
   - [] Optimize the console.log output in production to be
        more terse, and make common sense.
-
-*** p1xelfool additions ***
- - [] Complete TODOS @p1xelgool/blank. 
- - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
 
 *** Physics ***
  - [] Add jumping / movement speed.
@@ -340,10 +357,6 @@ Welcome to...
   - [] Cache already remotely loaded pieces in a given session,
        so they can be reloaded without having to re-download them or show a spinner.
   - [] Disable this in debug / development mode.
-
-***Android Day***
-  - [] Provision Android phone.
-  - [] Fix keyboard controls not working (this should also fix Meta Quest 2).
 
 ***Audio + Video Storage (Microphone)***
  + Now

@@ -28,7 +28,7 @@ function boot({ resize }) {
 
 // 🎨 Paint (Executes every display frame)
 function paint($api) {
-  $api.wipe(100, 100, 180); // Draw a background. (You can also use hex.)
+  $api.wipe(100, 100, 120); // Draw a background. (You can also use hex.)
 
   // Loop through / edit a pixel array. 
   //$api.edit((pix, w, h) => {

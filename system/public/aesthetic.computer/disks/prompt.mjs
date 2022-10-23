@@ -17,6 +17,7 @@ const { floor } = Math;
 
 import { parse } from "../lib/parse.mjs";
 import { font1 } from "./common/fonts.mjs";
+import { nopaint_adjust } from "../systems/nopaint.mjs";
 
 let glyphs = {};
 
@@ -44,14 +45,11 @@ let canType = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
-  cursor,
   net: { preload },
   pieceCount,
   glaze,
-  resize,
-  density,
-  screen,
 }) {
+
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
 
   // Preload all glyphs.
@@ -114,12 +112,11 @@ const scheme = {
 };
 
 // 🎨 Paint (Runs once per display refresh rate)
-function paint({ box, screen, wipe, ink, paste, store, dark }) {
+function paint({ box, screen, wipe, ink, paste, store, system, dark }) {
   const pal = scheme[dark ? "dark" : "light"];
 
   if (store["painting"]) {
     paste(store["painting"]);
-
     ink(...pal.bg, 127).box(screen); // Backdrop
     //wipe(70, 50, 100);
   } else {
@@ -161,12 +158,20 @@ async function act({
   load,
   store,
   download,
+  screen,
+  system,
+  painting,
   darkMode,
   num,
 }) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
   //if (e.is("move")) needsPaint();
+
+  if (e.is("reframed")) {
+    nopaint_adjust(screen, system, painting, store);
+    needsPaint();
+  } 
 
   if (e.is("keyboard:down")) {
     if (canType === false) {

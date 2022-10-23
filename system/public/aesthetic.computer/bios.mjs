@@ -593,9 +593,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   });
 
   const firstMessage = {
-    parsed,
-    debug,
-    rootPiece: window.acSTARTING_PIECE,
+    type: "init-from-bios",
+    content: {
+      parsed,
+      debug,
+      rootPiece: window.acSTARTING_PIECE
+    }
   };
 
   // Rewire things a bit if workers with modules are not supported (Firefox).
@@ -620,153 +623,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   };
 
   let send = (e) => worker.postMessage(e);
-  let onMessage = loaded;
+  let onMessage = receivedChange;
 
   worker.onmessage = (e) => onMessage(e);
-
-  // Start everything once the disk is loaded.
-  function loaded(e) {
-    if (e.data.loaded === true) {
-      //console.log("💾", path, "🌐", host);
-      onMessage = receivedChange;
-      diskSupervisor = { requestBeat, requestFrame };
-      // Set currentPiece to be the last segment of the path.
-
-      // Pen (also handles touch & pointer events)
-      pen = new Pen((x, y) => {
-        // console.log("cr", canvasRect, "pw", projectedWidth, "sw", screen.width)
-        return {
-          x: floor(((x - canvasRect.x) / projectedWidth) * screen.width),
-          y: floor(((y - canvasRect.y) / projectedHeight) * screen.height),
-        };
-      });
-
-      // ⌨️ Keyboard
-      keyboard = new Keyboard();
-      {
-        /**
-         * Insert a hidden input element that is used to toggle the software
-         * keyboard on touchscreen devices like iPhones and iPads.
-         * *Only works in "disks/prompt".
-         */
-        const input = document.createElement("input");
-        input.id = "software-keyboard-input";
-        input.type = "text";
-        input.style.opacity = 0;
-        input.style.width = 0;
-        input.style.height = 0;
-        input.style.position = "absolute";
-        wrapper.append(input);
-
-        input.addEventListener("input", (e) => (e.target.value = null));
-
-        let touching = false;
-        let keyboardOpen = false;
-
-        // TODO: The input element could be created and added to the DOM here
-        //       if it didn't already exist?
-        window.addEventListener("touchstart", () => (touching = true));
-
-        window.addEventListener("focusout", (e) => {
-          if (keyboardOpen) {
-            keyboard.events.push({ name: "keyboard:close" });
-            keyboardOpen = false;
-          }
-        });
-
-        // Make a pointer "tap" gesture with an `inTime` window of 250ms to
-        // trigger the keyboard on all browsers.
-        let down = false;
-        let downPos;
-        let inTime = false;
-
-        window.addEventListener("pointerdown", (e) => {
-          if (currentPiece === "aesthetic.computer/disks/prompt") {
-            down = true;
-            downPos = { x: e.x, y: e.y };
-            inTime = true;
-            setTimeout(() => (inTime = false), 250);
-            e.preventDefault();
-          }
-        });
-
-        window.addEventListener("pointerup", (e) => {
-          if (
-            down &&
-            dist(downPos.x, downPos.y, e.x, e.y) < 8 &&
-            inTime &&
-            currentPiece === "aesthetic.computer/disks/prompt" &&
-            // Commenting the above allows iframes to capture keyboard events. 2022.04.07.02.10
-            document.activeElement !== input
-          ) {
-            input.focus();
-            if (touching) {
-              touching = false;
-              keyboard.events.push({ name: "keyboard:open" });
-              keyboardOpen = true;
-            }
-            down = false;
-            e.preventDefault();
-          }
-        });
-
-        input.addEventListener("focus", (e) => {
-          keyboard.events.push({ name: "typing-input-ready" });
-        });
-      }
-
-      // 🌒 Detect light or dark mode.
-      // See also: https://flaviocopes.com/javascript-detect-dark-mode,
-      //           https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
-
-      if (
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
-        send({ type: "dark-mode", content: { enabled: true } });
-      }
-
-      window
-        .matchMedia("(prefers-color-scheme: dark)")
-        .addEventListener("change", (event) => {
-          if (event.matches) {
-            send({ type: "dark-mode", content: { enabled: true } });
-          } else {
-            send({ type: "dark-mode", content: { enabled: false } });
-          }
-        });
-
-
-      // 🖥️ Display
-      frame(resolution?.width, resolution?.height);
-
-      // 🔊 Sound
-      // TODO: Disable sound engine entirely... unless it is enabled by a disk. 2022.04.07.03.33
-      // Only start this after a user-interaction to prevent warnings.
-      window.addEventListener(
-        "pointerdown",
-        function down() {
-          startSound();
-        },
-        { once: true }
-      );
-
-      // ➰ Core Loops for User Input, Music, Object Updates, and Rendering
-      Loop.start(
-        () => {
-          // TODO: What is this now?
-          // pen.poll();
-          // TODO: Key.input();
-          // TODO: Voice.input();
-        },
-        function (needsRender, updateTimes) {
-          // console.log(updateTimes); // Note: No updates happen yet before a render.
-          diskSupervisor.requestFrame?.(needsRender, updateTimes);
-          //if (needsRender) ThreeD?.render();
-        }
-      );
-    }
-  }
 
   // The initial message sends the path and host to load the disk.
   send(firstMessage);
@@ -806,9 +665,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let startTime;
 
   function requestFrame(needsRender, updateCount) {
+
     if (needsReframe) {
       frame(undefined, undefined, lastGap);
       pen.retransformPosition();
+      frameAlreadyRequested = false;
     }
 
     if (frameAlreadyRequested) return;
@@ -864,6 +725,251 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   async function receivedChange({ data: { type, content } }) {
     // *** Route to different functions if this change is not a full frame update.
+
+    // console.log("receivedChange", type, content);
+
+    if (type === "disk-loaded") {
+      currentPiece = content.path;
+
+      // Initialize some global stuff after the first piece loads.
+      if (content.pieceCount === 0) {
+        // Pen (also handles touch & pointer events)
+        pen = new Pen((x, y) => {
+          // console.log("cr", canvasRect, "pw", projectedWidth, "sw", screen.width)
+          return {
+            x: floor(((x - canvasRect.x) / projectedWidth) * screen.width),
+            y: floor(((y - canvasRect.y) / projectedHeight) * screen.height),
+          };
+        });
+
+        // ⌨️ Keyboard
+        keyboard = new Keyboard();
+        {
+          /**
+           * Insert a hidden input element that is used to toggle the software
+           * keyboard on touchscreen devices like iPhones and iPads.
+           * *Only works in "disks/prompt".
+           */
+          const input = document.createElement("input");
+          input.id = "software-keyboard-input";
+          input.type = "text";
+          input.style.opacity = 0;
+          input.style.width = 0;
+          input.style.height = 0;
+          input.style.position = "absolute";
+          wrapper.append(input);
+
+          input.addEventListener("input", (e) => (e.target.value = null));
+
+          let touching = false;
+          let keyboardOpen = false;
+
+          // TODO: The input element could be created and added to the DOM here
+          //       if it didn't already exist?
+          window.addEventListener("touchstart", () => (touching = true));
+
+          window.addEventListener("focusout", (e) => {
+            if (keyboardOpen) {
+              keyboard.events.push({ name: "keyboard:close" });
+              keyboardOpen = false;
+            }
+          });
+
+          // Make a pointer "tap" gesture with an `inTime` window of 250ms to
+          // trigger the keyboard on all browsers.
+          let down = false;
+          let downPos;
+          let inTime = false;
+
+          window.addEventListener("pointerdown", (e) => {
+            if (currentPiece === "aesthetic.computer/disks/prompt") {
+              down = true;
+              downPos = { x: e.x, y: e.y };
+              inTime = true;
+              setTimeout(() => (inTime = false), 250);
+              e.preventDefault();
+            }
+          });
+
+          window.addEventListener("pointerup", (e) => {
+            if (
+              down &&
+              dist(downPos.x, downPos.y, e.x, e.y) < 8 &&
+              inTime &&
+              currentPiece === "aesthetic.computer/disks/prompt" &&
+              // Commenting the above allows iframes to capture keyboard events. 2022.04.07.02.10
+              document.activeElement !== input
+            ) {
+              input.focus();
+              if (touching) {
+                touching = false;
+                keyboard.events.push({ name: "keyboard:open" });
+                keyboardOpen = true;
+              }
+              down = false;
+              e.preventDefault();
+            }
+          });
+
+          input.addEventListener("focus", (e) => {
+            keyboard.events.push({ name: "typing-input-ready" });
+          });
+        }
+
+        // 🌒 Detect light or dark mode.
+        // See also: https://flaviocopes.com/javascript-detect-dark-mode,
+        //           https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
+
+        if (
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          send({ type: "dark-mode", content: { enabled: true } });
+        }
+
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", (event) => {
+            if (event.matches) {
+              send({ type: "dark-mode", content: { enabled: true } });
+            } else {
+              send({ type: "dark-mode", content: { enabled: false } });
+            }
+          });
+
+
+        // 🖥️ Display
+        frame(resolution?.width, resolution?.height);
+
+        // 🔊 Sound
+        // TODO: Disable sound engine entirely... unless it is enabled by a disk. 2022.04.07.03.33
+        // Only start this after a user-interaction to prevent warnings.
+        window.addEventListener(
+          "pointerdown",
+          function down() {
+            startSound();
+          },
+          { once: true }
+        );
+
+        diskSupervisor = { requestBeat, requestFrame };
+
+        // ➰ Core Loops for User Input, Music, Object Updates, and Rendering
+        Loop.start(
+          () => {
+            // TODO: What is this now?
+            // pen.poll();
+            // TODO: Key.input();
+            // TODO: Voice.input();
+          },
+          function (needsRender, updateTimes) {
+            // console.log(updateTimes); // Note: No updates happen yet before a render.
+            diskSupervisor.requestFrame?.(needsRender, updateTimes);
+            //if (needsRender) ThreeD?.render();
+          }
+        );
+      } else {
+        // Unload some already initialized stuff if this wasn't the first load.
+
+        // Remove any attached microphone.
+        detachMicrophone?.();
+
+        // Reset preloading.
+        window.waitForPreload = false;
+        window.preloaded = false;
+
+        // Clear any 3D content.
+        ThreeD?.clear();
+
+        // Kill the 3D engine.
+        ThreeD?.kill();
+
+        // Clear any DOM content that was added by a piece.
+        contentFrame?.remove(); // Remove the contentFrame if it exists.
+        contentFrame = undefined;
+        // Remove any event listeners added by the content frame.
+        window?.acCONTENT_EVENTS.forEach((e) => e());
+        window.acCONTENT_EVENTS = []; // And clear all events from the list.
+
+        // Remove existing video tags.
+        videos.forEach(({ video, buffer, getAnimationRequest }) => {
+          console.log("🎥 Removing:", video, buffer, getAnimationRequest());
+          video.remove();
+          buffer.remove();
+          cancelAnimationFrame(getAnimationRequest());
+        });
+        // Note: Any other disk state cleanup that needs to take place on unload
+        //       should happen here.
+
+        // Reset the framing to a system default when unloading a disk if using
+        // a customized resolution.
+        // TODO: Do disks with custom resolutions need to be reset
+        //       if they are being reloaded?
+
+        if (fixedWidth && fixedHeight) {
+          freezeFrame = true;
+          freezeFrameGlaze = glaze.on;
+
+          freezeFrameCan.width = imageData.width;
+          freezeFrameCan.height = imageData.height;
+
+          fixedWidth = undefined;
+          fixedHeight = undefined;
+          needsReframe = true;
+        }
+
+        if (lastGap !== 0) {
+          // lastGap = 0; No longer needed... 22.10.04.15.28
+          freezeFrame = true;
+          freezeFrameCan.width = imageData.width;
+          freezeFrameCan.height = imageData.height;
+          needsReframe = true;
+        }
+
+        // Turn off glaze.
+        glaze.on = false;
+
+        canvas.style.removeProperty("opacity");
+
+        // Clear pen events.
+        pen.events.length = 0;
+
+        // Clear keyboard events.
+        keyboard.events.length = 0;
+
+        // Clear when events.
+        whens = {};
+
+        // Close (defocus) software keyboard if it exists.
+        document.querySelector("#software-keyboard-input")?.blur();
+      }
+
+      setMetatags(content.meta);
+
+      // Show an "audio engine: off" message.
+      //if (content.noBeat === false && audioContext?.state !== "running") {
+      //bumper.innerText = "audio engine off";
+      //modal.classList.add("on");
+      //}
+
+      // Clear the ThreeD buffer.
+      // ThreeD.clear();
+
+      // Emit a push state for the old disk if it was not the first. This is so
+      // a user can use browser history to switch between disks.
+      if (content.pieceCount > 0) {
+        if (content.fromHistory === false) {
+          history.pushState(
+            "",
+            document.title,
+            content.text === "/prompt" ? "/" : "/" + content.text // Replace "prompt" with "/".
+          );
+        }
+      }
+
+      send({ type: "loading-complete" });
+      return;
+    }
 
     if (type === "forms") {
       const willBake = content.cam !== undefined;
@@ -963,9 +1069,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
     }
 
+    // I have a storage system where I can store data to localStorage (user settings),
+    //                                                   indexedDB (large files)
+    //                                                   remote (with user account or anonymous) 
+
     // *** 🏪 Store: Persist ***
     if (type === "store:persist") {
-      // Local
+
+      // Local Storage
       if (content.method === "local") {
         localStorage.setItem(content.key, JSON.stringify(content.data));
         if (debug) console.log("📦 Persisted locally:", content, localStorage);
@@ -1479,33 +1590,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       return;
     }
 
-    if (type === "disk-loaded") {
-      // Show an "audio engine: off" message.
-      setMetatags(content.meta);
-
-      //if (content.noBeat === false && audioContext?.state !== "running") {
-      //bumper.innerText = "audio engine off";
-      //modal.classList.add("on");
-      //}
-
-      // Clear the ThreeD buffer.
-      // ThreeD.clear();
-
-      // Emit a push state for the old disk if it was not the first. This is so
-      // a user can use browser history to switch between disks.
-      if (content.pieceCount > 0) {
-        if (content.fromHistory === false) {
-          history.pushState(
-            "",
-            document.title,
-            content.text === "/prompt" ? "/" : "/" + content.text // Replace "prompt" with "/".
-          );
-        }
-      }
-      currentPiece = content.path;
-      return;
-    }
-
     if (type === "disk-loaded-and-booted") {
       if (!window.waitForPreload) window.preloaded = true;
       if (debug) console.log("⏳ Preloaded: ❌", window.preloaded);
@@ -1518,91 +1602,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     if (type === "disk-unload") {
-      // Remove any attached microphone.
-      detachMicrophone?.();
-
-      // Reset preloading.
-      window.waitForPreload = false;
-      window.preloaded = false;
-
-      // Clear any 3D content.
-      ThreeD?.clear();
-
-      // Kill the 3D engine.
-      ThreeD?.kill();
-
-      // Clear any DOM content that was added by a piece.
-      contentFrame?.remove(); // Remove the contentFrame if it exists.
-      contentFrame = undefined;
-      // Remove any event listeners added by the content frame.
-      window?.acCONTENT_EVENTS.forEach((e) => e());
-      window.acCONTENT_EVENTS = []; // And clear all events from the list.
-
-      // Remove existing video tags.
-      videos.forEach(({ video, buffer, getAnimationRequest }) => {
-        console.log("🎥 Removing:", video, buffer, getAnimationRequest());
-        video.remove();
-        buffer.remove();
-        cancelAnimationFrame(getAnimationRequest());
-      });
-      // Note: Any other disk state cleanup that needs to take place on unload
-      //       should happen here.
-
-      // Reset the framing to a system default when unloading a disk if using
-      // a customized resolution.
-      // TODO: Do disks with custom resolutions need to be reset
-      //       if they are being reloaded?
-
-      if (fixedWidth && fixedHeight) {
-        freezeFrame = true;
-        freezeFrameGlaze = glaze.on;
-
-        freezeFrameCan.width = imageData.width;
-        freezeFrameCan.height = imageData.height;
-
-        fixedWidth = undefined;
-        fixedHeight = undefined;
-        needsReframe = true;
-      }
-
-      if (lastGap !== 0) {
-        // lastGap = 0; No longer needed... 22.10.04.15.28
-        freezeFrame = true;
-        freezeFrameCan.width = imageData.width;
-        freezeFrameCan.height = imageData.height;
-        needsReframe = true;
-      }
-
-      // Turn off glaze.
-      glaze.on = false;
-
-      canvas.style.removeProperty("opacity");
-
-      // Clear pen events.
-      pen.events.length = 0;
-
-      // Clear keyboard events.
-      keyboard.events.length = 0;
-
-      // Clear when events.
-      whens = {};
-
-      // Close (defocus) software keyboard if it exists.
-      document.querySelector("#software-keyboard-input")?.blur();
-
-      return;
-    }
-
-    // TODO: Filter out update from bottom of `disk.js` because I may not need to be
-    //       sending them at all? 2022.01.30.13.01
-    if (type === "update") {
-      frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
       return;
     }
 
     // BIOS:RENDER
     // 🌟 Assume `type === render` from now on.
-
     // Check for a change in resolution.
     if (content.reframe) {
       // Reframe the captured pixels.
@@ -1698,6 +1702,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       uiCtx.clearRect(0, 0, 64, 64); // Clear 64 pixels from the top left to remove any
       //                                previously rendered corner icons.
 
+      uiCtx.clearRect(0, uiCtx.canvas.height / dpi - 64, 64, 64); // Clear 64 pixels from the bottom left to remove any
+      //                                previously rendered corner icons.
+
       uiCtx.clearRect(uiCtx.canvas.width / dpi - 64, 0, 64, 64);
       // Also clear 64 pixels from the top right to remove any previously rendered corner icons.
 
@@ -1758,7 +1765,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     timePassed = performance.now();
+
     frameCount += 1;
+
     frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
   }
 

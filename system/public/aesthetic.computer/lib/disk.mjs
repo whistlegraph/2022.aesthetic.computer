@@ -9,6 +9,7 @@ import { parse } from "./parse.mjs";
 import { Socket } from "./socket.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
 const { round } = Math;
+import { nopaint_adjust } from "../systems/nopaint.mjs"; 
 
 export const noWorker = { onMessage: undefined, postMessage: undefined };
 
@@ -43,9 +44,10 @@ const defaults = {
 // Inheritable via `export const system = "nopaint"` from any piece.
 // Boilerplate for a distributed raster editor.
 const nopaint = {
-  boot: function boot({ paste, painting, system: sys }) {
+  boot: function boot({ paste, painting, store, screen, system: sys }) {
     //if (!screen.load("painting")) wipe(64); // Load painting or wipe to gray.
-    nopaint_adjust(paste, screen, sys, painting);
+    nopaint_adjust(screen, sys, painting, store);
+    paste(sys.painting);
   },
   act: function act({
     event: e,
@@ -55,6 +57,7 @@ const nopaint = {
     paste,
     num,
     screen,
+    store
   }) {
     if (e.is("keyboard:down:enter")) {
       download(`painting-${num.timestamp()}.png`, sys.painting);
@@ -62,27 +65,16 @@ const nopaint = {
       // TODO: Crop images when saving.
     }
 
-    if (e.is("reframed")) nopaint_adjust(paste, screen, sys, painting);
+    if (e.is("reframed")) {
+      nopaint_adjust(screen, sys, painting, store);
+      paste(sys.painting);
+    }
   },
-  leave: function leave({ store, screen, system }) {
+  leave: function leave({ store, system }) {
     store["painting"] = system.painting;
     store.persist("painting", "local:db");
-    //screen.save("painting");
   },
 };
-
-// Helper
-function nopaint_adjust(paste, screen, sys, painting) {
-  if (
-    screen.width > sys.painting.width ||
-    screen.height > sys.painting.height
-  ) {
-    sys.painting = painting(screen.width, screen.height, (p) => {
-      p.wipe(64).paste(sys.painting);
-    });
-  }
-  paste(sys.painting);
-}
 
 let boot = defaults.boot;
 let sim = defaults.sim;
@@ -190,6 +182,7 @@ let loadFailure;
 
 // For every function to access.
 const $commonApi = {
+  system: {},
   dark: true, // Dark mode. (Gets set on startup and on any change.)
   darkMode, // Toggle dark mode or set to `true` or `false`.
   // content: added programmatically: see Content class
@@ -381,6 +374,9 @@ const $paintApi = {
   QUAD,
   LINE,
 };
+
+// This is where I map the API functions that anyone can use, to the internal
+// code that represents them...
 
 const $paintApiUnwrapped = {
   // Shortcuts
@@ -622,6 +618,21 @@ async function load(
   { path, host, search, params, hash, text },
   fromHistory = false
 ) {
+  if (loading === false) {
+    loading = true;
+  } else {
+    // TODO: Implement some kind of loading screen system here?
+    console.warn("Already loading another disk:", path);
+    return;
+  }
+
+  if (path)
+    if (debug) {
+      console.log("🟡 Development");
+    } else {
+      console.log("🟢 Production");
+    }
+
   if (host === "") {
     host = originalHost;
   }
@@ -643,21 +654,6 @@ async function load(
   if (debug) console.log("🧩", path, "🌐", host);
 
   //if (path.indexOf("/") === -1) path = "aesthetic.computer/disks/" + path;
-
-  if (path)
-    if (debug) {
-      console.log("🟡 Development");
-    } else {
-      console.log("🟢 Production");
-    }
-
-  if (loading === false) {
-    loading = true;
-  } else {
-    // TODO: Implement some kind of loading screen system here?
-    console.warn("Already loading another disk:", path);
-    return;
-  }
 
   // TODO: Get proper protocol here...
   let fullUrl = location.protocol + "//" + host + "/" + path + ".mjs";
@@ -710,7 +706,6 @@ async function load(
   // TODO: What happens if source is undefined?
   // const moduleLoadTime = performance.now();
   const module = await import(fullUrl).catch((err) => {
-    loading = false;
     console.error(`😡 "${path}" load failure:`, err);
     loadFailure = err;
   });
@@ -799,10 +794,6 @@ async function load(
     );
 
     // 3. Assign the generated or manual width and height.
-
-    const widthDelta = width - screen.width;
-    const heightDelta = height - screen.height;
-
     const oldScreen = {
       width: screen.width,
       height: screen.height,
@@ -813,13 +804,8 @@ async function load(
     screen.height = height;
 
     // Reset / recreate the depth buffer. (This is only used for the 3D software renderer in `graph`)
-    graph.depthBuffer.length = screen.width * screen.height;
-    graph.depthBuffer.fill(Number.MAX_VALUE);
-
-    // TODO:
-    // Crop existing image by copying, then adding blank space if
-    // necessary.
-    //graph.paste();
+    // graph.depthBuffer.length = screen.width * screen.height;
+    // graph.depthBuffer.fill(Number.MAX_VALUE);
 
     screen.pixels = new Uint8ClampedArray(screen.width * screen.height * 4);
     screen.pixels.fill(255);
@@ -866,100 +852,90 @@ async function load(
   }
 
   // Artificially imposed loading by at least 1/4 sec.
-  setTimeout(() => {
+  // Redefine the default event functions if they exist in the module.
+  if (module.system === "nopaint") {
+    // If there is no painting is in ram, then grab it from the local store,
+    // or generate one.
 
-    // Redefine the default event functions if they exist in the module.
-    if (module.system === "nopaint") {
-      // If there is no painting is in ram, then grab it from the local store,
-      // or generate one.
-      $commonApi.system = { name: "nopaint" };
+    boot = module.boot || nopaint.boot;
+    sim = module.sim || defaults.sim;
+    paint = module.paint || defaults.paint;
+    beat = module.beat || defaults.beat;
+    act = module.act || nopaint.act;
+    leave = module.leave || nopaint.leave;
+  } else {
+    boot = module.boot || defaults.boot;
+    sim = module.sim || defaults.sim;
+    paint = module.paint || defaults.paint;
+    beat = module.beat || defaults.beat;
+    act = module.act || defaults.act;
+    leave = module.leave || defaults.leave;
 
-      boot = module.boot || nopaint.boot;
-      sim = module.sim || defaults.sim;
-      paint = module.paint || defaults.paint;
-      beat = module.beat || defaults.beat;
-      act = module.act || nopaint.act;
-      leave = module.leave || nopaint.leave;
-    } else {
-      boot = module.boot || defaults.boot;
-      sim = module.sim || defaults.sim;
-      paint = module.paint || defaults.paint;
-      beat = module.beat || defaults.beat;
-      act = module.act || defaults.act;
-      leave = module.leave || defaults.leave;
+    delete $commonApi.system.name; // No system in use.
+  }
 
-      delete $commonApi.system; // No system in use.
-    }
+  paintCount = 0n;
+  simCount = 0n;
+  booted = false;
+  initialSim = true;
+  activeVideo = null; // reset activeVideo
+  bitmapPromises = {};
+  noPaint = false;
+  formsSent = {}; // Clear 3D list for GPU.
+  currentPath = path;
+  currentHost = host;
+  currentSearch = search;
+  currentParams = params;
+  currentHash = hash;
+  currentText = text;
 
-    //console.clear();
-    paintCount = 0n;
-    simCount = 0n;
-    booted = false;
-    initialSim = true;
-    activeVideo = null; // reset activeVideo
-    bitmapPromises = {};
-    noPaint = false;
-    formsSent = {}; // Clear 3D list.
-    currentPath = path;
-    currentHost = host;
-    currentSearch = search;
-    currentParams = params;
-    currentHash = hash;
-    currentText = text;
+  $commonApi.query = search;
+  $commonApi.params = params || [];
+  $commonApi.load = load;
+  $commonApi.pieceCount += 1;
+  $commonApi.content = new Content();
 
-    $commonApi.query = search;
-    $commonApi.params = params || [];
-    $commonApi.load = load;
-    $commonApi.pieceCount += 1;
-    $commonApi.content = new Content();
+  $commonApi.dom = {};
 
-    $commonApi.dom = {};
+  $commonApi.dom.html = (strings, ...vars) => {
+    const processed = defaultTemplateStringProcessor(strings, ...vars);
+    $commonApi.content.add(processed);
+  };
 
-    $commonApi.dom.html = (strings, ...vars) => {
-      const processed = defaultTemplateStringProcessor(strings, ...vars);
-      $commonApi.content.add(processed);
-    };
+  $commonApi.dom.css = (strings, ...vars) => {
+    const processed = defaultTemplateStringProcessor(strings, ...vars);
+    $commonApi.content.add(`<style>${processed}</style>`);
+  };
 
-    $commonApi.dom.css = (strings, ...vars) => {
-      const processed = defaultTemplateStringProcessor(strings, ...vars);
-      $commonApi.content.add(`<style>${processed}</style>`);
-    };
+  $commonApi.dom.javascript = (strings, ...vars) => {
+    const processed = defaultTemplateStringProcessor(strings, ...vars);
+    $commonApi.content.add(`<script>${processed}</script>`);
+  };
 
-    $commonApi.dom.javascript = (strings, ...vars) => {
-      const processed = defaultTemplateStringProcessor(strings, ...vars);
-      $commonApi.content.add(`<script>${processed}</script>`);
-    };
+  cursorCode = "precise";
 
-    cursorCode = "precise";
-    loading = false;
+  send({
+    type: "disk-loaded",
+    content: {
+      path,
+      host,
+      search,
+      params,
+      hash,
+      text,
+      pieceCount: $commonApi.pieceCount,
+      fromHistory,
+      meta,
+      // noBeat: beat === defaults.beat,
+    },
+  });
 
-    send({
-      type: "disk-loaded",
-      content: {
-        path,
-        host,
-        search,
-        params,
-        hash,
-        text,
-        pieceCount: $commonApi.pieceCount,
-        fromHistory,
-        meta,
-        // noBeat: beat === defaults.beat,
-      },
-    });
-    if (firstLoad === false) {
-      // Send a message to the bios to unload the last disk if it is not the first load.
-      // This cleans up any bios state that is related to the disk and also
-      // takes care of nice transitions between disks of different resolutions.
-      send({ type: "disk-unload" });
-    } else {
-      firstLoad = false;
-      firstPiece = path;
-      firstParams = params;
-      firstSearch = search;
-    }
-  }, 100);
+  if (firstLoad === true) {
+    firstLoad = false;
+    firstPiece = path;
+    firstParams = params;
+    firstSearch = search;
+  }
 }
 
 const isWorker = typeof importScripts === "function";
@@ -968,24 +944,9 @@ const isWorker = typeof importScripts === "function";
 // Start by responding to a load message, then change
 // the message response to makeFrame.
 if (isWorker) {
-  onmessage = async function (e) {
-    debug = e.data.debug;
-    ROOT_PIECE = e.data.rootPiece;
-    originalHost = e.data.parsed.host;
-    await load(e.data.parsed);
-    onmessage = makeFrame;
-    send({ loaded: true });
-  };
+  onmessage = (d) => makeFrame(d);
 } else {
-  noWorker.onMessage = async (e) => {
-    e = { data: e };
-    debug = e.data.debug;
-    ROOT_PIECE = e.data.rootPiece;
-    originalHost = e.data.parsed.host;
-    await load(e.data.parsed);
-    noWorker.onMessage = (d) => makeFrame({ data: d });
-    send({ loaded: true });
-  };
+  noWorker.onMessage = (d) => makeFrame({ data: d });
 }
 
 // The main messaging function to comumunicate back with the main thread.
@@ -1046,7 +1007,19 @@ class Content {
 const signals = [];
 let reframed = false;
 async function makeFrame({ data: { type, content } }) {
-  // console.log("Frame:", type);
+
+  if (type === "init-from-bios") {
+    debug = content.debug;
+    ROOT_PIECE = content.rootPiece;
+    originalHost = content.parsed.host;
+    load(content.parsed);
+    return;
+  }
+
+  if (type === "loading-complete") {
+    loading = false;
+    return;
+  }
 
   if (type === "dark-mode") {
     const current = await store.retrieve("dark-mode");
@@ -1260,15 +1233,16 @@ async function makeFrame({ data: { type, content } }) {
     $commonApi.display = currentDisplay;
     // Only trigger a reframe event if we have already passed `boot` (painted
     // at least once)
-    if (paintCount > 0n) reframed = true;
+    if (booted) reframed = true;
     return;
   }
 
   // 2. Frame
   // This is where each...
   if (type === "frame") {
+
     // Act & Sim (Occurs after first boot and paint.)
-    if (paintCount > 0n) {
+    if (booted && paintCount > 0n) {
       const $api = {};
       Object.assign($api, $commonApi);
       Object.assign($api, $updateApi);
@@ -1682,21 +1656,15 @@ async function makeFrame({ data: { type, content } }) {
         //if (dark === true || dark === false) $commonApi.dark = dark;
 
         // System specific preloaders.
-        if ($commonApi?.system?.name === "nopaint" || currentText === "prompt") {
-          store["painting"] =
-            store["painting"] || (await store.retrieve("painting", "local:db"));
-        }
+        //if ($commonApi?.system?.name === "nopaint" || currentText === "prompt") {
+        store["painting"] =
+          store["painting"] ||
+          (await store.retrieve("painting", "local:db")) ||
+          painting.api.painting(screen.width, screen.height, $ => {
+            $.wipe(64);
+          });
 
-        if ($commonApi?.system?.name === "nopaint") {
-          $commonApi.system.painting =
-            store["painting"] ||
-            painting.api.painting(screen.width, screen.height, ({ wipe }) => {
-              // wipe(0, 0, 0, 0);
-              wipe(64);
-              // TODO: Enable working with transparency.
-            });
-
-        }
+        $commonApi.system.painting = store["painting"];
 
         try {
           boot($api);
@@ -1706,6 +1674,8 @@ async function makeFrame({ data: { type, content } }) {
         booted = true;
         send({ type: "disk-loaded-and-booted" });
       }
+
+      //console.log(paintCount, "booted:", booted, "loading:", loading);
 
       // We no longer need the preload api for painting.
       delete $api.net.preload;
@@ -1717,8 +1687,8 @@ async function makeFrame({ data: { type, content } }) {
       let painted = false;
       let dirtyBox;
 
-      if (noPaint === false) {
-
+      // Attempt a paint.
+      if (noPaint === false && booted && loading === false) {
         let paintOut;
 
         try {
@@ -1772,6 +1742,8 @@ async function makeFrame({ data: { type, content } }) {
         }
       }
       if (cursorCode) sendData.cursorCode = cursorCode;
+
+      //console.log(sendData);
 
       // Note: transferredPixels will be undefined when sendData === {}.
       send({ type: "render", content: sendData }, [transferredPixels]);
