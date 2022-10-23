@@ -45,6 +45,17 @@ Welcome to...
 
 🌟 Projects In Progress 🌟
 
+*** i ***
+ - [] Make `i` 2D multiplayer with UDP. 
+
+*** Ambient Presence ***
+ - [] No matter what disk you're on... queue into the ambient presence of others. You should be able to meet others.
+
+*** MUD ***
+ - [] Make a multi-user dungeon / room system, designed for single session play.
+  * welkum 2 mud *
+  & there r 32 playrz ONLINE
+
 *** Palette ***
   - [] Create a basic palette that enables one finger drawing. 
   - [] Add tools to palette that utilize existing toolset.
