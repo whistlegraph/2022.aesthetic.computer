@@ -62,6 +62,7 @@ async function fun(event, context) {
       const externalPiece = await getPage(
         `https://${parsed.host}/${parsed.path}.mjs`
       );
+      console.log(externalPiece)
       if (externalPiece?.code === 200) {
         desc =
           externalPiece.data.split(/\r?\n/)[0].replace("//", "").trim() ||
@@ -71,7 +72,11 @@ async function fun(event, context) {
       }
     } else {
       // Locally hosted piece.
-      desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
+      try {
+        desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
+      } catch (e) {
+        console.log(e)
+      }
     }
   } catch {
     // If either module doesn't load, then we KNOW we won't be able to load

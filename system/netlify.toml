@@ -5,6 +5,7 @@
 [functions.index]
   included_files = ["public/aesthetic.computer/disks/**/*.mjs",
                     "public/aesthetic.computer/dep/**/*.mjs",
+                    "public/aesthetic.computer/systems/**/*.mjs",
                     "public/aesthetic.computer/lib/**/*.mjs"]
 [functions.presigned-upload-url]
   external_node_modules = ["nanoid", "@aws-sdk-client-s3", "@aws-sdk/s3-request-presigner"]
