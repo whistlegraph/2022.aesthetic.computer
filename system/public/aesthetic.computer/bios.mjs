@@ -753,6 +753,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           const input = document.createElement("input");
           input.id = "software-keyboard-input";
           input.type = "text";
+          input.autocapitalize = "none";
+          input.autocomplete = "none";
           input.style.opacity = 0;
           input.style.width = 0;
           input.style.height = 0;
@@ -774,7 +776,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               ctrl: false,
             });
 
-            e.target.value = ' '; // Leave an empty space to capture delete
+            e.target.value = ' '; // Leave a non-empty space to capture delete
                                   // key events.
           });
 
