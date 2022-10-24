@@ -6,14 +6,35 @@
 export class Keyboard {
   events = [];
   #lastKeyDown;
+  input;
 
-  constructor() {
+  constructor(getCurrentPiece) {
+
     window.addEventListener("keydown", (e) => {
       // Firefox "repeat" seems to be broken on linux, so here is
       // some redundancy. 22.07.29.17.43
       const repeat = e.key === this.#lastKeyDown;
       this.#lastKeyDown = e.key;
 
+      // Only activate input field driven text input if we are in the prompt.
+      if (getCurrentPiece() === "aesthetic.computer/disks/prompt" &&
+        this.input &&
+        document.activeElement !== this.input
+      ) {
+        this.input.focus();
+      }
+
+      // Skip sending keyboard events from here if we are using text input
+      // which generates a synthetic keyboard event back
+      //  in `bios` under `Keyboard`
+      if (document.activeElement === this.input &&
+        e.key !== "Enter" &&
+        e.key !== "Escape" &&
+        e.key !== "ArrowUp" &&
+        e.key !== "ArrowDown"
+      ) return;
+
+      // Send a normal keyboard message if we are anywhere else.
       this.events.push({
         name: "keyboard:down:" + e.key.toLowerCase(),
         key: e.key,
@@ -22,6 +43,7 @@ export class Keyboard {
         alt: e.altKey,
         ctrl: e.ctrlKey,
       });
+
     });
 
     window.addEventListener("keyup", (e) => {

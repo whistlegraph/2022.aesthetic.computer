@@ -68,7 +68,9 @@ Welcome to...
 
 *** (3dline) ***
  + Now
-  - [] Add WebXR session.
+  - [] Android keyboard...
+  - [🌞] Add WebXR session.
+  
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
       - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html

@@ -743,7 +743,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         });
 
         // ⌨️ Keyboard
-        keyboard = new Keyboard();
+        keyboard = new Keyboard(() => currentPiece);
         {
           /**
            * Insert a hidden input element that is used to toggle the software
@@ -759,7 +759,24 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           input.style.position = "absolute";
           wrapper.append(input);
 
-          input.addEventListener("input", (e) => (e.target.value = null));
+          keyboard.input = input;
+
+          input.addEventListener("input", (e) => {
+            let key = e.data;
+            if (e.inputType === "deleteContentBackward") key = "Backspace";
+
+            keyboard.events.push({
+              name: "keyboard:down:" + key.toLowerCase(),
+              key,
+              repeat: false,
+              shift: false,
+              alt: false,
+              ctrl: false,
+            });
+
+            e.target.value = ' '; // Leave an empty space to capture delete
+                                  // key events.
+          });
 
           let touching = false;
           let keyboardOpen = false;
