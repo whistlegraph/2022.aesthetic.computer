@@ -1,4 +1,4 @@
-import geckos from "../dep/@geckos.io/client/index.js";
+//import geckos from "../dep/@geckos.io/client/index.js";
 
 // or add a minified version to your index.html file
 // https://github.com/geckosio/geckos.io/tree/master/bundles
