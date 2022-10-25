@@ -10,6 +10,7 @@ import { apiObject, extension } from "./lib/helpers.mjs";
 import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
 import * as Store from "./lib/store.mjs";
+import { Desktop, MetaBrowser } from "./lib/platform.js";
 
 const { assign } = Object;
 const { round, floor, min, max } = Math;
@@ -726,7 +727,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   async function receivedChange({ data: { type, content } }) {
     // *** Route to different functions if this change is not a full frame update.
 
-    // console.log("receivedChange", type, content);
+    if (type === "load-failure" && MetaBrowser) {
+      document.querySelector("#software-keyboard-input")?.blur();
+      return;
+    }
 
     if (type === "disk-loaded") {
       currentPiece = content.path;
@@ -761,7 +765,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           input.id = "software-keyboard-input";
           input.type = "text";
           input.autocapitalize = "none";
-          input.autocomplete = "none";
+          input.autocomplete = "off";
           input.style.opacity = 0;
           input.style.width = 0;
           input.style.height = 0;
@@ -793,7 +797,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
             if (e.inputType === "deleteContentBackward") {
               pressedKeys.push("Backspace");
-            } else if (e.inputType === "insertCompositionText") {
+            } else if (["insertText", "insertCompositionText"].includes(e.inputType)) {
 
               // Sanitize input if it arrives in chunks... like if it was dictated.
               // This is still basic, and is usable in the Meta Quest Browser. 22.10.24.17.07
@@ -803,7 +807,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
                 console.log("👄 Spoken / pasted input:", sanitizedInput);
               }
 
-              [...sanitizedInput].forEach((chr) => pressedKeys.push(chr))
+              [...sanitizedInput].forEach((chr) => pressedKeys.push(chr));
             }
 
             pressedKeys.forEach((pk) => {
@@ -1010,8 +1014,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         // Clear when events.
         whens = {};
 
-        // Close (defocus) software keyboard if it exists.
+        // Close (defocus) software keyboard if we are NOT on the prompt.
         document.querySelector("#software-keyboard-input")?.blur();
+        keyboard.events.push({ name: "keyboard:close" });
+
       }
 
       setMetatags(content.meta);

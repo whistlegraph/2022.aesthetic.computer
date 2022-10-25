@@ -71,9 +71,10 @@ Welcome to...
 
   (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
 
-  - [🌛] Don't kill the keyboard if the disk fails to load. (Meta Quest 2)
-  - [] Can the keyboard automatically open when returning back to the prompt? 
+  - [xxx] Can the keyboard automatically open when returning back to the prompt? 
     - (If it's not the first disk.) (All mobile platforms)
+
+  - [🌛] Don't kill the keyboard if the disk fails to load. (Meta Quest 2)
 
   - [🌞] Add WebXR session.
     - [] Use these demos.

@@ -40,6 +40,7 @@ export class Keyboard {
       // Remap `Unidentified` to `Backspace` for the Meta Quest Browser. 22.10.24.16.18
       let key = e.key;
       if (e.key === "Unidentified" && e.which === 8) key = "Backspace";
+      // if (e.key === "Unidentified" && e.which === 13) key = "Enter";
 
       // Send a normal keyboard message if we are anywhere else.
       this.events.push({

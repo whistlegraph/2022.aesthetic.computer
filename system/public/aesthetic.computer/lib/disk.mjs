@@ -1360,6 +1360,7 @@ async function makeFrame({ data: { type, content } }) {
           is: (e) => e === "load-error",
         };
         act($api);
+        send({type: "load-failure"});
         loadFailure = undefined;
       }
 

@@ -18,6 +18,7 @@ const { floor } = Math;
 import { parse } from "../lib/parse.mjs";
 import { font1 } from "./common/fonts.mjs";
 import { nopaint_adjust } from "../systems/nopaint.mjs";
+import { Desktop, MetaBrowser } from "../lib/platform.js";
 
 let glyphs = {};
 
@@ -61,10 +62,17 @@ function boot({
     );
   });
 
+  // TODO:
+  //       Did we arrive at this piece via keyboard shortcut or back button
+  //       press? 
+console.log("iOS:", iOS, "Android:", android, "Meta Browser:", oculus);
+console.log("User Agent:", navigator.userAgent);
+
   if (pieceCount > 0) {
-    canType = true;
+    if (Desktop) canType = true;
     input = "";
   }
+
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
@@ -304,7 +312,7 @@ async function act({
     flashPresent = true;
     showFlash = true;
     flashColor = [255, 0, 0];
-    input = "";
+    if (MetaBrowser) canType = false;
     needsPaint();
   }
 }
