@@ -67,14 +67,8 @@ Welcome to...
  - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
 
 *** (3dline) ***
+ (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
-
-  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
-
-  - [xxx] Can the keyboard automatically open when returning back to the prompt? 
-    - (If it's not the first disk.) (All mobile platforms)
-
-  - [🌛] Don't kill the keyboard if the disk fails to load. (Meta Quest 2)
 
   - [🌞] Add WebXR session.
     - [] Use these demos.
@@ -130,6 +124,9 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [no] Can the keyboard automatically open when returning back to the prompt? 
+    - (If it's not the first disk.) (All mobile platforms)
+  - [x] Don't kill the keyboard if the disk fails to load. (Meta Quest 2)
   - [x] Get 3dline working on Firefox too.
   - [x] Auto-expand buffer at the start of prompt.
   - [x] Quickly going back and forth between 3dline and itself / prompt

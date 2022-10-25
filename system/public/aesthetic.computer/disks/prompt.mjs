@@ -62,17 +62,10 @@ function boot({
     );
   });
 
-  // TODO:
-  //       Did we arrive at this piece via keyboard shortcut or back button
-  //       press? 
-console.log("iOS:", iOS, "Android:", android, "Meta Browser:", oculus);
-console.log("User Agent:", navigator.userAgent);
-
   if (pieceCount > 0) {
     if (Desktop) canType = true;
     input = "";
   }
-
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
@@ -179,7 +172,7 @@ async function act({
   if (e.is("reframed")) {
     nopaint_adjust(screen, system, painting, store);
     needsPaint();
-  } 
+  }
 
   if (e.is("keyboard:down")) {
     if (canType === false) {
