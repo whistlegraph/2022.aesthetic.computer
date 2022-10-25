@@ -10,10 +10,12 @@
   "author": "Jeffrey Alan Scudder",
   "license": "ISC",
   "dependencies": {
+    "@geckos.io/server": "^2.2.3",
     "chokidar": "^3.5.3",
     "dotenv": "^16.0.0",
     "fastify": "^4.9.2",
     "ip": "github:jaiswarvipin/node-ip",
+    "twilio": "^3.83.0",
     "ws": "^8.4.0"
   },
   "optionalDependencies": {

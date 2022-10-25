@@ -9,6 +9,46 @@ import ip from "ip";
 import chokidar from "chokidar";
 import "dotenv/config";
 
+// UDP Server
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+
+// See also: https://www.twilio.com/docs/stun-turn/api?code-sample=code-create-a-token-resource&code-language=Node.js&code-sdk-version=3.x#
+import twilio from "twilio";
+
+const client = twilio(accountSid, authToken);
+
+// console.log(client);
+client.tokens.create({ttl: 3600}).then(token => {
+  console.log("Twilio:", token);
+});
+
+import geckos from '@geckos.io/server';
+
+const io = geckos()
+
+io.listen(3000); // default port is 9208
+
+io.onConnection(channel => {
+  channel.onDisconnect(() => {
+    console.log(`${channel.id} got disconnected`)
+  });
+
+  channel.on('chat message', data => {
+    console.log(`got ${data} from "chat message"`)
+    // emit the "chat message" data to all channels in the same room
+    io.room(channel.roomId).emit('chat message', data)
+  })
+});
+
+
+
+
+
+
+// 
+
 // File Watching for Remote Development Mode (HTTP Server)
 let port = 8080;
 if (process.env.NODE_ENV === "development") port = 8082;
@@ -158,7 +198,7 @@ if (process.env.NODE_ENV === "development") {
   chokidar
     .watch("../system/public/aesthetic.computer/disks")
     .on("all", (event, path) => {
-      console.log("Disk:", event, path);
+      // console.log("Disk:", event, path);
       if (event === "change") everyone(pack("reload", { piece: "*" }, "local"));
     });
 
@@ -171,7 +211,7 @@ if (process.env.NODE_ENV === "development") {
       "../system/public/aesthetic.computer/style.css",
     ])
     .on("all", (event, path) => {
-      console.log("System:", event, path);
+      // console.log("System:", event, path);
       if (event === "change") everyone(pack("reload", { piece: "*refresh*" }, "local"));
     });
 }

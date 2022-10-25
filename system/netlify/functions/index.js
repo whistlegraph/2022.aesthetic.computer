@@ -73,7 +73,8 @@ async function fun(event, context) {
     } else {
       // Locally hosted piece.
       try {
-        desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
+        //console.log(parsed.path);
+        //desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
       } catch (e) {
         console.log(e)
       }
