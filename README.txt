@@ -69,17 +69,8 @@ Welcome to...
 *** (3dline) ***
  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
-
-  - [🌞] Add WebXR session.
-    - [] Use these demos.
-      - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
-      - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
-      - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
-    - [] Future specs: https://immersive-web.github.io/raw-camera-access
-
-  >--------<
-
-  - [] Draw a line in webXR.
+  - [🍏] Draw a line in webXR.
+  - [] Fix keyboard hold and drag to symbol in Meta Quest software keyboard.
   - [] Add user connected messages.
   - [] Better mouse and keyboard controls.
   - [] Automatically reload the socket server?
@@ -124,6 +115,12 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [🌞] Add WebXR session.
+    - [x] Use these demos.
+      - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
+      - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
+      - https://github.com/mrdoob/three.js/blob/master/examples/js/misc/TubePainter.js
+    - [x] Future specs: https://immersive-web.github.io/raw-camera-access
   - [no] Can the keyboard automatically open when returning back to the prompt? 
     - (If it's not the first disk.) (All mobile platforms)
   - [x] Don't kill the keyboard if the disk fails to load. (Meta Quest 2)

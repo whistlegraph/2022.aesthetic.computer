@@ -65,6 +65,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let pen, keyboard;
   let frameCount = 0;
   let timePassed = 0;
+  let now = 0;
 
   let diskSupervisor;
   let currentPiece = null; // Gets set to a path after `loaded`.
@@ -156,7 +157,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let ThreeD;
   async function loadThreeD() {
     ThreeD = await import(`./lib/3d.mjs`);
-    ThreeD.initialize(wrapper);
+    ThreeD.initialize(wrapper, Loop.mainLoop);
   }
 
   // Used by `disk` to set the metatags by default when a piece loads. It can
@@ -665,7 +666,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let frameAlreadyRequested = false;
   let startTime;
 
-  function requestFrame(needsRender, updateCount) {
+  function requestFrame(needsRender, updateCount, nowUpdate) {
+    now = nowUpdate;
 
     if (needsReframe) {
       frame(undefined, undefined, lastGap);
@@ -936,10 +938,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             // TODO: Key.input();
             // TODO: Voice.input();
           },
-          function (needsRender, updateTimes) {
+          function (needsRender, updateTimes, nowUpdate) {
             // console.log(updateTimes); // Note: No updates happen yet before a render.
-            diskSupervisor.requestFrame?.(needsRender, updateTimes);
-            //if (needsRender) ThreeD?.render();
+            diskSupervisor.requestFrame?.(needsRender, updateTimes, nowUpdate);
+            if (needsRender) ThreeD?.render(nowUpdate);
           }
         );
       } else {
@@ -1797,7 +1799,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (typeof resizeToStreamCanvas === "function") {
         resizeToStreamCanvas();
       }
-      ThreeD?.render();
+
+      //ThreeD?.render(now);
     }
 
     if (pixelsDidChange || pen.changedInPiece) {

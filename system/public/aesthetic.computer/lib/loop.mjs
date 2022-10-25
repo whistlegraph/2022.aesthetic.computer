@@ -1,5 +1,7 @@
 // 🔁 Loop
 
+// TODO: Modify for VR.
+
 // These numbers define the budgeted frame-time (max) for CPU and Rendering.
 // The updates will repeat multiple times per frame, but rendering will only
 // ever happen once per display refresh.
@@ -17,7 +19,7 @@ let updateAndRender;
 // Input runs once per loop.
 // Update runs multiple times.
 // Render runs once if enough time has passed.
-function loop(now) {
+function loop(now, XR = false) {
   input();
 
   const delta = now - lastNow;
@@ -40,8 +42,11 @@ function loop(now) {
     renderTime -= renderRate;
   }
 
-  updateAndRender(needsRender, updateTimes);
-  window.requestAnimationFrame(loop);
+  updateAndRender(needsRender, updateTimes, now);
+
+  // We don't use requestAnimationframe when
+  // running the main loop in an VR/AR/XR environment.
+  if (!XR) window.requestAnimationFrame(loop);
 }
 
 function start(inputFun, updateAndRenderFun) {
@@ -57,4 +62,5 @@ function frameRate(n) {
   renderTime = 0;
 }
 
+export const mainLoop = loop;
 export { start, frameRate };

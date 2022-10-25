@@ -7,11 +7,11 @@
 // TODO: Make use of indexed geometry at some point...
 
 import * as THREE from "../dep/three/three.module.js";
+import { VRButton } from "../dep/three/VRButton.js";
 import { radians, rgbToHex } from "./num.mjs";
 
 let scene,
   renderer,
-  renders,
   camera,
   disposal = [],
   target;
@@ -19,17 +19,27 @@ let scene,
 // let pixels;
 let jiggleForm;
 
+let button;
+
 export const status = { alive: false };
 
-export function initialize(wrapper) {
+export function initialize(wrapper, loop) {
   renderer = new THREE.WebGLRenderer({
     alpha: false,
     preserveDrawingBuffer: true,
   });
 
+  renderer.xr.enabled = true;
   renderer.sortObjects = false;
-
   renderer.domElement.dataset.type = "3d";
+
+  button = VRButton.createButton(renderer, function start(session) {
+    console.log("🕶️ ️VR Session started.");
+    renderer.setAnimationLoop((now) => loop(now, true));
+  }, function end() {
+    renderer.setAnimationLoop(null);
+    console.log("🕶️ VR Session ended.");
+  }); // Will return `undefined` if VR is not supported.
 
   scene = new THREE.Scene();
 
@@ -37,6 +47,9 @@ export function initialize(wrapper) {
   scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
   wrapper.append(renderer.domElement);
+
+  if (button) document.body.append(button);
+
   status.alive = true;
 }
 
@@ -388,7 +401,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   //return pixels;
 }
 
-export function render() {
+// Hooks into the requestAnimationFrame in the main system, and 
+// setAnimationLoop for VR.
+export function render(now) {
+  //console.log(test);
+  //console.log(scene, now)
   // TODO: If keeping the renderer alive between pieces, then make sure to
   //       top rendering! 22.10.14.13.05
   if (scene) {
@@ -440,6 +457,7 @@ export function collectGarbage() {
 
 export function kill() {
   renderer.domElement.remove();
+  button?.remove();
   renderer.dispose();
   scene = undefined;
   target = undefined;

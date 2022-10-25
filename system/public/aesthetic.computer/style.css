@@ -43,7 +43,8 @@ canvas {
   touch-action: none;
 }
 
-input, form {
+input,
+form {
   pointer-events: none;
 }
 
@@ -171,7 +172,8 @@ canvas[data-type="freeze"] {
 canvas[data-type="ui"] {
   z-index: 6;
   filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
-  transform: rotateX(0.01deg); /* Make sure we are using the GPU compositor. */
+  transform: rotateX(0.01deg);
+  /* Make sure we are using the GPU compositor. */
   /* display: none; */
 }
 
@@ -180,4 +182,31 @@ canvas[data-type="3d"] {
   z-index: 0;
   /* width: 100% !important; */
   /* height: 100% !important; */
+}
+
+#VRButton {
+  position: absolute;
+  bottom: 0.5em;
+  right: 0.5em;
+  cursor: none;
+  font-family: YWFTProcessing-Regular, sans serif;
+  /* font-family: Berkeley Mono Variable, sans serif; */
+  padding: 0 0.15em;
+  line-height: 100%;
+  border: 0.05em solid rgb(200, 0, 0);
+  color: rgb(200, 0, 0);
+  background: none;
+  font-size: 2.5em;
+  z-index: 5;
+}
+
+#VRButton:hover {
+  border: 0.05em solid rgb(0, 200, 200);
+  color: rgb(0, 200, 200);
+  background: rgb(23, 2, 99, 0.25);
+}
+
+#VRButton:focus {
+  outline: none;
+  box-shadow: none;
 }
