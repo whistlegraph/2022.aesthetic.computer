@@ -180,13 +180,81 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
 function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quantizer } }) {
   // Functions
   if (e.is("keyboard:down:enter")) {
+
+    /*
+    [
+      {
+        "Name": "NewRow",
+        "Vertices": [
+          {
+            "X": 10,
+            "Y": 20,
+            "Z": -30
+          }
+        ],
+        "Color": [
+          {
+            "B": 0,
+            "G": 0,
+            "R": 201,
+            "A": 0
+          }
+        ]
+      },
+      {
+        "Name": "NewRow_0",
+        "Vertices": [
+          {
+            "X": 10,
+            "Y": 20,
+            "Z": -30
+          }
+        ],
+        "Color": [
+          {
+            "B": 0,
+            "G": 0,
+            "R": 201,
+            "A": 0
+          }
+        ]
+      }
+    ]
+    */
+    // Pack up and download the vertices according to the above.
+    download(`sculpture-${timestamp()}.json`, JSON.stringify(
+      drawing.vertices.map((v, i) => {
+        return {
+          Name: "NewRow_" + i,
+          Vertices: [
+            {
+              X: v.pos["0"],
+              Y: v.pos["1"],
+              Z: v.pos["2"],
+            }
+          ],
+          Color: [
+            {
+              R: v.color["0"],
+              G: v.color["1"],
+              B: v.color["2"],
+              A: v.color["3"]
+            }
+          ]
+        }
+      }))
+    );
+
+
     // Pack up and download the vertices in an array of arrays.
+    /*
     download(`sculpture-${timestamp()}.json`, JSON.stringify(
       drawing.vertices.map(v => [
         [v.pos["0"], v.pos["1"], v.pos["2"]],
         [...v.color]
       ]))
     );
+    */
   }
 
   // Controls
