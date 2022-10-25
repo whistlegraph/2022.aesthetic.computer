@@ -7,6 +7,7 @@ import * as ui from "./ui.mjs";
 import * as help from "./help.mjs";
 import { parse } from "./parse.mjs";
 import { Socket } from "./socket.mjs"; // TODO: Eventually expand to `net.Socket`
+import { UDP } from "./udp.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
 const { round } = Math;
 import { nopaint_adjust } from "../systems/nopaint.mjs"; 

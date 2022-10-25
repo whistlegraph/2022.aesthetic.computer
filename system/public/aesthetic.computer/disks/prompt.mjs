@@ -18,7 +18,7 @@ const { floor } = Math;
 import { parse } from "../lib/parse.mjs";
 import { font1 } from "./common/fonts.mjs";
 import { nopaint_adjust } from "../systems/nopaint.mjs";
-import { Desktop, MetaBrowser } from "../lib/platform.js";
+import { Desktop, MetaBrowser } from "../lib/platform.mjs";
 
 let glyphs = {};
 

@@ -10,7 +10,7 @@ import { apiObject, extension } from "./lib/helpers.mjs";
 import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
 import * as Store from "./lib/store.mjs";
-import { Desktop, MetaBrowser } from "./lib/platform.js";
+import { Desktop, MetaBrowser } from "./lib/platform.mjs";
 
 const { assign } = Object;
 const { round, floor, min, max } = Math;
