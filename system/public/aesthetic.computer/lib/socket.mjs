@@ -10,7 +10,14 @@ export class Socket {
 
   // Connects a WebSocket object and takes a handler for messages.
   #connect(host, receive, reload, protocol = "wss") {
-    this.#ws = new WebSocket(`${protocol}://${host}`);
+
+    try {
+      this.#ws = new WebSocket(`${protocol}://${host}`);
+    } catch {
+      console.warn("📡 WebSocket connection failed.");
+      return;
+    }
+
     const ws = this.#ws;
 
     // Send a message to the console after the first connection.
@@ -27,15 +34,14 @@ export class Socket {
 
     // Recursively re-connect after every second upon close or failed connection.
     ws.onclose = (e) => {
-      // console.warn("📡 Disconnected...", e.reason);
+      console.warn("📡 Disconnected...", e.reason);
       // Only reconnect if we are not killing the socket and not in development mode.
       if (this.#killSocket === false) {
-        console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
+        // console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
         setTimeout(() => {
-          this.#connect(host, receive, reload);
+          this.#connect(host, receive, reload, protocol);
         }, this.#reconnectTime);
         this.#reconnectTime = Math.min(this.#reconnectTime * 2, 32000);
-      } else {
       }
     };
 

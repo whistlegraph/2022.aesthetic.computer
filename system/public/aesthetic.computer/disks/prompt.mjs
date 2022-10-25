@@ -177,10 +177,9 @@ async function act({
     if (canType === false) {
       canType = true;
       input = "";
+    } else if (e.key.length === 1 && e.ctrl === false) {
+      input += e.key; // Printable keys.
     }
-
-    // Printable keys.
-    else if (e.key.length === 1 && e.ctrl === false) input += e.key;
     // Other keys.
     else {
       if (e.key === "Backspace") input = input.slice(0, -1);

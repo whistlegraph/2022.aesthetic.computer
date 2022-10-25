@@ -43,7 +43,7 @@ canvas {
   touch-action: none;
 }
 
-input {
+input, form {
   pointer-events: none;
 }
 

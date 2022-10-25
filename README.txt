@@ -68,9 +68,14 @@ Welcome to...
 
 *** (3dline) ***
  + Now
-  - [] Android keyboard...
+
+  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
+
+  - [🌛] Don't kill the keyboard if the disk fails to load. (Meta Quest 2)
+  - [] Can the keyboard automatically open when returning back to the prompt? 
+    - (If it's not the first disk.) (All mobile platforms)
+
   - [🌞] Add WebXR session.
-  
     - [] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
       - https://github.com/mrdoob/three.js/blob/master/examples/webxr_vr_paint.html
@@ -83,6 +88,8 @@ Welcome to...
   - [] Add user connected messages.
   - [] Better mouse and keyboard controls.
   - [] Automatically reload the socket server?
+    - [] Try to get websockets server locally connectable in Meta Quest browser.
+         https://github.com/nekocode/Websocket-Adb-Forward/blob/master/example-py-client/client.py
   - [] Does each player bring their lines with them?
        (This would make their presence very important.)
   - [] Add a "room" system.
@@ -93,6 +100,7 @@ Welcome to...
       - [] Perhaps this can just use the system ram, then dump to S3 after
            clients disconnect?
   - [] How to hear someone else's audio stream? https://stackoverflow.com/a/61438244/8146077
+  - [x] Android keyboard...
   - [x] Save the buffered lines to indexedDB... and/or to the remote room?
     - [x] Store and reload from indexedDB.
     - [x] Save and load with ram storage.
@@ -175,11 +183,6 @@ Welcome to...
   - [x] Basic FPS Camera.
   - [x] Make it all way faster?
   - [x] Draw a bresenham line in 3d.
-
-***Android Day***
-  - [] Fix keyboard controls not working (this should also fix Meta Quest 2).
-  + Done
-  - [x] Provision Android phone.
 
 ***Firefox Day***
  - [] Cursor
@@ -797,6 +800,11 @@ Welcome to...
 
 
 *Recently ✅ Completed*
+
+***Android Day***
+  - [x] Fix keyboard controls not working (this should also fix Meta Quest 2).
+  + Done
+  - [x] Provision Android phone.
 
 *** Hex Support ***
   - [x] Add hex support to color inputs.

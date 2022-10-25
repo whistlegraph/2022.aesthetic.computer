@@ -11,6 +11,7 @@ export class Keyboard {
   constructor(getCurrentPiece) {
 
     window.addEventListener("keydown", (e) => {
+
       // Firefox "repeat" seems to be broken on linux, so here is
       // some redundancy. 22.07.29.17.43
       const repeat = e.key === this.#lastKeyDown;
@@ -28,16 +29,22 @@ export class Keyboard {
       // which generates a synthetic keyboard event back
       //  in `bios` under `Keyboard`
       if (document.activeElement === this.input &&
-        e.key !== "Enter" &&
+        // Remaps "Unidentified" to "Backspace" below, avoiding `Enter` code.
+        e.which !== 13 &&
+        e.key !== "Unidentified" &&
         e.key !== "Escape" &&
         e.key !== "ArrowUp" &&
         e.key !== "ArrowDown"
       ) return;
 
+      // Remap `Unidentified` to `Backspace` for the Meta Quest Browser. 22.10.24.16.18
+      let key = e.key;
+      if (e.key === "Unidentified" && e.which === 8) key = "Backspace";
+
       // Send a normal keyboard message if we are anywhere else.
       this.events.push({
-        name: "keyboard:down:" + e.key.toLowerCase(),
-        key: e.key,
+        name: "keyboard:down:" + key.toLowerCase(),
+        key,
         repeat: e.repeat || repeat,
         shift: e.shiftKey,
         alt: e.altKey,

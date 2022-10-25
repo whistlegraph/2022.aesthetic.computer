@@ -751,6 +751,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
            * *Only works in "disks/prompt".
            */
           const input = document.createElement("input");
+          const form = document.createElement("form");
+          form.id = "software-keyboard-input-form";
+          form.style.opacity = 0;
+          input.style.width = 0;
+          input.style.height = 0;
+          input.style.position = "absolute";
+
           input.id = "software-keyboard-input";
           input.type = "text";
           input.autocapitalize = "none";
@@ -758,26 +765,64 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           input.style.opacity = 0;
           input.style.width = 0;
           input.style.height = 0;
-          input.style.position = "absolute";
-          wrapper.append(input);
+
+          form.append(input);
+          wrapper.append(form);
 
           keyboard.input = input;
 
-          input.addEventListener("input", (e) => {
-            let key = e.data;
-            if (e.inputType === "deleteContentBackward") key = "Backspace";
-
+          form.addEventListener("submit", (e) => {
+            // Generate a keyboard event if the form was submitted.
+            // (Enter keypressed.)
             keyboard.events.push({
-              name: "keyboard:down:" + key.toLowerCase(),
-              key,
+              name: "keyboard:down:enter",
+              key: "Enter",
               repeat: false,
               shift: false,
               alt: false,
               ctrl: false,
             });
 
-            e.target.value = ' '; // Leave a non-empty space to capture delete
-                                  // key events.
+            e.preventDefault();
+          });
+
+          input.addEventListener("input", (e) => {
+            let input = e.data;
+
+            const pressedKeys = [];
+
+            if (e.inputType === "deleteContentBackward") {
+              pressedKeys.push("Backspace");
+            } else if (e.inputType === "insertCompositionText") {
+
+              // Sanitize input if it arrives in chunks... like if it was dictated.
+              // This is still basic, and is usable in the Meta Quest Browser. 22.10.24.17.07
+              let sanitizedInput = input;
+              if (input.length > 1) {
+                sanitizedInput = input.trim().toLowerCase().replace(",", "").replace(".", "");
+                console.log("👄 Spoken / pasted input:", sanitizedInput);
+              }
+
+              [...sanitizedInput].forEach((chr) => pressedKeys.push(chr))
+            }
+
+            pressedKeys.forEach((pk) => {
+              keyboard.events.push({
+                name: "keyboard:down:" + pk.toLowerCase(),
+                key: pk,
+                repeat: false,
+                shift: false,
+                alt: false,
+                ctrl: false,
+              });
+            })
+
+            if (input === "Backspace") {
+              e.target.value = e.target.value.slice(0, -1);
+            } else {
+              e.target.value += input;
+            }
+
           });
 
           let touching = false;
@@ -805,7 +850,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               down = true;
               downPos = { x: e.x, y: e.y };
               inTime = true;
-              setTimeout(() => (inTime = false), 250);
+              setTimeout(() => (inTime = false), 500);
               e.preventDefault();
             }
           });
@@ -813,13 +858,19 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           window.addEventListener("pointerup", (e) => {
             if (
               down &&
-              dist(downPos.x, downPos.y, e.x, e.y) < 8 &&
+              // dist(downPos.x, downPos.y, e.x, e.y) < 32 && // Distance threshold for opening keyboard.
               inTime &&
-              currentPiece === "aesthetic.computer/disks/prompt" &&
-              // Commenting the above allows iframes to capture keyboard events. 2022.04.07.02.10
-              document.activeElement !== input
+              currentPiece === "aesthetic.computer/disks/prompt"// &&
+              // Refactoring the above could allow iframes to capture keyboard events.
+              // via sending things from input... 22.10.24.17.16, 2022.04.07.02.10
             ) {
-              input.focus();
+
+              if (document.activeElement === input) {
+                input.blur();
+              } else {
+                input.focus();
+              }
+
               if (touching) {
                 touching = false;
                 keyboard.events.push({ name: "keyboard:open" });
