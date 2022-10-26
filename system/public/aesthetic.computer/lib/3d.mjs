@@ -19,7 +19,10 @@ let scene,
 // let pixels;
 let jiggleForm;
 
-let button;
+let button, vrSession, controller1, controller2; // VR Specific.
+export const penEvents = []; // VR pointer events. 
+
+const cursor = new THREE.Vector3();
 
 export const status = { alive: false };
 
@@ -30,26 +33,80 @@ export function initialize(wrapper, loop) {
   });
 
   renderer.xr.enabled = true;
+  renderer.xr.setFramebufferScaleFactor(0.5);
   renderer.sortObjects = false;
   renderer.domElement.dataset.type = "3d";
 
+  scene = new THREE.Scene();
+  // scene.fog = new THREE.Fog(0x111111, 0.5, 2); // More basic fog.
+  scene.fog = new THREE.FogExp2(0x030303, 0.5);
+
+  // Set up VR.
   button = VRButton.createButton(renderer, function start(session) {
-    console.log("🕶️ ️VR Session started.");
+    console.log("🕶️️ VR Session started.");
+
+    // Setup VR controllers.
+    function onSelectStart() {
+      this.userData.isSelecting = true;
+      penEvent("touch", this);
+    }
+
+    function onSelectEnd() {
+      this.userData.isSelecting = false;
+      penEvent("lift", this);
+    }
+
+    function onSqueezeStart() {
+      this.userData.isSqueezing = true;
+      this.userData.positionAtSqueezeStart = this.position.y;
+      this.userData.scaleAtSqueezeStart = this.scale.x;
+    }
+
+    function onSqueezeEnd() { this.userData.isSqueezing = false; }
+
+    controller1 = renderer.xr.getController(0);
+    controller1.name = "controller-1";
+    controller1.addEventListener('selectstart', onSelectStart);
+    controller1.addEventListener('selectend', onSelectEnd);
+    controller1.addEventListener('squeezestart', onSqueezeStart);
+    controller1.addEventListener('squeezeend', onSqueezeEnd);
+    //controller1.userData.painter = painter1;
+    scene.add(controller1);
+
+    controller2 = renderer.xr.getController(1);
+    controller2.name = "controller-2";
+    controller2.addEventListener('selectstart', onSelectStart);
+    controller2.addEventListener('selectend', onSelectEnd);
+    controller2.addEventListener('squeezestart', onSqueezeStart);
+    controller2.addEventListener('squeezeend', onSqueezeEnd);
+    //controller2.userData.painter = painter2;
+    scene.add(controller2);
+
+    // Create some geometry for each controller.
+    const geometry = new THREE.CylinderGeometry(0.01, 0.02, 0.08, 5);
+    geometry.rotateX(- Math.PI / 2);
+    const material = new THREE.MeshStandardMaterial({ flatShading: true });
+    const mesh = new THREE.Mesh(geometry, material);
+
+    const pivot = new THREE.Mesh(new THREE.IcosahedronGeometry(0.01, 3));
+    pivot.name = 'pivot';
+    pivot.position.z = - 0.05;
+    mesh.add(pivot);
+
+    controller1.add(mesh.clone());
+    controller2.add(mesh.clone());
+
+    vrSession = session;
     renderer.setAnimationLoop((now) => loop(now, true));
   }, function end() {
     renderer.setAnimationLoop(null);
     console.log("🕶️ VR Session ended.");
+    vrSession = null;
   }); // Will return `undefined` if VR is not supported.
-
-  scene = new THREE.Scene();
-
-  // scene.fog = new THREE.Fog(0x111111, 0.5, 2); // More basic fog.
-  scene.fog = new THREE.FogExp2(0x030303, 0.5);
-
-  wrapper.append(renderer.domElement);
 
   if (button) document.body.append(button);
 
+  wrapper.append(renderer.domElement); // Add renderer to dom.
   status.alive = true;
 }
 
@@ -401,6 +458,37 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   //return pixels;
 }
 
+function handleController(controller) {
+  const userData = controller.userData;
+  //const painter = userData.painter;
+  const pivot = controller.getObjectByName('pivot');
+  if (userData.isSqueezing === true) {
+    const delta = (controller.position.y - userData.positionAtSqueezeStart) * 5;
+    const scale = Math.max(0.1, userData.scaleAtSqueezeStart + delta);
+    pivot.scale.setScalar(scale);
+    //painter.setSize(scale);
+  }
+
+  cursor.setFromMatrixPosition(pivot.matrixWorld);
+
+  if (controller.userData.lastPosition) {
+    const delta = controller.position.distanceTo(controller.userData.lastPosition);
+    // Add a small deadzone to controller movements.
+    if (delta > 0.0001) { penEvent(userData.isSelecting ? "draw" : "move", controller); }
+  }
+
+  controller.userData.lastPosition = { ...controller.position };
+}
+
+function penEvent(name, controller) {
+  penEvents.push({
+    name,
+    pointer: parseInt(controller.name.split("-")[1]),
+    position: { ...controller.position },
+    lastPosition: { ...controller.userData.lastPosition }
+  });
+}
+
 // Hooks into the requestAnimationFrame in the main system, and 
 // setAnimationLoop for VR.
 export function render(now) {
@@ -427,6 +515,11 @@ export function render(now) {
       jiggleForm.geometry.attributes.position.needsUpdate = true;
     }
     */
+
+    if (vrSession) {
+      handleController(controller1);
+      handleController(controller2);
+    }
 
     renderer.render(scene, camera);
     collectGarbage();

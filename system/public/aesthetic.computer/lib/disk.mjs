@@ -10,7 +10,7 @@ import { Socket } from "./socket.mjs"; // TODO: Eventually expand to `net.Socket
 import { UDP } from "./udp.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
 const { round } = Math;
-import { nopaint_adjust } from "../systems/nopaint.mjs"; 
+import { nopaint_adjust } from "../systems/nopaint.mjs";
 
 export const noWorker = { onMessage: undefined, postMessage: undefined };
 
@@ -1284,6 +1284,8 @@ async function makeFrame({ data: { type, content } }) {
 
       $commonApi.pen = primaryPointer || { x: undefined, y: undefined };
 
+      // $commonApi.pen3d = content.pen3d; // Send 3d pen data.
+
       // 🤖 Sim // no send
       $api.seconds = function (s) {
         return s * 120; // TODO: Get 120 dynamically from the Loop setting. 2022.01.13.23.28
@@ -1349,7 +1351,11 @@ async function makeFrame({ data: { type, content } }) {
           device: "none",
           is: (e) => e === "reframed",
         };
-        act($api);
+        try {
+          act($api);
+        } catch {
+          console.warn("️ ✒ Act failure...");
+        }
         reframed = false;
       }
 
@@ -1360,8 +1366,12 @@ async function makeFrame({ data: { type, content } }) {
           error: loadFailure,
           is: (e) => e === "load-error",
         };
-        act($api);
-        send({type: "load-failure"});
+        try {
+          act($api);
+        } catch {
+          console.warn("️ ✒ Act failure...");
+        }
+        send({ type: "load-failure" });
         loadFailure = undefined;
       }
 
@@ -1373,7 +1383,11 @@ async function makeFrame({ data: { type, content } }) {
           is: (e) => e === "signal",
         });
         $api.event = data;
-        act($api);
+        try {
+          act($api);
+        } catch {
+          console.warn("️ ✒ Act failure...");
+        }
         signals.length = 0;
       }
 
@@ -1386,7 +1400,11 @@ async function makeFrame({ data: { type, content } }) {
           is: (e) => e === (inFocus === true ? "focus" : "defocus"),
         });
         $api.event = data;
-        act($api);
+        try {
+          act($api);
+        } catch {
+          console.warn("️ ✒ Act failure...");
+        }
       }
 
       // *** Pen Events ***
@@ -1409,7 +1427,6 @@ async function makeFrame({ data: { type, content } }) {
             }
           },
         });
-
         //console.log(data)
         $api.event = data;
         try {
@@ -1418,6 +1435,23 @@ async function makeFrame({ data: { type, content } }) {
           console.warn("️ ✒ Act failure...");
         }
       });
+
+      // *** 3D Pen Events ***
+      content.pen3d.events?.forEach((data) => {
+        Object.assign(data, {
+          is: (e) => {
+            let [prefix, event, pointer] = e.split(":");
+            if (prefix === "3d" && event === data.name && parseInt(pointer) === data.pointer) return true;
+          }
+        });
+        $api.event = data;
+        try {
+          act($api);
+        } catch {
+          console.warn("️ ✒ Act failure...");
+        }
+      });
+
 
       // Ingest all keyboard input events by running act for each event.
       content.keyboard.forEach((data) => {
@@ -1435,7 +1469,11 @@ async function makeFrame({ data: { type, content } }) {
           },
         });
         $api.event = data;
-        act($api); // Execute piece shortcut.
+        try {
+          act($api); // Execute piece shortcut.
+        } catch {
+          console.warn("️ ✒ Act failure...");
+        }
 
         // 🌟 Global Keyboard Shortcuts
         if (data.name.indexOf("keyboard:down") === 0) {

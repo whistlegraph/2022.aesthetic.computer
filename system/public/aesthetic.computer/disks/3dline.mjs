@@ -178,7 +178,58 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
 
 // ✒ Act
 function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quantizer } }) {
-  // Functions
+
+  // Right hand.
+  if (e.is("3d:touch:1")) {
+    console.log("Touched:", e.position, "Left");
+  }
+
+  if (e.is("3d:draw:1")) {
+    console.log("Moved:", e.position, "Left");
+    console.log(tri.position, e.position);
+    triTop.position = [e.position.x, e.position.y, e.position.z];
+  }
+
+  if (e.is("3d:lift:1")) {
+    console.log("Lifted:", e.position, "Left");
+  }
+
+  // Left Hand
+  if (e.is("3d:touch:2")) {
+    console.log("Touched:", e.position, "Right");
+  }
+
+  if (e.is("3d:draw:2")) {
+    console.log("Draw:", e.position, "Right");
+    const vertexColor = color(...colorParams);
+
+    drawing.addPoints({
+      positions: [
+        [e.position.x, e.position.y, e.position.z],
+        [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z],
+      ],
+      colors: [vertexColor, vertexColor]
+    });
+
+    client.send("add", {
+      positions: [
+        [e.position.x, e.position.y, e.position.z],
+        [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z],
+      ],
+      colors: [vertexColor, vertexColor]
+    });
+
+  }
+
+  if (e.is("3d:move:2")) {
+    console.log("Moved:", e.position, "Right");
+  }
+
+  if (e.is("3d:lift:2")) {
+    console.log("Lifted:", e.position, "Right");
+  }
+
+
   if (e.is("keyboard:down:enter")) {
 
     /*

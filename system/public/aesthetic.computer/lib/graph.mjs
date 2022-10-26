@@ -616,8 +616,15 @@ function box() {
     h = arguments[3];
     mode = arguments[4];
   } else {
-    return console.error("Invalid box call.");
+    //return console.error("Invalid box call.");
   }
+
+  // Random parameters if undefined.
+  if (x === undefined) x = randInt(width);
+  if (y === undefined) y = randInt(height);
+  if (w === undefined) w = randInt(width);
+  if (h === undefined) h = randInt(height);
+  if (mode === undefined) mode = "fill"; // TODO: Add chooser here.
 
   // Check for "Center" at the end of mode.
   if (mode.endsWith(BOX_CENTER)) {

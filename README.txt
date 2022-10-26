@@ -69,7 +69,6 @@ Welcome to...
 *** (3dline) ***
  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
-  - [] Better output for Unreal Engine.
   - [🍏] Draw a line in webXR.
   - [] Fix keyboard hold and drag to symbol in Meta Quest software keyboard.
   - [] Add user connected messages.
@@ -87,6 +86,7 @@ Welcome to...
       - [] Perhaps this can just use the system ram, then dump to S3 after
            clients disconnect?
   - [] How to hear someone else's audio stream? https://stackoverflow.com/a/61438244/8146077
+  - [x] Better output for Unreal Engine.
   - [x] Android keyboard...
   - [x] Save the buffered lines to indexedDB... and/or to the remote room?
     - [x] Store and reload from indexedDB.

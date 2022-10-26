@@ -693,6 +693,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         height: canvas.height,
         // TODO: Do all fields of `pointer` need to be sent? 22.09.19.23.30
         pen: { events: pen.events, pointers: pen.pointers },
+        pen3d: { events: ThreeD?.penEvents }, // TODO: Implement pointers in 3D.
         keyboard: keyboard.events,
       },
     });
@@ -711,6 +712,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // Clear pen events.
     pen.events.length = 0;
+    if (ThreeD?.penEvents) ThreeD.penEvents.length = 0;
 
     // Clear keyboard events.
     keyboard.events.length = 0;
