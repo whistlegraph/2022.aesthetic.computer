@@ -285,15 +285,9 @@ const LINE = {
   type: "line",
   positions: [
     [0, 0, 0, 1], // Center
-    [0.2, -0.25, 0, 1], // Top Right
-    [0, 0, 0, 1], // Center
-    [-0.15, 0.25, 0.1, 1], // ?
-    [0, 0, 0, 1], // Center
-    [0, -0.5, 0, 1], // ?
-    [0, 0, 0, 1], // Center
-    [0.1, 0.1, 0.2, 1], // ?
+    [0, 1, 0, 1] // Center
   ],
-  indices: [0, 1, 2, 3, 4, 5, 6, 7],
+  indices: [0, 1],
 };
 
 // Inputs: (r, g, b), (r, g, b, a) or an array of those.
