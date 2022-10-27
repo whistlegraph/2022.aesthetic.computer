@@ -98,7 +98,10 @@ export function initialize(wrapper, loop) {
     controller2.add(mesh.clone());
 
     vrSession = session;
+
+    // Why is loop sometimes undefined here when taking off and putting on my VR headset? 22.10.26.21.25
     renderer.setAnimationLoop((now) => loop(now, true));
+
   }, function end() {
     renderer.setAnimationLoop(null);
     console.log("🕶️ VR Session ended.");

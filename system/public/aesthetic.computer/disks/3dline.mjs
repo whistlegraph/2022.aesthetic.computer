@@ -9,10 +9,10 @@ let race, tail, tail2; // Lazy line control with preview lines.
 let client; // Network.
 
 // *** Markmaking Configuration ***
-const step = 0.1; // Step size of regulated line / minimum cut-off.
+const step = 0.01; // Step size of regulated line / minimum cut-off.
 const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
 const quantizedSmoothing = true; // Regulate all segments while still smoothing.
-const speed = 1; // Only used if smoothing is true.
+const speed = 2; // Only used if smoothing is true.
 
 let colorParams = [0, 0, 0, 0];
 
@@ -151,7 +151,6 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
 
   // 📈 Add to the drawing.
   if (isDrawing) {
-
     if (withMouseAndKeyboard) raceTarget = cam.center;
 
     const path = race.to(raceTarget);
@@ -177,8 +176,8 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
     if (dist3d(path.last, path.current)) tail = [path.last, path.current];
 
     // Preview from current camera cursor / pointer.
-    if (dist3d(path.current, cam.center)) {
-      tail2 = [path.current, cam.centerCached];
+    if (dist3d(path.current, raceTarget)) {
+      tail2 = [path.current, raceTarget];
     }
   }
 
@@ -197,8 +196,7 @@ function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quant
 
   // ✏️ Start a mark.
   if (e.is("3d:touch:2")) {
-    console.log("Touched:", e.position, "Right");
-    raceTarget = e.position;
+    raceTarget = [e.position.x, e.position.y, e.position.z, 0];
     race.start(raceTarget);
     drawing.gpuFlush = true;
     isDrawing = true;
@@ -208,15 +206,14 @@ function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quant
   if (e.is("3d:lift:2")) {
     race.reset?.();
     isDrawing = false;
-    console.log("Lifted:", e.position, "Right");
   }
 
   // if (e.is("3d:draw:2")) {
     // console.log("Draw:", e.position, "Right");
   // }
 
-  if (e.is("3d:move:2")) {
-    console.log("Moved:", e.position, "Right");
+  if (e.is("3d:draw:2")) {
+    raceTarget = [e.position.x, e.position.y, e.position.z, 0];
   }
 
   // 🖱️ Mouse
