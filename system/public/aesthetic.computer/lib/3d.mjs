@@ -23,7 +23,7 @@ let jiggleForm;
 let button, vrSession, controller1, controller2; // VR Specific.
 export const penEvents = []; // VR pointer events. 
 
-const cursor = new THREE.Vector3();
+// const cursor = new THREE.Vector3();
 
 export const status = { alive: false };
 
@@ -83,15 +83,26 @@ export function initialize(wrapper, loop) {
     //controller2.userData.painter = painter2;
     scene.add(controller2);
 
+    const wandLen = 0.2;
+    const wandOffset = 0.075;
+
     // Create some geometry for each controller.
-    const geometry = new THREE.CylinderGeometry(0.01, 0.02, 0.08, 5);
+    const geometry = new THREE.CylinderGeometry(0.0025, 0.0025, 0.2, 32);
     geometry.rotateX(- Math.PI / 2);
-    const material = new THREE.MeshStandardMaterial({ flatShading: true });
+    geometry.translate(0, 0, - (wandLen / 2) + wandOffset);
+    const material = new THREE.MeshBasicMaterial({
+      flatShading: true,
+      color: new THREE.Color(0.5, 0.5, 0.5)
+    });
     const mesh = new THREE.Mesh(geometry, material);
 
-    const pivot = new THREE.Mesh(new THREE.IcosahedronGeometry(0.01, 3));
+    const pivot = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0025, 5), material);
+
     pivot.name = 'pivot';
-    pivot.position.z = - 0.05;
+    pivot.position.z = - wandLen + wandOffset;
+
+    //mesh.name = 'pivot';
+
     mesh.add(pivot);
 
     controller1.add(mesh.clone());
@@ -361,7 +372,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
       geometry.computeBoundingBox();
-      geometry.computeBoundingSphere();
+      //geometry.computeBoundingSphere();
 
       disposal.push({
         keep: f.gpuKeep,
@@ -469,14 +480,18 @@ function handleController(controller) {
   const userData = controller.userData;
   //const painter = userData.painter;
   const pivot = controller.getObjectByName('pivot');
-  if (userData.isSqueezing === true) {
-    const delta = (controller.position.y - userData.positionAtSqueezeStart) * 5;
-    const scale = Math.max(0.1, userData.scaleAtSqueezeStart + delta);
-    pivot.scale.setScalar(scale);
-    //painter.setSize(scale);
-  }
 
-  cursor.setFromMatrixPosition(pivot.matrixWorld);
+  // TODO: Implement controller squeeze?
+  //if (userData.isSqueezing === true) {
+    //const delta = (controller.position.y - userData.positionAtSqueezeStart) * 5;
+    //const scale = Math.max(0.1, userData.scaleAtSqueezeStart + delta);
+    //pivot.scale.setScalar(scale);
+    //painter.setSize(scale);
+  //}
+
+  // cursor.setFromMatrixPosition(pivot.matrixWorld);
+  const position = new THREE.Vector3();
+  position.setFromMatrixPosition(pivot.matrixWorld);
 
   if (controller.userData.lastPosition) {
     const delta = controller.position.distanceTo(controller.userData.lastPosition);
@@ -484,14 +499,18 @@ function handleController(controller) {
     if (delta > 0.0001) { penEvent(userData.isSelecting ? "draw" : "move", controller); }
   }
 
-  controller.userData.lastPosition = { ...controller.position };
+  controller.userData.lastPosition = { ...position };
 }
 
 function penEvent(name, controller) {
+  const pivot = controller.getObjectByName('pivot');
+  const position = new THREE.Vector3();
+  position.setFromMatrixPosition(pivot.matrixWorld);
+
   penEvents.push({
     name,
     pointer: parseInt(controller.name.split("-")[1]),
-    position: { ...controller.position },
+    position: { ...position },
     lastPosition: { ...controller.userData.lastPosition }
   });
 }
@@ -510,23 +529,24 @@ export function render(now) {
     if (jiggleForm) {
       const positions = jiggleForm.geometry.attributes.position.array;
 
-      const jiggleLevel = 0.01;
+      const jiggleLevel = 0.001;
 
-      for (let i = 0; i < positions.length; i += 3) {
-        positions[i] += jiggleLevel / 2 - Math.random() * jiggleLevel;
-        positions[i + 1] += jiggleLevel / 2 - Math.random() * jiggleLevel;
-        positions[i + 2] += jiggleLevel / 2 - Math.random() * jiggleLevel;
+      for (let i = 0; i < positions.length; i += 6) {
+      const randomJiggle1 = jiggleLevel / 2 - Math.random() * jiggleLevel;
+      const randomJiggle2 = jiggleLevel / 2 - Math.random() * jiggleLevel;
+      const randomJiggle3 = jiggleLevel / 2 - Math.random() * jiggleLevel;
+        positions[i] += randomJiggle1;
+        positions[i + 1] += randomJiggle2;
+        positions[i + 2] += randomJiggle3;
+        positions[i + 3] += randomJiggle1;
+        positions[i + 4] += randomJiggle2;
+        positions[i + 5] += randomJiggle3;
       }
 
       jiggleForm.geometry.setDrawRange(0, jiggleForm.ac_length);
       jiggleForm.geometry.attributes.position.needsUpdate = true;
     }
     */
-
-    if (vrSession) {
-      handleController(controller1);
-      handleController(controller2);
-    }
 
     // Garbage is collected in `bios` under `BIOS:RENDER`
     renderer.render(scene, camera);
@@ -537,8 +557,24 @@ export function pasteTo(ctx) {
   ctx.drawImage(renderer.domElement, 0, 0);
 }
 
+export function pollControllers() {
+  if (vrSession) {
+    handleController(controller1);
+    handleController(controller2);
+  }
+}
+
 export function clear() {
   renderer.clear();
+}
+
+export function penPosition() {
+  if (controller2) {
+    const pivot = controller2.getObjectByName('pivot');
+    const position = new THREE.Vector3();
+    position.setFromMatrixPosition(pivot.matrixWorld);
+    return position; 
+  }
 }
 
 export function collectGarbage() {

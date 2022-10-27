@@ -1284,7 +1284,7 @@ async function makeFrame({ data: { type, content } }) {
 
       $commonApi.pen = primaryPointer || { x: undefined, y: undefined };
 
-      // $commonApi.pen3d = content.pen3d; // Send 3d pen data.
+      $commonApi.pen3d = content.pen3d.position; // Send 3d pen data.
 
       // 🤖 Sim // no send
       $api.seconds = function (s) {
@@ -1451,7 +1451,6 @@ async function makeFrame({ data: { type, content } }) {
           console.warn("️ ✒ Act failure...");
         }
       });
-
 
       // Ingest all keyboard input events by running act for each event.
       content.keyboard.forEach((data) => {

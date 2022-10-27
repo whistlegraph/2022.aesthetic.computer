@@ -680,6 +680,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     frameCount += 1;
 
+    console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
+
     // TODO: 📏 Measure performance of frame: test with different resolutions.
     startTime = performance.now();
 
@@ -695,7 +697,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         height: canvas.height,
         // TODO: Do all fields of `pointer` need to be sent? 22.09.19.23.30
         pen: { events: pen.events, pointers: pen.pointers },
-        pen3d: { events: ThreeD?.penEvents }, // TODO: Implement pointers in 3D.
+        pen3d: { events: ThreeD?.penEvents, position: ThreeD?.penPosition() }, // TODO: Implement pointers in 3D.
         keyboard: keyboard.events,
       },
     });
@@ -943,11 +945,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             // pen.poll();
             // TODO: Key.input();
             // TODO: Voice.input();
+            ThreeD?.pollControllers();
           },
           function (needsRender, updateTimes, nowUpdate) {
             // console.log(updateTimes); // Note: No updates happen yet before a render.
             diskSupervisor.requestFrame?.(needsRender, updateTimes, nowUpdate);
-            if (needsRender) ThreeD?.render(nowUpdate);
+            // TODO: How can I get the pen data into the disk and back
+            //       to Three.JS as fast as possible? 22.10.26.23.25
+            ThreeD?.render(nowUpdate);
           }
         );
       } else {
@@ -1853,7 +1858,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     // TODO: Put this in a budget / progress bar system, related to the current refresh rate.
-    // console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
 
     if (needsReappearance && wrapper.classList.contains("hidden")) {
       wrapper.classList.remove("hidden");

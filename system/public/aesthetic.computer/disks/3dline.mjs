@@ -12,7 +12,7 @@ let client; // Network.
 const step = 0.01; // Step size of regulated line / minimum cut-off.
 const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
 const quantizedSmoothing = true; // Regulate all segments while still smoothing.
-const speed = 2; // Only used if smoothing is true.
+const speed = 20; // Only used if smoothing is true.
 
 let colorParams = [0, 0, 0, 0];
 
@@ -127,7 +127,7 @@ function paint({ ink, wipe, screen, Form }) {
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
+function sim({ pen, Form, color, num: { dist3d, randIntRange: rr }, pen3d }) {
   // First person camera controls.
   let forward = 0,
     strafe = 0;
@@ -152,6 +152,9 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
   // 📈 Add to the drawing.
   if (isDrawing) {
     if (withMouseAndKeyboard) raceTarget = cam.center;
+    else {
+      raceTarget = [pen3d.x, pen3d.y, pen3d.z, 0];
+    }
 
     const path = race.to(raceTarget);
     if (!path) return;
@@ -188,7 +191,7 @@ let isDrawing = false;
 let withMouseAndKeyboard = false;
 
 // ✒ Act
-function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quantizer } }) {
+function act({ event: e, color, download, num: { timestamp }, geo: { Quantizer } }) {
 
   // Controls
 
@@ -213,7 +216,7 @@ function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quant
   // }
 
   if (e.is("3d:draw:2")) {
-    raceTarget = [e.position.x, e.position.y, e.position.z, 0];
+    //raceTarget = [e.position.x, e.position.y, e.position.z, 0];
   }
 
   // 🖱️ Mouse

@@ -76,6 +76,12 @@ Welcome to...
 *** (3dline) ***
  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
+  - [🔥] Reduce the latency of the pen information.
+  - [] Retrieve the floor / head height information.
+  - [] Line thickness.
+  - [] Also add a 'wand' to the first person camera?
+ + Later
+  - [] Shrink three.js filesize: https://github.com/mrdoob/three.js/issues/19148
   - [] Fix keyboard hold and drag to symbol in Meta Quest software keyboard.
   - [] Add user connected messages.
   - [] Better mouse and keyboard controls.
@@ -92,12 +98,6 @@ Welcome to...
       - [] Perhaps this can just use the system ram, then dump to S3 after
            clients disconnect?
   - [] How to hear someone else's audio stream? https://stackoverflow.com/a/61438244/8146077
-  - [x] Draw a line in webXR.
-  - [x] Better output for Unreal Engine.
-  - [x] Android keyboard...
-  - [x] Save the buffered lines to indexedDB... and/or to the remote room?
-    - [x] Store and reload from indexedDB.
-    - [x] Save and load with ram storage.
   - [] Jiggle every two vertices the same amount so each segment
        drifts as one and maintains its integrity / add jiggle or break-apart
        as a toggle.
@@ -117,12 +117,16 @@ Welcome to...
   - [] Touch controls.
   - [] Add other tools other than line.
   - [] Add a 3d prompt so you can change tools / be more active without going 2d.
- + Later
-  - [] Line thickness.
-  - [] Shrink three.js filesize: https://github.com/mrdoob/three.js/issues/19148
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Make a "wand" / stick to draw with that comes off the VR controller. 
+  - [x] Draw a line in webXR.
+  - [x] Better output for Unreal Engine.
+  - [x] Android keyboard...
+  - [x] Save the buffered lines to indexedDB... and/or to the remote room?
+    - [x] Store and reload from indexedDB.
+    - [x] Save and load with ram storage.
   - [🌞] Add WebXR session.
     - [x] Use these demos.
       - https://github.com/immersive-web/webxr-samples/blob/main/vr-barebones.html
