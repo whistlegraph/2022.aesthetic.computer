@@ -149,6 +149,10 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr }, pen3d }) {
   tri.turn({ y: -0.25 });
   triTop.turn({ x: -0.5, y: 0.5, z: 0.2 });
 
+  if (pen3d) {
+    triTop.position = [pen3d.x, pen3d.y, pen3d.z, 0];
+  }
+
   // 📈 Add to the drawing.
   if (isDrawing) {
     if (withMouseAndKeyboard) raceTarget = cam.center;

@@ -1243,6 +1243,7 @@ async function makeFrame({ data: { type, content } }) {
   // This is where each...
   if (type === "frame") {
 
+    // TODO: Get this time down to as few ms as possible!
     const frameTime = performance.now();
 
     // Take hold of a previously transferred screen buffer.
@@ -1825,7 +1826,7 @@ async function makeFrame({ data: { type, content } }) {
     // Reset video transcoding / print progress.
     if ($commonApi.rec.printProgress === 1) $commonApi.rec.printProgress = 0;
 
-    console.log(performance.now() - frameTime, "ms");
+    //console.log(performance.now() - frameTime, "ms");
   }
 
 }

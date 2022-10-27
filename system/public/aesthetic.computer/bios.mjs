@@ -185,7 +185,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   function frame(width, height, gap = 8) {
 
-    console.log("framing...", imageData);
+    // console.log("framing...", imageData);
 
     lastGap = gap;
 
@@ -684,7 +684,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     frameAlreadyRequested = true;
     frameCount += 1;
 
-    if (startTime) console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
+    //if (startTime) console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
 
     // TODO: 📏 Measure performance of frame: test with different resolutions.
     startTime = performance.now();
