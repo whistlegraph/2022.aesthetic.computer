@@ -184,6 +184,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   }
 
   function frame(width, height, gap = 8) {
+
+    console.log("framing...", imageData);
+
     lastGap = gap;
 
     // Cache the current canvas if needed.
@@ -624,7 +627,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
   };
 
-  let send = (e) => worker.postMessage(e);
+  let send = (e, shared) => worker.postMessage(e, shared);
   let onMessage = receivedChange;
 
   worker.onmessage = (e) => onMessage(e);
@@ -645,8 +648,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           time,
           bpm: sound.bpm,
         },
-      },
-      [sound.bpm] // TODO: Why not just send the number here?
+      }//,
+      //[sound.bpm] // TODO: Why not just send the number here?
     );
   }
 
@@ -670,17 +673,18 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     now = nowUpdate;
 
     if (needsReframe) {
+      console.log("NEEDS REFRAME:", needsReframe)
       frame(undefined, undefined, lastGap);
       pen.retransformPosition();
       frameAlreadyRequested = false;
     }
 
     if (frameAlreadyRequested) return;
-    frameAlreadyRequested = true;
 
+    frameAlreadyRequested = true;
     frameCount += 1;
 
-    console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
+    if (startTime) console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
 
     // TODO: 📏 Measure performance of frame: test with different resolutions.
     startTime = performance.now();
@@ -690,6 +694,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       content: {
         needsRender,
         updateCount,
+        pixels: screen.pixels.buffer,
         inFocus: document.hasFocus(),
         audioTime: audioContext?.currentTime,
         audioBpm: sound.bpm[0], // TODO: Turn this into a messaging thing.
@@ -700,7 +705,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         pen3d: { events: ThreeD?.penEvents, position: ThreeD?.penPosition() }, // TODO: Implement pointers in 3D.
         keyboard: keyboard.events,
       },
-    });
+    }, [screen.pixels.buffer]);
+
 
     pen.updatePastPositions();
 
@@ -938,6 +944,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
         diskSupervisor = { requestBeat, requestFrame };
 
+        let lastFrameCount = 0;
+        let framesDropped = 0;
+        let renderCount = 0;
+
         // ➰ Core Loops for User Input, Music, Object Updates, and Rendering
         Loop.start(
           () => {
@@ -950,9 +960,28 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           function (needsRender, updateTimes, nowUpdate) {
             // console.log(updateTimes); // Note: No updates happen yet before a render.
             diskSupervisor.requestFrame?.(needsRender, updateTimes, nowUpdate);
+
             // TODO: How can I get the pen data into the disk and back
             //       to Three.JS as fast as possible? 22.10.26.23.25
+
             ThreeD?.render(nowUpdate);
+
+            /*
+            if (frameCount === lastFrameCount) {
+              framesDropped += 1;
+            } else {
+              lastFrameCount = frameCount;
+              framesDropped = 0;
+            }
+            */
+
+            //console.log(frameCount, renderCount);
+
+            renderCount += 1;
+
+
+            //console.log("repeatedRenders", framesDropped);
+
           }
         );
       } else {
@@ -1700,6 +1729,19 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // 🌟 Assume `type === render` from now on.
 
+    // This is a bit messy compared to what happens inside of content.reframe -> frame below. 22.10.27.02.05
+    if (content.pixels) {
+      screen.pixels = new Uint8ClampedArray(content.pixels);
+      let width = screen.width;
+      let height = screen.height;
+      if (content.reframe && content.reframe.width && content.reframe.height) {
+        width = content.reframe.width;
+        height = content.reframe.height;
+      }
+      imageData = new ImageData(screen.pixels, width, height);
+      // console.log("cp", content.pixels, content, type);
+    }
+
     if (ThreeD?.bakeQueue.length > 0) {
       ThreeD.collectGarbage();
       ThreeD.bakeQueue.forEach((baker) => baker());
@@ -1742,7 +1784,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (content.dirtyBox) {
       // 🅰️ Cropped update.
       const imageData = new ImageData(
-        content.pixels, // Is this the only necessary part?
+        new Uint8ClampedArray(content.pixels), // Is this the only necessary part?
         content.dirtyBox.w,
         content.dirtyBox.h
       );
@@ -1763,7 +1805,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // dbCtx.transferFromImageBitmap(dirtyBoxBitmap);
     } else if (content.paintChanged) {
       // 🅱️ Normal full-screen update.
-      imageData = new ImageData(content.pixels, canvas.width, canvas.height);
+      imageData = new ImageData(new Uint8ClampedArray(content.pixels), canvas.width, canvas.height);
     }
 
     pixelsDidChange = content.paintChanged || false;

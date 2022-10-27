@@ -22,13 +22,16 @@
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({ resize }) {
+
   // Perform basic setup here.
-  // resize(50, 20); // Add a custom resolution. 
+  resize(50, 20); // Add a custom resolution. 
 }
 
 // 🎨 Paint (Executes every display frame)
 function paint($api) {
-  $api.wipe(100, 100, 120); // Draw a background. (You can also use hex.)
+  $api.wipe(undefined, 100, 120); // Draw a background. (You can also use hex.)
+
+  $api.ink(0).line(0, 0, $api.screen.width, $api.screen.height);
 
   // Loop through / edit a pixel array. 
   //$api.edit((pix, w, h) => {

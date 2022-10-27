@@ -372,7 +372,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
       geometry.computeBoundingBox();
-      //geometry.computeBoundingSphere();
+      geometry.computeBoundingSphere();
 
       disposal.push({
         keep: f.gpuKeep,
@@ -464,7 +464,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         form.geometry.attributes.color.needsUpdate = true;
 
         form.geometry.computeBoundingBox();
-        form.geometry.computeBoundingSphere();
+        //form.geometry.computeBoundingSphere();
+        needsSphere = true;
       }
     }
   });
@@ -475,6 +476,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   //return pixels;
 }
 
+let needsSphere = false;
 
 function handleController(controller) {
   const userData = controller.userData;
@@ -547,6 +549,9 @@ export function render(now) {
       jiggleForm.geometry.attributes.position.needsUpdate = true;
     }
     */
+
+    if (jiggleForm && needsSphere) jiggleForm.geometry.computeBoundingSphere();
+    needsSphere = false;
 
     // Garbage is collected in `bios` under `BIOS:RENDER`
     renderer.render(scene, camera);

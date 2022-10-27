@@ -951,9 +951,10 @@ if (isWorker) {
 }
 
 // The main messaging function to comumunicate back with the main thread.
-function send(data) {
+function send(data, shared = []) {
   if (isWorker) {
-    postMessage(data);
+    if (shared[0] === undefined) shared = [];
+    postMessage(data, shared);
   } else {
     noWorker.postMessage({ data });
   }
@@ -1154,9 +1155,9 @@ async function makeFrame({ data: { type, content } }) {
       console.warn(" 💗 Beat failure...");
     }
 
-    send({ type: "beat", content: { bpm: content.bpm, squares, bubbles } }, [
-      content.bpm,
-    ]);
+    send({ type: "beat", content: { bpm: content.bpm, squares, bubbles } }//,
+      //[content.bpm]
+    );
 
     squares.length = 0;
     bubbles.length = 0;
@@ -1241,6 +1242,16 @@ async function makeFrame({ data: { type, content } }) {
   // 2. Frame
   // This is where each...
   if (type === "frame") {
+
+    const frameTime = performance.now();
+
+    // Take hold of a previously transferred screen buffer.
+    let pixels;
+    if (content.pixels) {
+      //console.log(screen, content.pixels)
+      pixels = new Uint8ClampedArray(content.pixels)
+      if (screen) screen.pixels = pixels;
+    }
 
     // Act & Sim (Occurs after first boot and paint.)
     if (booted && paintCount > 0n) {
@@ -1531,6 +1542,7 @@ async function makeFrame({ data: { type, content } }) {
         glazeAfterReframe = { type: "glaze", content };
       };
 
+
       // Make a screen buffer or resize it automatically if it doesn't exist.
       if (
         !screen ||
@@ -1538,7 +1550,7 @@ async function makeFrame({ data: { type, content } }) {
         screen.height !== content.height
       ) {
         screen = {
-          pixels: new Uint8ClampedArray(content.width * content.height * 4),
+          pixels: pixels || new Uint8ClampedArray(content.width * content.height * 4),
           width: content.width,
           height: content.height,
           load: function load(name) {
@@ -1776,6 +1788,7 @@ async function makeFrame({ data: { type, content } }) {
       if (reframe || glazeAfterReframe) {
         sendData.reframe = reframe || glazeAfterReframe !== undefined;
         if (glazeAfterReframe) {
+          console.log(glazeAfterReframe)
           send(glazeAfterReframe);
           glazeAfterReframe = undefined;
         }
@@ -1785,7 +1798,15 @@ async function makeFrame({ data: { type, content } }) {
       //console.log(sendData);
 
       // Note: transferredPixels will be undefined when sendData === {}.
-      send({ type: "render", content: sendData }, [transferredPixels]);
+      if (sendData.pixels) {
+        sendData.pixels = sendData.pixels.buffer;
+      } else {
+        sendData.pixels = content.pixels;
+      } 
+
+      //else sendData.pixels = pixels; 
+
+      send({ type: "render", content: sendData }, [sendData.pixels]);
 
       // Flush the `signals` after sending.
       if (reframe) reframe = undefined;
@@ -1796,14 +1817,17 @@ async function makeFrame({ data: { type, content } }) {
       //       get sent?
       send({
         type: "update",
-        content: { didntRender: true, loading },
-      });
+        content: { didntRender: true, loading, pixels: pixels.buffer },
+      }, [pixels.buffer]);
     }
 
     // ***Frame State Reset***
     // Reset video transcoding / print progress.
     if ($commonApi.rec.printProgress === 1) $commonApi.rec.printProgress = 0;
+
+    console.log(performance.now() - frameTime, "ms");
   }
+
 }
 
 // 📚 Utilities

@@ -77,6 +77,7 @@ Welcome to...
  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
   - [🔥] Reduce the latency of the pen information.
+    - [] Make buffers transferrable.
   - [] Retrieve the floor / head height information.
   - [] Line thickness.
   - [] Also add a 'wand' to the first person camera?
