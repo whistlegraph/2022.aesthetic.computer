@@ -12,6 +12,7 @@ import { radians, rgbToHex } from "./num.mjs";
 
 let scene,
   renderer,
+  bakes,
   camera,
   disposal = [],
   target;
@@ -113,6 +114,8 @@ export function initialize(wrapper, loop) {
 // Should all bakes be batched together, messages combined?
 // (Maybe not yet... unless there becomes tons of calls in a piece.)
 export function bake({ cam, forms, color }, { width, height }, size) {
+  // Clear leftovers that was marked as deletable from the last round of bakes.
+
   // Only instantiate some things once.
   if (!target || target.width !== width || target.height !== height) {
     target = new THREE.WebGLRenderTarget(width, height);
@@ -458,6 +461,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   //return pixels;
 }
 
+
 function handleController(controller) {
   const userData = controller.userData;
   //const painter = userData.painter;
@@ -496,7 +500,7 @@ export function render(now) {
   //console.log(scene, now)
   // TODO: If keeping the renderer alive between pieces, then make sure to
   //       top rendering! 22.10.14.13.05
-  if (scene) {
+  if (scene && camera) {
     // CTO Rapter's line jiggling request:
 
     /*
@@ -521,8 +525,8 @@ export function render(now) {
       handleController(controller2);
     }
 
+    // Garbage is collected in `bios` under `BIOS:RENDER`
     renderer.render(scene, camera);
-    collectGarbage();
   }
 }
 
@@ -547,6 +551,8 @@ export function collectGarbage() {
   }); // Free memory from forms if it's been marked as `keep === false`.
   disposal = disposal.filter(Boolean);
 }
+
+export const bakeQueue = [];
 
 export function kill() {
   renderer.domElement.remove();

@@ -421,7 +421,7 @@ const $paintApiUnwrapped = {
     if (cpu === true) {
       if (Array.isArray(forms)) forms.forEach((form) => form.graph(cam));
       else forms.graph(cam);
-    } else {
+    } else { // GPU forms.
       if (!Array.isArray(forms)) forms = [forms];
 
       // Build a list of forms to send, ignoring already sent ones by UID.

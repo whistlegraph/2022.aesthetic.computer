@@ -30,6 +30,7 @@ Welcome to...
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
+  - [] Fix pen data being erased on click.
   - [🍽️] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
   - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
   - [] (Related to reloading.) Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
@@ -44,6 +45,12 @@ Welcome to...
   - [x] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
 
 🌟 Projects In Progress 🌟
+
+*** Developers ***
+ - [] Move `maya` from glitch to ssh.
+  - [] Document each step so that I can script adding new users in the future.
+ - [] Figure out how to best automate the addition of a new developer... 
+ - [] Why isn't artur's ssh key working?
 
 *** i ***
  - [] Make `i` 2D multiplayer with UDP. 

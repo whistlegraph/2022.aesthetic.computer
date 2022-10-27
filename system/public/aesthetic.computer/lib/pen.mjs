@@ -104,6 +104,7 @@ export class Pen {
         //pointer.down = true;
         //console.log("pointerdown", pointer.down);
         pointer.drawing = true;
+        pointer.button = e.button;
 
         pointer.penDragStartPos = { x: pointer.x, y: pointer.y };
 
@@ -139,6 +140,7 @@ export class Pen {
         pointer.untransformedPosition = { x: e.x, y: e.y };
         pointer.pressure = reportPressure(e);
 
+        pointer.button = e.button;
         pointer.device = e.pointerType;
         pointer.pointerId = e.pointerId;
         pointer.isPrimary = e.isPrimary;

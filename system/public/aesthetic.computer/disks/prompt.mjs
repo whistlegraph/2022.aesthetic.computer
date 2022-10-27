@@ -183,6 +183,7 @@ async function act({
     }
     // Other keys.
     else {
+
       if (e.key === "Backspace") input = input.slice(0, -1);
 
       const key = "prompt:history";

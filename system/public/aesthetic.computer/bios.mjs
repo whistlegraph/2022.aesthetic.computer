@@ -678,6 +678,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (frameAlreadyRequested) return;
     frameAlreadyRequested = true;
 
+    frameCount += 1;
+
     // TODO: 📏 Measure performance of frame: test with different resolutions.
     startTime = performance.now();
 
@@ -773,6 +775,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           input.style.opacity = 0;
           input.style.width = 0;
           input.style.height = 0;
+
+          input.value = "_";
 
           form.append(input);
           wrapper.append(form);
@@ -1058,10 +1062,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         if (ThreeD === undefined) await loadThreeD();
         if (ThreeD.status.alive === false) ThreeD.initialize(wrapper);
 
-        // Add / update forms in and then render them.
-        ThreeD?.bake(content, screen, {
-          width: projectedWidth,
-          height: projectedHeight,
+        // Add / update forms in a queue and then run all the bakes in render.
+        ThreeD?.bakeQueue.push(() => {
+          ThreeD?.bake(content, screen, {
+            width: projectedWidth,
+            height: projectedHeight,
+          });
         });
 
         send({ type: "forms:baked", content: true });
@@ -1686,7 +1692,15 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     // BIOS:RENDER
+
     // 🌟 Assume `type === render` from now on.
+
+    if (ThreeD?.bakeQueue.length > 0) {
+      ThreeD.collectGarbage();
+      ThreeD.bakeQueue.forEach((baker) => baker());
+      ThreeD.bakeQueue.length = 0;
+    }
+
     // Check for a change in resolution.
     if (content.reframe) {
       // Reframe the captured pixels.
@@ -1803,6 +1817,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
 
       //ThreeD?.render(now);
+
     }
 
     if (pixelsDidChange || pen.changedInPiece) {
@@ -1847,8 +1862,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     timePassed = performance.now();
 
-    frameCount += 1;
-
+    //frameCount += 1;
     frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
   }
 

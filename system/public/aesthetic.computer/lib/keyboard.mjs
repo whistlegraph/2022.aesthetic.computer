@@ -52,6 +52,7 @@ export class Keyboard {
         ctrl: e.ctrlKey,
       });
 
+      if (e.key === "ArrowUp") e.preventDefault();
     });
 
     window.addEventListener("keyup", (e) => {

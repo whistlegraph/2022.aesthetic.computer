@@ -9,10 +9,10 @@ let race, tail, tail2; // Lazy line control with preview lines.
 let client; // Network.
 
 // *** Markmaking Configuration ***
-const step = 0.025; // Step size of regulated line / minimum cut-off.
+const step = 0.1; // Step size of regulated line / minimum cut-off.
 const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
 const quantizedSmoothing = true; // Regulate all segments while still smoothing.
-const speed = 20; // Only used if smoothing is true.
+const speed = 1; // Only used if smoothing is true.
 
 let colorParams = [0, 0, 0, 0];
 
@@ -111,15 +111,19 @@ function paint({ ink, wipe, screen, Form }) {
     .circle(...screen.center, 9);
 
   // I'm rendering multiple times before simming again, which means tail
-  ink(...colorParams).form(
-    new Form({ type: "line", positions: tail, keep: false }, { alpha: 1 }),
-    cam
-  );
+  if (tail) {
+    ink(0, 255, 0).form(
+      new Form({ type: "line", positions: tail, keep: false }, { alpha: 1 }),
+      cam
+    );
+  }
 
-  ink(255, 0, 0).form(
-    new Form({ type: "line", positions: tail2, keep: false }, { alpha: 1 }),
-    cam
-  );
+  if (tail2) {
+    ink(255, 0, 0).form(
+      new Form({ type: "line", positions: tail2, keep: false }, { alpha: 1 }),
+      cam
+    );
+  }
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
@@ -145,9 +149,12 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
   tri.turn({ y: -0.25 });
   triTop.turn({ x: -0.5, y: 0.5, z: 0.2 });
 
-  // 🖱️ Add to the drawing.
-  if (pen.drawing && pen.device === "mouse" && pen.button === 0) {
-    const path = race.to(cam.center);
+  // 📈 Add to the drawing.
+  if (isDrawing) {
+
+    if (withMouseAndKeyboard) raceTarget = cam.center;
+
+    const path = race.to(raceTarget);
     if (!path) return;
 
     if (path.out?.length > 0) {
@@ -170,68 +177,128 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr } }) {
     if (dist3d(path.last, path.current)) tail = [path.last, path.current];
 
     // Preview from current camera cursor / pointer.
-    if (dist3d(path.current, cam.centerCached)) {
+    if (dist3d(path.current, cam.center)) {
       tail2 = [path.current, cam.centerCached];
     }
   }
+
 }
+
+let raceTarget;
+let isDrawing = false;
+let withMouseAndKeyboard = false;
 
 // ✒ Act
 function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quantizer } }) {
 
-  // Right hand.
-  if (e.is("3d:touch:1")) {
-    console.log("Touched:", e.position, "Left");
-  }
+  // Controls
 
-  if (e.is("3d:draw:1")) {
-    console.log("Moved:", e.position, "Left");
-    console.log(tri.position, e.position);
-    triTop.position = [e.position.x, e.position.y, e.position.z];
-  }
+  // Right Hand
 
-  if (e.is("3d:lift:1")) {
-    console.log("Lifted:", e.position, "Left");
-  }
-
-  // Left Hand
+  // ✏️ Start a mark.
   if (e.is("3d:touch:2")) {
     console.log("Touched:", e.position, "Right");
+    raceTarget = e.position;
+    race.start(raceTarget);
+    drawing.gpuFlush = true;
+    isDrawing = true;
   }
 
-  if (e.is("3d:draw:2")) {
-    console.log("Draw:", e.position, "Right");
-    const vertexColor = color(...colorParams);
-
-    drawing.addPoints({
-      positions: [
-        [e.position.x, e.position.y, e.position.z],
-        [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z],
-      ],
-      colors: [vertexColor, vertexColor]
-    });
-
-    client.send("add", {
-      positions: [
-        [e.position.x, e.position.y, e.position.z],
-        [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z],
-      ],
-      colors: [vertexColor, vertexColor]
-    });
-
+  // 🚩 End a mark.
+  if (e.is("3d:lift:2")) {
+    race.reset?.();
+    isDrawing = false;
+    console.log("Lifted:", e.position, "Right");
   }
+
+  // if (e.is("3d:draw:2")) {
+    // console.log("Draw:", e.position, "Right");
+  // }
 
   if (e.is("3d:move:2")) {
     console.log("Moved:", e.position, "Right");
   }
 
-  if (e.is("3d:lift:2")) {
-    console.log("Lifted:", e.position, "Right");
+  // 🖱️ Mouse
+
+  // ✏️ Start a mark.
+  if (e.is("touch") && e.device === "mouse" && e.button === 0) {
+    raceTarget = cam.center;
+    withMouseAndKeyboard = true;
+    race.start(raceTarget);
+    drawing.gpuFlush = true;
+    isDrawing = true;
   }
 
+  // 🚩 End a mark.
+  if (e.is("lift") && e.device === "mouse" && e.button === 0) {
+    race.reset?.(); // Reset the lazy cursor.
 
+    // Draw the second tail if it exists, then clear both.
+    const start = tail?.[0] || tail2?.[0];
+    const end = tail2?.[1];
+
+    if (start && end) {
+      const q = new Quantizer({ step });
+      q.start(start);
+      const path = q.to(end);
+
+      if (path.out.length > 0) {
+        const colors = []; // Note: Could this whole color loop be shorter?
+        path.out.forEach((p) => {
+          const vertexColor = color(...colorParams);
+          colors.push(vertexColor, vertexColor);
+        });
+
+        drawing.addPoints({ positions: path.out, colors });
+      }
+    }
+
+    isDrawing = false;
+    tail = tail2 = undefined;
+  }
+
+  // 👀 Look around while dragging.
+  if (e.is("draw")) {
+    cam.rotX -= e.delta.y / 3.5;
+    cam.rotY -= e.delta.x / 3.5;
+  }
+
+  // 🖖 Touch
+  // Two fingers for move forward.
+  if (e.is("touch:2")) W = true;
+  if (e.is("lift:2")) W = false;
+
+  // Three fingers for moving backward.
+  if (e.is("touch:3")) S = true;
+  if (e.is("lift:3")) S = false;
+
+  // 💻️ Keyboard: WASD for movement, arrows for looking.
+  if (e.is("keyboard:down:w")) W = true;
+  if (e.is("keyboard:down:s")) S = true;
+  if (e.is("keyboard:down:a")) A = true;
+  if (e.is("keyboard:down:d")) D = true;
+
+  if (e.is("keyboard:up:w")) W = false;
+  if (e.is("keyboard:up:s")) S = false;
+  if (e.is("keyboard:up:a")) A = false;
+  if (e.is("keyboard:up:d")) D = false;
+
+  if (e.is("keyboard:down:arrowup")) UP = true;
+  if (e.is("keyboard:down:arrowdown")) DOWN = true;
+  if (e.is("keyboard:down:arrowleft")) LEFT = true;
+  if (e.is("keyboard:down:arrowright")) RIGHT = true;
+
+  if (e.is("keyboard:up:arrowup")) UP = false;
+  if (e.is("keyboard:up:arrowdown")) DOWN = false;
+  if (e.is("keyboard:up:arrowleft")) LEFT = false;
+  if (e.is("keyboard:up:arrowright")) RIGHT = false;
+
+  if (e.is("keyboard:down:k")) cursorSize += 0.1;
+  if (e.is("keyboard:down:j")) cursorSize -= 0.1;
+
+  // 💾 Saving
   if (e.is("keyboard:down:enter")) {
-
     /*
     [
       {
@@ -308,80 +375,6 @@ function act({ event: e, color, download, num: { vec4, timestamp }, geo: { Quant
     */
   }
 
-  // Controls
-
-  // 🖱️ Mouse
-  //Look around while dragging.
-  if (e.is("draw")) {
-    cam.rotX -= e.delta.y / 3.5;
-    cam.rotY -= e.delta.x / 3.5;
-  }
-
-  // Start a mark.
-  if (e.is("touch") && e.device === "mouse") {
-    race.start(cam.center);
-    drawing.gpuFlush = true;
-  }
-
-  // End a mark.
-  if (e.is("lift") && e.device === "mouse") {
-    race.reset?.(); // Reset the lazy cursor.
-
-    // Draw the second tail if it exists, then clear both.
-    const start = tail?.[0] || tail2?.[0];
-    const end = tail2?.[1];
-
-    if (start && end) {
-      const q = new Quantizer({ step });
-      q.start(start);
-      const path = q.to(end);
-
-      if (path.out.length > 0) {
-        const colors = []; // Note: Could this whole color loop be shorter?
-        path.out.forEach((p) => {
-          const vertexColor = color(...colorParams);
-          colors.push(vertexColor, vertexColor);
-        });
-
-        drawing.addPoints({ positions: path.out, colors });
-      }
-    }
-
-    tail = tail2 = undefined;
-  }
-
-  // 🖖 Touch
-  // Two fingers for move forward.
-  if (e.is("touch:2")) W = true;
-  if (e.is("lift:2")) W = false;
-
-  // Three fingers for moving backward.
-  if (e.is("touch:3")) S = true;
-  if (e.is("lift:3")) S = false;
-
-  // 💻️ Keyboard: WASD for movement, arrows for looking.
-  if (e.is("keyboard:down:w")) W = true;
-  if (e.is("keyboard:down:s")) S = true;
-  if (e.is("keyboard:down:a")) A = true;
-  if (e.is("keyboard:down:d")) D = true;
-
-  if (e.is("keyboard:up:w")) W = false;
-  if (e.is("keyboard:up:s")) S = false;
-  if (e.is("keyboard:up:a")) A = false;
-  if (e.is("keyboard:up:d")) D = false;
-
-  if (e.is("keyboard:down:arrowup")) UP = true;
-  if (e.is("keyboard:down:arrowdown")) DOWN = true;
-  if (e.is("keyboard:down:arrowleft")) LEFT = true;
-  if (e.is("keyboard:down:arrowright")) RIGHT = true;
-
-  if (e.is("keyboard:up:arrowup")) UP = false;
-  if (e.is("keyboard:up:arrowdown")) DOWN = false;
-  if (e.is("keyboard:up:arrowleft")) LEFT = false;
-  if (e.is("keyboard:up:arrowright")) RIGHT = false;
-
-  if (e.is("keyboard:down:k")) cursorSize += 0.1;
-  if (e.is("keyboard:down:j")) cursorSize -= 0.1;
 }
 
 // 💗 Beat
