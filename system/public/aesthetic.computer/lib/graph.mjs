@@ -1326,9 +1326,9 @@ class Form {
         // Draw each triangle by applying the screen transform &
         // perspective divide (with clipping).
         drawTriangle(
-          transformedVertices[i],
-          transformedVertices[i + 1],
-          transformedVertices[i + 2],
+          transformedVertices[this.indices[i]],
+          transformedVertices[this.indices[i + 1]],
+          transformedVertices[this.indices[i + 2]],
           // Eventually pass in a "shader" function instead of texture or alpha..
           this.texture,
           this.alpha
@@ -1338,12 +1338,12 @@ class Form {
 
     if (this.primitive === "line") {
       // Loop indices list to draw each triangle.
-      for (let i = 0; i < this.indices?.length; i += 2) {
+      for (let i = 0; i < this.indices.length; i += 2) {
         // Draw each line by applying the screen transform &
         // perspective divide (with clipping).
         drawLine3d(
-          transformedVertices[i],
-          transformedVertices[i + 1],
+          transformedVertices[this.indices[i]],
+          transformedVertices[this.indices[i + 1]],
           this.color
         );
       }

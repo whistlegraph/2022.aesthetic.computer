@@ -284,8 +284,8 @@ const TRI = {
 const LINE = {
   type: "line",
   positions: [
-    [0, 0, 0, 1], // Center
-    [0, 1, 0, 1] // Center
+    [0, 0, 0, 1], // Bottom
+    [0, 1, 0, 1] // Top
   ],
   indices: [0, 1],
 };
