@@ -1062,7 +1062,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // console.log(content.text);
 
       // TODO: Make this automatic for pieces that use 3d.
-      if (content.text === "3dline") { loadThreeD(); }
+      if (content.text === "wand") { loadThreeD(); }
 
       // Show an "audio engine: off" message.
       //if (content.noBeat === false && audioContext?.state !== "running") {

@@ -302,7 +302,7 @@ const LINE = {
 //         Or hex with "#000000" or "0x000000" or 0x000000.
 // TODO: Add better hex support via: https://stackoverflow.com/a/53936623/8146077
 function color() {
-  let args = arguments;
+  let args = [...arguments];
 
   if (args.length === 1 && args[0] !== undefined) {
     const isNumber = () => typeof args[0] === "number";

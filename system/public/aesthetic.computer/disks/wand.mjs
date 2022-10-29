@@ -1,6 +1,15 @@
-// 3D Line, 22.10.05.11.01
-// A test for developing software (and hardware) rasterized 3D lines
-// and other geometry.
+// Wand, 22.10.29.01.50 
+//       22.10.05.11.01
+
+// TODO
+// - [] Add shortening of line.
+// - [] Switch to a new stick of color and length once a line runs out.
+// - [] Transmit wand position.
+// - [] "Flat" 2D controls to allow better participation on 2d screens.
+// - [] Make 2D controls closer.
+// - [] Add colors to line.
+// - [] Add text chat.
+// - [] Add voice chat.
 
 let cam, dolly; // Camera system.
 let floor, cross, tri, triTop, drawing; // Geometry.
@@ -192,6 +201,7 @@ function sim({ pen, Form, color, num: { dist3d, degrees: deg, randIntRange: rr }
 
       path.out.forEach(() => {
         const vertexColor = color(...colorParams);
+        console.log(vertexColor)
         colors.push(vertexColor, vertexColor);
       });
 
