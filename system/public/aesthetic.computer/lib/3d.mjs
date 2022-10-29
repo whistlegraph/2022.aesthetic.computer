@@ -27,10 +27,12 @@ export function initialize(wrapper, loop) {
     preserveDrawingBuffer: true,
   });
 
+  renderer.sortObjects = false;
   renderer.xr.enabled = true;
   renderer.xr.setFramebufferScaleFactor(1);
   renderer.xr.setFoveation(0);
-  renderer.sortObjects = false;
+  renderer.preserveDrawingBuffer = true;
+
   renderer.domElement.dataset.type = "3d";
 
   scene = new THREE.Scene();
@@ -136,9 +138,12 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
   // 🎥 Camera
   if (!vrSession) {
+
     camera.rotation.order = "YXZ"; // Set to match the software renderer.
     camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
+    camera.scale.set(...cam.scale)
     camera.position.set(...cam.position);
+
   }
 
   if (!Array.isArray(forms)) forms = [forms];

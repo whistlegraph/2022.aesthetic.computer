@@ -905,18 +905,22 @@ class Camera {
 
   position = [0, 0, 0, 1];
   rotation = [0, 0, 0];
+  scale = [1, 1, 1];
 
   centerCached; // Saved after each call to `center()`.
 
   perspectiveMatrix;
   #transformMatrix;
 
-  constructor(fov = 80, { x, y, z }) {
+  // Takes x, y, z position and an optional scale (xyz) array.
+  constructor(fov = 80, { x, y, z, scale }) {
     this.fov = fov;
 
     this.x = x;
     this.y = y;
     this.z = z;
+
+    if (scale) this.scale = scale;
 
     this.#perspective(this.fov);
     this.#transform();
@@ -1059,7 +1063,8 @@ class Camera {
     const rotatedY = mat4.multiply(mat4.create(), rotY, rotatedX);
     const rotatedZ = mat4.multiply(mat4.create(), rotZ, rotatedY);
 
-    const world = rotatedZ;
+    const scaled = mat4.scale(mat4.create(), rotatedZ, this.scale);
+    const world = scaled;
 
     // 4. Camera World Space -> Inverted Perspective Projection
     const invertedProjection = mat4.invert(
@@ -1107,13 +1112,13 @@ class Camera {
 
     // Scale
     // TODO: Add support for camera scaling.
-    //const scaled = mat4.scale(mat4.create(), rotatedZ, [0.1, 0.1, 0.1])
+    const scaled = mat4.scale(mat4.create(), rotatedZ, this.scale)
 
     // Perspective
     this.#transformMatrix = mat4.multiply(
       mat4.create(),
       this.perspectiveMatrix,
-      rotatedZ
+      scaled
     );
   }
 }
@@ -1275,6 +1280,9 @@ class Form {
         //0,
       ];
 
+      // TODO:
+      // Wrap based on MAX_POINTS. 
+
       this.uvs.push(...texCoord); // For sending to the GPU.
 
       this.vertices.push(
@@ -1286,6 +1294,7 @@ class Form {
           texCoord //this.#texCoords[i % 3] // Replace to enable bespoke texture coordinates.
         )
       );
+
     }
 
     // Create indices from pre-indexed positions or generate

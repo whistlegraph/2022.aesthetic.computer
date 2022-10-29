@@ -3,10 +3,11 @@
 
 // TODO
 
+// - [] Add a 'wand' representation to 2d screens. 
+// - [] Make 2D camera properly scaled.
+
 // - [] Limit wand length so you can run out.
 // - [] Transmit wand position and length.
-// - [] Make 2D camera properly scaled.
-// - [] Add a 'wand' representation to 2d screens. 
 // - [] Add shortening of line.
 // - [] Switch to a new stick of color and length once a line runs out.
 // - [] Add colors to line.
@@ -17,19 +18,17 @@
 let cam, dolly; // Camera system.
 let floor, cross, tri, triTop, drawing; // Geometry.
 let race, tail, tail2; // Lazy line control with preview lines.
+let lookCursor = false;
 
 let client; // Network.
 
 // *** Markmaking Configuration ***
-//const step = 0.02; // Step size of regulated line / minimum cut-off.
+
 const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
 const quantizedSmoothing = true; // Regulate all segments while still smoothing.
-//const speed = 2; // Only used if smoothing is true.
-
 // Good for VR...
-const step = 0.0010;
-const speed = 30;
-
+const step = 0.0010; // Step size of regulated line / minimum cut-off.
+const speed = 30; // Only used if smoothing is true.
 // Good for PC + Keyboard.
 // const step = 0.10;
 // const speed = 20;
@@ -50,8 +49,11 @@ async function boot({
   params,
   store,
   net,
+  cursor,
   wipe
 }) {
+
+  cursor("none");
 
   wipe(0, 0);
 
@@ -72,7 +74,7 @@ async function boot({
 
   //colorParams = params.map((str) => parseInt(str)); // Set params for color.
 
-  cam = new Camera(80, { z: 4, y: 2 }); // camera with fov
+  cam = new Camera(80, { z: 4, y: 1, scale: [0.65, 0.65, 0.65] }); // camera with fov
 
   dolly = new Dolly(cam); // moves the camera
 
@@ -96,7 +98,7 @@ async function boot({
   tri = new Form(
     TRI,
     { tex: p(1, 8, (g) => g.noise16DIGITPAIN()), alpha: 0.75 },
-    { pos: [0, 0, 1] }
+    { pos: [0, 1, 0] }
   );
 
   triTop = new Form({
@@ -117,7 +119,7 @@ async function boot({
     store["3dline:drawing"] ||
     (await store.retrieve("3dline:drawing", "local:db")));
   */
- const stored = undefined;
+  const stored = undefined;
 
   drawing = new Form(
     {
@@ -131,10 +133,10 @@ async function boot({
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ ink, pen3d, wipe, screen, Form }) {
+function paint({ ink, pen, pen3d, wipe, screen, Form }) {
   // The lines & the furnitue.
   //ink(0, 255, 0, 255).form([floor, cross, tri, triTop, drawing], cam);
-  ink(255, 255, 255, 150).form([floor, triTop, drawing], cam);
+  ink(255, 255, 255, 150).form([tri, floor, triTop, drawing], cam);
 
   // Crosshair
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
@@ -143,14 +145,20 @@ function paint({ ink, pen3d, wipe, screen, Form }) {
   // console.log(tail?.vertices[0], tail?.vertices[1])
   // ink(255, 0, 0).form(tail2, cam, { keep: false });
 
-  //wipe(10, 0);
-    //.ink(200, 0, 0, 255)
-    // .circle(...screen.center, 9);
+  if (lookCursor) {
+     //wipe(10, 0).ink(255).circle(...screen.center, 8);
+     wipe(10, 0).ink(255).circle(pen.x, pen.y, 8);
+  } else { // Draw 2D wand.
+    if (pen.x && pen.y) {
+      wipe(10, 0).ink(255).line(pen.x, pen.y, pen.x + 15, pen.y + 15);
+    }
+  }
+
 
   // I'm rendering multiple times before simming again, which means tail
   if (tail) {
     ink(0, 255, 0).form(
-    //ink(255, 255, 255).form(
+      //ink(255, 255, 255).form(
       new Form({ type: "line", positions: tail, keep: false }, { alpha: 1 }),
       cam
     );
@@ -158,7 +166,7 @@ function paint({ ink, pen3d, wipe, screen, Form }) {
 
   if (tail2) {
     ink(255, 0, 0).form(
-    //ink(255, 255, 255).form(
+      //ink(255, 255, 255).form(
       new Form({ type: "line", positions: tail2, keep: false }, { alpha: 1 }),
       cam
     );
@@ -189,7 +197,7 @@ function sim({ pen, screen, color, num: { dist3d, degrees: deg }, pen3d }) {
   tri.turn({ y: -0.25 });
 
   triTop.turn({ x: 0.0, y: 0.0, z: 0.0 }); // Why does this make everything work?
-  
+
   if (pen3d) {
     triTop.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
     triTop.rotation = [deg(pen3d.rot._x), deg(pen3d.rot._y), deg(pen3d.rot._z)];
@@ -297,11 +305,15 @@ function act({ event: e, color, screen, download, num: { timestamp }, geo: { Qua
     tail = tail2 = undefined;
   }
 
-  // 👀 Look around while dragging with a finger.
-  if (e.is("draw") && e.device === "touch") {
+  // 👀 Look around while dragging with a finger. (or mouse if 2nd button held)
+  if (e.is("draw") && (e.device === "touch" || e.button === 2)) {
     cam.rotX -= e.delta.y / 3.5;
     cam.rotY -= e.delta.x / 3.5;
   }
+
+  // Enable look mode / cursor.
+  if (e.is("touch") && e.button === 2) lookCursor = true;
+  if (e.is("lift") && e.button === 2) lookCursor = false;
 
   // 🖖 Touch
   // Two fingers for move forward.

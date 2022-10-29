@@ -452,7 +452,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
       type: "forms",
       content: {
         forms: formsToSend, cam: {
-          position: cam.position, rotation: cam.rotation
+          position: cam.position, rotation: cam.rotation, scale: cam.scale
         }, color: graph.color()
       },
     });
