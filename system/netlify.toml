@@ -45,6 +45,16 @@
   status = 301
   force = true
 [[redirects]]
+  from = "https://wand.ac"
+  to = "https://aesthetic.computer/wand"
+  status = 200
+  force = true
+[[redirects]]
+  from = "https://prompt.ac"
+  to = "https://aesthetic.computer/prompt"
+  status = 301
+  force = true
+[[redirects]]
   from = "/thumbnail/*"
   to = "/.netlify/builders/thumbnail"
   status = 200

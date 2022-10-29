@@ -87,7 +87,6 @@ Welcome to...
   - [🔥] Reduce the latency of the pen information.
     - [] Make workers optional.
     - [x] Make buffers transferrable.
-  - [] Retrieve the floor / head height information.
   - [] Line thickness.
   - [] Also add a 'wand' to the first person camera?
  + Later
@@ -130,6 +129,7 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Retrieve the floor / head height information.
   - [x] Make a "wand" / stick to draw with that comes off the VR controller. 
   - [x] Draw a line in webXR.
   - [x] Better output for Unreal Engine.
