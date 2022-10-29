@@ -85,10 +85,10 @@ Welcome to...
  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
   - [🔥] Reduce the latency of the pen information.
-    - [] Make workers optional.
+    - [] Make workers optional / turn them back on. (but not for Meta Quest Browser).
+    - [] Rethink where the workers should be ideally...
     - [x] Make buffers transferrable.
   - [] Line thickness.
-  - [] Also add a 'wand' to the first person camera?
  + Later
   - [] Shrink three.js filesize: https://github.com/mrdoob/three.js/issues/19148
   - [] Fix keyboard hold and drag to symbol in Meta Quest software keyboard.

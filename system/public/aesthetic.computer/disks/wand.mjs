@@ -2,14 +2,15 @@
 //       22.10.05.11.01
 
 // TODO
+// - [] Make 2D camera properly scaled.
+// - [] Add a 'wand' representation to 2d screens. 
 // - [] Add shortening of line.
 // - [] Switch to a new stick of color and length once a line runs out.
 // - [] Transmit wand position.
-// - [] "Flat" 2D controls to allow better participation on 2d screens.
-// - [] Make 2D controls closer.
 // - [] Add colors to line.
 // - [] Add text chat.
 // - [] Add voice chat.
+// - [x] "Flat" 2D controls to allow better participation on 2d screens.
 
 let cam, dolly; // Camera system.
 let floor, cross, tri, triTop, drawing; // Geometry.
@@ -19,11 +20,17 @@ let client; // Network.
 
 // *** Markmaking Configuration ***
 //const step = 0.02; // Step size of regulated line / minimum cut-off.
-const step = 0.0010;
 const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
 const quantizedSmoothing = true; // Regulate all segments while still smoothing.
 //const speed = 2; // Only used if smoothing is true.
-const speed = 30;
+
+// Good for VR...
+// const step = 0.0010;
+// const speed = 30;
+
+// Good for PC + Keyboard.
+const step = 0.10;
+const speed = 20;
 
 let colorParams = [255, 255, 255, 255];
 
@@ -37,7 +44,6 @@ async function boot({
   Form,
   QUAD,
   TRI,
-  LINE,
   geo: { Race, Quantizer },
   params,
   store,
@@ -65,6 +71,7 @@ async function boot({
   //colorParams = params.map((str) => parseInt(str)); // Set params for color.
 
   cam = new Camera(80, { z: 4, y: 2 }); // camera with fov
+
   dolly = new Dolly(cam); // moves the camera
 
   race =
@@ -133,22 +140,23 @@ function paint({ ink, pen3d, wipe, screen, Form }) {
 
   // console.log(tail?.vertices[0], tail?.vertices[1])
   // ink(255, 0, 0).form(tail2, cam, { keep: false });
-  //wipe(10, 0)
-  //  .ink(200, 0, 0, 255)
-  //  .circle(...screen.center, 9);
+
+  //wipe(10, 0);
+    //.ink(200, 0, 0, 255)
+    // .circle(...screen.center, 9);
 
   // I'm rendering multiple times before simming again, which means tail
   if (tail) {
-    //ink(0, 255, 0).form(
-    ink(255, 255, 255).form(
+    ink(0, 255, 0).form(
+    //ink(255, 255, 255).form(
       new Form({ type: "line", positions: tail, keep: false }, { alpha: 1 }),
       cam
     );
   }
 
   if (tail2) {
-    //ink(255, 0, 0).form(
-    ink(255, 255, 255).form(
+    ink(255, 0, 0).form(
+    //ink(255, 255, 255).form(
       new Form({ type: "line", positions: tail2, keep: false }, { alpha: 1 }),
       cam
     );
@@ -157,7 +165,7 @@ function paint({ ink, pen3d, wipe, screen, Form }) {
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim({ pen, Form, color, num: { dist3d, degrees: deg, randIntRange: rr }, pen3d }) {
+function sim({ pen, screen, color, num: { dist3d, degrees: deg }, pen3d }) {
   // First person camera controls.
   let forward = 0,
     strafe = 0;
@@ -188,7 +196,9 @@ function sim({ pen, Form, color, num: { dist3d, degrees: deg, randIntRange: rr }
 
   // 📈 Add to the drawing.
   if (isDrawing) {
-    if (withMouseAndKeyboard) raceTarget = cam.center;
+    if (withMouseAndKeyboard) {
+      raceTarget = cam.center(1 - (pen.x / screen.width), 1 - (pen.y / screen.height));
+    }
     else if (pen3d) {
       raceTarget = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
     }
@@ -201,7 +211,6 @@ function sim({ pen, Form, color, num: { dist3d, degrees: deg, randIntRange: rr }
 
       path.out.forEach(() => {
         const vertexColor = color(...colorParams);
-        console.log(vertexColor)
         colors.push(vertexColor, vertexColor);
       });
 
@@ -228,7 +237,7 @@ let isDrawing = false;
 let withMouseAndKeyboard = false;
 
 // ✒ Act
-function act({ event: e, color, download, num: { timestamp }, geo: { Quantizer } }) {
+function act({ event: e, color, screen, download, num: { timestamp }, geo: { Quantizer } }) {
 
   // 👋 Right Hand
 
@@ -251,7 +260,7 @@ function act({ event: e, color, download, num: { timestamp }, geo: { Quantizer }
 
   // ✏️ Start a mark.
   if (e.is("touch") && e.device === "mouse" && e.button === 0) {
-    raceTarget = cam.center;
+    raceTarget = cam.center(1 - (e.x / screen.width), 1 - (e.y / screen.height));
     withMouseAndKeyboard = true;
     race.start(raceTarget);
     drawing.gpuFlush = true;
@@ -286,8 +295,8 @@ function act({ event: e, color, download, num: { timestamp }, geo: { Quantizer }
     tail = tail2 = undefined;
   }
 
-  // 👀 Look around while dragging.
-  if (e.is("draw")) {
+  // 👀 Look around while dragging with a finger.
+  if (e.is("draw") && e.device === "touch") {
     cam.rotX -= e.delta.y / 3.5;
     cam.rotY -= e.delta.x / 3.5;
   }

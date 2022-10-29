@@ -1030,7 +1030,8 @@ class Camera {
     return this.perspectiveMatrix;
   }
 
-  get center() {
+  // TODO: Rename to screenToWorld.
+  center(X = 0.5, Y = 0.5) {
     // See also: https://codersdesiderata.com/2016/09/10/screen-view-to-world-coordinates,
     //           https://stackoverflow.com/a/31617382/8146077
 
@@ -1038,12 +1039,15 @@ class Camera {
     // Note: This could be generalized from any screen point...
     // x = 2.0 * screenX / width - 1;
     // y = 2.0 * screenY / height - 1;
-    const x = 2.0 * 0.5 - 1;
-    const y = 2.0 * 0.5 - 1;
+    const x = 2.0 * X - 1;
+    const y = 2.0 * Y - 1;
 
     // 2. NDS -> Homogeneous Space
     //    (flipped Z, because we are in a left-handed coordinate // system?).
     const screenPos = vec4.fromValues(x, -y, 1, 1);
+
+    // 2.5 Adjust depth of center?
+    // const move = vec4.fromValues(...this.position);
 
     // 3. Camera World Space
     const translation = mat4.fromTranslation(mat4.create(), this.position);
@@ -1070,6 +1074,9 @@ class Camera {
 
     // 6. Subtract transformed point from camera position.
     const center = vec4.sub(vec4.create(), this.position, xyz);
+
+    // 7. Translate point.
+    // center[2] += 0.3;
 
     this.centerCached = center;
     return center;
@@ -1099,6 +1106,7 @@ class Camera {
     const rotatedZ = mat4.multiply(mat4.create(), rotZ, rotatedX);
 
     // Scale
+    // TODO: Add support for camera scaling.
     //const scaled = mat4.scale(mat4.create(), rotatedZ, [0.1, 0.1, 0.1])
 
     // Perspective
