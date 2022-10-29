@@ -2,11 +2,13 @@
 //       22.10.05.11.01
 
 // TODO
+
+// - [] Limit wand length so you can run out.
+// - [] Transmit wand position and length.
 // - [] Make 2D camera properly scaled.
 // - [] Add a 'wand' representation to 2d screens. 
 // - [] Add shortening of line.
 // - [] Switch to a new stick of color and length once a line runs out.
-// - [] Transmit wand position.
 // - [] Add colors to line.
 // - [] Add text chat.
 // - [] Add voice chat.
@@ -25,12 +27,12 @@ const quantizedSmoothing = true; // Regulate all segments while still smoothing.
 //const speed = 2; // Only used if smoothing is true.
 
 // Good for VR...
-// const step = 0.0010;
-// const speed = 30;
+const step = 0.0010;
+const speed = 30;
 
 // Good for PC + Keyboard.
-const step = 0.10;
-const speed = 20;
+// const step = 0.10;
+// const speed = 20;
 
 let colorParams = [255, 255, 255, 255];
 

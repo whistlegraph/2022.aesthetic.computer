@@ -81,12 +81,16 @@ Welcome to...
  - [] Complete TODOS @p1xelgool/blank. 
  - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
 
+*** Workers ***
+ - [] Reconsider where the piece worker boundary is now.
+      (It might be just a bad design.)
+      (Or it's a great design and just works poorly with the WebXR animation loop.)
+
 *** (3dline) ***
  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
-  - [🔥] Reduce the latency of the pen information.
     - [] Make workers optional / turn them back on. (but not for Meta Quest Browser).
-    - [] Rethink where the workers should be ideally...
+      - [] Rethink where the workers should be ideally...
     - [x] Make buffers transferrable.
   - [] Line thickness.
  + Later
@@ -129,6 +133,7 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Reduce the latency of the pen information.
   - [x] Retrieve the floor / head height information.
   - [x] Make a "wand" / stick to draw with that comes off the VR controller. 
   - [x] Draw a line in webXR.
