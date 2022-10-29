@@ -1,10 +1,6 @@
 // 3D (GPU)
 // Render geometry and scenes on the GPU via Three.js.
-
-// TODO: Keep the renderer / scene alive when returning to the prompt, but
-//       destroy it if the user doesn't return?
-
-// TODO: Make use of indexed geometry at some point...
+// Also handles VR scenes.
 
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
@@ -12,19 +8,17 @@ import { radians, rgbToHex } from "./num.mjs";
 
 let scene,
   renderer,
-  bakes,
   camera,
   disposal = [],
+  //pixels,
   target;
 
-// let pixels;
-let jiggleForm;
+let jiggleForm, needsSphere = false;
 
 let button, vrSession, controller1, controller2; // VR Specific.
+
 export const penEvents = []; // VR pointer events. 
-
-// const cursor = new THREE.Vector3();
-
+export const bakeQueue = [];
 export const status = { alive: false };
 
 export function initialize(wrapper, loop) {
@@ -34,7 +28,8 @@ export function initialize(wrapper, loop) {
   });
 
   renderer.xr.enabled = true;
-  renderer.xr.setFramebufferScaleFactor(0.5);
+  renderer.xr.setFramebufferScaleFactor(1);
+  renderer.xr.setFoveation(0);
   renderer.sortObjects = false;
   renderer.domElement.dataset.type = "3d";
 
@@ -71,7 +66,6 @@ export function initialize(wrapper, loop) {
     controller1.addEventListener('selectend', onSelectEnd);
     controller1.addEventListener('squeezestart', onSqueezeStart);
     controller1.addEventListener('squeezeend', onSqueezeEnd);
-    //controller1.userData.painter = painter1;
     scene.add(controller1);
 
     controller2 = renderer.xr.getController(1);
@@ -80,39 +74,38 @@ export function initialize(wrapper, loop) {
     controller2.addEventListener('selectend', onSelectEnd);
     controller2.addEventListener('squeezestart', onSqueezeStart);
     controller2.addEventListener('squeezeend', onSqueezeEnd);
-    //controller2.userData.painter = painter2;
     scene.add(controller2);
 
-    const wandLen = 0.2;
-    const wandOffset = 0.075;
 
     // Create some geometry for each controller.
-    const geometry = new THREE.CylinderGeometry(0.0025, 0.0025, 0.2, 32);
-    geometry.rotateX(- Math.PI / 2);
-    geometry.translate(0, 0, - (wandLen / 2) + wandOffset);
-    const material = new THREE.MeshBasicMaterial({
-      flatShading: true,
-      color: new THREE.Color(0.5, 0.5, 0.5)
-    });
-    const mesh = new THREE.Mesh(geometry, material);
+    // const wandLen = 0.2;
+    // const wandOffset = 0.075;
+    // const geometry = new THREE.CylinderGeometry(0.0015, 0.0015, 0.2, 32);
+    // geometry.rotateX(- Math.PI / 2);
+    //geometry.translate(0, 0, - (wandLen / 2) + wandOffset);
+    // const material = new THREE.MeshBasicMaterial({
+    //   flatShading: true,
+    //   color: new THREE.Color(1, 0.5, 1)
+    // });
 
-    const pivot = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0025, 5), material);
+    // material.opacity = 0.5;
+    // material.transparent = true;
 
-    pivot.name = 'pivot';
-    pivot.position.z = - wandLen + wandOffset;
+    // const mesh = new THREE.Mesh(geometry, material);
 
-    //mesh.name = 'pivot';
+    // const pivot = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0015, 2), material);
 
-    mesh.add(pivot);
 
-    controller1.add(mesh.clone());
-    controller2.add(mesh.clone());
+    //  pivot.name = 'pivot';
+    //  pivot.position.z = - wandLen + wandOffset;
+    //  mesh.add(pivot);
+
+    //  controller1.add(mesh.clone());
+    //  controller2.add(mesh.clone());
 
     vrSession = session;
 
-    // Why is loop sometimes undefined here when taking off and putting on my VR headset? 22.10.26.21.25
     renderer.setAnimationLoop((now) => loop(now, true));
-
   }, function end() {
     renderer.setAnimationLoop(null);
     console.log("🕶️ VR Session ended.");
@@ -125,10 +118,7 @@ export function initialize(wrapper, loop) {
   status.alive = true;
 }
 
-// Should all bakes be batched together, messages combined?
-// (Maybe not yet... unless there becomes tons of calls in a piece.)
 export function bake({ cam, forms, color }, { width, height }, size) {
-  // Clear leftovers that was marked as deletable from the last round of bakes.
 
   // Only instantiate some things once.
   if (!target || target.width !== width || target.height !== height) {
@@ -145,9 +135,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   }
 
   // 🎥 Camera
-  camera.rotation.order = "YXZ"; // Set to match the software renderer.
-  camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
-  camera.position.set(...cam.position);
+  if (!vrSession) {
+    camera.rotation.order = "YXZ"; // Set to match the software renderer.
+    camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
+    camera.position.set(...cam.position);
+  }
 
   if (!Array.isArray(forms)) forms = [forms];
 
@@ -294,15 +286,12 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       }
 
       const geometry = new THREE.BufferGeometry();
-
-      // attributes
       const positions = new Float32Array(f.MAX_POINTS * 3);
       const colors = new Float32Array(f.MAX_POINTS * 4);
 
       // CTO Rapter Notes:
 
       /*
-
       *** Optimized Vertex Model for Dynamic Data ***
 
       - Future line renderer...
@@ -316,14 +305,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         - 1 byte left over
           - 0-8 would be indexed color that pulls from a shader const
           - 0-8 for alpha
-
           - (1bit) flag properties
             blinking
-          
           - oscillating / lerping
-
-          -  left for everything else
-
+          - left for everything else
       */
 
       for (let i = 0; i < points.length; i += 1) {
@@ -355,7 +340,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       lineb.ac_length = points.length;
       lineb.ac_lastLength = lineb.ac_length;
-      //lineb.ac_vertsToAdd = [];
 
       lineb.translateX(f.position[0]);
       lineb.translateY(f.position[1]);
@@ -386,6 +370,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const form = scene.getObjectByProperty("aestheticID", fu.uid);
       if (!form) return;
 
+
       form.position.set(...fu.position);
 
       form.rotation.set(
@@ -395,6 +380,17 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       );
 
       form.scale.set(...fu.scale);
+
+      /*
+      line.translateX(f.position[0]);
+      line.translateY(f.position[1]);
+      line.translateZ(f.position[2]);
+      line.rotateX(radians(f.rotation[0]));
+      line.rotateY(radians(f.rotation[1]));
+      line.rotateZ(radians(f.rotation[2]));
+      */
+
+      //console.log("form transform to:", fu.position, performance.now());
     }
 
     // Add vertices to geometry:buffered objects.
@@ -413,19 +409,19 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const form = scene.getObjectByProperty("aestheticID", formUpdate.uid);
       if (!form) return;
 
-      jiggleForm = form;
+      jiggleForm = form; // for jiggleForm
 
       // See: https://threejs.org/docs/#manual/en/introduction/How-to-update-things,
       //      https://jsfiddle.net/t4m85pLr/1
-      if (form) {
-        // 0. Flush the vertsToAdd cache if necessary.
-        //if (formUpdate.flush) form.ac_vertsToAdd.length = 0;
 
+      if (form) {
+        // Flush if necessary.
         if (formUpdate.reset) {
           form.ac_length = 0;
           form.ac_lastLength = 0;
         }
 
+        // Add points.
         const points = [];
         const pointColors = [];
 
@@ -433,8 +429,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           points.push(new THREE.Vector3(...formUpdate.vertices[i].pos));
           pointColors.push(new THREE.Vector4(...formUpdate.vertices[i].color));
         }
-
-        //form.ac_vertsToAdd.length = 0; // Ingest added points.
 
         // Set custom properties on the form to keep track of where we are
         // in the previously allocated vertex buffer.
@@ -464,55 +458,60 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         form.geometry.attributes.color.needsUpdate = true;
 
         form.geometry.computeBoundingBox();
-        //form.geometry.computeBoundingSphere();
-        needsSphere = true;
+        form.geometry.computeBoundingSphere();
+
+        needsSphere = true; // for jiggleForm
       }
     }
   });
 
-  // In case we need to render off screen.
+  // In case we ever need to render off screen...
   //renderer.render(scene, camera);
   //renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
   //return pixels;
 }
 
-let needsSphere = false;
-
 function handleController(controller) {
+  // console.log(renderer.xr.getFrame()) // In case I need more info.
   const userData = controller.userData;
-  //const painter = userData.painter;
-  const pivot = controller.getObjectByName('pivot');
 
   // TODO: Implement controller squeeze?
   //if (userData.isSqueezing === true) {
-    //const delta = (controller.position.y - userData.positionAtSqueezeStart) * 5;
-    //const scale = Math.max(0.1, userData.scaleAtSqueezeStart + delta);
-    //pivot.scale.setScalar(scale);
-    //painter.setSize(scale);
+  //const delta = (controller.position.y - userData.positionAtSqueezeStart) * 5;
+  //const scale = Math.max(0.1, userData.scaleAtSqueezeStart + delta);
+  //pivot.scale.setScalar(scale);
+  //painter.setSize(scale);
   //}
 
-  // cursor.setFromMatrixPosition(pivot.matrixWorld);
-  const position = new THREE.Vector3();
-  position.setFromMatrixPosition(pivot.matrixWorld);
-
+  // Record pen events to send through to the piece.
   if (controller.userData.lastPosition) {
     const delta = controller.position.distanceTo(controller.userData.lastPosition);
     // Add a small deadzone to controller movements.
     if (delta > 0.0001) { penEvent(userData.isSelecting ? "draw" : "move", controller); }
   }
 
-  controller.userData.lastPosition = { ...position };
+  controller.userData.lastPosition = { ...controller.position };
+
+  // TODO: Also return controller angle here.
+  return { pos: controller.position, rot: controller.rotation  };
 }
 
-function penEvent(name, controller) {
-  const pivot = controller.getObjectByName('pivot');
-  const position = new THREE.Vector3();
-  position.setFromMatrixPosition(pivot.matrixWorld);
+// Get controller data to send to a piece.
+export function pollControllers() {
+  if (vrSession) {
+    handleController(controller1);
+    const pen = handleController(controller2);
+    return { events: penEvents.slice(), pen };
+  }
+}
 
+// Create a pen event.
+function penEvent(name, controller) {
   penEvents.push({
     name,
     pointer: parseInt(controller.name.split("-")[1]),
-    position: { ...position },
+    pos: { ...controller.position },
+    rot: { ...controller.rotation },
     lastPosition: { ...controller.userData.lastPosition }
   });
 }
@@ -548,10 +547,12 @@ export function render(now) {
       jiggleForm.geometry.setDrawRange(0, jiggleForm.ac_length);
       jiggleForm.geometry.attributes.position.needsUpdate = true;
     }
-    */
 
     if (jiggleForm && needsSphere) jiggleForm.geometry.computeBoundingSphere();
     needsSphere = false;
+    */
+
+    // console.log("position at render:", controller2?.position, performance.now());
 
     // Garbage is collected in `bios` under `BIOS:RENDER`
     renderer.render(scene, camera);
@@ -562,24 +563,9 @@ export function pasteTo(ctx) {
   ctx.drawImage(renderer.domElement, 0, 0);
 }
 
-export function pollControllers() {
-  if (vrSession) {
-    handleController(controller1);
-    handleController(controller2);
-  }
-}
 
 export function clear() {
   renderer.clear();
-}
-
-export function penPosition() {
-  if (controller2) {
-    const pivot = controller2.getObjectByName('pivot');
-    const position = new THREE.Vector3();
-    position.setFromMatrixPosition(pivot.matrixWorld);
-    return position; 
-  }
 }
 
 export function collectGarbage() {
@@ -595,8 +581,6 @@ export function collectGarbage() {
   }); // Free memory from forms if it's been marked as `keep === false`.
   disposal = disposal.filter(Boolean);
 }
-
-export const bakeQueue = [];
 
 export function kill() {
   renderer.domElement.remove();

@@ -84,6 +84,10 @@ export function radians(deg) {
   return deg * (Math.PI / 180);
 }
 
+export function degrees(rad) {
+  return rad * (180 / Math.PI);
+}
+
 // Keeps a value between min and max.
 export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);

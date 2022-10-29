@@ -83,7 +83,7 @@ function pixel(x, y) {
 // Set global color.
 // Send 0 arguements to retrieve the current one.
 function color(r, g, b, a = 255) {
-  if (arguments.length === 0) return c;
+  if (arguments.length === 0) return c.slice();
 
   c[0] = floor(r);
   c[1] = floor(g);
@@ -425,8 +425,14 @@ function line3d(a, b, lineColor) {
   const [x1, y1, z1] = b.pos;
   const points = bresenham(x0, y0, x1, y1);
 
+
   const saveColor = c.slice();
+
   color(...lineColor); // Set color from lineColor or default to global color.
+  //color(...a.color); // Set color from lineColor or default to global color.
+  // color(randInt(255), randInt(255), randInt(255)); // Set color from lineColor or default to global color.
+
+  //console.log(a.color[0], a.color[1], a.color[2])
 
   points.forEach((p, i) => {
     const z = lerp(z0, z1, i / points.length);
@@ -1124,9 +1130,8 @@ class Dolly {
     this.yVel *= this.dec;
     this.zVel *= this.dec;
 
-    this.camera.x += this.xVel;
-    // this.camera.y += this.yVel;
-    this.camera.z += this.zVel;
+    if (abs(this.xVel) > 0) this.camera.x += this.xVel;
+    if (abs(this.zVel) > 0) this.camera.z += this.zVel;
   }
 
   push({ x, y, z }) {
@@ -1144,12 +1149,14 @@ class Dolly {
   }
 }
 
+let formId = 0;
+
 // Mesh
 class Form {
   primitive = "triangle";
   type = "triangle";
 
-  uid = nanoid(); // An id to keep across threads.
+  uid;// = nanoid(); // An id to keep across threads.
 
   // Model
   vertices = [];
@@ -1200,6 +1207,11 @@ class Form {
     // Transform
     transform
   ) {
+
+    // Give an incremental id per session.
+    this.uid = formId;
+    formId += 1;
+
     // Set the primitive type.
     this.primitive = type;
     this.type = type;

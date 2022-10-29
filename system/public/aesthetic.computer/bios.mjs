@@ -11,6 +11,7 @@ import { dist } from "./lib/num.mjs";
 import { parse, slug } from "./lib/parse.mjs";
 import * as Store from "./lib/store.mjs";
 import { Desktop, MetaBrowser } from "./lib/platform.mjs";
+import { promiseWithTimeout } from "./dep/@geckos.io/common/lib/helpers.js";
 
 const { assign } = Object;
 const { round, floor, min, max } = Math;
@@ -155,6 +156,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   // THREE.JS (With a thin wrapper called ThreeD).
   let ThreeD;
+  let ThreeDBakeQueue = [];
   async function loadThreeD() {
     ThreeD = await import(`./lib/3d.mjs`);
     ThreeD.initialize(wrapper, Loop.mainLoop);
@@ -593,10 +595,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   //});
   const fullPath = "/aesthetic.computer/lib/disk.mjs" + "#" + Date.now(); // bust the cache. This prevents an error related to Safari loading workers from memory.
 
-  const worker = new Worker(new URL(fullPath, window.location.href), {
-    type: "module",
-  });
-
   const firstMessage = {
     type: "init-from-bios",
     content: {
@@ -605,6 +603,15 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       rootPiece: window.acSTARTING_PIECE
     }
   };
+
+  const onMessage = (m) => receivedChange(m);
+
+  // A. Worker Mode
+
+  /*
+  const worker = new Worker(new URL(fullPath, window.location.href), {
+    type: "module",
+  });
 
   // Rewire things a bit if workers with modules are not supported (Firefox).
   worker.onerror = async (err) => {
@@ -628,9 +635,15 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   };
 
   let send = (e, shared) => worker.postMessage(e, shared);
-  let onMessage = receivedChange;
+  worker.onmessage = onMessage;
+  */
 
-  worker.onmessage = (e) => onMessage(e);
+  // B. No Worker Mode
+  const module = await import(`./lib/disk.mjs`);
+  module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
+  let send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
+
+  // ---------------
 
   // The initial message sends the path and host to load the disk.
   send(firstMessage);
@@ -667,7 +680,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   // Update & Render
   let frameAlreadyRequested = false;
-  let startTime;
 
   function requestFrame(needsRender, updateCount, nowUpdate) {
     now = nowUpdate;
@@ -684,10 +696,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     frameAlreadyRequested = true;
     frameCount += 1;
 
-    //if (startTime) console.log("🎨", (performance.now() - startTime).toFixed(4), "ms");
-
     // TODO: 📏 Measure performance of frame: test with different resolutions.
-    startTime = performance.now();
+
+    // console.log("Sending frame...", frameCount, performance.now())
 
     send({
       type: "frame",
@@ -695,14 +706,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         needsRender,
         updateCount,
         pixels: screen.pixels.buffer,
-        inFocus: document.hasFocus(),
+        inFocus: true, // document.hasFocus(),
         audioTime: audioContext?.currentTime,
-        audioBpm: sound.bpm[0], // TODO: Turn this into a messaging thing.
+        audioBpm: 80,//sound.bpm[0], // TODO: Turn this into a messaging thing.
         width: canvas.width,
         height: canvas.height,
         // TODO: Do all fields of `pointer` need to be sent? 22.09.19.23.30
         pen: { events: pen.events, pointers: pen.pointers },
-        pen3d: { events: ThreeD?.penEvents, position: ThreeD?.penPosition() }, // TODO: Implement pointers in 3D.
+        pen3d: ThreeD?.pollControllers(), // TODO: Implement pointers in 3D.
         keyboard: keyboard.events,
       },
     }, [screen.pixels.buffer]);
@@ -720,6 +731,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     //console.log("Render Budget: ", round((renderDelta / renderRate) * 100));
     // TODO: Output this number graphically.
 
+      //render3d();
     // Clear pen events.
     pen.events.length = 0;
     if (ThreeD?.penEvents) ThreeD.penEvents.length = 0;
@@ -727,6 +739,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     // Clear keyboard events.
     keyboard.events.length = 0;
   }
+
+  let frameResolution;
 
   let frameCached = false;
   let pixelsDidChange = false; // TODO: Can this whole thing be removed? 2021.11.28.03.50
@@ -736,11 +750,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   const bakedCan = document.createElement("canvas", {
     willReadFrequently: true,
   });
-  const bakedCtx = bakedCan.getContext("2d");
 
+  // *** Received Frame ***
   async function receivedChange({ data: { type, content } }) {
     // *** Route to different functions if this change is not a full frame update.
-
     if (type === "load-failure" && MetaBrowser) {
       document.querySelector("#software-keyboard-input")?.blur();
       return;
@@ -944,10 +957,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
         diskSupervisor = { requestBeat, requestFrame };
 
-        let lastFrameCount = 0;
-        let framesDropped = 0;
-        let renderCount = 0;
-
         // ➰ Core Loops for User Input, Music, Object Updates, and Rendering
         Loop.start(
           () => {
@@ -955,32 +964,19 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             // pen.poll();
             // TODO: Key.input();
             // TODO: Voice.input();
-            ThreeD?.pollControllers();
           },
-          function (needsRender, updateTimes, nowUpdate) {
-            // console.log(updateTimes); // Note: No updates happen yet before a render.
-            diskSupervisor.requestFrame?.(needsRender, updateTimes, nowUpdate);
-
+          async function (needsRender, updateTimes, nowUpdate) {
             // TODO: How can I get the pen data into the disk and back
             //       to Three.JS as fast as possible? 22.10.26.23.25
 
-            ThreeD?.render(nowUpdate);
+            diskSupervisor.requestFrame?.(needsRender, updateTimes, nowUpdate);
 
-            /*
-            if (frameCount === lastFrameCount) {
-              framesDropped += 1;
-            } else {
-              lastFrameCount = frameCount;
-              framesDropped = 0;
+            if (ThreeD?.status.alive === true && ThreeDBakeQueue.length > 0) {
+              ThreeD?.collectGarbage();
+              ThreeDBakeQueue.forEach((baker) => baker());
+              ThreeDBakeQueue.length = 0;
             }
-            */
-
-            //console.log(frameCount, renderCount);
-
-            renderCount += 1;
-
-
-            //console.log("repeatedRenders", framesDropped);
+            ThreeD?.render();
 
           }
         );
@@ -1059,10 +1055,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         // Close (defocus) software keyboard if we are NOT on the prompt.
         document.querySelector("#software-keyboard-input")?.blur();
         keyboard.events.push({ name: "keyboard:close" });
-
       }
 
       setMetatags(content.meta);
+
+      // console.log(content.text);
+
+      // TODO: Make this automatic for pieces that use 3d.
+      if (content.text === "3dline") { loadThreeD(); }
 
       // Show an "audio engine: off" message.
       //if (content.noBeat === false && audioContext?.state !== "running") {
@@ -1093,20 +1093,20 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const willBake = content.cam !== undefined;
 
       if (willBake) {
-        if (ThreeD === undefined) await loadThreeD();
-        if (ThreeD.status.alive === false) ThreeD.initialize(wrapper);
+        if (ThreeD?.status.alive === false) ThreeD.initialize(wrapper);
 
         // Add / update forms in a queue and then run all the bakes in render.
-        ThreeD?.bakeQueue.push(() => {
+        ThreeDBakeQueue.push(() => {
           ThreeD?.bake(content, screen, {
             width: projectedWidth,
             height: projectedHeight,
           });
         });
 
-        send({ type: "forms:baked", content: true });
+        //send({ type: "forms:baked", content: true });
       } else {
-        send({ type: "forms:baked", content: false });
+
+        //send({ type: "forms:baked", content: false });
       }
 
       // TODO: Measure the time this takes.
@@ -1726,7 +1726,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     }
 
     // BIOS:RENDER
-
     // 🌟 Assume `type === render` from now on.
 
     // This is a bit messy compared to what happens inside of content.reframe -> frame below. 22.10.27.02.05
@@ -1742,11 +1741,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // console.log("cp", content.pixels, content, type);
     }
 
-    if (ThreeD?.bakeQueue.length > 0) {
-      ThreeD.collectGarbage();
-      ThreeD.bakeQueue.forEach((baker) => baker());
-      ThreeD.bakeQueue.length = 0;
-    }
+    // old threed garbage collection (remove)
 
     // Check for a change in resolution.
     if (content.reframe) {
@@ -1775,6 +1770,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         freezeFrame
       );
       frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
+
       return;
     }
 
@@ -1803,7 +1799,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Use this alternative once it's faster. 2022.01.29.02.46
       // const dbCtx = dirtyBoxBitmapCan.getContext("bitmaprenderer");
       // dbCtx.transferFromImageBitmap(dirtyBoxBitmap);
-    } else if (content.paintChanged) {
+    } else if (content.paintChanged && content.pixels) {
       // 🅱️ Normal full-screen update.
       imageData = new ImageData(new Uint8ClampedArray(content.pixels), canvas.width, canvas.height);
     }
@@ -1863,8 +1859,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         resizeToStreamCanvas();
       }
 
-      //ThreeD?.render(now);
-
     }
 
     if (pixelsDidChange || pen.changedInPiece) {
@@ -1906,11 +1900,20 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       needsReappearance = false;
     }
 
-    timePassed = performance.now();
-
     //frameCount += 1;
     frameAlreadyRequested = false; // 🗨️ Tell the system we are ready for another frame.
+
+    //if (needsRender)
+
+
+    //if (lastRender) {
+    //console.log(performance.now() - lastRender)
+    //}
+    //lastRender = performance.now()
+
   }
+
+  let lastRender;
 
   // Reads the extension off of filename to determine the mimetype and then
   // handles the data accordingly and downloads the file in the browser.
@@ -2170,6 +2173,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       console.log("😱 Leaving fullscreen mode!");
     }
   };
+
 }
 
 export { boot };

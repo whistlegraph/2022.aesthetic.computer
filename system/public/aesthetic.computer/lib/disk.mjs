@@ -145,6 +145,11 @@ const store = {
     // TODO: Turn the existing key into a retrieval function / promise?
   },
   retrieve: function (key, method = "local") {
+
+    const promise = new Promise((resolve) => {
+      storeRetrievalResolution = resolve;
+    });
+
     send({
       type: "store:retrieve",
       content: {
@@ -152,13 +157,16 @@ const store = {
         method,
       },
     });
-    return new Promise((resolve) => {
-      storeRetrievalResolution = resolve;
-    });
+
+    return promise
   },
   delete: function (key, method = "local") {
     // Remove the key from the ram store, no matter what the method.
     delete store[key];
+
+    const promise = new Promise((resolve) => {
+      storeDeletionResolution = resolve;
+    });
 
     send({
       type: "store:delete",
@@ -167,9 +175,7 @@ const store = {
         method,
       },
     });
-    return new Promise((resolve) => {
-      storeDeletionResolution = resolve;
-    });
+    return promise;
   },
 };
 
@@ -198,6 +204,7 @@ const $commonApi = {
     dist: num.dist,
     dist3d: num.dist3d,
     radians: num.radians,
+    degrees: num.degrees,
     lerp: num.lerp,
     map: num.map,
     Track: num.Track,
@@ -345,7 +352,8 @@ function color() {
     args.length === 0 ||
     (args.length === 1 && args[0] === undefined)
   ) {
-    args = num.randIntArr(255, 4);
+    args = num.randIntArr(255, 3);
+    args.push(255); // Generate random values here, always leave alpha 255.
   }
 
   if (args.length === 3) args = [...args, 255]; // Always be sure we have alpha.
@@ -372,6 +380,90 @@ const $paintApi = {
 
 // This is where I map the API functions that anyone can use, to the internal
 // code that represents them...
+
+// Rendering of 3D forms.
+// `cpu: true` enabled software rendering
+function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
+  // Exit silently if no forms are present.
+  if (forms === undefined || forms?.length === 0) return;
+
+  if (cpu === true) {
+    if (Array.isArray(forms)) forms.forEach((form) => form.graph(cam));
+    else forms.graph(cam);
+  } else { // GPU forms.
+    if (!Array.isArray(forms)) forms = [forms];
+
+    // Build a list of forms to send, ignoring already sent ones by UID.
+    const formsToSend = [];
+
+    forms.filter(Boolean).forEach((form) => {
+      // A. If the form has not been sent yet...
+      if (formsSent[form.uid] === undefined) {
+        // Set the form to expire automatically if keep is false.
+
+        formsToSend.push(form);
+        formsSent[form.uid] = true;
+
+        form.gpuVerticesSent = form.vertices.length;
+      } else {
+        // B. If the form has been sent, but the form has changed and
+        //    needs a partial update.
+
+        // Transform the geometry.
+        if (form.gpuTransformed === true) {
+          formsToSend.push({
+            update: "form:transform",
+            uid: form.uid,
+            rotation: form.rotation,
+            position: form.position,
+            scale: form.scale,
+          });
+          form.gpuTransformed = false;
+        }
+
+        // Add vertices to buffered forms.
+        if (form.vertices.length > form.gpuVerticesSent) {
+          formsToSend.push({
+            update: "form:buffered:add-vertices",
+            uid: form.uid,
+            flush: form.gpuFlush,
+            reset: form.gpuReset,
+            vertices: form.vertices.slice(form.gpuVerticesSent),
+            length: form.vertices.length, // TODO: These aren't being used anymore / they are generated from the GPU.
+            pastLength: form.gpuVerticesSent,
+          });
+
+          // Update form state now that we are sending the message.
+          // TODO: Put these both under a "gpu" object in form.
+          // TODO: Both gpuFlush and gpuReset could have better names
+          //       once I start scaling the renderer. 22.10.16.20.49
+          form.gpuFlush = false;
+          form.gpuReset = false;
+          form.gpuVerticesSent = form.vertices.length;
+        }
+      }
+    });
+
+    if (formsToSend.length === 0) return;
+
+    // console.log("Sending form...", performance.now())
+
+    send({
+      type: "forms",
+      content: {
+        forms: formsToSend, cam: {
+          position: cam.position, rotation: cam.rotation
+        }, color: graph.color()
+      },
+    });
+
+    // paintFormsResolution?.();
+    // return new Promise((resolve) => {
+    // paintFormsResolution = resolve;
+    // });
+  }
+
+}
 
 const $paintApiUnwrapped = {
   // Shortcuts
@@ -405,82 +497,7 @@ const $paintApiUnwrapped = {
   grid: graph.grid,
   draw: graph.draw,
   printLine: graph.printLine, // TODO: This is kind of ugly and I need a state machine for type.
-
-  // Rendering of 3D forms.
-  // `cpu: true` enabled software rendering
-  form: function (forms, cam, { cpu } = { cpu: false, keep: true }) {
-    // Exit silently if no forms are present.
-    if (forms === undefined || forms?.length === 0) return;
-
-    if (cpu === true) {
-      if (Array.isArray(forms)) forms.forEach((form) => form.graph(cam));
-      else forms.graph(cam);
-    } else { // GPU forms.
-      if (!Array.isArray(forms)) forms = [forms];
-
-      // Build a list of forms to send, ignoring already sent ones by UID.
-      const formsToSend = [];
-
-      forms.filter(Boolean).forEach((form) => {
-        // A. If the form has not been sent yet...
-        if (formsSent[form.uid] === undefined) {
-          // Set the form to expire automatically if keep is false.
-
-          formsToSend.push(form);
-          formsSent[form.uid] = true;
-
-          form.gpuVerticesSent = form.vertices.length;
-        } else {
-          // B. If the form has been sent, but the form has changed and
-          //    needs a partial update.
-
-          // Transform the geometry.
-          if (form.gpuTransformed === true) {
-            formsToSend.push({
-              update: "form:transform",
-              uid: form.uid,
-              rotation: form.rotation,
-              position: form.position,
-              scale: form.scale,
-            });
-            form.gpuTransformed = false;
-          }
-
-          // Add vertices to buffered forms.
-          if (form.vertices.length > form.gpuVerticesSent) {
-            formsToSend.push({
-              update: "form:buffered:add-vertices",
-              uid: form.uid,
-              flush: form.gpuFlush,
-              reset: form.gpuReset,
-              vertices: form.vertices.slice(form.gpuVerticesSent),
-              length: form.vertices.length, // TODO: These aren't being used anymore / they are generated from the GPU.
-              pastLength: form.gpuVerticesSent,
-            });
-
-            // Update form state now that we are sending the message.
-            // TODO: Put these both under a "gpu" object in form.
-            // TODO: Both gpuFlush and gpuReset could have better names
-            //       once I start scaling the renderer. 22.10.16.20.49
-            form.gpuFlush = false;
-            form.gpuReset = false;
-            form.gpuVerticesSent = form.vertices.length;
-          }
-        }
-      });
-
-      if (formsToSend.length === 0) return;
-
-      send({
-        type: "forms",
-        content: { forms: formsToSend, cam, color: graph.color() },
-      });
-
-      return new Promise((resolve) => {
-        paintFormsResolution = resolve;
-      });
-    }
-  },
+  form,
   pan: graph.pan,
   unpan: graph.unpan,
   skip: graph.skip,
@@ -513,9 +530,12 @@ class Painting {
         p.api[k] = function () {
           if (notArray(p.#layers[p.#layer])) p.#layers[p.#layer] = [];
           // deferred action called as paint() below.
-          p.#layers[p.#layer].push(async () => {
-            await $paintApiUnwrapped[k](...arguments);
+          p.#layers[p.#layer].push(() => {
+            $paintApiUnwrapped[k](...arguments);
           });
+          // p.#layers[p.#layer].push(async () => {
+          //   await $paintApiUnwrapped[k](...arguments);
+          // });
           return p.api;
         };
       }
@@ -546,7 +566,8 @@ class Painting {
   }
 
   // Paints every layer.
-  async paint(immediate = false) {
+  //async paint(immediate = false) {
+  paint(immediate = false) {
     /*
     this.#layers.forEach((layer) => {
       //layer.forEach(async (paint) => await paint());
@@ -559,11 +580,11 @@ class Painting {
 
     for (const layer of this.#layers) {
       for (const paint of layer) {
-        if (immediate) {
-          paint();
-        } else {
-          await paint();
-        }
+        //        if (immediate) {
+        paint();
+        //       } else {
+        //        await paint();
+        //      }
       }
     }
 
@@ -939,7 +960,7 @@ const isWorker = typeof importScripts === "function";
 // Start by responding to a load message, then change
 // the message response to makeFrame.
 if (isWorker) {
-  onmessage = (d) => makeFrame(d);
+  onmessage = makeFrame;
 } else {
   noWorker.onMessage = (d) => makeFrame({ data: d });
 }
@@ -1035,7 +1056,7 @@ async function makeFrame({ data: { type, content } }) {
     //  graph.paste(content, 0, 0, 1, true);
     // }
 
-    paintFormsResolution?.();
+    // paintFormsResolution?.();
     return;
   }
 
@@ -1237,9 +1258,6 @@ async function makeFrame({ data: { type, content } }) {
   // This is where each...
   if (type === "frame") {
 
-    // TODO: Get this time down to as few ms as possible!
-    const frameTime = performance.now();
-
     // Take hold of a previously transferred screen buffer.
     let pixels;
     if (content.pixels) {
@@ -1251,9 +1269,12 @@ async function makeFrame({ data: { type, content } }) {
     // Act & Sim (Occurs after first boot and paint.)
     if (booted && paintCount > 0n) {
       const $api = {};
-      Object.assign($api, $commonApi);
-      Object.assign($api, $updateApi);
-      Object.assign($api, painting.api);
+      Object.keys($commonApi).forEach(key => $api[key] = $commonApi[key]);
+      Object.keys($updateApi).forEach(key => $api[key] = $updateApi[key]);
+      Object.keys(painting.api).forEach(key => $api[key] = painting.api[key]);
+      //Object.assign($api, $commonApi);
+      //Object.assign($api, $updateApi);
+      //Object.assign($api, painting.api);
 
       $api.inFocus = content.inFocus;
 
@@ -1267,35 +1288,39 @@ async function makeFrame({ data: { type, content } }) {
 
       $api.cursor = (code) => (cursorCode = code);
 
-      const primaryPointer = help.findKeyAndValue(
-        content.pen.pointers,
-        "isPrimary",
-        true
-      );
+      if (content.pen) {
 
-      // Returns all [pens] if n is undefined, or can return a specific pen by 1 based index.
-      // [pens] are sorted by `pointerIndex`
-      $commonApi.pens = (n) => {
-        if (n === undefined) {
-          return Object.values(content.pen.pointers).reduce((arr, value) => {
-            arr[value.pointerIndex] = value;
-            return arr;
-          }, []);
-        }
-        return (
-          help.findKeyAndValue(content.pen.pointers, "pointerIndex", n - 1) ||
-          {}
+        const primaryPointer = help.findKeyAndValue(
+          content.pen.pointers,
+          "isPrimary",
+          true
         );
-      };
 
-      $commonApi.pen = primaryPointer || { x: undefined, y: undefined };
+        // Returns all [pens] if n is undefined, or can return a specific pen by 1 based index.
+        // [pens] are sorted by `pointerIndex`
+        $commonApi.pens = (n) => {
+          if (n === undefined) {
+            return Object.values(content.pen.pointers).reduce((arr, value) => {
+              arr[value.pointerIndex] = value;
+              return arr;
+            }, []);
+          }
+          return (
+            help.findKeyAndValue(content.pen.pointers, "pointerIndex", n - 1) ||
+            {}
+          );
+        };
 
-      $commonApi.pen3d = content.pen3d.position; // Send 3d pen data.
+        $commonApi.pen = primaryPointer || { x: undefined, y: undefined };
+      }
 
       // 🤖 Sim // no send
       $api.seconds = function (s) {
         return s * 120; // TODO: Get 120 dynamically from the Loop setting. 2022.01.13.23.28
       };
+
+      // 🕶️ VR Pen
+      $commonApi.pen3d = content.pen3d?.pen;
 
       // TODO: A booted check could be higher up the chain here?
       // Or this could just move. 22.10.11.01.31
@@ -1417,7 +1442,7 @@ async function makeFrame({ data: { type, content } }) {
       // Ingest all pen input events by running act for each event.
       // TODO: I could also be transforming pen coordinates here...
       // TODO: Keep track of lastPen to see if it changed.
-      content.pen.events.forEach((data) => {
+      content.pen?.events.forEach((data) => {
         Object.assign(data, {
           device: data.device,
           is: (e) => {
@@ -1443,7 +1468,7 @@ async function makeFrame({ data: { type, content } }) {
       });
 
       // *** 3D Pen Events ***
-      content.pen3d.events?.forEach((data) => {
+      content.pen3d?.events?.forEach((data) => {
         Object.assign(data, {
           is: (e) => {
             let [prefix, event, pointer] = e.split(":");
@@ -1459,7 +1484,7 @@ async function makeFrame({ data: { type, content } }) {
       });
 
       // Ingest all keyboard input events by running act for each event.
-      content.keyboard.forEach((data) => {
+      content.keyboard?.forEach((data) => {
         Object.assign(data, {
           device: "keyboard",
           is: (e) => {
@@ -1527,8 +1552,11 @@ async function makeFrame({ data: { type, content } }) {
     // 🖼 Render // Two sends (Move one send up eventually? -- 2021.11.27.17.20)
     if (content.needsRender) {
       const $api = {};
-      Object.assign($api, $commonApi);
-      Object.assign($api, painting.api);
+      Object.keys($commonApi).forEach(key => $api[key] = $commonApi[key]);
+      Object.keys(painting.api).forEach(key => $api[key] = painting.api[key]);
+      // Object.assign($api, $commonApi);
+      // Object.assign($api, painting.api);
+
       $api.paintCount = Number(paintCount);
 
       $api.inFocus = content.inFocus;
@@ -1698,8 +1726,8 @@ async function makeFrame({ data: { type, content } }) {
         inFocus = content.inFocus; // Inherit our starting focus from host window.
         // Read current dark mode.
 
-        //const dark = await store.retrieve("dark-mode");
-        //if (dark === true || dark === false) $commonApi.dark = dark;
+        const dark = await store.retrieve("dark-mode");
+        if (dark === true || dark === false) $commonApi.dark = dark;
 
         // System specific preloaders.
         //if ($commonApi?.system?.name === "nopaint" || currentText === "prompt") {
@@ -1724,7 +1752,7 @@ async function makeFrame({ data: { type, content } }) {
       //console.log(paintCount, "booted:", booted, "loading:", loading);
 
       // We no longer need the preload api for painting.
-      delete $api.net.preload;
+      $api.net.preload = null;
 
       // Paint a frame, which can return false to enable caching via noPaint and by
       // default returns undefined (assume a repaint).
@@ -1743,16 +1771,24 @@ async function makeFrame({ data: { type, content } }) {
           console.warn("🎨 Paint failure...");
         }
 
+
         // `DirtyBox` and `undefined` always set `noPaint` to `true`.
         noPaint =
           paintOut === false || (paintOut !== undefined && paintOut !== true);
 
         // Run everything that was queued to be painted, then devour paintLayers.
-        await painting.paint();
+        //await painting.paint();
+        painting.paint(true);
         painted = true;
         paintCount = paintCount + 1n;
 
+        // console.log("!! Painted", paintCount, performance.now());
+
         if (paintOut) dirtyBox = paintOut;
+
+
+        //console.log("bake")
+        //send({ type: "3d-bake" });
       }
 
       // Return frame data back to the main thread.
@@ -1797,9 +1833,15 @@ async function makeFrame({ data: { type, content } }) {
         sendData.pixels = sendData.pixels.buffer;
       } else {
         sendData.pixels = content.pixels;
-      } 
+      }
 
       //else sendData.pixels = pixels; 
+
+      if (sendData.pixels?.byteLength === 0) {
+        sendData.pixels = undefined;
+      }
+
+      //console.log(sendData.pixels.byteLength)
 
       send({ type: "render", content: sendData }, [sendData.pixels]);
 
@@ -1812,8 +1854,8 @@ async function makeFrame({ data: { type, content } }) {
       //       get sent?
       send({
         type: "update",
-        content: { didntRender: true, loading, pixels: pixels.buffer },
-      }, [pixels.buffer]);
+        content: { didntRender: true, loading, pixels: pixels?.buffer },
+      }, [pixels?.buffer]);
     }
 
     // ***Frame State Reset***
@@ -1821,6 +1863,15 @@ async function makeFrame({ data: { type, content } }) {
     if ($commonApi.rec.printProgress === 1) $commonApi.rec.printProgress = 0;
 
     //console.log(performance.now() - frameTime, "ms");
+
+
+    //performance.mark("b");
+
+    //performance.measure("a", "b");
+    //console.log("Frame perf:", performance.getEntriesByType("measure")[0].duration);
+    //performance.clearMarks();
+    //performance.clearMeasures();
+
   }
 
 }

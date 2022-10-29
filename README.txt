@@ -52,6 +52,14 @@ Welcome to...
  - [] Figure out how to best automate the addition of a new developer... 
  - [] Why isn't artur's ssh key working?
 
+*** Sage Session TODOs ***
+ - [] make sure color attributes work for QUADS.
+ - [] flip the y on camera position initializer.
+ - [] `Form` should scale and then rotate. See `Form.graph`.
+ - [] `Form` should have a point / points option.
+ - [] `point` primitive that is below forms. 
+ - [] Make color vertices work in software3D.  
+
 *** i ***
  - [] Make `i` 2D multiplayer with UDP. 
 
@@ -77,7 +85,8 @@ Welcome to...
  (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
   - [🔥] Reduce the latency of the pen information.
-    - [] Make buffers transferrable.
+    - [] Make workers optional.
+    - [x] Make buffers transferrable.
   - [] Retrieve the floor / head height information.
   - [] Line thickness.
   - [] Also add a 'wand' to the first person camera?

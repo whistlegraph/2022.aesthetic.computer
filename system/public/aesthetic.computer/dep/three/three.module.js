@@ -25499,7 +25499,7 @@ class WebXRManager extends EventDispatcher {
 
 					controller.update( inputSource, frame, customReferenceSpace || referenceSpace );
 
-				}
+					}
 
 			}
 

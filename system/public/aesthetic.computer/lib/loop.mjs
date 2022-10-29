@@ -20,7 +20,7 @@ let updateAndRender;
 // Update runs multiple times.
 // Render runs once if enough time has passed.
 function loop(now, XR = false) {
-  input();
+  input(now);
 
   const delta = now - lastNow;
 

@@ -9,12 +9,14 @@ let race, tail, tail2; // Lazy line control with preview lines.
 let client; // Network.
 
 // *** Markmaking Configuration ***
-const step = 0.01; // Step size of regulated line / minimum cut-off.
+//const step = 0.02; // Step size of regulated line / minimum cut-off.
+const step = 0.0010;
 const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
 const quantizedSmoothing = true; // Regulate all segments while still smoothing.
-const speed = 20; // Only used if smoothing is true.
+//const speed = 2; // Only used if smoothing is true.
+const speed = 30;
 
-let colorParams = [0, 0, 0, 0];
+let colorParams = [255, 255, 255, 255];
 
 let W, S, A, D, UP, DOWN, LEFT, RIGHT;
 
@@ -31,7 +33,11 @@ async function boot({
   params,
   store,
   net,
+  wipe
 }) {
+
+  wipe(0, 0);
+
   // Connect to the network.
   client = net.socket((id, type, content) => {
     // Instantiate painters (clients) based on their `id` attribute.
@@ -47,9 +53,9 @@ async function boot({
     //console.log(id, type, content);
   });
 
-  colorParams = params.map((str) => parseInt(str)); // Set params for color.
+  //colorParams = params.map((str) => parseInt(str)); // Set params for color.
 
-  cam = new Camera(80, { z: 4 }); // camera with fov
+  cam = new Camera(80, { z: 4, y: 2 }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
 
   race =
@@ -60,7 +66,7 @@ async function boot({
   floor = new Form(
     QUAD,
     { tex: p(2, 2, (g) => g.wipe(0, 0, 100)) },
-    { pos: [0, -1, 1], rot: [-90, 0, 0], scale: [3, 3, 3] }
+    { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [3, 3, 3] }
   );
 
   cross = new Form(
@@ -75,15 +81,25 @@ async function boot({
     { pos: [0, 0, 1] }
   );
 
-  triTop = new Form(LINE, { pos: [0, 1, 1] });
+  triTop = new Form({
+    type: "line",
+    positions: [
+      [0, 0, 0.0, 1], // Bottom
+      [0, 0, 0.1, 1] // Top
+    ],
+    indices: [0, 1],
+  }, { pos: [0, 0, 0], scale: [1, 1, 1] });
 
   // An empty buffer that gets populated in `sim()`.
 
   // Load a drawing from RAM if it already exists, or from the indexedDB,
   // otherwise start an empty one.
+  /*
   const stored = (store["3dline:drawing"] =
     store["3dline:drawing"] ||
     (await store.retrieve("3dline:drawing", "local:db")));
+  */
+ const stored = undefined;
 
   drawing = new Form(
     {
@@ -93,12 +109,14 @@ async function boot({
     },
     { color: [255, 255, 255, 255] }
   );
+
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ ink, wipe, screen, Form }) {
+function paint({ ink, pen3d, wipe, screen, Form }) {
   // The lines & the furnitue.
-  ink(0, 255, 0, 255).form([floor, cross, tri, triTop, drawing], cam);
+  //ink(0, 255, 0, 255).form([floor, cross, tri, triTop, drawing], cam);
+  ink(255, 255, 255, 150).form([floor, triTop, drawing], cam);
 
   // Crosshair
   // TODO: Do a dirty box wipe here / use this to test the new compositor? 🤔
@@ -106,28 +124,31 @@ function paint({ ink, wipe, screen, Form }) {
 
   // console.log(tail?.vertices[0], tail?.vertices[1])
   // ink(255, 0, 0).form(tail2, cam, { keep: false });
-  wipe(10, 0)
-    .ink(200, 0, 0, 255)
-    .circle(...screen.center, 9);
+  //wipe(10, 0)
+  //  .ink(200, 0, 0, 255)
+  //  .circle(...screen.center, 9);
 
   // I'm rendering multiple times before simming again, which means tail
   if (tail) {
-    ink(0, 255, 0).form(
+    //ink(0, 255, 0).form(
+    ink(255, 255, 255).form(
       new Form({ type: "line", positions: tail, keep: false }, { alpha: 1 }),
       cam
     );
   }
 
   if (tail2) {
-    ink(255, 0, 0).form(
+    //ink(255, 0, 0).form(
+    ink(255, 255, 255).form(
       new Form({ type: "line", positions: tail2, keep: false }, { alpha: 1 }),
       cam
     );
   }
+
 }
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
-function sim({ pen, Form, color, num: { dist3d, randIntRange: rr }, pen3d }) {
+function sim({ pen, Form, color, num: { dist3d, degrees: deg, randIntRange: rr }, pen3d }) {
   // First person camera controls.
   let forward = 0,
     strafe = 0;
@@ -147,17 +168,20 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr }, pen3d }) {
 
   // Rotate some scenery.
   tri.turn({ y: -0.25 });
-  triTop.turn({ x: -0.5, y: 0.5, z: 0.2 });
 
+  triTop.turn({ x: 0.0, y: 0.0, z: 0.0 }); // Why does this make everything work?
+  
   if (pen3d) {
-    triTop.position = [pen3d.x, pen3d.y, pen3d.z, 0];
+    triTop.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
+    triTop.rotation = [deg(pen3d.rot._x), deg(pen3d.rot._y), deg(pen3d.rot._z)];
+    triTop.gpuTransformed = true;
   }
 
   // 📈 Add to the drawing.
   if (isDrawing) {
     if (withMouseAndKeyboard) raceTarget = cam.center;
-    else {
-      raceTarget = [pen3d.x, pen3d.y, pen3d.z, 0];
+    else if (pen3d) {
+      raceTarget = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
     }
 
     const path = race.to(raceTarget);
@@ -165,7 +189,8 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr }, pen3d }) {
 
     if (path.out?.length > 0) {
       const colors = [];
-      path.out.forEach((p) => {
+
+      path.out.forEach(() => {
         const vertexColor = color(...colorParams);
         colors.push(vertexColor, vertexColor);
       });
@@ -173,7 +198,7 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr }, pen3d }) {
       // Add points locally.
       drawing.addPoints({ positions: path.out, colors });
 
-      // Send vertices to the cloud.
+      // Send vertices to the internet.
       client.send("add", {
         positions: path.out.map((vertex) => [...vertex]),
         colors,
@@ -183,9 +208,7 @@ function sim({ pen, Form, color, num: { dist3d, randIntRange: rr }, pen3d }) {
     if (dist3d(path.last, path.current)) tail = [path.last, path.current];
 
     // Preview from current camera cursor / pointer.
-    if (dist3d(path.current, raceTarget)) {
-      tail2 = [path.current, raceTarget];
-    }
+    if (dist3d(path.current, raceTarget)) { tail2 = [path.current, raceTarget]; }
   }
 
 }
@@ -197,30 +220,21 @@ let withMouseAndKeyboard = false;
 // ✒ Act
 function act({ event: e, color, download, num: { timestamp }, geo: { Quantizer } }) {
 
-  // Controls
+  // 👋 Right Hand
 
-  // Right Hand
-
-  // ✏️ Start a mark.
+  //   ✏️ Start a mark.
   if (e.is("3d:touch:2")) {
-    raceTarget = [e.position.x, e.position.y, e.position.z, 0];
+    raceTarget = [e.pos.x, e.pos.y, e.pos.z, 0];
     race.start(raceTarget);
     drawing.gpuFlush = true;
     isDrawing = true;
   }
 
-  // 🚩 End a mark.
+  //   🚩 End a mark.
   if (e.is("3d:lift:2")) {
     race.reset?.();
     isDrawing = false;
-  }
-
-  // if (e.is("3d:draw:2")) {
-    // console.log("Draw:", e.position, "Right");
-  // }
-
-  if (e.is("3d:draw:2")) {
-    //raceTarget = [e.position.x, e.position.y, e.position.z, 0];
+    tail = tail2 = undefined;
   }
 
   // 🖱️ Mouse
