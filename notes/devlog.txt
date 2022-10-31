@@ -33,6 +33,22 @@ Practical and conceptual notes weaved together.
 - [] Add hybrid bindings to fish: https://github.com/fish-shell/fish-shell/blob/master/share/functions/fish_hybrid_key_bindings.fish
 
 💻 Docs
+-> Meta Quest Remote Debugging (Manual Setup):
+   https://developer.oculus.com/documentation/web/browser-remote-debugging/
+
+  1 ❯ adb devices 
+      List of devices attached
+      1WMHHA62V22187	device
+    
+  2 ❯ adb shell ip route
+      192.168.1.0/24 dev wlan0 proto kernel scope link src 192.168.1.31 
+    
+  3 ❯ adb tcpip 5555
+      restarting in TCP mode port: 5555
+    
+  4 ❯ adb connect 192.168.1.31:5555
+      connected to 192.168.1.31:5555
+
 -> GitHub Codespaces (Manual Setup):
   A. Clone my dotfiles repo and install chezmoi via the chezmoi/dotfiles install.sh script.
   B. For running the frontend:

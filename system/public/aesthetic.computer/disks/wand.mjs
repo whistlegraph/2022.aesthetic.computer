@@ -2,21 +2,19 @@
 //       22.10.05.11.01
 
 // TODO
-// - [] Add shortening of line.
-//   - []  Render wand at a length that is a ratio of the actual length.
-//     - [🔥] 2D
-//     - [] 3D
-//   - [x] Create a class for a wand. 
-// - [] Reset wand when it runs out.
+// - [👨‍🚒] Make step size equal across players. 
+// - [] Cross platform Y level / eye level check and scale check.
+
+// - [] Wand length should be based on distance and not samples.
+// - [] Step size needs to take this into account.
+// - [] Reset / reload a wand when it runs out.
 
 // Server
 // - [] Give each player their own wand.
 // - [] Transmit wand position and length.
 // - [] Along with status updates / resets.
 
-
-// - [] Resizing the 2D camera should work properly / send new
-//      camera data.
+// - [] Add touch controls.
 // - [] Other players should be represented by separate geometry.
 // - [] Fix scaling of 2D camera / don't scale but add depth to the screenToPoint / center function of Camera.
 // - [] Add colors to line.
@@ -29,6 +27,12 @@
 // - [] Add circular buffer to wand lines (buffer-geometry) / infinite
 //      wand with dissolving trail.
 // + Done
+// - [x] Fast ending marks no longer add bits to the end of the preview. (Fixed / disabled)
+// - [x] Add shortening of line.
+// - [x] Render wand at a length that is a ratio of the actual length.
+// - [x] Move 3D wand to 2D.
+// - [x] Create a class for a wand. 
+// - [x] Resizing the 2D camera should work properly / send new camera data?
 // - [x] Set speed and step based on device type within wand.
 // - [x] Limit wand length so you can run out.
 // - [x] Prevent wand from maxing out.
@@ -38,7 +42,7 @@
 
 let cam, dolly; // Camera system.
 let wand; // Player / line geometry.
-let floor, cross, tri, triTop; // Room Geometry.
+let floor, cross, tri; // Room Geometry.
 let lookCursor = false;
 let client; // Network.
 let colorParams = [255, 255, 255, 255];
@@ -50,7 +54,7 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
   // colorParams = params.map((str) => parseInt(str)); // Set params for color.
 
   // Clear the screen to transparent and remove the cursor.
-  cursor("none");
+  //cursor("none");
   wipe(0, 0);
 
   // Connect to the network.
@@ -63,10 +67,10 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
 
     // Just in case we are sending messages to "everyone" / receiving our
     // own messages.
-    if (client.id !== id) drawing.addPoints(content); // Add points locally.
+    if (client.id !== id) wand?.drawing.addPoints(content); // Add points locally.
   });
 
-  cam = new Camera(80, { z: 4, y: 1, scale: [0.65, 0.65, 0.65] }); // camera with fov
+  cam = new Camera(80, { z: 4, y: 1, scale: [1, 1, 1] }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
 
 
@@ -85,21 +89,12 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
   tri = new Form(
     TRI,
     { tex: p(1, 8, (g) => g.noise16DIGITPAIN()), alpha: 0.75 },
-    { pos: [0, 1, 0] }
+    { pos: [0, 1, 0], scale: [0.5, 0.5, 0.5] }
   );
-
-  triTop = new Form({
-    type: "line",
-    positions: [
-      [0, 0, 0.0, 1], // Bottom
-      [0, 0, 0.1, 1] // Top
-    ],
-    indices: [0, 1],
-  }, { pos: [0, 0, 0], scale: [1, 1, 1] });
 
   // 1. Create a wand for the user.
   // Wand type, how many samples allowed, and a geometry.
-  wand = await (new Wand({ Form, color, Quantizer, Race, store, dist3d, client }, "line", 2048).init({
+  wand = await (new Wand({ Form, color, Quantizer, Race, store, dist3d, client }, "line", 8096).init({
     preload: false
   }));
 }
@@ -107,11 +102,15 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
 // 🎨 Paint (Executes every display frame)
 function paint({ ink, pen, pen3d, wipe, screen, Form }) {
   // The lines & the furnitue.
-  ink(255, 255, 255, 150).form([tri, floor, triTop, wand?.drawing], cam);
+  ink(255, 255, 255, 150).form([tri, floor, wand?.form, wand?.drawing], cam);
 
   // Draw cursors for 2D screens.
-  if (lookCursor) wipe(10, 0).ink(255).circle(pen.x, pen.y, 8);
-  else if (pen) wipe(10, 0).ink(255).line(pen.x, pen.y, pen.x + 15, pen.y + 15);
+  wipe(10, 0);
+  if (lookCursor) ink(127).circle(pen.x, pen.y, 8);
+  else if (pen) {
+    const shadow = 30 * (1 - wand.progress);
+    ink(127, 127).line(pen.x, pen.y, pen.x + shadow, pen.y + shadow);
+  }
 
   if (wand?.tail) {
     ink(0, 255, 0).form(
@@ -130,34 +129,44 @@ function paint({ ink, pen, pen3d, wipe, screen, Form }) {
 
 // 🧮 Sim(ulate) (Runs once per logic frame (120fps locked)).
 function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
-  // First person camera controls.
+  // 🔫 FPS style camera movement.
   let forward = 0, strafe = 0;
-
   if (W) forward = -0.004;
   if (S) forward = 0.004;
   if (A) strafe = -0.004;
   if (D) strafe = 0.004;
   if (W || S || A || D) dolly.push({ x: strafe, z: forward });
-
   if (UP) cam.rotX += 1;
   if (DOWN) cam.rotX -= 1;
   if (LEFT) cam.rotY += 1;
   if (RIGHT) cam.rotY -= 1;
+  dolly.sim();
 
-  dolly.sim(); // Move the camera.
-  tri.turn({ y: -0.25 }); // Rotate some scenery.
-  triTop.turn({ x: 0.0, y: 0.0, z: 0.0 }); // Why does this make everything work?
 
-  if (pen3d) {
-    triTop.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
-    triTop.rotation = [deg(pen3d.rot._x), deg(pen3d.rot._y), deg(pen3d.rot._z)];
-    triTop.gpuTransformed = true;
-  }
+  // 🌴 Scenery adjustments.
+  tri.turn({ y: -0.25 });
 
-  // 📈 Add to the drawing.
-  if (wand?.waving) {
-    if (wand?.vr) wand.goto([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0]);
-    else wand.goto(cam.center(1 - (pen.x / width), 1 - (pen.y / height)))
+  // 🪄 Wand
+  if (wand) {
+    // Position wand.
+    if (pen3d) {
+      wand.form.turn({ x: 0.0, y: 0.0, z: 0.0 }); // Why does this make everything work?
+      wand.form.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
+      wand.form.rotation = [deg(pen3d.rot._x), deg(pen3d.rot._y), deg(pen3d.rot._z)];
+      wand.form.scale = [1, 1, 1 - wand.progress];
+      wand.form.gpuTransformed = true; // Is this still needed?
+    } else if (pen) {
+      wand.form.turn({ x: 0.0, y: 0.0, z: 0.0 }); // Why does this make everything work?
+      wand.form.position = cam.ray(pen.x, pen.y);
+      wand.form.rotation = cam.rotation;
+      wand.form.scale = [1, 1, 1 - wand.progress];
+    }
+
+    // Calculate current gesture.
+    if (wand.waving) {
+      if (wand.vr) wand.goto([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0]);
+      else wand.goto(cam.ray(pen.x, pen.y))
+    }
   }
 }
 
@@ -165,20 +174,16 @@ function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
 function act({ event: e, color, screen, download, num: { timestamp } }) {
 
   // 👋 Right Hand
-  //   ✏️ Start a mark.
-  if (e.is("3d:touch:2")) wand.start([e.pos.x, e.pos.y, e.pos.z, 0]);
-  //   🚩 End a mark.
-  if (e.is("3d:lift:2")) wand.stop();
+  if (e.is("3d:touch:2")) wand.start([e.pos.x, e.pos.y, e.pos.z, 0]); // ✏️
+  if (e.is("3d:lift:2")) wand.stop(); // 🚩
 
   // 🖱️ Mouse
-  //   ✏️ Start a mark.
-  if (e.is("touch") && e.device === "mouse" && e.button === 0) {
-    wand.start(cam.center(1 - (e.x / screen.width), 1 - (e.y / screen.height)), false);
+  if (e.device === "mouse" && e.button === 0) {
+    if (e.is("touch")) wand.start(cam.ray(e.x, e.y), false); // ✏️ Start a mark.
+    if (e.is("lift")) wand.stop(); // 🚩 End a mark.
   }
-  //   🚩 End a mark.
-  if (e.is("lift") && e.device === "mouse" && e.button === 0) wand.stop();
 
-  // 👀 Look around while dragging with a finger. (or mouse if 2nd button held)
+  // 👀 Look around while dragging with a finger (or mouse if 2nd button held).
   if (e.is("draw") && (e.device === "touch" || e.button === 2)) {
     cam.rotX -= e.delta.y / 3.5;
     cam.rotY -= e.delta.x / 3.5;
@@ -274,6 +279,7 @@ class Wand {
   type;
   length;
   waving = false;
+  form;
 
   // The below fields are mostly for the "line" type, but could also be shared
   // by many wand types, depending on the design.
@@ -286,6 +292,16 @@ class Wand {
     this.api = api;
     this.type = type;
     this.length = length;
+
+    // Define the 3D renderable for this wand.
+    this.form = new api.Form({
+      type: "line",
+      positions: [
+        [0, 0, 0.0, 1],
+        [0, 0, 0.1, 1]
+      ],
+      indices: [0, 1],
+    }, { pos: [0, 0, 0], scale: [1, 1, 1] })
   }
 
   async init({ preload }) {
@@ -312,14 +328,22 @@ class Wand {
     return this;
   }
 
+  get progress() {
+    return this.drawing.vertices.length / this.drawing.MAX_POINTS;
+  }
+
   start(target, vr = true) {
     this.vr = vr;
 
     // *** Markmaking Configuration ***
     const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
     const quantizedSmoothing = true; // Regulate all segments while still smoothing.
-    const step = vr ? 0.0010 : 0.025; // Step size / overall quantization.
-    const speed = vr ? 30 : 20; // Racing speed.
+
+    //const step = vr ? 0.0010 : 0.025; // Step size / overall quantization.
+    //const speed = vr ? 30 : 20; // Racing speed.
+
+    const step = 0.0010;
+    const speed = 20;
 
     this.race =
       smoothing === true
@@ -359,19 +383,20 @@ class Wand {
   }
 
   stop() {
-    this.race = null;
-    this.waving = false;
-
     // Draw the second tail if it exists, then clear both.
     const start = this.tail?.[0] || this.tail2?.[0];
     const end = this.tail2?.[1];
 
     let maxedOut;
 
+    /*
     if (start && end) {
-      const q = new this.api.Quantizer({ step: this.step });
+      const q = new this.api.Quantizer({ step: this.race.step });
+
       q.start(start);
       const path = q.to(end);
+
+      console.log(path.out);
 
       if (path.out.length > 0) {
         const colors = []; // Note: Could this whole color loop be shorter?
@@ -383,7 +408,10 @@ class Wand {
         maxedOut = this.drawing.addPoints({ positions: path.out, colors });
       }
     }
+    */
 
+    this.race = null;
+    this.waving = false;
     this.tail = this.tail2 = undefined;
     return maxedOut;
   }

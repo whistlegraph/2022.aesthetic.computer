@@ -138,12 +138,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
   // 🎥 Camera
   if (!vrSession) {
-
     camera.rotation.order = "YXZ"; // Set to match the software renderer.
     camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
     camera.scale.set(...cam.scale)
     camera.position.set(...cam.position);
-
   }
 
   if (!Array.isArray(forms)) forms = [forms];

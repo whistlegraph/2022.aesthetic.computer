@@ -87,7 +87,6 @@ Welcome to...
       (Or it's a great design and just works poorly with the WebXR animation loop.)
 
 *** (3dline) ***
- (Meta Quest Remote Debugging Help: https://developer.oculus.com/documentation/web/browser-remote-debugging/)
  + Now
     - [] Make workers optional / turn them back on. (but not for Meta Quest Browser).
       - [] Rethink where the workers should be ideally...

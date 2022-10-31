@@ -16,7 +16,7 @@ import {
 import { repeat } from "./help.mjs";
 // import { nanoid } from "../dep/nanoid/nanoid.js";
 
-const { abs, sign, ceil, floor, sin, cos } = Math;
+const { abs, sign, ceil, floor, sin, cos, tan } = Math;
 
 let width, height, pixels;
 const depthBuffer = [];
@@ -1035,57 +1035,89 @@ class Camera {
   }
 
   // TODO: Rename to screenToWorld.
-  center(X = 0.5, Y = 0.5) {
-    // See also: https://codersdesiderata.com/2016/09/10/screen-view-to-world-coordinates,
-    //           https://stackoverflow.com/a/31617382/8146077
+  ray(X = width / 2, Y = height / 2) {
 
-    // 1. pixels -> Normalized Device Space
+    const dist = 0.2; // Away from you three.
+
+    // Normalize from screen coordinates.
+    X = 1 - (X / width);
+    Y = 1 - (Y / height);
+
+    // 1. Normalized Screen Space -> Normalized Device Space (NDS)
     // Note: This could be generalized from any screen point...
-    // x = 2.0 * screenX / width - 1;
-    // y = 2.0 * screenY / height - 1;
-    const x = 2.0 * X - 1;
-    const y = 2.0 * Y - 1;
+    let x = 2.0 * X - 1;
+    let y = 2.0 * Y - 1;
+
+    /*
+    const aspect =  height / width;
+    let x = 2.0 * X - 1;
+    let y = 2.0 * Y - 1;
+    y *= aspect;
+    let z = -aspect / tan(radians(this.fov / 2));
+
+    x *= dist;
+    y *= dist;
+    z *= dist;
+    */
+    // -1 / tan(radians(this.fov/2.0))
+    // 3. Camera World Space
+    const pos = [...this.position];
+
+    const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
+    const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY));
+    const rotZ = mat4.fromZRotation(mat4.create(), radians(this.#rotZ));
+
+    const rotatedX = mat4.multiply(mat4.create(), rotX, mat4.create());
+    const rotatedY = mat4.multiply(mat4.create(), rotY, rotatedX);
+    const rotatedZ = mat4.multiply(mat4.create(), rotZ, rotatedY);
+
+    //const invertedRotation = mat4.invert(mat4.create(), rotatedZ); 
+
+    //const rotatedMouse = vec4.transformMat4(vec4.create(), [x, y, z, 1], invertedRotation);
+
+    //const worldPoint = vec4.add(vec4.create(), pos, rotatedMouse);
+    //console.log(worldPoint);
+    //worldPoint[3] = 1;
+    //return worldPoint;
+
+    const scaled = mat4.scale(mat4.create(), rotatedZ, this.scale);
+
+    const world = scaled;
+
+    // 4. Camera World Space -> Inverted Perspective Projection
+    const invertedProjection = mat4.invert(mat4.create(), this.perspectiveMatrix);
+
+    // 5. Screen Point -> Inverted World Perspective Projection
+    // const invWorldPersProj = mat4.mul(mat4.create(), world, translated);
+    const invWorldPersProj = mat4.mul(mat4.create(), world, invertedProjection);
+
+    // Adjust Z depth of plane...
+    //const adj = mat4.translate(mat4.create(), invWorldPersProj, [0, 0, -0.5]);
 
     // 2. NDS -> Homogeneous Space
     //    (flipped Z, because we are in a left-handed coordinate // system?).
     const screenPos = vec4.fromValues(x, -y, 1, 1);
 
-    // 2.5 Adjust depth of center?
-    // const move = vec4.fromValues(...this.position);
+    screenPos[0] *= dist;
+    screenPos[1] *= dist;
+    screenPos[2] *= dist;
+    screenPos[3] *= dist;
 
-    // 3. Camera World Space
-    const translation = mat4.fromTranslation(mat4.create(), this.position);
-
-    const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
-    const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY));
-    const rotZ = mat4.fromZRotation(mat4.create(), radians(this.#rotZ));
-    const rotatedX = mat4.multiply(mat4.create(), rotX, translation);
-    const rotatedY = mat4.multiply(mat4.create(), rotY, rotatedX);
-    const rotatedZ = mat4.multiply(mat4.create(), rotZ, rotatedY);
-
-    const scaled = mat4.scale(mat4.create(), rotatedZ, this.scale);
-    const world = scaled;
-
-    // 4. Camera World Space -> Inverted Perspective Projection
-    const invertedProjection = mat4.invert(
-      mat4.create(),
-      this.perspectiveMatrix
-    );
-
-    // 5. Screen Point -> Inverted World Perspective Projection
-    const invWorldPersProj = mat4.mul(mat4.create(), world, invertedProjection);
-
+    // Get near plane.
     const xyz = vec4.transformMat4(vec4.create(), screenPos, invWorldPersProj);
 
+    // console.log(xyz[3]);
+
     // 6. Subtract transformed point from camera position.
-    const center = vec4.sub(vec4.create(), this.position, xyz);
+    const worldPos = vec4.sub(vec4.create(), pos, xyz);
+
+    worldPos[3] = 1;
+    // 6.5 Translate world position by x, according to camera angle.
 
     // 7. Translate point.
-    // center[2] += 0.3;
-
-    this.centerCached = center;
-    return center;
+    return worldPos;
   }
+
 
   #transform() {
     // TODO: Why does this and the FPS camera control need to be inverted?
