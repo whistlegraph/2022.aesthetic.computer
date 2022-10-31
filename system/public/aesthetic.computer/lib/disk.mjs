@@ -426,7 +426,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
           formsToSend.push({
             update: "form:buffered:add-vertices",
             uid: form.uid,
-            flush: form.gpuFlush,
+            // flush: form.gpuFlush,
             reset: form.gpuReset,
             vertices: form.vertices.slice(form.gpuVerticesSent),
             length: form.vertices.length, // TODO: These aren't being used anymore / they are generated from the GPU.
@@ -437,7 +437,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
           // TODO: Put these both under a "gpu" object in form.
           // TODO: Both gpuFlush and gpuReset could have better names
           //       once I start scaling the renderer. 22.10.16.20.49
-          form.gpuFlush = false;
+          // form.gpuFlush = false;
           form.gpuReset = false;
           form.gpuVerticesSent = form.vertices.length;
         }
@@ -862,8 +862,8 @@ async function load(
   if (firstLoad === false) {
     try {
       leave({ store, screen, system: $commonApi.system }); // Trigger leave.
-    } catch {
-      console.warn("👋 Leave failure...");
+    } catch(e) {
+      console.warn("👋 Leave failure...", e);
     }
   }
 
@@ -1166,8 +1166,8 @@ async function makeFrame({ data: { type, content } }) {
 
     try {
       beat($api);
-    } catch {
-      console.warn(" 💗 Beat failure...");
+    } catch(e) {
+      console.warn(" 💗 Beat failure...", e);
     }
 
     send({ type: "beat", content: { bpm: content.bpm, squares, bubbles } }//,
@@ -1311,7 +1311,7 @@ async function makeFrame({ data: { type, content } }) {
           );
         };
 
-        $commonApi.pen = primaryPointer || { x: undefined, y: undefined };
+        $commonApi.pen = primaryPointer;// || { x: undefined, y: undefined };
       }
 
       // 🤖 Sim // no send
@@ -1330,8 +1330,8 @@ async function makeFrame({ data: { type, content } }) {
           $api.simCount = simCount;
           try {
             sim($api);
-          } catch {
-            console.warn("🧮 Sim failure...");
+          } catch(e) {
+            console.warn("🧮 Sim failure...", e);
           }
           initialSim = false;
         } else if (content.updateCount > 0 && paintCount > 0n) {
@@ -1341,8 +1341,8 @@ async function makeFrame({ data: { type, content } }) {
             $api.simCount = simCount;
             try {
               sim($api);
-            } catch {
-              console.warn("🧮 Sim failure...");
+            } catch(e) {
+              console.warn("🧮 Sim failure...", e);
             }
           }
         }
@@ -1384,8 +1384,8 @@ async function makeFrame({ data: { type, content } }) {
         };
         try {
           act($api);
-        } catch {
-          console.warn("️ ✒ Act failure...");
+        } catch(e) {
+          console.warn("️ ✒ Act failure...", e);
         }
         reframed = false;
       }
@@ -1399,8 +1399,8 @@ async function makeFrame({ data: { type, content } }) {
         };
         try {
           act($api);
-        } catch {
-          console.warn("️ ✒ Act failure...");
+        } catch(e) {
+          console.warn("️ ✒ Act failure...", e);
         }
         send({ type: "load-failure" });
         loadFailure = undefined;
@@ -1416,8 +1416,8 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api);
-        } catch {
-          console.warn("️ ✒ Act failure...");
+        } catch(e) {
+          console.warn("️ ✒ Act failure...", e);
         }
         signals.length = 0;
       }
@@ -1433,8 +1433,8 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api);
-        } catch {
-          console.warn("️ ✒ Act failure...");
+        } catch(e) {
+          console.warn("️ ✒ Act failure...", e);
         }
       }
 
@@ -1462,8 +1462,8 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api);
-        } catch {
-          console.warn("️ ✒ Act failure...");
+        } catch(e) {
+          console.warn("️ ✒ Act failure...", e);
         }
       });
 
@@ -1478,8 +1478,8 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api);
-        } catch {
-          console.warn("️ ✒ Act failure...");
+        } catch(e) {
+          console.warn("️ ✒ Act failure...", e);
         }
       });
 
@@ -1501,8 +1501,8 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api); // Execute piece shortcut.
-        } catch {
-          console.warn("️ ✒ Act failure...");
+        } catch(e) {
+          console.warn("️ ✒ Act failure...", e);
         }
 
         // 🌟 Global Keyboard Shortcuts
@@ -1742,8 +1742,8 @@ async function makeFrame({ data: { type, content } }) {
 
         try {
           boot($api);
-        } catch {
-          console.warn("🥾 Boot failure...")
+        } catch(e) {
+          console.warn("🥾 Boot failure...", e)
         }
         booted = true;
         send({ type: "disk-loaded-and-booted" });
@@ -1767,8 +1767,8 @@ async function makeFrame({ data: { type, content } }) {
 
         try {
           paintOut = paint($api); // Returns `undefined`, `false`, or `DirtyBox`.
-        } catch {
-          console.warn("🎨 Paint failure...");
+        } catch(e) {
+          console.warn("🎨 Paint failure...", e);
         }
 
 

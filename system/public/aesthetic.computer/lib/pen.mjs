@@ -209,7 +209,8 @@ export class Pen {
       pen.penCursor = true;
       if (e.pointerType !== "mouse") pen.penCursor = false;
 
-      delete pen.pointers[e.pointerId];
+      // Delete pointer only if we are using touch.
+      if (e.pointerType === "touch") delete pen.pointers[e.pointerId];
 
       if (debug)
         console.log("Removed pointer by ID:", e.pointerId, this.pointers);

@@ -284,7 +284,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       let points = [];
       let pointColors = [];
 
-      // Generate a curve for points if there are any at the start.
+      // Generate points from vertices if there are any to load at the start.
       if (f.vertices.length > 0) {
         points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
         pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
@@ -343,8 +343,12 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       const lineb = new THREE.LineSegments(geometry, material);
 
+      // Custom properties added from the aesthetic.computer runtime.
+      // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
       lineb.ac_length = points.length;
       lineb.ac_lastLength = lineb.ac_length;
+      lineb.ac_MAX_POINTS = f.MAX_POINTS;
+      lineb.aestheticID = f.uid;
 
       lineb.translateX(f.position[0]);
       lineb.translateY(f.position[1]);
@@ -355,7 +359,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       lineb.scale.set(...f.scale);
 
       scene.add(lineb);
-      lineb.aestheticID = f.uid;
 
       geometry.setDrawRange(0, points.length);
       geometry.attributes.position.needsUpdate = true;
@@ -402,15 +405,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     if (f.update === "form:buffered:add-vertices") {
       const formUpdate = f;
 
-      // TODO: Make this generic / hold onto
-      //       IDs for each form.
-      //       Should I maintain my own IDs or
-      //       actually send the ones
-      //       back from Three JS?
-      //
-      //       Actually I can just use a
-      //       dictionary here... 22.10.12.15.30
-
       const form = scene.getObjectByProperty("aestheticID", formUpdate.uid);
       if (!form) return;
 
@@ -439,6 +433,15 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         // in the previously allocated vertex buffer.
         form.ac_lastLength = form.ac_length;
         form.ac_length += points.length;
+
+        // ⚠️ Reset the buffer if we were go over the max, by default.
+        if (form.ac_length > form.ac_MAX_POINTS) {
+          form.ac_lastLength = 0;
+          form.ac_length = points.length;
+        }
+
+        // TODO: How to make the buffer circular?
+        //       (When would I want this?) 22.10.30.17.14
 
         const positions = form.geometry.attributes.position.array;
         const colors = form.geometry.attributes.color.array;

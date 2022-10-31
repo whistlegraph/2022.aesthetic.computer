@@ -17,8 +17,8 @@ let rgb = [0];
 // 🎨 Paint (Executes every display frame)
 function paint({ wipe, ink, pen, pens }) {
   wipe(128); // Gray background.
-  ink(rgb).line(pen.x, pen.y, pens(2).x, pens(2).y); // Line from pen 1->2.
-  ink(0, 0, 255).circle(pen.x, pen.y, 16); // Blue circle for 1st pen.
+  ink(rgb).line(pen?.x, pen?.y, pens(2).x, pens(2).y); // Line from pen 1->2.
+  ink(0, 0, 255).circle(pen?.x, pen?.y, 16); // Blue circle for 1st pen.
   ink(0, 255, 255).circle(pens(2).x, pens(2).y, 16); // Teal for 2nd pen.
 }
 

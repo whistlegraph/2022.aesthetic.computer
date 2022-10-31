@@ -14,7 +14,7 @@ import {
 } from "./num.mjs";
 
 import { repeat } from "./help.mjs";
-import { nanoid } from "../dep/nanoid/nanoid.js";
+// import { nanoid } from "../dep/nanoid/nanoid.js";
 
 const { abs, sign, ceil, floor, sin, cos } = Math;
 
@@ -1173,7 +1173,7 @@ class Form {
 
   // Model
   vertices = [];
-  indices;
+  indices = [];
 
   // TODO: Texture and color should be optional, and perhaps based on type.
   // TODO: Should this use a parameter called shader?
@@ -1230,7 +1230,7 @@ class Form {
     this.type = type;
 
     // Decide whether to throw this away after being drawn once
-    this.gpuKeep = keep;    
+    this.gpuKeep = keep;
 
     // Take into account form -> primitive relationships.
     if (type === "quad") this.primitive = "triangle";
@@ -1239,6 +1239,7 @@ class Form {
     // 🌩️ Ingest positions and turn them into vertices.
     // ("Import" a model...)
 
+    // TODO: There is no maxed out notice here.
     if (positions?.length > 0) this.addPoints({ positions, colors }, indices);
 
     // Or just set vertices directly.
@@ -1267,8 +1268,30 @@ class Form {
   // TODO: This needs to support color (and eventually N vertex attributes).
 
   addPoints(attributes, indices) {
+
+    const incomingLength = attributes.positions.length;
+    const verticesLength = this.vertices.length;
+    const pointsAvailable = this.MAX_POINTS - verticesLength;
+
+    let end = incomingLength;
+    let maxedOut = false;
+
+    /* Left for debugging. 22.10.30.18.30
+    if (this.MAX_POINTS === 256) {
+      console.log(
+        "Incoming:", incomingLength, "Current:", verticesLength,
+        "Max:", this.MAX_POINTS
+      );
+    }
+    */
+
+    if (pointsAvailable < incomingLength) {
+      end = pointsAvailable
+      maxedOut = true;
+    }
+
     // Create new vertices from incoming positions.
-    for (let i = 0; i < attributes.positions.length; i++) {
+    for (let i = 0; i < end; i++) {
       // Generate texCoord from position instead of loading.
       // (Vertex / 2) + 0.5 // Vertex to UV
       // See also: (Vertex - 0.5) * 2 // UV to Vertex
@@ -1280,6 +1303,7 @@ class Form {
         //0,
       ];
 
+      // 🔥
       // TODO:
       // Wrap based on MAX_POINTS. 
 
@@ -1295,11 +1319,18 @@ class Form {
         )
       );
 
+      if (!indices) this.indices.push((verticesLength - 1 + i));
     }
+
+    if (indices) this.indices = indices;
 
     // Create indices from pre-indexed positions or generate
     // a linear set of indices based on length.
-    this.indices = indices || repeat(this.vertices.length, (i) => i);
+
+    // TODO: How inefficient is this? 22.10.30.17.30
+    // this.indices = indices || repeat(this.vertices.length, (i) => i);
+
+    return maxedOut;
   }
 
   graph({ matrix: cameraMatrix }) {
