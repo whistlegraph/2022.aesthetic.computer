@@ -4,11 +4,17 @@
 // TODO
 // - [] Add shortening of line.
 //   - []  Render wand at a length that is a ratio of the actual length.
-//     - [] 2D
+//     - [🔥] 2D
 //     - [] 3D
 //   - [x] Create a class for a wand. 
+// - [] Reset wand when it runs out.
 
+// Server
+// - [] Give each player their own wand.
 // - [] Transmit wand position and length.
+// - [] Along with status updates / resets.
+
+
 // - [] Resizing the 2D camera should work properly / send new
 //      camera data.
 // - [] Other players should be represented by separate geometry.
@@ -23,6 +29,7 @@
 // - [] Add circular buffer to wand lines (buffer-geometry) / infinite
 //      wand with dissolving trail.
 // + Done
+// - [x] Set speed and step based on device type within wand.
 // - [x] Limit wand length so you can run out.
 // - [x] Prevent wand from maxing out.
 // - [x] Add a 'wand' representation to 2d screens. 
@@ -36,8 +43,6 @@ let lookCursor = false;
 let client; // Network.
 let colorParams = [255, 255, 255, 255];
 let W, S, A, D, UP, DOWN, LEFT, RIGHT; // Controls
-
-let mouse = false;
 
 // 🥾 Boot
 async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
@@ -151,8 +156,8 @@ function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
 
   // 📈 Add to the drawing.
   if (wand?.waving) {
-    if (mouse) wand.goto(cam.center(1 - (pen.x / width), 1 - (pen.y / height)))
-    else wand.goto([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0]);
+    if (wand?.vr) wand.goto([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0]);
+    else wand.goto(cam.center(1 - (pen.x / width), 1 - (pen.y / height)))
   }
 }
 
@@ -168,8 +173,7 @@ function act({ event: e, color, screen, download, num: { timestamp } }) {
   // 🖱️ Mouse
   //   ✏️ Start a mark.
   if (e.is("touch") && e.device === "mouse" && e.button === 0) {
-    wand.start(cam.center(1 - (e.x / screen.width), 1 - (e.y / screen.height)));
-    mouse = true;
+    wand.start(cam.center(1 - (e.x / screen.width), 1 - (e.y / screen.height)), false);
   }
   //   🚩 End a mark.
   if (e.is("lift") && e.device === "mouse" && e.button === 0) wand.stop();
@@ -282,22 +286,6 @@ class Wand {
     this.api = api;
     this.type = type;
     this.length = length;
-
-    // *** Markmaking Configuration ***
-    const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
-    const quantizedSmoothing = true; // Regulate all segments while still smoothing.
-
-    // Good for VR...
-    const step = 0.0010; // Step size of regulated line / minimum cut-off.
-    const speed = 30; // Only used if smoothing is true.
-    // Good for PC + Keyboard.
-    //const step = 0.10;
-    //const speed = 20;
-
-    this.race =
-      smoothing === true
-        ? new api.Race({ step, speed, quantized: quantizedSmoothing })
-        : new api.Quantizer({ step });
   }
 
   async init({ preload }) {
@@ -324,14 +312,26 @@ class Wand {
     return this;
   }
 
-  start(target) {
+  start(target, vr = true) {
+    this.vr = vr;
+
+    // *** Markmaking Configuration ***
+    const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
+    const quantizedSmoothing = true; // Regulate all segments while still smoothing.
+    const step = vr ? 0.0010 : 0.025; // Step size / overall quantization.
+    const speed = vr ? 30 : 20; // Racing speed.
+
+    this.race =
+      smoothing === true
+        ? new this.api.Race({ step, speed, quantized: quantizedSmoothing })
+        : new this.api.Quantizer({ step });
     this.race.start(target);
     this.waving = true;
   }
 
   goto(target) {
-    const path = this.race.to(target);
-    if (!path) return;
+    const path = this.race.to(target); if (!path) return;
+    let maxedOut;
 
     if (path.out?.length > 0) {
       const colors = [];
@@ -342,8 +342,7 @@ class Wand {
       });
 
       // Add points locally.
-      const maxedOut = this.drawing.addPoints({ positions: path.out, colors });
-      if (maxedOut) console.log("Maxed out points!");
+      maxedOut = this.drawing.addPoints({ positions: path.out, colors });
 
       // Send vertices to the internet.
       this.api.client.send("add", {
@@ -355,15 +354,19 @@ class Wand {
     // Previews from wand tip. 
     if (this.api.dist3d(path.last, path.current)) this.tail = [path.last, path.current];
     if (this.api.dist3d(path.current, target)) { this.tail2 = [path.current, target]; }
+
+    return maxedOut;
   }
 
   stop() {
-    this.race.reset?.();
+    this.race = null;
     this.waving = false;
 
     // Draw the second tail if it exists, then clear both.
     const start = this.tail?.[0] || this.tail2?.[0];
     const end = this.tail2?.[1];
+
+    let maxedOut;
 
     if (start && end) {
       const q = new this.api.Quantizer({ step: this.step });
@@ -377,12 +380,12 @@ class Wand {
           colors.push(vertexColor, vertexColor);
         });
 
-        const maxedOut = this.drawing.addPoints({ positions: path.out, colors });
-        if (maxedOut) console.log("Maxed out points!");
+        maxedOut = this.drawing.addPoints({ positions: path.out, colors });
       }
     }
 
     this.tail = this.tail2 = undefined;
+    return maxedOut;
   }
 
 }

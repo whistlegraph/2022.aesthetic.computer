@@ -392,10 +392,6 @@ export class Race {
     this.pos = vec4.clone(point);
     this.last = vec4.clone(point);
   }
-
-  reset() {
-    this.dist = 0;
-  }
 }
 
 // A simple model without lazy following.
