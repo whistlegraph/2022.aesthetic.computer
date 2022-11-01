@@ -25,7 +25,7 @@ export function paint({
     rect = null;
   }
 
-  if (pen.dragBox) {
+  if (pen.drawing) {
     paste(system.painting);
     rect = Box.copy(pen.dragBox).abs.crop(0, 0, screen.width, screen.height);
     ink(color).box(rect);

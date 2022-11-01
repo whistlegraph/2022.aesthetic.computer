@@ -38,6 +38,7 @@ export function checkForRemovedForms(formsBaked) {
 }
 
 export function initialize(wrapper, loop) {
+
   renderer = new THREE.WebGLRenderer({
     alpha: false,
     preserveDrawingBuffer: true,

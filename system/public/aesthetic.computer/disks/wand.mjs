@@ -2,12 +2,15 @@
 //       22.10.05.11.01
 
 // TODO
-// - [] Add notifications to see who joins on the main screen / play a sound.
-// - [] Add touch controls.
+// - [] Get font loaded.
+// - [] Play a sound on exit or enter.
+// - [] Add notifications to see who joins on the main screen.
 // - [] Title screen.
+// - [] Add touch controls.
+// - [] Segmented, colored wands.
 // - [] Add text chat.
 // - [] Add voice chat.
-// - [] Add demo recording.
+// - [] Add demo recording and playback with vocals.
 // + Later
 // - [] Fix broken GL lines.
 // - [] Send the actual camera fov and near and far through to the gpu.
@@ -45,11 +48,9 @@ let lookCursor = false;
 let client; // Network.
 let colorParams = [255, 255, 255, 255];
 let W, S, A, D, UP, DOWN, LEFT, RIGHT; // Controls
-let wandDepth2D = 0.3;
-
-const wandLength = 6000;
-
-const remoteWands = {};
+let wandDepth2D = 0.3; // The distance from the near plane for drawing on screens.
+const wandLength = 4096; // The maximum number of points per each wand.
+const remoteWands = {}; // A container for wands that come off the network.
 
 // 🥾 Boot
 async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
@@ -63,12 +64,6 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
 
   // Connect to the network.
   client = net.socket(async (id, type, content) => {
-    // Instantiate painters (clients) based on their `id` attribute.
-    //painters[id] = painters[id] || new Painter(id);
-    // Record the action.
-    //actions.push({ id, type, content });
-    //console.log(content);
-    //console.log(id, type, content);
 
     // Make a new wand for another user.
     if (type === "create") {
@@ -93,13 +88,19 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
       client.send("create", { color: wand.color, points: wand.drawing.vertices.map(v => [...v.pos]) });
     }
 
+    if (type === "start" && client.id !== id) {
+      remoteWands[id]?.start(content.target, content.vr, true);
+    }
+
+    if (type === "goto" && client.id !== id) {
+      remoteWands[id]?.goto(content.target, true);
+    }
+
     if (type === "move") {
       if (client.id !== id) {
         const rw = remoteWands[id];
         if (rw === undefined) return;
-        rw.waving = content.waving;
-        const form = rw.form
-        if (form === undefined) return; // TODO: Is this necessary?
+        const form = rw.form;
         form.turn({ x: 0, y: 0, z: 0 }); // TODO: Is this still necessary?
         form.position = content.position;
         form.rotation = content.rotation;
@@ -107,21 +108,12 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
       }
     }
 
-    /*
-    if (type === "lift") {
-      if (client.id !== id) {
-        const rw = remoteWands[id];
-        if (rw === undefined) return;
-        rw.waving = false;
-      }
-    }
-    */
+    if (type === "stop" && client.id !== id) remoteWands[id]?.stop(true);
 
     // Add points to wand... or make new wand associated with a client ID if it
     // doesn't exist. 
     if (type === "add") {
-      // Just in case we are sending messages to "everyone" / receiving our
-      // own messages.
+      // In case we are sending messages to "everyone".
       if (client.id !== id) remoteWands[id]?.drawing.addPoints(content); // Add points locally.
     }
 
@@ -210,19 +202,39 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form }) {
     );
   }
 
+  // Draw the tails for any remote wands.
+
+  help.each(remoteWands, w => {
+    if (w.tail) {
+      ink(w.color).form(
+        new Form({ type: "line", positions: w.tail, keep: false }, { alpha: 1 }),
+        cam
+      );
+    }
+
+    if (w.tail2) {
+      ink(w.color).form(
+        new Form({ type: "line", positions: w.tail2, keep: false }, { alpha: 1 }),
+        cam
+      );
+    }
+  });
+
   // Draw a colored tail for any remote wands.
+  /*
   help.each(remoteWands, w => {
     if (!w.waving) return;
     const start = w.form.position;
     const end = w.drawing.vertices[w.drawing.vertices.length - 1]?.pos;
+    console.log(start, end);
     if (start && end) {
       ink(w.color).form(
         new Form({ type: "line", positions: [start, end], keep: false }, { alpha: 1 }),
         cam
       );
     }
-
   });
+  */
 
 }
 
@@ -258,8 +270,7 @@ function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
       client.send("move", {
         position: wand.form.position,
         rotation: wand.form.rotation,
-        scale: wand.form.scale,
-        waving: wand.waving
+        scale: wand.form.scale
       });
 
     } else if (pen) {
@@ -376,8 +387,10 @@ function beat($api) { }
 
 // 👋 Leave
 function leave({ store }) {
-  store["3dline:drawing"] = drawing;
-  store.persist("3dline:drawing", "local:db");
+  if (wand?.drawing) {
+    store["3dline:drawing"] = wand.drawing;
+    store.persist("3dline:drawing", "local:db");
+  }
 }
 
 export { boot, sim, paint, act, beat, leave };
@@ -395,11 +408,13 @@ class Wand {
   waving = false;
   form;
   color;
+  randomColor = false;
 
   // The below fields are mostly for the "line" type, but could also be shared
   // by many wand types, depending on the design.
   drawing; // Geometry.
   race; // Lazy line control.
+  lastTarget; // Prevents sending the same points over and over in `goto`.
   tail; // Preview / prediction lines.
   tail2;
 
@@ -413,15 +428,16 @@ class Wand {
 
     // Set the color or choose a random one.
     if (color === undefined) {
+      this.randomColor = true;
       // Pick a color for this wand.
       let r = Math.random() > 0.5 ? 0 : 255;
       let g = Math.random() > 0.5 ? 0 : 255;
       let b = Math.random() > 0.5 ? 0 : 255;
 
       if (r === 0 && g === 0 && b === 0) {
-        r = 128;
-        g = 128;
-        b = 128;
+        r = 255;
+        g = 255;
+        b = 255;
       }
 
       this.color = [r, g, b, 255];
@@ -460,6 +476,7 @@ class Wand {
       // drawing.MAX_POINTS = length;
     }
 
+    this.lastTarget = undefined; // Reset the target tracker in `goto`.
     return this;
   }
 
@@ -468,7 +485,7 @@ class Wand {
     return this.drawing.vertices.length / this.drawing.MAX_POINTS;
   }
 
-  start(target, vr = true) {
+  start(target, vr = true, remote) {
     this.vr = vr;
     // *** Markmaking Configuration ***
     const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
@@ -484,9 +501,19 @@ class Wand {
         : new this.api.Quantizer({ step });
     this.race.start(target);
     this.waving = true;
+    if (!remote) this.api.client.send("start", { target, vr });
   }
 
-  goto(target) {
+  goto(target, remote = false) {
+
+    if (this.lastTarget !== undefined &&
+      this.lastTarget[0] === target[0] &&
+      this.lastTarget[1] === target[1] &&
+      this.lastTarget[2] === target[2]) {
+        return;
+    }
+
+    this.lastTarget = target;
     if (this.drawing === null) return;
     if (!this.waving) return;
     const path = this.race.to(target); if (!path) return;
@@ -505,21 +532,26 @@ class Wand {
       maxedOut = this.drawing.addPoints({ positions: path.out, colors });
 
       // Send vertices to the internet.
-      this.api.client.send("add", {
+      /*
+      if (!remote) this.api.client.send("add", {
         positions: path.out.map((vertex) => [...vertex]),
         colors,
       });
+      */
+
     }
 
     // Previews from wand tip. 
     if (this.api.dist3d(path.last, path.current)) this.tail = [path.last, path.current];
-    if (this.api.dist3d(path.current, target)) { this.tail2 = [path.current, target]; }
+    if (this.api.dist3d(path.current, target)) this.tail2 = [path.current, target];
 
-    if (maxedOut) this.clear(this.color);
+    if (!remote) this.api.client.send("goto", { target: [...target] });
+
+    if (maxedOut) this.clear(!this.randomColor ? this.color : undefined);
     return maxedOut;
   }
 
-  stop() {
+  stop(remote = false) {
     // Draw the second tail if it exists, then clear both.
     const start = this.tail?.[0] || this.tail2?.[0];
     const end = this.tail2?.[1];
@@ -550,7 +582,8 @@ class Wand {
     this.race = null;
     this.waving = false;
     this.tail = this.tail2 = undefined;
-    if (maxedOut) this.clear(this.color);
+    if (maxedOut) this.clear(!this.randomColor ? this.color : undefined);
+    if (!remote) this.api.client.send("stop");
     return maxedOut;
   }
 

@@ -1065,7 +1065,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // console.log(content.text);
 
       // TODO: Make this automatic for pieces that use 3d.
-      console.log(content);
       if (content.text === "wand" || content.text.indexOf("wand") === 0) {
         loadThreeD();
       }
@@ -1099,7 +1098,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       const willBake = content.cam !== undefined;
 
       if (willBake) {
-        if (ThreeD?.status.alive === false) ThreeD.initialize(wrapper);
+        // if (ThreeD?.status.alive === false) ThreeD.initialize(wrapper);
 
         // Add / update forms in a queue and then run all the bakes in render.
         ThreeDBakeQueue.push(() => {
