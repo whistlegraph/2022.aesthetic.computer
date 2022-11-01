@@ -76,6 +76,7 @@ export class Socket {
       if (c.text) {
         // Someone else has connected as...
         console.log(`📡 ${c.text}`);
+
       } else {
         // Send a self-connection message here. (You are connected as...)
         console.log(`${c.ip} → 🤹 ${c.playerCount} : @${c.id}`);

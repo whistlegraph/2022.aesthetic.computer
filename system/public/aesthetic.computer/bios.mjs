@@ -972,8 +972,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             diskSupervisor.requestFrame?.(needsRender, updateTimes, nowUpdate);
 
             if (ThreeD?.status.alive === true && ThreeDBakeQueue.length > 0) {
-              ThreeD?.collectGarbage();
-              ThreeDBakeQueue.forEach((baker) => baker());
+              ThreeD.collectGarbage();
+              // Bake all forms, while keeping track of baked forms, and any form that is missing after the queue ends needs to be cleared.
+              const touchedForms = [];
+              ThreeDBakeQueue.forEach((baker) => touchedForms.push(...baker()));
+              ThreeD.checkForRemovedForms(touchedForms);
               ThreeDBakeQueue.length = 0;
             }
             ThreeD?.render();
@@ -1097,7 +1100,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
         // Add / update forms in a queue and then run all the bakes in render.
         ThreeDBakeQueue.push(() => {
-          ThreeD?.bake(content, screen, {
+          return ThreeD?.bake(content, screen, {
             width: projectedWidth,
             height: projectedHeight,
           });

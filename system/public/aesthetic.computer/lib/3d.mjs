@@ -21,6 +21,22 @@ export const penEvents = []; // VR pointer events.
 export const bakeQueue = [];
 export const status = { alive: false };
 
+export function checkForRemovedForms(formsBaked) {
+  const currentFormIDs = scene.children.map(c => c.aestheticID).filter(Boolean);
+
+  const currentForms = {};
+  scene.children.forEach(c => {
+    if (c.aestheticID !== undefined) currentForms[c.aestheticID] = c;
+  });
+
+  // console.log(formsBaked, currentFormIDs, scene.children);
+  const formIDsToRemove = currentFormIDs.filter(f => !formsBaked.includes(f));
+
+  // Remove objects.
+  formIDsToRemove.forEach(id => removeObjectsWithChildren(currentForms[id]));
+
+}
+
 export function initialize(wrapper, loop) {
   renderer = new THREE.WebGLRenderer({
     alpha: false,
@@ -38,6 +54,7 @@ export function initialize(wrapper, loop) {
   scene = new THREE.Scene();
   // scene.fog = new THREE.Fog(0x111111, 0.5, 2); // More basic fog.
   scene.fog = new THREE.FogExp2(0x030303, 0.5);
+  //scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
   // Set up VR.
   button = VRButton.createButton(renderer, function start(session) {
@@ -131,7 +148,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     // pixels = new Uint8Array(width * height * 4);
     const fov = 80;
     const aspect = width / height;
-    const near = 0.1;
+    const near = 0.01;
     const far = 1000;
     camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   }
@@ -189,7 +206,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       scene.add(tri);
       tri.aestheticID = f.uid;
 
-      disposal.push(tex, material, geometry);
+      disposal.push({
+        keep: f.gpuKeep,
+        form: tri,
+        resources: [tex, material, geometry],
+      });
     }
 
     // *** 🟥 Quad ***
@@ -469,12 +490,16 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         needsSphere = true; // for jiggleForm
       }
     }
+
+
   });
 
   // In case we ever need to render off screen...
   //renderer.render(scene, camera);
   //renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
   //return pixels;
+
+  return forms.map(f => f.uid); // Return UIDs of every added or adjusted form.
 }
 
 function handleController(controller) {
@@ -499,7 +524,7 @@ function handleController(controller) {
   controller.userData.lastPosition = { ...controller.position };
 
   // TODO: Also return controller angle here.
-  return { pos: controller.position, rot: controller.rotation  };
+  return { pos: controller.position, rot: controller.rotation };
 }
 
 // Get controller data to send to a piece.
@@ -574,6 +599,15 @@ export function clear() {
   renderer.clear();
 }
 
+export function kill() {
+  renderer.domElement.remove();
+  button?.remove();
+  renderer.dispose();
+  scene = undefined;
+  target = undefined;
+  status.alive = false;
+}
+
 export function collectGarbage() {
   // ♻️ De-allocation.
   // Note: This should do the trick, but I should still
@@ -584,15 +618,52 @@ export function collectGarbage() {
       d.form.removeFromParent();
     }
     disposal[i] = undefined;
-  }); // Free memory from forms if it's been marked as `keep === false`.
+  });
+  // Free memory from forms if they have been marked as `keep === false`.
+  // (Or only drawn one time.)
   disposal = disposal.filter(Boolean);
 }
 
-export function kill() {
-  renderer.domElement.remove();
-  button?.remove();
-  renderer.dispose();
-  scene = undefined;
-  target = undefined;
-  status.alive = false;
+// Completely dispose of an object and all its children.
+// TODO: Eventually replace disposal's "resources" with this. 22.10.31.17.44
+// Via: https://stackoverflow.com/a/73827012/8146077
+function removeObjectsWithChildren(obj) {
+
+  if (obj.children.length > 0) {
+    for (var x = obj.children.length - 1; x >= 0; x--) {
+      removeObjectsWithChildren(obj.children[x]);
+    }
+  }
+
+  if (obj.geometry) { obj.geometry.dispose(); }
+
+  if (obj.material) {
+    if (obj.material.length) {
+      for (let i = 0; i < obj.material.length; ++i) {
+
+        if (obj.material[i].map) obj.material[i].map.dispose();
+        if (obj.material[i].lightMap) obj.material[i].lightMap.dispose();
+        if (obj.material[i].bumpMap) obj.material[i].bumpMap.dispose();
+        if (obj.material[i].normalMap) obj.material[i].normalMap.dispose();
+        if (obj.material[i].specularMap) obj.material[i].specularMap.dispose();
+        if (obj.material[i].envMap) obj.material[i].envMap.dispose();
+
+        obj.material[i].dispose()
+      }
+    }
+    else {
+      if (obj.material.map) obj.material.map.dispose();
+      if (obj.material.lightMap) obj.material.lightMap.dispose();
+      if (obj.material.bumpMap) obj.material.bumpMap.dispose();
+      if (obj.material.normalMap) obj.material.normalMap.dispose();
+      if (obj.material.specularMap) obj.material.specularMap.dispose();
+      if (obj.material.envMap) obj.material.envMap.dispose();
+
+      obj.material.dispose();
+    }
+  }
+
+  obj.removeFromParent();
+
+  return true;
 }

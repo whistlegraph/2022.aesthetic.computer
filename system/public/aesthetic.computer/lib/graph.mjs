@@ -1007,7 +1007,7 @@ class Camera {
   }
 
   #perspective(fov) {
-    const zNear = 0.1;
+    const zNear = 0.01;
     const zFar = 1000;
 
     this.perspectiveMatrix = mat4.perspective(
@@ -1034,33 +1034,10 @@ class Camera {
     return this.perspectiveMatrix;
   }
 
-  // TODO: Rename to screenToWorld.
-  ray(X = width / 2, Y = height / 2) {
-
-    const dist = 0.2; // Away from you three.
-
-    // Normalize from screen coordinates.
-    X = 1 - (X / width);
-    Y = 1 - (Y / height);
-
-    // 1. Normalized Screen Space -> Normalized Device Space (NDS)
-    // Note: This could be generalized from any screen point...
-    let x = 2.0 * X - 1;
-    let y = 2.0 * Y - 1;
-
-    /*
-    const aspect =  height / width;
-    let x = 2.0 * X - 1;
-    let y = 2.0 * Y - 1;
-    y *= aspect;
-    let z = -aspect / tan(radians(this.fov / 2));
-
-    x *= dist;
-    y *= dist;
-    z *= dist;
-    */
-    // -1 / tan(radians(this.fov/2.0))
-    // 3. Camera World Space
+  // Get an XYZ position on a plane at a given depth,
+  // relative to screen coordinates.
+  ray(X = width / 2, Y = height / 2, depth = 1) {
+    // 1. Camera World Space
     const pos = [...this.position];
 
     const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
@@ -1071,50 +1048,38 @@ class Camera {
     const rotatedY = mat4.multiply(mat4.create(), rotY, rotatedX);
     const rotatedZ = mat4.multiply(mat4.create(), rotZ, rotatedY);
 
-    //const invertedRotation = mat4.invert(mat4.create(), rotatedZ); 
-
-    //const rotatedMouse = vec4.transformMat4(vec4.create(), [x, y, z, 1], invertedRotation);
-
-    //const worldPoint = vec4.add(vec4.create(), pos, rotatedMouse);
-    //console.log(worldPoint);
-    //worldPoint[3] = 1;
-    //return worldPoint;
-
     const scaled = mat4.scale(mat4.create(), rotatedZ, this.scale);
 
     const world = scaled;
 
-    // 4. Camera World Space -> Inverted Perspective Projection
+    // Camera World Space -> Inverted Perspective Projection
     const invertedProjection = mat4.invert(mat4.create(), this.perspectiveMatrix);
-
-    // 5. Screen Point -> Inverted World Perspective Projection
-    // const invWorldPersProj = mat4.mul(mat4.create(), world, translated);
     const invWorldPersProj = mat4.mul(mat4.create(), world, invertedProjection);
 
-    // Adjust Z depth of plane...
-    //const adj = mat4.translate(mat4.create(), invWorldPersProj, [0, 0, -0.5]);
+    // 2. Screen Point -> Inverted World Perspective Projection
+    const dist = 1;
 
-    // 2. NDS -> Homogeneous Space
-    //    (flipped Z, because we are in a left-handed coordinate // system?).
+    // Normalize from screen coordinates.
+    X = 1 - (X / width);
+    Y = 1 - (Y / height);
+
+    // 2. -> Normalized Device Space (NDS)
+    let x = 2.0 * X - 1;
+    let y = 2.0 * Y - 1;
+
+    // NDS -> Homogeneous Space
+    // (flipped Z, because we are in a left-handed coordinate system.)
     const screenPos = vec4.fromValues(x, -y, 1, 1);
 
-    screenPos[0] *= dist;
-    screenPos[1] *= dist;
-    screenPos[2] *= dist;
-    screenPos[3] *= dist;
+    // Adjust Z depth of plane... (scale screen position)
+    const shiftedScreenPos = vec4.scale(vec4.create(), screenPos, depth);
 
     // Get near plane.
-    const xyz = vec4.transformMat4(vec4.create(), screenPos, invWorldPersProj);
+    const xyz = vec4.transformMat4(vec4.create(), shiftedScreenPos, invWorldPersProj);
 
-    // console.log(xyz[3]);
-
-    // 6. Subtract transformed point from camera position.
+    // Subtract transformed point from camera position.
     const worldPos = vec4.sub(vec4.create(), pos, xyz);
 
-    worldPos[3] = 1;
-    // 6.5 Translate world position by x, according to camera angle.
-
-    // 7. Translate point.
     return worldPos;
   }
 

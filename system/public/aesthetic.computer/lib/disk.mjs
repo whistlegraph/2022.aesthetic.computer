@@ -399,15 +399,15 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
     forms.filter(Boolean).forEach((form) => {
       // A. If the form has not been sent yet...
       if (formsSent[form.uid] === undefined) {
-        // Set the form to expire automatically if keep is false.
 
+        // Set the form to expire automatically if keep is false.
         formsToSend.push(form);
         formsSent[form.uid] = true;
-
         form.gpuVerticesSent = form.vertices.length;
+
       } else {
         // B. If the form has been sent, but the form has changed and
-        //    needs a partial update.
+        //    needs a partial update or is simply being redrawn.
 
         // Transform the geometry.
         if (form.gpuTransformed === true) {
@@ -419,10 +419,8 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
             scale: form.scale,
           });
           form.gpuTransformed = false;
-        }
-
-        // Add vertices to buffered forms.
-        if (form.vertices.length > form.gpuVerticesSent) {
+        } else if (form.vertices.length > form.gpuVerticesSent) {
+          // Add vertices to buffered forms.
           formsToSend.push({
             update: "form:buffered:add-vertices",
             uid: form.uid,
@@ -440,6 +438,13 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
           // form.gpuFlush = false;
           form.gpuReset = false;
           form.gpuVerticesSent = form.vertices.length;
+        } else {
+          // Simply tell the system we are still drawing the form... otherwise
+          // it will get cleared.
+          formsToSend.push({
+            update: "form:touch",
+            uid: form.uid
+          });
         }
       }
     });
