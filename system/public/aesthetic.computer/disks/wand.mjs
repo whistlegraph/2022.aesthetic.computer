@@ -53,7 +53,9 @@ const remoteWands = {};
 // 🥾 Boot
 async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
   geo: { Race, Quantizer }, num: { dist3d }, params, store, net, cursor, wipe }) {
-  // colorParams = params.map((str) => parseInt(str)); // Set params for color.
+  colorParams = params.map((str) => parseInt(str)); // Set params for color.
+  console.log(colorParams);
+  if (colorParams.length === 0) { colorParams = undefined; }
 
   // Clear the screen to transparent and remove the cursor.
   cursor("none");
@@ -158,7 +160,7 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
   wand = await (new Wand({
     Form, color, Quantizer, Race, store, dist3d, client
   }, "line", wandLength).init({
-    preload: false
+    preload: false, color: colorParams
   }));
 
   client.send("create", { color: wand.color }); // Tell anyone whose around to make a wand for us.
@@ -170,7 +172,7 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form }) {
   // Only draw a wand / a wand's drawing if it exists.
 
   // The lines & the furnitue and our wand.
-  form([floor, cross, wand?.form, wand?.drawing], cam);
+  form([floor, wand?.form, wand?.drawing], cam);
 
   // Everyone else's wands...
   help.each(remoteWands, w => form([w.form, w.drawing], cam));
@@ -487,7 +489,7 @@ class Wand {
       const colors = [];
 
       path.out.forEach(() => {
-        const vertexColor = this.api.color(...colorParams);
+        const vertexColor = this.api.color(...this.color);
         colors.push(vertexColor, vertexColor);
       });
 

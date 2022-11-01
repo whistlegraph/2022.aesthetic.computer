@@ -731,7 +731,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     //console.log("Render Budget: ", round((renderDelta / renderRate) * 100));
     // TODO: Output this number graphically.
 
-      //render3d();
+    //render3d();
     // Clear pen events.
     pen.events.length = 0;
     if (ThreeD?.penEvents) ThreeD.penEvents.length = 0;
@@ -1065,7 +1065,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // console.log(content.text);
 
       // TODO: Make this automatic for pieces that use 3d.
-      if (content.text === "wand") { loadThreeD(); }
+      console.log(content);
+      if (content.text === "wand" || content.text.indexOf("wand") === 0) {
+        loadThreeD();
+      }
 
       // Show an "audio engine: off" message.
       //if (content.noBeat === false && audioContext?.state !== "running") {
