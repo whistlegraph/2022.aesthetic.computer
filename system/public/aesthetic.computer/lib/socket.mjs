@@ -68,18 +68,14 @@ export class Socket {
   // Before passing messages to disk code, handle some system messages here.
   // Note: "reload" should only be defined when in development / debug mode.
   #preReceive({ id, type, content }, receive, reload) {
-
     if (type === "message") {
       // 🔴 TODO: Catch this JSON.parse error.
       const c = JSON.parse(content);
-
       if (c.text) {
-        // Someone else has connected as...
-        console.log(`📡 ${c.text}`);
-
+        console.log(`📡 ${c.text}`); // Someone else has connected as...
       } else {
         // Send a self-connection message here. (You are connected as...)
-        console.log(`${c.ip} → 🤹 ${c.playerCount} : @${c.id}`);
+        console.log(`📡 ${c.ip} → 🤹 ${c.playerCount} : @${c.id}`);
         this.id = c.id; // Set the user identifier.
       }
     } else if (type === "reload" && reload) {
@@ -92,6 +88,8 @@ export class Socket {
       this.kill();
       reload(c);
     } else {
+      if (type === "left")
+        console.log(`📡 ${content.id} has left. ${content.count} connections remain.`);
       receive?.(id, type, content); // Finally send the message to the client.
     }
   }

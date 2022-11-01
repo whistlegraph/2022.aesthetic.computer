@@ -2,23 +2,24 @@
 //       22.10.05.11.01
 
 // TODO
-// - [🔥] Add a "leave" event to the server.
-// - [] Fix broken GL lines.
+// - [] Add notifications to see who joins on the main screen / play a sound.
 // - [] Add touch controls.
-// - [] Other players should be represented by separate geometry.
-// - [] Fix scaling of 2D camera / don't scale but add depth to the screenToPoint / center function of Camera.
-// - [] Add colors to line.
-// - [] Switch to a new stick of color and length once a line runs out.
 // - [] Title screen.
-// - [] Add notifications to see who joins.
 // - [] Add text chat.
 // - [] Add voice chat.
+// - [] Add demo recording.
 // + Later
+// - [] Fix broken GL lines.
 // - [] Send the actual camera fov and near and far through to the gpu.
 // - [] Add circular buffer to wand lines (buffer-geometry) / infinite
 //      wand with dissolving trail.
 // + Done
-// - [-] Reset / reload a wand when it runs out.
+// - [x] Fix scaling of 2D camera / don't scale but add depth to the screenToPoint / center function of Camera.
+// - [x] Add colors to line.
+// - [x] Switch to a new stick of color and length once a line runs out.
+// - [x] Other players should be represented by separate geometry.
+// - [x] Reset / reload a wand when it runs out.
+// - [x] Add a "leave" event to the server.
 // - [x] Give each player their own wand.
 // - [x] Transmit wand position and length.
 // - [x] Along with status updates / resets.
@@ -54,7 +55,6 @@ const remoteWands = {};
 async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
   geo: { Race, Quantizer }, num: { dist3d }, params, store, net, cursor, wipe }) {
   colorParams = params.map((str) => parseInt(str)); // Set params for color.
-  console.log(colorParams);
   if (colorParams.length === 0) { colorParams = undefined; }
 
   // Clear the screen to transparent and remove the cursor.
@@ -82,8 +82,15 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
         preload: false, color: content.color
       }));
 
-      // Instantiate our wand for the client who send us their wand instantiation request.
-      client.send("create", { color: wand.color });
+      if (content.points?.length > 0) {
+        remoteWands[id].drawing.addPoints({
+          positions: content.points,
+          colors: content.points.map(() => remoteWands[id].color)
+        });
+      }
+
+      // Instantiate our wand for the client who sent us their wand instantiation request.
+      client.send("create", { color: wand.color, points: wand.drawing.vertices.map(v => [...v.pos]) });
     }
 
     if (type === "move") {
@@ -120,13 +127,14 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
 
     // Clear wand.
     if (type === "clear") {
-      if (client.id !== id) {
-        remoteWands[id]?.clear(content, true);
-      }
+      if (client.id !== id) remoteWands[id]?.clear(content, true);
     }
 
     // TODO: This needs to be handled from `socket.mjs` 
-    if (type === "leave") {
+    if (type === "left") {
+      if (client.id !== id) delete remoteWands[content.id]; //?.clear(content, true);
+      console.log("user left", content);
+      // If a user leaves and a remote wand. 
     }
 
   });
@@ -180,7 +188,7 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form }) {
   // Draw cursors for 2D screens.
   wipe(10, 0);
   if (lookCursor) ink(127).circle(pen.x, pen.y, 8);
-  else if (pen) {
+  else if (pen && wand) {
     const shadow = 30 * (1 - wand.progress);
     ink(127, 127).line(pen.x, pen.y, pen.x + shadow, pen.y + shadow);
   }
@@ -507,7 +515,7 @@ class Wand {
     if (this.api.dist3d(path.last, path.current)) this.tail = [path.last, path.current];
     if (this.api.dist3d(path.current, target)) { this.tail2 = [path.current, target]; }
 
-    if (maxedOut) this.clear();
+    if (maxedOut) this.clear(this.color);
     return maxedOut;
   }
 
@@ -542,7 +550,7 @@ class Wand {
     this.race = null;
     this.waving = false;
     this.tail = this.tail2 = undefined;
-    if (maxedOut) this.clear();
+    if (maxedOut) this.clear(this.color);
     return maxedOut;
   }
 

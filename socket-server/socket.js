@@ -20,7 +20,7 @@ import twilio from "twilio";
 const client = twilio(accountSid, authToken);
 
 // console.log(client);
-client.tokens.create({ttl: 3600}).then(token => {
+client.tokens.create({ ttl: 3600 }).then(token => {
   console.log("Twilio:", token);
 });
 
@@ -142,7 +142,7 @@ wss.on("connection", (ws, req) => {
   others(
     pack(
       "message",
-      JSON.stringify({ text: `🤖 ${ip} : ${connectionId} has joined.` }),
+      JSON.stringify({ text: `🤖 ${ip} : ${connectionId} has joined. There are ${content.playerCount} connections open.` }),
       id
     )
   );
@@ -160,8 +160,8 @@ wss.on("connection", (ws, req) => {
     // others(JSON.stringify(msg));
   });
 
-  /* Note: for some reason pinging was disconnecting users over and over again...
-           TBD: Is pinging even necessary?
+  //Note: for some reason pinging was disconnecting users over and over again...
+  //         TBD: Is pinging even necessary?
 
   ws.isAlive = true; // For checking persistence between ping-pong messages.
 
@@ -178,8 +178,12 @@ wss.on("connection", (ws, req) => {
   ws.on("pong", () => (ws.isAlive = true)); // Receive a pong.
 
   // Stop pinging once the socket closes.
-  wss.on("close", () => clearInterval(interval));
-  */
+  // More info: https://stackoverflow.com/a/49791634/8146077
+  ws.on("close", () => {
+    everyone(pack("left", { id, count: wss.clients.size }));
+    clearInterval(interval);
+  });
+
 });
 
 // Sends a message to all connected clients.
