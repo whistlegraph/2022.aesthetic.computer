@@ -1824,7 +1824,6 @@ async function makeFrame({ data: { type, content } }) {
       if (reframe || glazeAfterReframe) {
         sendData.reframe = reframe || glazeAfterReframe !== undefined;
         if (glazeAfterReframe) {
-          console.log(glazeAfterReframe)
           send(glazeAfterReframe);
           glazeAfterReframe = undefined;
         }
