@@ -3,20 +3,21 @@
 
 // TODO
 // - [] Add touch controls.
-//    - [] [F] [B] [L] [R] [W]
-// - [] Add secret button to give up on a wand earlier / cancel a wand.
-//   - [] Keyboard button - and oculus button.
-//   - [] Needs to be tied to the server.
+//    - [F] [B] [W/L]
+//    - [x] Wandline.
 // - [] Make a better startup screen.
 //   - [] Get rid of ThreeJS flicker box.
 //   - [] Paint something until ThreeJS has loaded.
 //   - [] Give paint a callback so it knows when the GPU is online?
+// - [] Test VR.
+// + Later
+// - [] Add secret button to give up on a wand earlier / cancel a wand.
+//   - [] Keyboard button - and oculus button.
+//   - [] Needs to be tied to the server.
 // - [] Conditionally draw end of tail based on its distance?
 //   - [] Maybe tail should be a different color for the main user.
 //   - [] Slightly lighter or darker version of chosen color?
 // - [] Leave drawing up / fade drawing.
-// - [] Test VR.
-// + Later
 // - [] Add text chat.
 //   - [] Implement for both computer, phone, and headset.
 //                                                ^ will require getting tex into 3d 
@@ -27,6 +28,9 @@
 // - [] Add circular buffer to wand lines (buffer-geometry) / infinite
 //      wand with dissolving trail.
 // + Done
+// - [x] Wands need palettes.
+// - [x] Don't draw with one finger on Oculus.
+// - [x] All players need to start at the same position.
 // - [x] Segmented, colored wands.
 // - [x] Fix resolution not updating with mouse. (Update camera transform when pointing a ray.)
 // - [x] Add notifications to see who joins on the main screen.
@@ -59,6 +63,8 @@
 // - [x] "Flat" 2D controls to allow better participation on 2d screens.
 
 import { font1 } from "./common/fonts.mjs";
+import { MetaBrowser } from "../lib/platform.mjs";
+
 const { entries, keys } = Object;
 const glyphs = {};
 
@@ -179,7 +185,7 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: {
 
   });
 
-  cam = new Camera(80, { z: 4, y: 1.8, scale: [1, 1, 1] }); // camera with fov
+  cam = new Camera(80, { z: 0, y: 1.8, scale: [1, 1, 1] }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
 
 
@@ -271,6 +277,20 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
     ink(color).printLine(wandCount, glyphs, 4, 4, 6, 2, 0);
   }
 
+  // Show wandLine
+  if (wand) {
+    const y = screen.height - 1;
+    let length = 0;
+    wand.segments.forEach(seg => {
+      const start = length;
+      const end = length + seg.length / wand.totalLength * screen.width; 
+      if (end - start > 1) {
+        ink(...seg.color.slice(0, 3), 200).line(start, y, end - 1, y);
+      }
+      length = end;
+    });
+  }
+
   // Draw current wand's tail.
   if (wand?.tail) {
     //ink(0, 255, 0).form(
@@ -282,7 +302,7 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
 
   if (wand?.tail2) {
     ink().form(
-    //ink(wand.currentColor).form(
+      //ink(wand.currentColor).form(
       new Form({ type: "line", positions: wand.tail2, keep: false }, { alpha: 1 }),
       cam
     );
@@ -409,9 +429,11 @@ function act({ event: e, color, screen, download, num: { timestamp } }) {
   if (e.is("lift:3")) S = false;
 
   // One finger to draw.
-  if(e.device === "touch") {
-    if (e.is("touch:1")) wand.start(cam.ray(e.x, e.y, wandDepth2D), false); // ✏️ Start a mark.
-    if (e.is("lift:1")) wand.stop(); // 🚩 End a mark.
+  if (!MetaBrowser) {
+    if (e.device === "touch") {
+      if (e.is("touch:1")) wand.start(cam.ray(e.x, e.y, wandDepth2D), false); // ✏️ Start a mark.
+      if (e.is("lift:1")) wand.stop(); // 🚩 End a mark.
+    }
   }
 
   // 💻️ Keyboard: WASD for movement, arrows for looking.
@@ -524,6 +546,49 @@ export { boot, sim, paint, act, beat, leave };
 
 // 📚 Library
 
+const wandPalettes = {
+  rgb: [
+    [255, 0, 0, 255],
+    [0, 255, 0, 255],
+    [0, 0, 255, 255]
+  ],
+  zebra: [
+    [200, 200, 200, 255],
+    [100, 100, 100, 255],
+    [200, 200, 200, 255],
+    [100, 100, 100, 255],
+  ],
+  cmy: [
+    [0, 255, 255, 255],
+    [255, 0, 255, 255],
+    [255, 255, 0, 255]
+  ],
+  roygbiv: [
+    [255, 0, 0, 255],
+    [255, 127, 0, 255],
+    [255, 255, 0, 255],
+    [0, 200, 0, 255],
+    [0, 0, 255, 255],
+    [200, 0, 100, 255],
+    [255, 0, 200, 255]
+  ],
+  red: [
+    [255, 0, 0, 255]
+  ],
+  blue: [
+    [0, 0, 255, 255]
+  ],
+  green: [
+    [0, 255, 0, 255]
+  ],
+  yellow: [
+    [255, 255, 0, 255]
+  ],
+  pink: [
+    [255, 200, 200, 255]
+  ]
+};
+
 class Wand {
   // TODO
   // - [] Add segmented wands: wands ==hasMany=> segments
@@ -545,6 +610,8 @@ class Wand {
   segmentMarkers;
   currentLength;
   totalLength;
+
+  lastPalette;
 
   // The below fields are mostly for the "line" type, but could also be shared
   // by many wand types, depending on the design.
@@ -605,18 +672,21 @@ class Wand {
       const segmentCount = rr(4, 6);
       const genSegs = [];
 
-      for (let i = 0; i < segmentCount; i += 1) {
-        genSegs.push({
-          length: ch(0.02, 0.02, 0.02, 0.02), color: ch(
-            [rr(200, 255), 0, 0, 255],
-            [0, rr(200, 255), 0, 255],
-            [0, 0, rr(200, 255), 255],
-            [rr(200, 255), rr(200, 255), 0, 255],
-            [0, rr(200, 255), rr(200, 255), 255],
-            [rr(200, 255), 0, rr(200, 255), 255],
-            [rr(200, 255), rr(200, 255), rr(200, 255), 255],
-          )
-        });
+      const k = keys(wandPalettes);
+      let palette = wandPalettes[k[this.api.randIntRange(0, k.length - 1)]];
+
+      while (palette === this.lastPalette) {
+        palette = wandPalettes[k[this.api.randIntRange(0, k.length - 1)]];
+      }
+
+      this.lastPalette = palette;
+
+      for (let i = 0; i < palette.length; i += 1) {
+        let len;
+        if (palette.length === 1) len = 0.1;
+        if (palette === wandPalettes.roygbiv) len =  0.02;
+        else len = ch(0.04, 0.02, 0.03, 0.05);
+        genSegs.push({ length: len, color: palette[i] });
       }
 
       this.segments = genSegs;
