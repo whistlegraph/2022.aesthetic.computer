@@ -4,7 +4,7 @@
 // TODO
 // - [] Add touch controls.
 //    - [F] [B] [W/L]
-//    - [x] Wandline.
+// - [] Adjust drawing depth for phone screen.
 // - [] Make a better startup screen.
 //   - [] Get rid of ThreeJS flicker box.
 //   - [] Paint something until ThreeJS has loaded.
@@ -28,6 +28,8 @@
 // - [] Add circular buffer to wand lines (buffer-geometry) / infinite
 //      wand with dissolving trail.
 // + Done
+// - [x] Wandline.
+// - [x] Don't draw self wand on phone screen.
 // - [x] Wands need palettes.
 // - [x] Don't draw with one finger on Oculus.
 // - [x] All players need to start at the same position.
@@ -81,6 +83,8 @@ let showWandCountDuration = 300;
 let showWandCountProgress = 0;
 const wandLength = 4096; // The maximum number of points per each wand.
 const remoteWands = {}; // A container for wands that come off the network.
+
+let lastDevice;
 
 const beeps = [];
 let beatCount = 0n;
@@ -234,7 +238,14 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
 
   // The lines & the furnitue and our wand.
   wand?.generateForm();
-  form([floor, wand?.form, wand?.drawing], cam);
+
+  if (pen?.device !== "touch" && lastDevice !== "touch") {
+    form([floor, wand?.form, wand?.drawing], cam);
+  } else {
+    form([floor, wand?.drawing], cam);
+  }
+
+  if (pen && pen.device) lastDevice = pen.device;
 
   // Everyone else's wands...
   help.each(remoteWands, w => {
@@ -246,7 +257,7 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
   wipe(10, 0);
 
   if (lookCursor) ink(127).circle(pen.x, pen.y, 8);
-  else if (pen && wand) {
+  else if (pen && wand && pen?.device !== "touch") {
     const shadow = 30 * (1 - wand.progress);
     ink(127, 127).line(pen.x, pen.y, pen.x + shadow, pen.y + shadow);
   }
@@ -260,7 +271,7 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
     const hheight = height / 2;
     const hwidth = width / 2;
 
-    ink(...wand?.color.slice(0, 3), 180).printLine(
+    ink(...wand.currentSegment.color.slice(0, 3), 180).printLine(
       title, glyphs,
       (screen.width / 2) - hwidth, (screen.height / 2) - hheight,
       spacing, scale, 0
@@ -270,7 +281,7 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
   if (showWandCount && wand) { // Print wand count.
     const wandCount = keys(remoteWands).length + 1;
     const hd = showWandCountDuration / 2;
-    const color = [...wand?.color.slice(0, 3), 180];
+    const color = [...wand?.currentSegment.color.slice(0, 3), 180];
     if (showWandCountProgress > hd) { // Fade after half the duration passed.
       color[3] = 180 * (1 - ((showWandCountProgress - hd) / hd));
     }
@@ -421,20 +432,27 @@ function act({ event: e, color, screen, download, num: { timestamp } }) {
 
   // 🖖 Touch
   // Two fingers for move forward.
-  if (e.is("touch:2")) W = true;
-  if (e.is("lift:2")) W = false;
+  //if (e.is("touch:2")) W = true;
+  //if (e.is("lift:2")) W = false;
 
   // Three fingers for moving backward.
-  if (e.is("touch:3")) S = true;
-  if (e.is("lift:3")) S = false;
+  //if (e.is("touch:3")) S = true;
+  //if (e.is("lift:3")) S = false;
 
   // One finger to draw.
   if (!MetaBrowser) {
+    console.log();
     if (e.device === "touch") {
       if (e.is("touch:1")) wand.start(cam.ray(e.x, e.y, wandDepth2D), false); // ✏️ Start a mark.
       if (e.is("lift:1")) wand.stop(); // 🚩 End a mark.
     }
   }
+
+  // 👀 Look around if 2nd mouse button is held.
+  // if (e.is("draw") && e.device === "touch") {
+  //  cam.rotX -= e.delta.y / 3.5;
+  //  cam.rotY -= e.delta.x / 3.5;
+  // }
 
   // 💻️ Keyboard: WASD for movement, arrows for looking.
   if (e.is("keyboard:down:w")) W = true;
