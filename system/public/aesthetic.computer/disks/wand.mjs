@@ -863,9 +863,9 @@ class Wand {
       maxedOut = this.drawing.addPoints({ positions: path.out, colors });
 
       if (!maxedOut) {
+
         const totalSegmentLength = this.totalLength;
         const segments = this.segments;
-
         const progressThisTick = (path.out.length / this.drawing.MAX_POINTS) * totalSegmentLength;
 
         for (let i = 0; i < segments.length; i += 1) {
@@ -880,6 +880,7 @@ class Wand {
             break;
           }
         }
+
       }
     }
 
@@ -906,26 +907,24 @@ class Wand {
 
     let maxedOut;
 
-    /*
-    if (start && end) {
-      const q = new this.api.Quantizer({ step: this.race.step });
+    if (this.currentSegment.length !== this.currentSegment.originalLength) {
+      if (start && end) {
+        const q = new this.api.Quantizer({ step: this.race.step });
 
-      q.start(start);
-      const path = q.to(end);
+        q.start(start);
+        const path = q.to(end);
 
-      console.log(path.out);
-
-      if (path.out.length > 0) {
+        if (path.out.length > 0) {
         const colors = []; // Note: Could this whole color loop be shorter?
-        path.out.forEach((p) => {
-          const vertexColor = this.api.color(...colorParams);
+        path.out.forEach(() => {
+          const vertexColor = this.api.color(this.currentSegment.color);
           colors.push(vertexColor, vertexColor);
         });
 
-        maxedOut = this.drawing.addPoints({ positions: path.out, colors });
+          maxedOut = this.drawing.addPoints({ positions: path.out, colors });
+        }
       }
     }
-    */
 
     this.race = null;
     this.waving = false;
