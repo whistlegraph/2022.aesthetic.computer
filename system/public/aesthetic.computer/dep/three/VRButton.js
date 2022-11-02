@@ -7,7 +7,7 @@ class VRButton {
 	static createButton(renderer, started, ended) {
 
 		const button = document.createElement('button');
-		button.textContent = 'oo';
+		button.textContent = 'wave';
 
 		function showEnterVR( /*device*/) {
 

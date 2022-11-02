@@ -2,6 +2,7 @@
 //       22.10.05.11.01
 
 // TODO
+// - [] Mess with phone density.
 // - [] Add touch controls.
 //    - [F] [B] [W/L]
 // - [] Adjust drawing depth for phone screen.
