@@ -68,8 +68,8 @@ function boot({
   query,
   needsPaint,
 }) {
-  resize(64, 64);
-  cursor("tiny");
+  // cursor("tiny"); // TODO: Why doesn't cursor tiny work here? 22.11.01.16.59
+  resize(64, 64); // It might have to do with this resize call?
 
   // Read some basic query parameters for configuring the resolution.
   //const params = new URLSearchParams(query);

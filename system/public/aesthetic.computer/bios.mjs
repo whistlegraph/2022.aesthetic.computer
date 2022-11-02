@@ -528,7 +528,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         "sound-processor",
         {
           outputChannelCount: [2],
-          processorOptions: { bpm: sound.bpm[0], debug },
+          processorOptions: { bpm: sound.bpm, debug },
         }
       );
 
@@ -651,7 +651,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // Beat
 
   // Set the default bpm.
-  sound.bpm.fill(bpm);
+  sound.bpm = bpm;
 
   function requestBeat(time) {
     send(
@@ -668,9 +668,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   function receivedBeat(content) {
     // BPM
-    if (sound.bpm[0] !== content.bpm[0]) {
-      sound.bpm = new Float32Array(content.bpm);
-      updateMetronome(sound.bpm[0]);
+    if (sound.bpm !== content.bpm) {
+      sound.bpm = content.bpm;
+      updateMetronome(sound.bpm);
     }
 
     // SQUARE
@@ -708,7 +708,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         pixels: screen.pixels.buffer,
         inFocus: true, // document.hasFocus(),
         audioTime: audioContext?.currentTime,
-        audioBpm: 80,//sound.bpm[0], // TODO: Turn this into a messaging thing.
+        audioBpm: sound.bpm, // TODO: Turn this into a messaging thing.
         width: canvas.width,
         height: canvas.height,
         // TODO: Do all fields of `pointer` need to be sent? 22.09.19.23.30

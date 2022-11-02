@@ -10,7 +10,6 @@ import chokidar from "chokidar";
 import "dotenv/config";
 
 // UDP Server
-
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 
@@ -41,13 +40,6 @@ io.onConnection(channel => {
     io.room(channel.roomId).emit('chat message', data)
   })
 });
-
-
-
-
-
-
-// 
 
 // File Watching for Remote Development Mode (HTTP Server)
 let port = 8080;
@@ -142,7 +134,7 @@ wss.on("connection", (ws, req) => {
   others(
     pack(
       "message",
-      JSON.stringify({ text: `🤖 ${ip} : ${connectionId} has joined. There are ${content.playerCount} connections open.` }),
+      JSON.stringify({ text: `${connectionId} has joined from ${ip}. Connections open: ${content.playerCount}` }),
       id
     )
   );

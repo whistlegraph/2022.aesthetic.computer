@@ -1111,8 +1111,8 @@ async function makeFrame({ data: { type, content } }) {
       time: content.time,
       // Get the bpm with bpm() or set the bpm with bpm(newBPM).
       bpm: function (newBPM) {
-        if (newBPM) content.bpm[0] = newBPM;
-        return content.bpm[0];
+        if (newBPM) content.bpm = newBPM;
+        return content.bpm;
       },
     };
 

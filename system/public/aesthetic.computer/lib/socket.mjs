@@ -89,7 +89,7 @@ export class Socket {
       reload(c);
     } else {
       if (type === "left")
-        console.log(`📡 ${content.id} has left. ${content.count} connections remain.`);
+        console.log(`📡 ${content.id} has left. Connections open: ${content.count}`);
       receive?.(id, type, content); // Finally send the message to the client.
     }
   }

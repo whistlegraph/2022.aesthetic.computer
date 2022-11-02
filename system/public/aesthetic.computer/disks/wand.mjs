@@ -2,21 +2,33 @@
 //       22.10.05.11.01
 
 // TODO
-// - [] Get font loaded.
-// - [] Play a sound on exit or enter.
-// - [] Add notifications to see who joins on the main screen.
-// - [] Title screen.
-// - [] Add touch controls.
+// - [🍦] Add touch controls.
+// - [] Leave drawing up / fade drawing.
+// - [] Add button to give up on wand earlier / quit wand.
 // - [] Segmented, colored wands.
+// - [] Conditionally draw end of tail based on its distance?
+//   - [] Maybe tail should be a different color for the main user.
+//   - [] Slightly lighter or darker version of chosen color?
+// - [] Make a better startup screen.
+//   - [] Get rid of ThreeJS flicker box.
+//   - [] Paint something until ThreeJS has loaded.
+//   - [] Give paint a callback so it knows when the GPU is online?
+// + Later
 // - [] Add text chat.
+//   - [] Implement for both computer, phone, and headset.
+//                                                ^ will require getting tex into 3d 
 // - [] Add voice chat.
 // - [] Add demo recording and playback with vocals.
-// + Later
 // - [] Fix broken GL lines.
 // - [] Send the actual camera fov and near and far through to the gpu.
 // - [] Add circular buffer to wand lines (buffer-geometry) / infinite
 //      wand with dissolving trail.
 // + Done
+// - [x] Add notifications to see who joins on the main screen.
+// - [x] Get font loaded.
+// - [x] Something is going on with colors.
+// - [x] Title screen.
+// - [x] Play a little sound on exit or enter.
 // - [x] Fix scaling of 2D camera / don't scale but add depth to the screenToPoint / center function of Camera.
 // - [x] Add colors to line.
 // - [x] Switch to a new stick of color and length once a line runs out.
@@ -41,6 +53,10 @@
 // - [x] Make 2D camera properly scaled.
 // - [x] "Flat" 2D controls to allow better participation on 2d screens.
 
+import { font1 } from "./common/fonts.mjs";
+const { entries, keys } = Object;
+const glyphs = {};
+
 let cam, dolly; // Camera system.
 let wand; // Player / line geometry.
 let floor, cross, tri; // Room Geometry.
@@ -49,18 +65,32 @@ let client; // Network.
 let colorParams = [255, 255, 255, 255];
 let W, S, A, D, UP, DOWN, LEFT, RIGHT; // Controls
 let wandDepth2D = 0.3; // The distance from the near plane for drawing on screens.
+let showWandCount = true;
+let showWandCountDuration = 300;
+let showWandCountProgress = 0;
 const wandLength = 4096; // The maximum number of points per each wand.
 const remoteWands = {}; // A container for wands that come off the network.
 
+const beeps = [];
+let beatCount = 0n;
+
 // 🥾 Boot
-async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
+async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: { preload },
   geo: { Race, Quantizer }, num: { dist3d }, params, store, net, cursor, wipe }) {
   colorParams = params.map((str) => parseInt(str)); // Set params for color.
-  if (colorParams.length === 0) { colorParams = undefined; }
+  if (colorParams.filter(Boolean).length === 0) { colorParams = undefined; } // Set up empty params for randomization.
 
-  // Clear the screen to transparent and remove the cursor.
+  entries(font1).forEach(([glyph, location]) => {
+    preload(`aesthetic.computer/disks/drawings/font-1/${location}.json`).then(
+      (res) => {
+        glyphs[glyph] = res;
+      }
+    );
+  });
+
+  // Clear the screen to black and remove the cursor.
   cursor("none");
-  wipe(0, 0);
+  wipe(0);
 
   // Connect to the network.
   client = net.socket(async (id, type, content) => {
@@ -86,6 +116,10 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
 
       // Instantiate our wand for the client who sent us their wand instantiation request.
       client.send("create", { color: wand.color, points: wand.drawing.vertices.map(v => [...v.pos]) });
+
+      showWandCount = true;
+      showWandCountProgress = 0;
+      beeps[0] = { event: "join" };
     }
 
     if (type === "start" && client.id !== id) {
@@ -110,23 +144,22 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
 
     if (type === "stop" && client.id !== id) remoteWands[id]?.stop(true);
 
-    // Add points to wand... or make new wand associated with a client ID if it
-    // doesn't exist. 
-    if (type === "add") {
-      // In case we are sending messages to "everyone".
-      if (client.id !== id) remoteWands[id]?.drawing.addPoints(content); // Add points locally.
+    // Directly points to wand... (like when loading from start)
+    if (type === "add" && client.id !== id) {
+      remoteWands[id]?.drawing.addPoints(content); // Add points locally.
     }
 
     // Clear wand.
-    if (type === "clear") {
-      if (client.id !== id) remoteWands[id]?.clear(content, true);
+    if (type === "clear" && client.id !== id) {
+      remoteWands[id]?.clear(content, true);
     }
 
     // TODO: This needs to be handled from `socket.mjs` 
-    if (type === "left") {
-      if (client.id !== id) delete remoteWands[content.id]; //?.clear(content, true);
-      console.log("user left", content);
-      // If a user leaves and a remote wand. 
+    if (type === "left" && client.id !== id && remoteWands[content.id]) {
+      delete remoteWands[content.id];
+      showWandCount = true;
+      showWandCountProgress = 0;
+      beeps[0] = { event: "left" };
     }
 
   });
@@ -167,7 +200,7 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color,
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({ ink, pen, pen3d, wipe, help, screen, Form, form }) {
+function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randIntRange } }) {
 
   // Only draw a wand / a wand's drawing if it exists.
 
@@ -179,10 +212,38 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form }) {
 
   // Draw cursors for 2D screens.
   wipe(10, 0);
+
   if (lookCursor) ink(127).circle(pen.x, pen.y, 8);
   else if (pen && wand) {
     const shadow = 30 * (1 - wand.progress);
     ink(127, 127).line(pen.x, pen.y, pen.x + shadow, pen.y + shadow);
+  }
+
+
+  if (wand?.started === false) { // Print title.
+    const title = "Wand";
+    const scale = 2;
+    const spacing = 6;
+    const width = title.length * (scale * spacing);
+    const height = 10 * scale;
+    const hheight = height / 2;
+    const hwidth = width / 2;
+
+    ink(...wand?.color.slice(0, 3), 180).printLine(
+      title, glyphs,
+      (screen.width / 2) - hwidth, (screen.height / 2) - hheight,
+      spacing, scale, 0
+    );
+  }
+
+  if (showWandCount && wand) { // Print wand count.
+    const wandCount = keys(remoteWands).length + 1;
+    const hd = showWandCountDuration / 2;
+    const color = [...wand?.color.slice(0, 3), 180];
+    if (showWandCountProgress > hd) { // Fade after half the duration passed.
+      color[3] = 180 * (1 - ((showWandCountProgress - hd) / hd));
+    }
+    ink(color).printLine(wandCount, glyphs, 4, 4, 6, 2, 0);
   }
 
   // Draw current wand's tail.
@@ -219,22 +280,6 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form }) {
       );
     }
   });
-
-  // Draw a colored tail for any remote wands.
-  /*
-  help.each(remoteWands, w => {
-    if (!w.waving) return;
-    const start = w.form.position;
-    const end = w.drawing.vertices[w.drawing.vertices.length - 1]?.pos;
-    console.log(start, end);
-    if (start && end) {
-      ink(w.color).form(
-        new Form({ type: "line", positions: [start, end], keep: false }, { alpha: 1 }),
-        cam
-      );
-    }
-  });
-  */
 
 }
 
@@ -290,6 +335,15 @@ function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
     if (wand.waving) {
       if (wand.vr) wand.goto([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0]);
       else wand.goto(cam.ray(pen.x, pen.y, wandDepth2D))
+    }
+
+    // Timing for showWandCount duration.
+    if (showWandCount) {
+      showWandCountProgress += 1;
+      if (showWandCountProgress === showWandCountDuration) {
+        showWandCount = false;
+        showWandCountProgress = 0;
+      }
     }
   }
 }
@@ -383,7 +437,24 @@ function act({ event: e, color, screen, download, num: { timestamp } }) {
 }
 
 // 💗 Beat
-function beat($api) { }
+function beat({ sound: { bpm, square } }) {
+  if (beatCount === 0n) bpm(1800); // Set bpm to 1800 ~ 30fps }
+  beatCount += 1n; // TODO: This should go into the main API. 22.11.01.17.43
+  if (beatCount < 30n * 2n) { beeps.length = 0; return; } // Wait ~ 2 sec to prevent mass bleeps.
+  // TODO: ^ This is a little janky and should be tied to an event.
+
+  beeps.forEach((beep) => {
+    square({
+      tone: beep.event === "join" ? 200 : 50,
+      beats: 0.5,
+      attack: 0.1,
+      decay: 0.9,
+      volume: 0.15
+    });
+  });
+
+  beeps.length = 0;
+}
 
 // 👋 Leave
 function leave({ store }) {
@@ -401,6 +472,7 @@ class Wand {
   // TODO
   // - [] Add segmented wands: wands ==hasMany=> segments
   cleared = false;
+  started = false;
 
   api;
   type;
@@ -486,6 +558,7 @@ class Wand {
   }
 
   start(target, vr = true, remote) {
+    this.started = true;
     this.vr = vr;
     // *** Markmaking Configuration ***
     const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
@@ -510,7 +583,7 @@ class Wand {
       this.lastTarget[0] === target[0] &&
       this.lastTarget[1] === target[1] &&
       this.lastTarget[2] === target[2]) {
-        return;
+      return;
     }
 
     this.lastTarget = target;
@@ -589,6 +662,7 @@ class Wand {
 
   // Remove the drawing and the wand.
   clear(color, remote = false) {
+    // this.started = false;
     this.stop();
     this.init({ preload: false, color }); // Reload this wand.
     if (!remote) this.api.client.send("clear", this.color); // Send a clear event to the server.
