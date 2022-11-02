@@ -69,7 +69,7 @@
 // - [x] "Flat" 2D controls to allow better participation on 2d screens.
 
 import { font1 } from "./common/fonts.mjs";
-import { MetaBrowser } from "../lib/platform.mjs";
+import { MetaBrowser, iOS } from "../lib/platform.mjs";
 
 const { entries, keys } = Object;
 const glyphs = {};
@@ -81,7 +81,7 @@ let lookCursor = false;
 let client; // Network.
 let colorParams = [255, 255, 255, 255];
 let W, S, A, D, UP, DOWN, LEFT, RIGHT; // Controls
-let wandDepth2D = 0.3; // The distance from the near plane for drawing on screens.
+let wandDepth2D = 0.3; //iOS ? 0.1 : 0.3; // The distance from the near plane for drawing on screens.
 let showWandCount = true;
 let showWandCountDuration = 300;
 let showWandCountProgress = 0;
@@ -821,8 +821,8 @@ class Wand {
     const quantizedSmoothing = true; // Regulate all segments while still smoothing.
     //const step = vr ? 0.0010 : 0.025; // Step size / overall quantization.
     //const speed = vr ? 30 : 20; // Racing speed.
-    const step = 0.0010;
-    const speed = 20;
+    const step = iOS ? 0.0010 : 0.0010;
+    const speed = iOS ? 40 : 20;
 
     this.race =
       smoothing === true
