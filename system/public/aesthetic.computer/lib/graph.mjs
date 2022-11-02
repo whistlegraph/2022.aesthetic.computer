@@ -1037,6 +1037,8 @@ class Camera {
   // Get an XYZ position on a plane at a given depth,
   // relative to screen coordinates.
   ray(X = width / 2, Y = height / 2, depth = 1) {
+    this.#perspective(this.fov);
+
     // 1. Camera World Space
     const pos = [...this.position];
 
@@ -1243,7 +1245,7 @@ class Form {
     if (vertices?.length > 0) {
       this.vertices = vertices;
       this.uvs = uvs;
-      this.indices = indices;
+      this.indices = indices || repeat(vertices.length, (i) => i);
     }
 
     // Switch fill to transform if the was skipped.

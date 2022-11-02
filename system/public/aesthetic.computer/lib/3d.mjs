@@ -257,17 +257,42 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
     // *** ✏️ Line ***
     if (f.type === "line") {
-      const material = new THREE.LineBasicMaterial({
-        color: rgbToHex(...(f.color || color)),
-      });
+
+      let material;
+
+      if (f.vertices[0].color) { // Only use a gloabl color if vertices don't have color.
+        material = new THREE.LineBasicMaterial();
+      } else {
+        material = new THREE.LineBasicMaterial({ color: rgbToHex(...(f.color || color)) });
+      }
+
       material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
       material.linewidth = 1;
+      material.vertexColors = f.vertices[0].color ? true : false;
+      material.vertexAlphas = f.vertices[0].color?.length === 4 ? true : false;
 
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
+      const pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+      const colors = new Float32Array(points.length * 4);
+
+      for (let i = 0; i < pointColors.length; i += 1) {
+        const colStart = i * 4;
+        colors[colStart] = pointColors[i].x / 255;
+        colors[colStart + 1] = pointColors[i].y / 255;
+        colors[colStart + 2] = pointColors[i].z / 255;
+        colors[colStart + 3] = pointColors[i].w / 255;
+      }
+
+      geometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(colors, 4, true)
+      );
+
       const line = new THREE.Line(geometry, material);
 
       line.translateX(f.position[0]);
@@ -289,9 +314,15 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     }
 
     if (f.type === "line:buffered") {
-      const material = new THREE.LineBasicMaterial({
-        color: rgbToHex(...(f.color || color)),
-      });
+
+      let material;
+
+      if (f.color) { // Only use a gloabl color if vertices don't have color.
+        material = new THREE.LineBasicMaterial({ color: rgbToHex(...(f.color || color)) });
+      } else {
+        material = new THREE.LineBasicMaterial();
+      }
+
       material.side = THREE.DoubleSide;
       material.transparent = true;
       material.opacity = f.alpha;
@@ -588,6 +619,7 @@ export function render(now) {
 
     // Garbage is collected in `bios` under `BIOS:RENDER`
     renderer.render(scene, camera);
+
   }
 }
 

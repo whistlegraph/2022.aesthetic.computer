@@ -2,17 +2,17 @@
 //       22.10.05.11.01
 
 // TODO
-// - [🍦] Add touch controls.
-// - [] Leave drawing up / fade drawing.
+// - [] Add touch controls.
 // - [] Add button to give up on wand earlier / quit wand.
-// - [] Segmented, colored wands.
-// - [] Conditionally draw end of tail based on its distance?
-//   - [] Maybe tail should be a different color for the main user.
-//   - [] Slightly lighter or darker version of chosen color?
 // - [] Make a better startup screen.
 //   - [] Get rid of ThreeJS flicker box.
 //   - [] Paint something until ThreeJS has loaded.
 //   - [] Give paint a callback so it knows when the GPU is online?
+// - [] Conditionally draw end of tail based on its distance?
+//   - [] Maybe tail should be a different color for the main user.
+//   - [] Slightly lighter or darker version of chosen color?
+// - [] Leave drawing up / fade drawing.
+// - [] Test VR.
 // + Later
 // - [] Add text chat.
 //   - [] Implement for both computer, phone, and headset.
@@ -24,6 +24,8 @@
 // - [] Add circular buffer to wand lines (buffer-geometry) / infinite
 //      wand with dissolving trail.
 // + Done
+// - [x] Segmented, colored wands.
+// - [x] Fix resolution not updating with mouse. (Update camera transform when pointing a ray.)
 // - [x] Add notifications to see who joins on the main screen.
 // - [x] Get font loaded.
 // - [x] Something is going on with colors.
@@ -76,7 +78,7 @@ let beatCount = 0n;
 
 // 🥾 Boot
 async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: { preload },
-  geo: { Race, Quantizer }, num: { dist3d }, params, store, net, cursor, wipe }) {
+  geo: { Race, Quantizer }, num: { dist3d, map, randIntRange }, help: { choose }, params, store, net, cursor, wipe }) {
   colorParams = params.map((str) => parseInt(str)); // Set params for color.
   if (colorParams.filter(Boolean).length === 0) { colorParams = undefined; } // Set up empty params for randomization.
 
@@ -102,20 +104,31 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: {
       if (remoteWands[id] !== undefined) return; // Don't instantiate anyone's wand more than once.
 
       remoteWands[id] = await (new Wand({
-        Form, color, Quantizer, Race, store, dist3d, client
+        Form, color, Quantizer, Race, store, dist3d, client, map, randIntRange, choose
       }, "line", wandLength).init({
-        preload: false, color: content.color
+        preload: false,
+        color: content.color,
+        segments: content.segments,
+        segmentMarkers: content.segmentMarkers,
+        totalLength: content.totalLength,
       }));
 
       if (content.points?.length > 0) {
         remoteWands[id].drawing.addPoints({
           positions: content.points,
-          colors: content.points.map(() => remoteWands[id].color)
+          colors: content.colors
         });
       }
 
       // Instantiate our wand for the client who sent us their wand instantiation request.
-      client.send("create", { color: wand.color, points: wand.drawing.vertices.map(v => [...v.pos]) });
+      client.send("create", {
+        color: wand.color,
+        segments: wand.segments, // I really don't have to be passing in both these values here... 22.11.01.22.17
+        segmentMarkers: wand.segmentMarkers,
+        totalLength: wand.totalLength,
+        points: wand.drawing.vertices.map(v => [...v.pos]),
+        colors: wand.drawing.vertices.map(v => [...v.color])
+      });
 
       showWandCount = true;
       showWandCountProgress = 0;
@@ -135,10 +148,9 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: {
         const rw = remoteWands[id];
         if (rw === undefined) return;
         const form = rw.form;
-        form.turn({ x: 0, y: 0, z: 0 }); // TODO: Is this still necessary?
-        form.position = content.position;
-        form.rotation = content.rotation;
-        form.scale = content.scale;
+        rw.position = content.position;
+        rw.rotation = content.rotation;
+        // form.scale = content.scale;
       }
     }
 
@@ -151,7 +163,7 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: {
 
     // Clear wand.
     if (type === "clear" && client.id !== id) {
-      remoteWands[id]?.clear(content, true);
+      remoteWands[id]?.clear(content.color, content.segments, content.segmentMarkers, content.totalLength, true);
     }
 
     // TODO: This needs to be handled from `socket.mjs` 
@@ -191,12 +203,17 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: {
   // 1. Create a wand for the user.
   // Wand type, how many samples allowed, and a geometry.
   wand = await (new Wand({
-    Form, color, Quantizer, Race, store, dist3d, client
+    Form, color, Quantizer, Race, store, dist3d, client, map, randIntRange, choose
   }, "line", wandLength).init({
     preload: false, color: colorParams
   }));
 
-  client.send("create", { color: wand.color }); // Tell anyone whose around to make a wand for us.
+  client.send("create", {
+    color: wand.color,
+    segments: wand.segments, // I really don't have to be passing in both these values here... 22.11.01.22.17
+    segmentMarkers: wand.segmentMarkers,
+    totalLength: wand.totalLength,
+  }); // Tell anyone whose around to make a wand for us.
 }
 
 // 🎨 Paint (Executes every display frame)
@@ -204,11 +221,17 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
 
   // Only draw a wand / a wand's drawing if it exists.
 
+  //console.log(wand?.form);
+
   // The lines & the furnitue and our wand.
+  wand?.generateForm();
   form([floor, wand?.form, wand?.drawing], cam);
 
   // Everyone else's wands...
-  help.each(remoteWands, w => form([w.form, w.drawing], cam));
+  help.each(remoteWands, w => {
+    w.generateForm();
+    form([w.form, w.drawing], cam)
+  });
 
   // Draw cursors for 2D screens.
   wipe(10, 0);
@@ -218,7 +241,6 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
     const shadow = 30 * (1 - wand.progress);
     ink(127, 127).line(pen.x, pen.y, pen.x + shadow, pen.y + shadow);
   }
-
 
   if (wand?.started === false) { // Print title.
     const title = "Wand";
@@ -249,15 +271,15 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
   // Draw current wand's tail.
   if (wand?.tail) {
     //ink(0, 255, 0).form(
-    ink(wand.color).form(
+    ink(wand.currentColor).form(
       new Form({ type: "line", positions: wand.tail, keep: false }, { alpha: 1 }),
       cam
     );
   }
 
   if (wand?.tail2) {
-    // ink(255, 0, 0).form(
-    ink(wand.color).form(
+    ink().form(
+    //ink(wand.currentColor).form(
       new Form({ type: "line", positions: wand.tail2, keep: false }, { alpha: 1 }),
       cam
     );
@@ -267,14 +289,14 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
 
   help.each(remoteWands, w => {
     if (w.tail) {
-      ink(w.color).form(
+      ink(w.currentColor).form(
         new Form({ type: "line", positions: w.tail, keep: false }, { alpha: 1 }),
         cam
       );
     }
 
     if (w.tail2) {
-      ink(w.color).form(
+      ink(w.currentColor).form(
         new Form({ type: "line", positions: w.tail2, keep: false }, { alpha: 1 }),
         cam
       );
@@ -307,27 +329,30 @@ function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
     // Position wand.
     if (pen3d) {
       wand.form.turn({ x: 0.0, y: 0.0, z: 0.0 }); // Why does this make everything work?
-      wand.form.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
-      wand.form.rotation = [deg(pen3d.rot._x), deg(pen3d.rot._y), deg(pen3d.rot._z)];
-      wand.form.scale = [1, 1, 1 - wand.progress];
-      wand.form.gpuTransformed = true; // Is this still needed?
+      wand.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
+      wand.rotation = [deg(pen3d.rot._x), deg(pen3d.rot._y), deg(pen3d.rot._z)];
+      //wand.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
+      //wand.form.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
+      //wand.form.rotation = [deg(pen3d.rot._x), deg(pen3d.rot._y), deg(pen3d.rot._z)];
+      // wand.form.scale = [1, 1, 1 - wand.progress];
+      // wand.form.gpuTransformed = true; // Is this still needed?
 
       client.send("move", {
-        position: wand.form.position,
-        rotation: wand.form.rotation,
-        scale: wand.form.scale
+        position: wand.position,
+        rotation: wand.rotation,
+        // scale: wand.form.scale
       });
 
     } else if (pen) {
-      wand.form.turn({ x: 0.0, y: 0.0, z: 0.0 }); // Why does this make everything work?
-      wand.form.position = cam.ray(pen.x, pen.y, wandDepth2D);
-      wand.form.rotation = cam.rotation;
-      wand.form.scale = [1, 1, 1 - wand.progress];
+      //wand.form.turn({ x: 0.0, y: 0.0, z: 0.0 }); // Why does this make everything work?
+      wand.position = cam.ray(pen.x, pen.y, wandDepth2D);
+      wand.rotation = cam.rotation;
+      // wand.form.scale = [1, 1, 1 - wand.progress];
 
       client.send("move", {
-        position: [...wand.form.position],
-        rotation: wand.form.rotation,
-        scale: wand.form.scale
+        position: [...wand.position],
+        rotation: wand.rotation,
+        // scale: wand.form.scale
       });
     }
 
@@ -440,7 +465,7 @@ function act({ event: e, color, screen, download, num: { timestamp } }) {
 function beat({ sound: { bpm, square } }) {
   if (beatCount === 0n) bpm(1800); // Set bpm to 1800 ~ 30fps }
   beatCount += 1n; // TODO: This should go into the main API. 22.11.01.17.43
-  if (beatCount < 30n * 2n) { beeps.length = 0; return; } // Wait ~ 2 sec to prevent mass bleeps.
+  if (beatCount < 8n * 2n) { beeps.length = 0; return; } // Wait ~ 2 sec to prevent mass bleeps.
   // TODO: ^ This is a little janky and should be tied to an event.
 
   beeps.forEach((beep) => {
@@ -452,6 +477,28 @@ function beat({ sound: { bpm, square } }) {
       volume: 0.15
     });
   });
+
+  if (wand.beep) {
+    square({
+      tone: 300,
+      beats: 0.7,
+      attack: 0.01,
+      decay: 0.5,
+      volume: 0.15
+    });
+    wand.beep = false;
+  }
+
+  if (wand.bop) {
+    square({
+      tone: 600,
+      beats: 0.7,
+      attack: 0.01,
+      decay: 0.5,
+      volume: 0.15
+    });
+    wand.bop = false;
+  }
 
   beeps.length = 0;
 }
@@ -476,11 +523,19 @@ class Wand {
 
   api;
   type;
-  length;
   waving = false;
   form;
   color;
   randomColor = false;
+
+  position = [0, 0, 0];
+  rotation = [0, 0, 0];
+
+  currentSegment;
+  segments;
+  segmentMarkers;
+  currentLength;
+  totalLength;
 
   // The below fields are mostly for the "line" type, but could also be shared
   // by many wand types, depending on the design.
@@ -490,14 +545,18 @@ class Wand {
   tail; // Preview / prediction lines.
   tail2;
 
+  beep = false; // Triggers a beep.
+  bop = false; // Triggers a bop.
+
   constructor(api, type, length) {
     this.api = api;
     this.type = type;
-    this.length = length;
   }
 
-  async init({ preload, color }) {
+  // TODO: Pass in segments instead of color if necessary.
+  async init({ preload, color, segments, segmentMarkers, totalLength }) {
 
+    // TODO: Over-ride segments if a color has been defined?
     // Set the color or choose a random one.
     if (color === undefined) {
       this.randomColor = true;
@@ -506,26 +565,78 @@ class Wand {
       let g = Math.random() > 0.5 ? 0 : 255;
       let b = Math.random() > 0.5 ? 0 : 255;
 
-      if (r === 0 && g === 0 && b === 0) {
-        r = 255;
-        g = 255;
-        b = 255;
-      }
+      if (r === 0 && g === 0 && b === 0) { r = 255; g = 255; b = 255; }
 
       this.color = [r, g, b, 255];
     } else {
       this.color = color;
     }
 
+
     // Define the 3D renderable for this wand.
-    this.form = new this.api.Form({
-      type: "line",
-      positions: [
-        [0, 0, 0.0, 1],
-        [0, 0, 0.1, 1]
-      ],
-      indices: [0, 1],
-    }, { color: this.color }, { pos: [0, 0, 0], scale: [1, 1, 1] })
+    // Generate or load segments, formatted like below.
+    /*
+    [
+      { length: 0.025, color: [255, 0, 0, 255] },
+      { length: 0.05, color: [0, 255, 0, 255] },
+      { length: 0.025, color: [0, 0, 255, 255] }
+    ];
+    */
+
+    if (segments) {
+      this.segments = segments;
+      this.segmentMarkers = segmentMarkers;
+      this.totalLength = totalLength;
+      this.generateForm();
+    } else {
+      // Generate segments...
+      const rr = this.api.randIntRange;
+      const ch = this.api.choose;
+
+      const segmentCount = rr(4, 6);
+      const genSegs = [];
+
+      for (let i = 0; i < segmentCount; i += 1) {
+        genSegs.push({
+          length: ch(0.02, 0.02, 0.02, 0.02), color: ch(
+            [rr(200, 255), 0, 0, 255],
+            [0, rr(200, 255), 0, 255],
+            [0, 0, rr(200, 255), 255],
+            [rr(200, 255), rr(200, 255), 0, 255],
+            [0, rr(200, 255), rr(200, 255), 255],
+            [rr(200, 255), 0, rr(200, 255), 255],
+            [rr(200, 255), rr(200, 255), rr(200, 255), 255],
+          )
+        });
+      }
+
+      this.segments = genSegs;
+      this.generateForm();
+      this.totalLength = this.currentLength;
+
+      let p = 0;
+      this.segmentMarkers = segmentMarkers || this.segments.map((s, i) => {
+        return i === 0 ? s.length : p += s.length;
+      });
+    }
+
+    // Calculate the current segment whether generated or loaded.
+    for (let i = 0; i < this.segments.length; i += 1) {
+      if (this.segments[i].length > 0) {
+        this.currentSegment = this.segments[i];
+        break;
+      }
+    }
+
+    // Non-segmented.
+    // this.form = new this.api.Form({
+    //   type: "line",
+    //   positions: [
+    //     [0, 0, 0.0, 1],
+    //     [0, 0, 0.1, 1]
+    //   ],
+    //   indices: [0, 1],
+    // }, { color: this.color }, { pos: [0, 0, 0], scale: [1, 1, 1] })
 
     if (this.type === "line") {
       let stored;
@@ -538,11 +649,12 @@ class Wand {
           type: "line:buffered",
           vertices: stored?.vertices,
           indices: stored?.indices,
-        },
-        { color: this.color }
+        }//,
+        //{ color: this.color }
       )
 
-      this.drawing.MAX_POINTS = this.length * 2; // Must be a multiple of two for "line".
+
+      this.drawing.MAX_POINTS = (this.totalLength * 2) * 32000; // Must be a multiple of two for "line".
     } else {
       // TODO: Implement other geometries.
       // drawing.MAX_POINTS = length;
@@ -551,6 +663,36 @@ class Wand {
     this.lastTarget = undefined; // Reset the target tracker in `goto`.
     return this;
   }
+
+  get currentColor() {
+    return this.currentSegment?.color;
+  }
+
+  generateForm() {
+    const positions = [];
+    const colors = [];
+    let length = 0;
+
+    this.segments.forEach(segment => {
+      // if (segment.length === 0) return; // Skip segments with 0 length.
+      const nextLength = length + segment.length;
+      positions.push([0, 0, length, 1], [0, 0, nextLength, 1])
+      length = nextLength;
+      colors.push(segment.color, segment.color);
+    });
+
+    this.currentLength = length;
+
+    // Segmented
+    this.form = new this.api.Form({
+      type: "line",
+      positions,
+      colors,
+      keep: false
+    }, { color: this.color }, { pos: this.position, rot: this.rotation, scale: [1, 1, 1] })
+    // }, { color: this.color }, { pos: [0, 0, 0], scale: [1, 1, 1] })
+  }
+
 
   get progress() {
     if (!this.drawing) return 0;
@@ -592,26 +734,39 @@ class Wand {
     const path = this.race.to(target); if (!path) return;
 
     let maxedOut;
+    let needsStop = false;
 
     if (path.out?.length > 0) {
+
       const colors = [];
 
       path.out.forEach(() => {
-        const vertexColor = this.api.color(...this.color);
+        //const vertexColor = this.api.color(this.color);
+        const vertexColor = this.api.color(this.currentSegment.color);
         colors.push(vertexColor, vertexColor);
       });
 
       // Add points locally.
       maxedOut = this.drawing.addPoints({ positions: path.out, colors });
 
-      // Send vertices to the internet.
-      /*
-      if (!remote) this.api.client.send("add", {
-        positions: path.out.map((vertex) => [...vertex]),
-        colors,
-      });
-      */
+      if (!maxedOut) {
+        const totalSegmentLength = this.totalLength;
+        const segments = this.segments;
+        const progressThisTick = (path.out.length / this.drawing.MAX_POINTS) * totalSegmentLength;
 
+        for (let i = 0; i < segments.length; i += 1) {
+          if (segments[i].length > 0) {
+            segments[i].length -= progressThisTick;
+            this.currentSegment = segments[i];
+            if (segments[i].length <= 0) {
+              segments[i].length = 0;
+              if (segments[i + 1]) { this.currentSegment = segments[i + 1]; }
+              needsStop = true;
+            }
+            break;
+          }
+        }
+      }
     }
 
     // Previews from wand tip. 
@@ -620,7 +775,13 @@ class Wand {
 
     if (!remote) this.api.client.send("goto", { target: [...target] });
 
-    if (maxedOut) this.clear(!this.randomColor ? this.color : undefined);
+    if (needsStop) {
+      // TODO: Trigger sound here?
+      if (!remote) { this.beep = true; }
+      this.stop(remote);
+    }
+
+    if (maxedOut) this.clear(!this.randomColor ? this.color : undefined, undefined, undefined, undefined, remote);
     return maxedOut;
   }
 
@@ -655,17 +816,24 @@ class Wand {
     this.race = null;
     this.waving = false;
     this.tail = this.tail2 = undefined;
-    if (maxedOut) this.clear(!this.randomColor ? this.color : undefined);
+    if (maxedOut) this.clear(!this.randomColor ? this.color : undefined, undefined, undefined, undefined, remote);
     if (!remote) this.api.client.send("stop");
     return maxedOut;
   }
 
   // Remove the drawing and the wand.
-  clear(color, remote = false) {
+  clear(color, segments, segmentMarkers, totalLength, remote = false) {
     // this.started = false;
-    this.stop();
-    this.init({ preload: false, color }); // Reload this wand.
-    if (!remote) this.api.client.send("clear", this.color); // Send a clear event to the server.
+    this.stop(remote);
+    if (!remote) this.bop = true;
+    this.init({ preload: false, color, segments, segmentMarkers, totalLength }); // Reload this wand.
+
+    if (!remote) {
+      this.api.client.send("clear", {
+        color: this.color, segments: this.segments, segmentMarkers: this.segmentMarkers, totalLength: this.totalLength
+      }); // Send a clear event to the server.
+    }
+
   }
 
 }
