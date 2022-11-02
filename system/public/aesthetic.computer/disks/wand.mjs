@@ -28,6 +28,9 @@
 // - [] Add circular buffer to wand lines (buffer-geometry) / infinite
 //      wand with dissolving trail.
 // + Done
+// - [x] Make VR wand appear again. 
+// - [x] Joining from the prompt needs to work.
+// - [x] Wand no longer appears in hand in VR.
 // - [x] Wandline.
 // - [x] Don't draw self wand on phone screen.
 // - [x] Wands need palettes.
@@ -192,7 +195,6 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: {
   cam = new Camera(80, { z: 0, y: 1.8, scale: [1, 1, 1] }); // camera with fov
   dolly = new Dolly(cam); // moves the camera
 
-
   floor = new Form(
     QUAD,
     { tex: p(2, 2, (g) => g.wipe(0, 0, 100)) },
@@ -221,16 +223,30 @@ async function boot({ painting: p, Camera, Dolly, Form, QUAD, TRI, color, net: {
     preload: false, color: colorParams
   }));
 
+  /*
   client.send("create", {
     color: wand.color,
     segments: wand.segments, // I really don't have to be passing in both these values here... 22.11.01.22.17
     segmentMarkers: wand.segmentMarkers,
     totalLength: wand.totalLength,
   }); // Tell anyone whose around to make a wand for us.
+  */
 }
+
+let sentWand = false;
 
 // 🎨 Paint (Executes every display frame)
 function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randIntRange } }) {
+
+  if (wand && client.id !== undefined && sentWand === false) {
+    client.send("create", {
+      color: wand.color,
+      segments: wand.segments, // I really don't have to be passing in both these values here... 22.11.01.22.17
+      segmentMarkers: wand.segmentMarkers,
+      totalLength: wand.totalLength,
+    }); // Tell anyone whose around to make a wand for us.
+    sentWand = true;
+  }
 
   // Only draw a wand / a wand's drawing if it exists.
 
@@ -239,7 +255,7 @@ function paint({ ink, pen, pen3d, wipe, help, screen, Form, form, num: { randInt
   // The lines & the furnitue and our wand.
   wand?.generateForm();
 
-  if (pen?.device !== "touch" && lastDevice !== "touch") {
+  if ((pen?.device !== "touch" && lastDevice !== "touch") || MetaBrowser) {
     form([floor, wand?.form, wand?.drawing], cam);
   } else {
     form([floor, wand?.drawing], cam);
@@ -369,7 +385,7 @@ function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
       //wand.form.position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 0];
       //wand.form.rotation = [deg(pen3d.rot._x), deg(pen3d.rot._y), deg(pen3d.rot._z)];
       // wand.form.scale = [1, 1, 1 - wand.progress];
-      // wand.form.gpuTransformed = true; // Is this still needed?
+      wand.form.gpuTransformed = true; // Is this still needed?
 
       client.send("move", {
         position: wand.position,
@@ -702,9 +718,9 @@ class Wand {
       for (let i = 0; i < palette.length; i += 1) {
         let len;
         if (palette.length === 1) len = 0.1;
-        if (palette === wandPalettes.roygbiv) len =  0.02;
+        else if (palette === wandPalettes.roygbiv) len =  0.02;
         else len = ch(0.04, 0.02, 0.03, 0.05);
-        genSegs.push({ length: len, color: palette[i] });
+        genSegs.push({ length: len, color: palette[i], originalLength: len });
       }
 
       this.segments = genSegs;
@@ -849,6 +865,7 @@ class Wand {
       if (!maxedOut) {
         const totalSegmentLength = this.totalLength;
         const segments = this.segments;
+
         const progressThisTick = (path.out.length / this.drawing.MAX_POINTS) * totalSegmentLength;
 
         for (let i = 0; i < segments.length; i += 1) {

@@ -54,7 +54,7 @@ export function initialize(wrapper, loop) {
 
   scene = new THREE.Scene();
   // scene.fog = new THREE.Fog(0x111111, 0.5, 2); // More basic fog.
-  scene.fog = new THREE.FogExp2(0x030303, 0.5);
+  scene.fog = new THREE.FogExp2(0x030303, 0.4);
   //scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
   // Set up VR.
@@ -95,7 +95,6 @@ export function initialize(wrapper, loop) {
     controller2.addEventListener('squeezestart', onSqueezeStart);
     controller2.addEventListener('squeezeend', onSqueezeEnd);
     scene.add(controller2);
-
 
     // Create some geometry for each controller.
     // const wandLen = 0.2;
