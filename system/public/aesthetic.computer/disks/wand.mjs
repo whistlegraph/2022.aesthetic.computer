@@ -3,7 +3,10 @@
 
 // TODO
 // - [] Add touch controls.
-// - [] Add button to give up on wand earlier / quit wand.
+//    - [] [F] [B] [L] [R] [W]
+// - [] Add secret button to give up on a wand earlier / cancel a wand.
+//   - [] Keyboard button - and oculus button.
+//   - [] Needs to be tied to the server.
 // - [] Make a better startup screen.
 //   - [] Get rid of ThreeJS flicker box.
 //   - [] Paint something until ThreeJS has loaded.
@@ -386,8 +389,8 @@ function act({ event: e, color, screen, download, num: { timestamp } }) {
     if (e.is("lift")) wand.stop(); // 🚩 End a mark.
   }
 
-  // 👀 Look around while dragging with a finger (or mouse if 2nd button held).
-  if (e.is("draw") && (e.device === "touch" || e.button === 2)) {
+  // 👀 Look around if 2nd mouse button is held.
+  if (e.is("draw") && e.button === 2) {
     cam.rotX -= e.delta.y / 3.5;
     cam.rotY -= e.delta.x / 3.5;
   }
@@ -404,6 +407,12 @@ function act({ event: e, color, screen, download, num: { timestamp } }) {
   // Three fingers for moving backward.
   if (e.is("touch:3")) S = true;
   if (e.is("lift:3")) S = false;
+
+  // One finger to draw.
+  if(e.device === "touch") {
+    if (e.is("touch:1")) wand.start(cam.ray(e.x, e.y, wandDepth2D), false); // ✏️ Start a mark.
+    if (e.is("lift:1")) wand.stop(); // 🚩 End a mark.
+  }
 
   // 💻️ Keyboard: WASD for movement, arrows for looking.
   if (e.is("keyboard:down:w")) W = true;

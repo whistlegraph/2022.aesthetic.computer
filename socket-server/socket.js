@@ -1,5 +1,6 @@
 // 🐕‍ Server
 // Handles online multiplayer and realtime interaction @ server.aesthetic.computer.
+
 // TODO: 🔐 Setup client<->server identity validation for both anonymous users and
 //          authenticated ones.
 
