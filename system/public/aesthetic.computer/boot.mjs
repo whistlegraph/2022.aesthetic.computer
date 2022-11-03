@@ -18,6 +18,11 @@ if (window.acDEBUG === true || window.acDEBUG === false) {
   // TODO: This should eventually be upgraded for IPFS exports.
 }
 
+// Check to see if we have a "#debug" hash.
+if (window.location.hash === "#debug") debug = true;
+if (window.location.hash === "#nodebug") debug = false;
+
+
 window.acDEBUG = debug; // Set window.acDEBUG again just in case any code relies
 // on it down the line. Should it need to? 22.07.15.00.21
 
