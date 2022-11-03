@@ -193,6 +193,7 @@ const $commonApi = {
   dark: true, // Dark mode. (Gets set on startup and on any change.)
   darkMode, // Toggle dark mode or set to `true` or `false`.
   // content: added programmatically: see Content class
+  gpuReady: false,
   num: {
     even: num.even,
     odd: num.odd,
@@ -457,7 +458,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
       type: "forms",
       content: {
         forms: formsToSend, cam: {
-          position: cam.position, rotation: cam.rotation, scale: cam.scale
+          position: cam.position, rotation: cam.rotation, scale: cam.scale, fov: cam.fov, near: cam.near, far: cam.far
         }, color: graph.color()
       },
     });
@@ -867,7 +868,7 @@ async function load(
   if (firstLoad === false) {
     try {
       leave({ store, screen, system: $commonApi.system }); // Trigger leave.
-    } catch(e) {
+    } catch (e) {
       console.warn("👋 Leave failure...", e);
     }
   }
@@ -1043,6 +1044,21 @@ async function makeFrame({ data: { type, content } }) {
     return;
   }
 
+  if (type === "before-unload") {
+    leave();
+    try {
+      leave({ store, screen, system: $commonApi.system }); // Trigger leave.
+    } catch (e) {
+      console.warn("👋 Leave failure...", e);
+    }
+    return;
+  }
+
+  if (type === "gpu-rendered-once") {
+    $commonApi.gpuReady = true;
+    return;
+  }
+
   if (type === "dark-mode") {
     const current = await store.retrieve("dark-mode");
     if (current !== null) {
@@ -1171,7 +1187,7 @@ async function makeFrame({ data: { type, content } }) {
 
     try {
       beat($api);
-    } catch(e) {
+    } catch (e) {
       console.warn(" 💗 Beat failure...", e);
     }
 
@@ -1335,7 +1351,7 @@ async function makeFrame({ data: { type, content } }) {
           $api.simCount = simCount;
           try {
             sim($api);
-          } catch(e) {
+          } catch (e) {
             console.warn("🧮 Sim failure...", e);
           }
           initialSim = false;
@@ -1346,7 +1362,7 @@ async function makeFrame({ data: { type, content } }) {
             $api.simCount = simCount;
             try {
               sim($api);
-            } catch(e) {
+            } catch (e) {
               console.warn("🧮 Sim failure...", e);
             }
           }
@@ -1389,7 +1405,7 @@ async function makeFrame({ data: { type, content } }) {
         };
         try {
           act($api);
-        } catch(e) {
+        } catch (e) {
           console.warn("️ ✒ Act failure...", e);
         }
         reframed = false;
@@ -1404,7 +1420,7 @@ async function makeFrame({ data: { type, content } }) {
         };
         try {
           act($api);
-        } catch(e) {
+        } catch (e) {
           console.warn("️ ✒ Act failure...", e);
         }
         send({ type: "load-failure" });
@@ -1421,7 +1437,7 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api);
-        } catch(e) {
+        } catch (e) {
           console.warn("️ ✒ Act failure...", e);
         }
         signals.length = 0;
@@ -1438,7 +1454,7 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api);
-        } catch(e) {
+        } catch (e) {
           console.warn("️ ✒ Act failure...", e);
         }
       }
@@ -1467,7 +1483,7 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api);
-        } catch(e) {
+        } catch (e) {
           console.warn("️ ✒ Act failure...", e);
         }
       });
@@ -1483,7 +1499,7 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api);
-        } catch(e) {
+        } catch (e) {
           console.warn("️ ✒ Act failure...", e);
         }
       });
@@ -1506,7 +1522,7 @@ async function makeFrame({ data: { type, content } }) {
         $api.event = data;
         try {
           act($api); // Execute piece shortcut.
-        } catch(e) {
+        } catch (e) {
           console.warn("️ ✒ Act failure...", e);
         }
 
@@ -1528,10 +1544,10 @@ async function makeFrame({ data: { type, content } }) {
           }
 
           if (
-            data.key === "~" &&
+            data.key === "`" &&
             currentPath !== "aesthetic.computer/disks/prompt"
           ) {
-            // Load prompt if the tilde is pressed.
+            // Load prompt if the backtic is pressed.
             $api.load(parse("prompt"));
             /*
             $api.load({
@@ -1747,7 +1763,7 @@ async function makeFrame({ data: { type, content } }) {
 
         try {
           boot($api);
-        } catch(e) {
+        } catch (e) {
           console.warn("🥾 Boot failure...", e)
         }
         booted = true;
@@ -1772,7 +1788,7 @@ async function makeFrame({ data: { type, content } }) {
 
         try {
           paintOut = paint($api); // Returns `undefined`, `false`, or `DirtyBox`.
-        } catch(e) {
+        } catch (e) {
           console.warn("🎨 Paint failure...", e);
         }
 

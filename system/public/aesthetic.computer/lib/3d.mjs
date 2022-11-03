@@ -11,7 +11,10 @@ let scene,
   camera,
   disposal = [],
   //pixels,
+  renderedOnce = false,
   target;
+
+let send;
 
 let jiggleForm, needsSphere = false;
 
@@ -37,7 +40,8 @@ export function checkForRemovedForms(formsBaked) {
 
 }
 
-export function initialize(wrapper, loop) {
+export function initialize(wrapper, loop, sendToPiece) {
+  send = sendToPiece;
 
   renderer = new THREE.WebGLRenderer({
     alpha: false,
@@ -53,6 +57,7 @@ export function initialize(wrapper, loop) {
   renderer.domElement.dataset.type = "3d";
 
   scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
   // scene.fog = new THREE.Fog(0x111111, 0.5, 2); // More basic fog.
   scene.fog = new THREE.FogExp2(0x030303, 0.4);
   //scene.fog = new THREE.FogExp2(0x030303, 0.5);
@@ -133,6 +138,7 @@ export function initialize(wrapper, loop) {
 
   if (button) document.body.append(button);
 
+  //renderer.render(scene, camera); // Render once before adding the element to the dom.
   wrapper.append(renderer.domElement); // Add renderer to dom.
   status.alive = true;
 }
@@ -146,10 +152,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     renderer.setPixelRatio(1 / 2.2);
     // renderer.setRenderTarget(target); // For rendering offsceen.
     // pixels = new Uint8Array(width * height * 4);
-    const fov = 80;
+    const fov = cam.fov;
     const aspect = width / height;
-    const near = 0.01;
-    const far = 1000;
+    const near = cam.near;
+    const far = cam.far;
     camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   }
 
@@ -619,6 +625,12 @@ export function render(now) {
     // Garbage is collected in `bios` under `BIOS:RENDER`
     renderer.render(scene, camera);
 
+    if (renderedOnce === false) {
+      renderer.domElement.classList.add("visible");
+      send({ type: "gpu-rendered-once" });
+      renderedOnce = true;
+    }
+
   }
 }
 
@@ -635,6 +647,7 @@ export function kill() {
   renderer.domElement.remove();
   button?.remove();
   renderer.dispose();
+  renderedOnce = false;
   scene = undefined;
   target = undefined;
   status.alive = false;

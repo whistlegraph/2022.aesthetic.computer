@@ -30,7 +30,6 @@ Welcome to...
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Major Bugs & Regressions
-  - [] Fix pen data being erased on click.
   - [🍽️] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
   - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
   - [] (Related to reloading.) Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
@@ -41,6 +40,7 @@ Welcome to...
   - [] The back button does not work in the Instagram in-app browser.
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   + Done
+  - [x] Fix pen data being erased on click.
   - [x] Fix Firefox not working.
   - [x] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
 
@@ -86,12 +86,26 @@ Welcome to...
       (It might be just a bad design.)
       (Or it's a great design and just works poorly with the WebXR animation loop.)
 
-*** (3dline) ***
+*** Communication ***
+  - [] Add text chat.
+    - [] Implement for both computer, phone, and headset.
+  - [] Add voice chat.
+    - [] Implement for both computer, phone, and headset.
+  - [] Add identity / authentication / JWT tokens.
+
+*** (Wand) ***
  + Now
     - [] Make workers optional / turn them back on. (but not for Meta Quest Browser).
       - [] Rethink where the workers should be ideally...
     - [x] Make buffers transferrable.
   - [] Line thickness.
+  - [] Replace Gl.lines with something cooler.
+  - [] Add / design / consider touch controls.
+    - [F] [B] [W/L]
+  - [] Add circular buffer to wand lines (buffer-geometry) / infinite
+      wand with dissolving trail.
+  - [] Leave drawing up / fade drawing.
+  - [] Add demo recording and playback with vocals.
  + Later
   - [] Shrink three.js filesize: https://github.com/mrdoob/three.js/issues/19148
   - [] Fix keyboard hold and drag to symbol in Meta Quest software keyboard.

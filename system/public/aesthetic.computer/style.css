@@ -177,11 +177,15 @@ canvas[data-type="ui"] {
   /* display: none; */
 }
 
-
 canvas[data-type="3d"] {
   z-index: 0;
   /* width: 100% !important; */
   /* height: 100% !important; */
+  opacity: 0;
+}
+
+canvas[data-type="3d"].visible {
+  opacity: 1;
 }
 
 #VRButton {

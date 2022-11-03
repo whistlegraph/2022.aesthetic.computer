@@ -4,7 +4,7 @@
 // 🎨
 // If `params` is empty then ink's RGBA will be randomized.
 export function paint({ pen, params, system, page, screen }) {
-  if (pen.drawing) {
+  if (pen?.drawing) {
     params = params.map((str) => parseInt(str));
     page(system.painting).ink(params).line(pen.px, pen.py, pen.x, pen.y);
     page(screen).ink(params).line(pen.px, pen.py, pen.x, pen.y);

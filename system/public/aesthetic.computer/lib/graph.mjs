@@ -903,6 +903,9 @@ class Camera {
   #rotZ = 0;
   fov;
 
+  near = 0.001;
+  far = 1000;
+
   position = [0, 0, 0, 1];
   rotation = [0, 0, 0];
   scale = [1, 1, 1];
@@ -1007,8 +1010,8 @@ class Camera {
   }
 
   #perspective(fov) {
-    const zNear = 0.01;
-    const zFar = 1000;
+    const zNear = this.near;
+    const zFar = this.far;
 
     this.perspectiveMatrix = mat4.perspective(
       mat4.create(),

@@ -178,7 +178,7 @@ async function act({
     if (canType === false) {
       canType = true;
       input = "";
-    } else if (e.key.length === 1 && e.ctrl === false) {
+    } else if (e.key.length === 1 && e.ctrl === false && e.key !== "`") {
       input += e.key; // Printable keys.
     }
     // Other keys.

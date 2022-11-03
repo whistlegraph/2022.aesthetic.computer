@@ -159,7 +159,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let ThreeDBakeQueue = [];
   async function loadThreeD() {
     ThreeD = await import(`./lib/3d.mjs`);
-    ThreeD.initialize(wrapper, Loop.mainLoop);
+    ThreeD.initialize(wrapper, Loop.mainLoop, send);
   }
 
   // Used by `disk` to set the metatags by default when a piece loads. It can
@@ -918,6 +918,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             keyboard.events.push({ name: "typing-input-ready" });
           });
         }
+
+        // Turn off all layers onbeforeunload. (Prevents a white flicker in chrome.)
+        window.addEventListener('beforeunload', (e) => {
+          send({type: "before-unload"});
+          wrapper.remove();
+        });
 
         // 🌒 Detect light or dark mode.
         // See also: https://flaviocopes.com/javascript-detect-dark-mode,
