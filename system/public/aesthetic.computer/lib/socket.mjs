@@ -1,10 +1,12 @@
 export class Socket {
   id; // Will be filled in with the user identifier after the first message.
+  #debug;
   #killSocket = false;
   #ws;
   #reconnectTime = 1000;
 
-  constructor(host, receive, reload, protocol = "wss") {
+  constructor(host, receive, reload, protocol = "wss", debug) {
+    this.#debug = debug;
     this.#connect(host, receive, reload, protocol);
   }
 
@@ -14,7 +16,7 @@ export class Socket {
     try {
       this.#ws = new WebSocket(`${protocol}://${host}`);
     } catch {
-      console.warn("📡 WebSocket connection failed.");
+      console.warn("📡 Connection failed.");
       return;
     }
 
@@ -22,7 +24,7 @@ export class Socket {
 
     // Send a message to the console after the first connection.
     ws.onopen = (e) => {
-      console.log("📡 Connected");
+      // if (this.#debug) console.log("📡 Connected.");
       this.#reconnectTime = 1000;
     };
 

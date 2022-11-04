@@ -12,46 +12,14 @@ import { parse, slug } from "./lib/parse.mjs";
 import * as Store from "./lib/store.mjs";
 import { Desktop, MetaBrowser } from "./lib/platform.mjs";
 import { promiseWithTimeout } from "./dep/@geckos.io/common/lib/helpers.js";
+import { headers } from "./lib/console-headers.mjs";
 
 const { assign } = Object;
 const { round, floor, min, max } = Math;
 
 // 💾 Boot the system and load a disk.
 async function boot(parsed, bpm = 60, resolution, debug) {
-  // Title
-  console.log(
-    "%caesthetic.computer",
-    `background: rgba(10, 20, 40);
-     color: rgb(200, 200, 250);
-     font-size: 120%;
-     padding: 0 0.25em;
-     border-radius: 0.15em;
-     border-bottom: 0.75px solid rgb(120, 120, 170);
-     border-right: 0.75px solid rgb(120, 120, 170);`
-  ); // Print a pretty title in the console.
-
-  // Global Keyboard Shortcuts
-  console.log(
-    `%cFullscreen: C-x, Prompt: ~`,
-    `background-color: black;
-     color: rgb(200, 200, 200);
-     padding: 0 0.25em;
-     border-left: 0.75px solid rgb(60, 60, 60);
-     border-right: 0.75px solid rgb(60, 60, 60);`
-  );
-
-  // Source code URL.
-  console.log(
-    "%cgithub.com/digitpain/aesthetic.computer",
-    `color: rgb(200, 200, 200);
-     background-color: black;
-     padding: 0 0.25em;
-     border-left: 0.75px solid rgb(60, 60, 60);
-     border-right: 0.75px solid rgb(60, 60, 60);`
-  );
-
-  // TODO: What words to type in?
-  // console.log();
+  headers(); // Print console headers.
 
   if (debug) {
     if (window.isSecureContext) {
@@ -186,14 +154,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   }
 
   function frame(width, height, gap = 8) {
-
     // console.log("framing...", imageData);
 
     lastGap = gap;
 
     // Cache the current canvas if needed.
     if (freezeFrame && imageData && !document.body.contains(freezeFrameCan)) {
-
       if (debug) {
         console.log(
           "🥶 Freezing:",
@@ -600,50 +566,54 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     content: {
       parsed,
       debug,
-      rootPiece: window.acSTARTING_PIECE
-    }
+      rootPiece: window.acSTARTING_PIECE,
+    },
   };
 
   const onMessage = (m) => receivedChange(m);
 
-  // A. Worker Mode
+  let send;
 
-  /*
-  const worker = new Worker(new URL(fullPath, window.location.href), {
-    type: "module",
-  });
+  // 🔥 Optionally use workers or not.
+  // Always use workers if they are supported, except for
+  // when we are in VR (MetaBrowser).
+  if (!MetaBrowser) {
+    const worker = new Worker(new URL(fullPath, window.location.href), {
+      type: "module",
+    });
 
-  // Rewire things a bit if workers with modules are not supported (Firefox).
-  worker.onerror = async (err) => {
-    if (
-      err.message ===
-      "SyntaxError: import declarations may only appear at top level of a module"
-    ) {
-      console.warn(
-        "🟡 Disk module workers unsupported in this browser. Using a dynamic import..."
-      );
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
-      const module = await import(`./lib/disk.mjs`);
-      module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
-      send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
-      send(firstMessage);
-    } else {
-      console.error("🛑 Disk error:", err);
-      // TODO: Try and save the crash here by restarting the worker
-      //       without a full system reload?
-    }
-  };
+    // Rewire things a bit if workers with modules are not supported (Firefox).
+    worker.onerror = async (err) => {
+      if (
+        err.message ===
+        "SyntaxError: import declarations may only appear at top level of a module"
+      ) {
+        console.warn(
+          "🟡 Disk module workers unsupported in this browser. Using a dynamic import..."
+        );
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
+        const module = await import(`./lib/disk.mjs`);
+        module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
+        send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
+        send(firstMessage);
+      } else {
+        console.error("🛑 Disk error:", err);
+        // TODO: Try and save the crash here by restarting the worker
+        //       without a full system reload?
+      }
+    };
 
-  let send = (e, shared) => worker.postMessage(e, shared);
-  worker.onmessage = onMessage;
-  */
+    if (debug && worker.postMessage) console.log("🟢 Worker");
 
-  // B. No Worker Mode
-  const module = await import(`./lib/disk.mjs`);
-  module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
-  let send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
-
-  // ---------------
+    send = (e, shared) => worker.postMessage(e, shared);
+    worker.onmessage = onMessage;
+  } else {
+    // B. No Worker Mode
+    if (debug) console.log("🔴 No Worker");
+    const module = await import(`./lib/disk.mjs`);
+    module.noWorker.postMessage = (e) => onMessage(e); // Define the disk's postMessage replacement.
+    send = (e) => module.noWorker.onMessage(e); // Hook up our post method to disk's onmessage replacement.
+  }
 
   // The initial message sends the path and host to load the disk.
   send(firstMessage);
@@ -661,7 +631,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           time,
           bpm: sound.bpm,
         },
-      }//,
+      } //,
       //[sound.bpm] // TODO: Why not just send the number here?
     );
   }
@@ -700,24 +670,26 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // console.log("Sending frame...", frameCount, performance.now())
 
-    send({
-      type: "frame",
-      content: {
-        needsRender,
-        updateCount,
-        pixels: screen.pixels.buffer,
-        inFocus: true, // document.hasFocus(),
-        audioTime: audioContext?.currentTime,
-        audioBpm: sound.bpm, // TODO: Turn this into a messaging thing.
-        width: canvas.width,
-        height: canvas.height,
-        // TODO: Do all fields of `pointer` need to be sent? 22.09.19.23.30
-        pen: { events: pen.events, pointers: pen.pointers },
-        pen3d: ThreeD?.pollControllers(), // TODO: Implement pointers in 3D.
-        keyboard: keyboard.events,
+    send(
+      {
+        type: "frame",
+        content: {
+          needsRender,
+          updateCount,
+          pixels: screen.pixels.buffer,
+          inFocus: true, // document.hasFocus(),
+          audioTime: audioContext?.currentTime,
+          audioBpm: sound.bpm, // TODO: Turn this into a messaging thing.
+          width: canvas.width,
+          height: canvas.height,
+          // TODO: Do all fields of `pointer` need to be sent? 22.09.19.23.30
+          pen: { events: pen.events, pointers: pen.pointers },
+          pen3d: ThreeD?.pollControllers(), // TODO: Implement pointers in 3D.
+          keyboard: keyboard.events,
+        },
       },
-    }, [screen.pixels.buffer]);
-
+      [screen.pixels.buffer]
+    );
 
     pen.updatePastPositions();
 
@@ -826,13 +798,18 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
             if (e.inputType === "deleteContentBackward") {
               pressedKeys.push("Backspace");
-            } else if (["insertText", "insertCompositionText"].includes(e.inputType)) {
-
+            } else if (
+              ["insertText", "insertCompositionText"].includes(e.inputType)
+            ) {
               // Sanitize input if it arrives in chunks... like if it was dictated.
               // This is still basic, and is usable in the Meta Quest Browser. 22.10.24.17.07
               let sanitizedInput = input;
               if (input.length > 1) {
-                sanitizedInput = input.trim().toLowerCase().replace(",", "").replace(".", "");
+                sanitizedInput = input
+                  .trim()
+                  .toLowerCase()
+                  .replace(",", "")
+                  .replace(".", "");
                 console.log("👄 Spoken / pasted input:", sanitizedInput);
               }
 
@@ -848,14 +825,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
                 alt: false,
                 ctrl: false,
               });
-            })
+            });
 
             if (input === "Backspace") {
               e.target.value = e.target.value.slice(0, -1);
             } else {
               e.target.value += input;
             }
-
           });
 
           let touching = false;
@@ -893,11 +869,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               down &&
               // dist(downPos.x, downPos.y, e.x, e.y) < 32 && // Distance threshold for opening keyboard.
               inTime &&
-              currentPiece === "aesthetic.computer/disks/prompt"// &&
+              currentPiece === "aesthetic.computer/disks/prompt" // &&
               // Refactoring the above could allow iframes to capture keyboard events.
               // via sending things from input... 22.10.24.17.16, 2022.04.07.02.10
             ) {
-
               if (document.activeElement === input) {
                 input.blur();
               } else {
@@ -920,8 +895,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         }
 
         // Turn off all layers onbeforeunload. (Prevents a white flicker in chrome.)
-        window.addEventListener('beforeunload', (e) => {
-          send({type: "before-unload"});
+        window.addEventListener("beforeunload", (e) => {
+          send({ type: "before-unload" });
           wrapper.remove();
         });
 
@@ -945,7 +920,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               send({ type: "dark-mode", content: { enabled: false } });
             }
           });
-
 
         // 🖥️ Display
         frame(resolution?.width, resolution?.height);
@@ -986,7 +960,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               ThreeDBakeQueue.length = 0;
             }
             ThreeD?.render();
-
           }
         );
       } else {
@@ -1116,7 +1089,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
         //send({ type: "forms:baked", content: true });
       } else {
-
         //send({ type: "forms:baked", content: false });
       }
 
@@ -1202,11 +1174,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // I have a storage system where I can store data to localStorage (user settings),
     //                                                   indexedDB (large files)
-    //                                                   remote (with user account or anonymous) 
+    //                                                   remote (with user account or anonymous)
 
     // *** 🏪 Store: Persist ***
     if (type === "store:persist") {
-
       // Local Storage
       if (content.method === "local") {
         localStorage.setItem(content.key, JSON.stringify(content.data));
@@ -1812,7 +1783,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // dbCtx.transferFromImageBitmap(dirtyBoxBitmap);
     } else if (content.paintChanged && content.pixels) {
       // 🅱️ Normal full-screen update.
-      imageData = new ImageData(new Uint8ClampedArray(content.pixels), canvas.width, canvas.height);
+      imageData = new ImageData(
+        new Uint8ClampedArray(content.pixels),
+        canvas.width,
+        canvas.height
+      );
     }
 
     pixelsDidChange = content.paintChanged || false;
@@ -1869,7 +1844,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (typeof resizeToStreamCanvas === "function") {
         resizeToStreamCanvas();
       }
-
     }
 
     if (pixelsDidChange || pen.changedInPiece) {
@@ -1916,12 +1890,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     //if (needsRender)
 
-
     //if (lastRender) {
     //console.log(performance.now() - lastRender)
     //}
     //lastRender = performance.now()
-
   }
 
   let lastRender;
@@ -2146,6 +2118,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   //       a user's session. This could also be used for autocompletion of
   //       pieces / up + down arrow prev-next etc.
   window.onpopstate = function (e) {
+    if (
+      document.location.hash === "#debug" ||
+      document.location.hash === "#nodebug"
+    ) {
+      document.location.reload();
+    }
+
     send({
       type: "history-load",
       content: parse(slug(document.location.href) || window.acSTARTING_PIECE),
@@ -2184,7 +2163,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       console.log("😱 Leaving fullscreen mode!");
     }
   };
-
 }
 
 export { boot };

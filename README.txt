@@ -81,11 +81,6 @@ Welcome to...
  - [] Complete TODOS @p1xelgool/blank. 
  - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
 
-*** Workers ***
- - [] Reconsider where the piece worker boundary is now.
-      (It might be just a bad design.)
-      (Or it's a great design and just works poorly with the WebXR animation loop.)
-
 *** Communication ***
   - [] Add text chat.
     - [] Implement for both computer, phone, and headset.
@@ -123,12 +118,18 @@ Welcome to...
     - [] Have a function that allows me to update the mint fee. 
   
 
+*** Keyboard Input ***
+  - [] Debug keyboard input on every device again.
+    - [] Android
+    - [] Meta
+  + Done
+  - [x] Fix duplicate "Enter" event bug on desktop.
+
 *** (Wand) ***
  + Now
-    - [] Make workers optional / turn them back on. (but not for Meta Quest Browser).
-      - [] Rethink where the workers should be ideally...
-    - [x] Make buffers transferrable.
   - [] Line thickness.
+    - [] Billboarded MeshLine?
+    - [] Tube geometry?
   - [] Replace Gl.lines with something cooler.
   - [] Add / design / consider touch controls.
     - [F] [B] [W/L]
@@ -176,6 +177,9 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Clear console on new disk load. (Only in production.) 
+  - [x] Make workers optional / turn them back on. (but not for Meta Quest Browser).
+  - [x] Make buffers transferrable.
   - [x] Reduce the latency of the pen information.
   - [x] Retrieve the floor / head height information.
   - [x] Make a "wand" / stick to draw with that comes off the VR controller. 
@@ -250,9 +254,15 @@ Welcome to...
   - [x] Draw a bresenham line in 3d.
 
 ***Firefox Day***
- - [] Cursor
- - [] 3dline loading
- - [] Smooth out everything.
+ - [] The main cursor is not visible...
+ + Done
+ - [x] 3dline loading
+ - [x] Smooth out everything.
+
+*** Workers ***
+ - [] Reconsider where the piece worker boundary is now.
+      (It might be just a bad design.)
+      (Or it's a great design and just works poorly with the WebXR animation loop.)
 
 *** Friendlier Developer Logs ***
   - [] Optimize the console.log output in production to be
@@ -1148,6 +1158,10 @@ Make sure `git` and `git-lfs` is installed, (you can do that through `homebrew`)
 🧩 Making a new included piece.
 - Run `npm run new-piece -- name-of-your-piece` 
 - Then open the file in `system/public/aesthetic.computer/disks` and start working!
+
+In production: Add a "#debug" hash to the end of your URL for more verbose output.
+
+If developing: Add a "#nodebug" hash to the end of a URL for less output.
 
 📖 This project originally began as two separate repositories with their own
 commit history: `digitpain/system` and `digitpain/disks`.

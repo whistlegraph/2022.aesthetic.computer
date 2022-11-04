@@ -11,6 +11,7 @@ import { UDP } from "./udp.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
 const { round } = Math;
 import { nopaint_adjust } from "../systems/nopaint.mjs";
+import { headers } from "./console-headers.mjs";
 
 export const noWorker = { onMessage: undefined, postMessage: undefined };
 
@@ -640,6 +641,7 @@ async function load(
   { path, host, search, params, hash, text },
   fromHistory = false
 ) {
+
   if (loading === false) {
     loading = true;
   } else {
@@ -652,7 +654,7 @@ async function load(
     if (debug) {
       console.log("🟡 Development");
     } else {
-      console.log("🟢 Production");
+      // console.log("🟢 Production");
     }
 
   if (host === "") {
@@ -671,13 +673,13 @@ async function load(
   if (path === "") path = ROOT_PIECE;
   if (path === firstPiece && params.length === 0) params = firstParams;
 
-  // TODO: In larger multi-disk IPFS exports, a new root path should be defined.
+  if (!debug && !firstLoad) {
+    console.clear();
+    headers(); // Clear console and re-print headers if we are in production.
+  }
 
-  if (debug) console.log("🧩", path, "🌐", host);
+  console.log("🧩", path, "🌐", host);
 
-  //if (path.indexOf("/") === -1) path = "aesthetic.computer/disks/" + path;
-
-  // TODO: Get proper protocol here...
   let fullUrl = location.protocol + "//" + host + "/" + path + ".mjs";
 
   // let fullUrl = "https://" + host + "/" + path + ".js";
@@ -715,7 +717,8 @@ async function load(
     debug === true ? servers.local : servers.main,
     (id, type, content) => receiver?.(id, type, content),
     $commonApi.reload,
-    debug === true ? "ws" : "wss"
+    debug === true ? "ws" : "wss",
+    debug
   );
 
   $commonApi.net.socket = function (receive) {
@@ -723,6 +726,8 @@ async function load(
     receiver = receive;
     return socket;
   };
+
+  // 🧨
 
   // 🅱️ Load the piece.
   // TODO: What happens if source is undefined?
@@ -1045,12 +1050,18 @@ async function makeFrame({ data: { type, content } }) {
   }
 
   if (type === "before-unload") {
-    leave();
+    // This has to be synchronous (no workers) to work, and is also often unreliable.
+    // I should not design around using this event, other than perhaps
+    // sending a beacon at the end. 22.11.03.14.53
+    // See also: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
+
+    /*
     try {
       leave({ store, screen, system: $commonApi.system }); // Trigger leave.
     } catch (e) {
       console.warn("👋 Leave failure...", e);
     }
+    */
     return;
   }
 

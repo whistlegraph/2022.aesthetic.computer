@@ -21,12 +21,19 @@
 function parse(text, location = self?.location) {
   let path, host, params, search, hash;
 
+  // 0. Pull of any "hash" from text.
+  [text, hash] = text.split("#");
+
   // 1. Pull off any "search" from `text`.
   [text, search] = text.split("?");
-  [search, hash] = (search || "").split("#"); // And any "hash" from `search`.
 
   // TODO: When to parse the search query string into a URLSearchParams object?
   //       https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+
+  // 1.5 Strip any trailing slash off of 'text'. (So stuff like prompt/#nodebug works)
+  // console.log(text);
+  if (text.endsWith("/")) text = text.slice(0, -1);
+  console.log(text);
 
   // 2. Tokenize on " " or "~".
   const tokens = text.trim().split(/~| /);
@@ -76,7 +83,8 @@ function slug(url) {
   return url
     .replace(/^http(s?):\/\//i, "")
     .replace(window.location.hostname + ":" + window.location.port + "/", "")
-    .replace(window.location.hostname + "/", "");
+    .replace(window.location.hostname + "/", "")
+    .split("#")[0]; // Remove any hash.
 }
 
 export { parse, slug };
