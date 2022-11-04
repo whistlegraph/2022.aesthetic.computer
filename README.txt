@@ -79,7 +79,7 @@ Welcome to...
   - [] 🅱️ Server
     - [] Upload media to S3
       - [] Make a special S3 bucket for mints.
-    - [] Upload media to IPFS
+    - [] Upload media to IPFS (Should preview links be scaled up?)
       - [] Pinata: https://docs.pinata.cloud/pinata-api/authentication
       - [] Mix pinata with server upload calls.
       - [] Set up ipfs.aesthetic.computer gateway.
@@ -115,6 +115,19 @@ Welcome to...
     - [] Make a special wallet for aesthetic.computer.
     - [] Deploy contract!
     - [] Add media and metadata to OpenSea.
+  - [] #️⃣ Release!
+    - [] Make an actually good drawing.
+    - [] What extra features do I need?
+      - [] Ability to say NO.
+      - [] Lazy line brush using pixel perfect algo for rendering.
+      - [] Filled circle and soft circle brush.
+      - [] Clear / fill command.
+      - [] A palette the first digitpain "styles".
+      - [] Add ability to add text to the piece. 
+        - `text insert-text-here size`
+      - [] Side mission: Add size modifier to dl.
+    - [] Mint it.
+    - [] Use it 
 
 *** (Wand) ***
  + Now
