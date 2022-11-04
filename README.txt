@@ -127,7 +127,8 @@ Welcome to...
         - `text insert-text-here size`
       - [] Side mission: Add size modifier to dl.
     - [] Mint it.
-    - [] Use it 
+    - [] Use it as an avatar on @digitpain twitter. 
+    - [] Point to @aesthetic_cpu in a tweet to launch the Twitter account.
 
 *** (Wand) ***
  + Now
