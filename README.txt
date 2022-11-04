@@ -97,7 +97,9 @@ Welcome to...
                 "value": creator
               },
               {
-                "trait_type": // Date? See also: https://docs.opensea.io/docs/metadata-standards
+                "trait_type": "Date" // See also: https://docs.opensea.io/docs/metadata-standards
+                "display_type": "date", 
+                "value": 1546360800 (Must be a unix timestamp in seconds.)
               }
             ] 
           }
@@ -107,6 +109,8 @@ Welcome to...
     - [] Unlimited edition.
     - [] Charge a mint fee which goes back to the aesthetic.computer wallet and
          prevents spam and promotes quality.
+    - [] Should I freeze the Metadata? https://docs.opensea.io/docs/metadata-standards#freezing-metadata
+    - [] Add contract Metadata too: https://docs.opensea.io/docs/contract-level-metadata
     - [] Have a function that allows me to update the mint fee. 
     - [] Make a special wallet for aesthetic.computer.
     - [] Deploy contract!
