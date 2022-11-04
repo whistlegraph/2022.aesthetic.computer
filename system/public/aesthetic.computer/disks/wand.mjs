@@ -511,7 +511,7 @@ function act({ event: e, color, screen, download, num: { timestamp } }) {
   if (e.is("keyboard:down:j")) cursorSize -= 0.1;
 
   // 💾 Saving
-  if (e.is("keyboard:down:enter")) {
+  if (e.is("keyboard:down:enter") && !e.repeat) {
     // 🅰️ Pack up and download the vertices in an array of arrays.
     /*
     download(`sculpture-${timestamp()}.json`, JSON.stringify(
@@ -897,7 +897,7 @@ class Wand {
               if (segments[i + 1]) {
                 this.currentSegment = segments[i + 1];
               }
-              needsStop = true;
+              // needsStop = true;
             }
             break;
           }

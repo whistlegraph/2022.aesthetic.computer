@@ -4,6 +4,9 @@
 
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
+import { LineGeometry } from "../dep/three/LineGeometry.js";
+import { LineMaterial } from "../dep/three/LineMaterial.js";
+import { Line2 } from "../dep/three/Line2.js";
 import { radians, rgbToHex } from "./num.mjs";
 
 let scene,
@@ -16,28 +19,30 @@ let scene,
 
 let send;
 
-let jiggleForm, needsSphere = false;
+let jiggleForm,
+  needsSphere = false;
 
 let button, vrSession, controller1, controller2; // VR Specific.
 
-export const penEvents = []; // VR pointer events. 
+export const penEvents = []; // VR pointer events.
 export const bakeQueue = [];
 export const status = { alive: false };
 
 export function checkForRemovedForms(formsBaked) {
-  const currentFormIDs = scene.children.map(c => c.aestheticID).filter(Boolean);
+  const currentFormIDs = scene.children
+    .map((c) => c.aestheticID)
+    .filter(Boolean);
 
   const currentForms = {};
-  scene.children.forEach(c => {
+  scene.children.forEach((c) => {
     if (c.aestheticID !== undefined) currentForms[c.aestheticID] = c;
   });
 
   // console.log(formsBaked, currentFormIDs, scene.children);
-  const formIDsToRemove = currentFormIDs.filter(f => !formsBaked.includes(f));
+  const formIDsToRemove = currentFormIDs.filter((f) => !formsBaked.includes(f));
 
   // Remove objects.
-  formIDsToRemove.forEach(id => removeObjectsWithChildren(currentForms[id]));
-
+  formIDsToRemove.forEach((id) => removeObjectsWithChildren(currentForms[id]));
 }
 
 export function initialize(wrapper, loop, sendToPiece) {
@@ -63,78 +68,83 @@ export function initialize(wrapper, loop, sendToPiece) {
   //scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
   // Set up VR.
-  button = VRButton.createButton(renderer, function start(session) {
-    console.log("🕶️️ VR Session started.");
+  button = VRButton.createButton(
+    renderer,
+    function start(session) {
+      console.log("🕶️️ VR Session started.");
 
-    // Setup VR controllers.
-    function onSelectStart() {
-      this.userData.isSelecting = true;
-      penEvent("touch", this);
+      // Setup VR controllers.
+      function onSelectStart() {
+        this.userData.isSelecting = true;
+        penEvent("touch", this);
+      }
+
+      function onSelectEnd() {
+        this.userData.isSelecting = false;
+        penEvent("lift", this);
+      }
+
+      function onSqueezeStart() {
+        this.userData.isSqueezing = true;
+        this.userData.positionAtSqueezeStart = this.position.y;
+        this.userData.scaleAtSqueezeStart = this.scale.x;
+      }
+
+      function onSqueezeEnd() {
+        this.userData.isSqueezing = false;
+      }
+
+      controller1 = renderer.xr.getController(0);
+      controller1.name = "controller-1";
+      controller1.addEventListener("selectstart", onSelectStart);
+      controller1.addEventListener("selectend", onSelectEnd);
+      controller1.addEventListener("squeezestart", onSqueezeStart);
+      controller1.addEventListener("squeezeend", onSqueezeEnd);
+      scene.add(controller1);
+
+      controller2 = renderer.xr.getController(1);
+      controller2.name = "controller-2";
+      controller2.addEventListener("selectstart", onSelectStart);
+      controller2.addEventListener("selectend", onSelectEnd);
+      controller2.addEventListener("squeezestart", onSqueezeStart);
+      controller2.addEventListener("squeezeend", onSqueezeEnd);
+      scene.add(controller2);
+
+      // Create some geometry for each controller.
+      // const wandLen = 0.2;
+      // const wandOffset = 0.075;
+      // const geometry = new THREE.CylinderGeometry(0.0015, 0.0015, 0.2, 32);
+      // geometry.rotateX(- Math.PI / 2);
+      //geometry.translate(0, 0, - (wandLen / 2) + wandOffset);
+      // const material = new THREE.MeshBasicMaterial({
+      //   flatShading: true,
+      //   color: new THREE.Color(1, 0.5, 1)
+      // });
+
+      // material.opacity = 0.5;
+      // material.transparent = true;
+
+      // const mesh = new THREE.Mesh(geometry, material);
+
+      // const pivot = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0015, 2), material);
+
+      //  pivot.name = 'pivot';
+      //  pivot.position.z = - wandLen + wandOffset;
+      //  mesh.add(pivot);
+
+      //  controller1.add(mesh.clone());
+      //  controller2.add(mesh.clone());
+
+      vrSession = session;
+
+      renderer.setAnimationLoop((now) => loop(now, true));
+    },
+    function end() {
+      renderer.setAnimationLoop(null);
+      console.log("🕶️ VR Session ended.");
+      vrSession = null;
     }
-
-    function onSelectEnd() {
-      this.userData.isSelecting = false;
-      penEvent("lift", this);
-    }
-
-    function onSqueezeStart() {
-      this.userData.isSqueezing = true;
-      this.userData.positionAtSqueezeStart = this.position.y;
-      this.userData.scaleAtSqueezeStart = this.scale.x;
-    }
-
-    function onSqueezeEnd() { this.userData.isSqueezing = false; }
-
-    controller1 = renderer.xr.getController(0);
-    controller1.name = "controller-1";
-    controller1.addEventListener('selectstart', onSelectStart);
-    controller1.addEventListener('selectend', onSelectEnd);
-    controller1.addEventListener('squeezestart', onSqueezeStart);
-    controller1.addEventListener('squeezeend', onSqueezeEnd);
-    scene.add(controller1);
-
-    controller2 = renderer.xr.getController(1);
-    controller2.name = "controller-2";
-    controller2.addEventListener('selectstart', onSelectStart);
-    controller2.addEventListener('selectend', onSelectEnd);
-    controller2.addEventListener('squeezestart', onSqueezeStart);
-    controller2.addEventListener('squeezeend', onSqueezeEnd);
-    scene.add(controller2);
-
-    // Create some geometry for each controller.
-    // const wandLen = 0.2;
-    // const wandOffset = 0.075;
-    // const geometry = new THREE.CylinderGeometry(0.0015, 0.0015, 0.2, 32);
-    // geometry.rotateX(- Math.PI / 2);
-    //geometry.translate(0, 0, - (wandLen / 2) + wandOffset);
-    // const material = new THREE.MeshBasicMaterial({
-    //   flatShading: true,
-    //   color: new THREE.Color(1, 0.5, 1)
-    // });
-
-    // material.opacity = 0.5;
-    // material.transparent = true;
-
-    // const mesh = new THREE.Mesh(geometry, material);
-
-    // const pivot = new THREE.Mesh(new THREE.IcosahedronGeometry(0.0015, 2), material);
-
-
-    //  pivot.name = 'pivot';
-    //  pivot.position.z = - wandLen + wandOffset;
-    //  mesh.add(pivot);
-
-    //  controller1.add(mesh.clone());
-    //  controller2.add(mesh.clone());
-
-    vrSession = session;
-
-    renderer.setAnimationLoop((now) => loop(now, true));
-  }, function end() {
-    renderer.setAnimationLoop(null);
-    console.log("🕶️ VR Session ended.");
-    vrSession = null;
-  }); // Will return `undefined` if VR is not supported.
+  ); // Will return `undefined` if VR is not supported.
 
   if (button) document.body.append(button);
 
@@ -144,7 +154,6 @@ export function initialize(wrapper, loop, sendToPiece) {
 }
 
 export function bake({ cam, forms, color }, { width, height }, size) {
-
   // Only instantiate some things once.
   if (!target || target.width !== width || target.height !== height) {
     target = new THREE.WebGLRenderTarget(width, height);
@@ -163,7 +172,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   if (!vrSession) {
     camera.rotation.order = "YXZ"; // Set to match the software renderer.
     camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
-    camera.scale.set(...cam.scale)
+    camera.scale.set(...cam.scale);
     camera.position.set(...cam.position);
   }
 
@@ -262,13 +271,15 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
     // *** ✏️ Line ***
     if (f.type === "line") {
-
       let material;
 
-      if (f.vertices[0].color) { // Only use a gloabl color if vertices don't have color.
+      if (f.vertices[0].color) {
+        // Only use a gloabl color if vertices don't have color.
         material = new THREE.LineBasicMaterial();
       } else {
-        material = new THREE.LineBasicMaterial({ color: rgbToHex(...(f.color || color)) });
+        material = new THREE.LineBasicMaterial({
+          color: rgbToHex(...(f.color || color)),
+        });
       }
 
       material.transparent = true;
@@ -319,14 +330,30 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     }
 
     if (f.type === "line:buffered") {
+      // Line2 ( LineGeometry, LineMaterial )
 
       let material;
 
-      if (f.color) { // Only use a gloabl color if vertices don't have color.
-        material = new THREE.LineBasicMaterial({ color: rgbToHex(...(f.color || color)) });
+      if (f.color) {
+        // Only use a gloabl color if vertices don't have color.
+        material = new THREE.LineBasicMaterial({
+          color: rgbToHex(...(f.color || color)),
+        });
       } else {
         material = new THREE.LineBasicMaterial();
       }
+
+      /*
+      material = new LineMaterial({
+        color: 0xffffff,
+        linewidth: 5, // in world units with size attenuation, pixels otherwise
+        vertexColors: true,
+
+        //resolution:  // to be set by renderer, eventually
+        dashed: false,
+        alphaToCoverage: true,
+      });
+      */
 
       material.side = THREE.DoubleSide;
       material.transparent = true;
@@ -347,6 +374,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       }
 
       const geometry = new THREE.BufferGeometry();
+      // const geometry = new LineGeometry();
       const positions = new Float32Array(f.MAX_POINTS * 3);
       const colors = new Float32Array(f.MAX_POINTS * 4);
 
@@ -397,7 +425,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         new THREE.BufferAttribute(colors, 4, true)
       );
 
+      //geometry.setPositions(positions);
+      //geometry.setColors(colors);
+
       const lineb = new THREE.LineSegments(geometry, material);
+      //const lineb = new Line2(geometry, material);
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
@@ -413,6 +445,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       lineb.rotateY(radians(f.rotation[1]));
       lineb.rotateZ(radians(f.rotation[2]));
       lineb.scale.set(...f.scale);
+
+      //lineb.computeLineDistances();
 
       scene.add(lineb);
 
@@ -433,7 +467,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const fu = f; // formUpdate
       const form = scene.getObjectByProperty("aestheticID", fu.uid);
       if (!form) return;
-
 
       form.position.set(...fu.position);
 
@@ -524,11 +557,13 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         form.geometry.computeBoundingBox();
         form.geometry.computeBoundingSphere();
 
+        //form.geometry.setPositions(positions);
+        //form.geometry.setColors(colors);
+        //form.computeLineDistances();
+
         needsSphere = true; // for jiggleForm
       }
     }
-
-
   });
 
   // In case we ever need to render off screen...
@@ -536,7 +571,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   //renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
   //return pixels;
 
-  return forms.map(f => f.uid); // Return UIDs of every added or adjusted form.
+  return forms.map((f) => f.uid); // Return UIDs of every added or adjusted form.
 }
 
 function handleController(controller) {
@@ -553,9 +588,13 @@ function handleController(controller) {
 
   // Record pen events to send through to the piece.
   if (controller.userData.lastPosition) {
-    const delta = controller.position.distanceTo(controller.userData.lastPosition);
+    const delta = controller.position.distanceTo(
+      controller.userData.lastPosition
+    );
     // Add a small deadzone to controller movements.
-    if (delta > 0.0001) { penEvent(userData.isSelecting ? "draw" : "move", controller); }
+    if (delta > 0.0001) {
+      penEvent(userData.isSelecting ? "draw" : "move", controller);
+    }
   }
 
   controller.userData.lastPosition = { ...controller.position };
@@ -580,11 +619,11 @@ function penEvent(name, controller) {
     pointer: parseInt(controller.name.split("-")[1]),
     pos: { ...controller.position },
     rot: { ...controller.rotation },
-    lastPosition: { ...controller.userData.lastPosition }
+    lastPosition: { ...controller.userData.lastPosition },
   });
 }
 
-// Hooks into the requestAnimationFrame in the main system, and 
+// Hooks into the requestAnimationFrame in the main system, and
 // setAnimationLoop for VR.
 export function render(now) {
   //console.log(test);
@@ -630,14 +669,12 @@ export function render(now) {
       send({ type: "gpu-rendered-once" });
       renderedOnce = true;
     }
-
   }
 }
 
 export function pasteTo(ctx) {
   ctx.drawImage(renderer.domElement, 0, 0);
 }
-
 
 export function clear() {
   renderer.clear();
@@ -673,19 +710,19 @@ export function collectGarbage() {
 // TODO: Eventually replace disposal's "resources" with this. 22.10.31.17.44
 // Via: https://stackoverflow.com/a/73827012/8146077
 function removeObjectsWithChildren(obj) {
-
   if (obj.children.length > 0) {
     for (var x = obj.children.length - 1; x >= 0; x--) {
       removeObjectsWithChildren(obj.children[x]);
     }
   }
 
-  if (obj.geometry) { obj.geometry.dispose(); }
+  if (obj.geometry) {
+    obj.geometry.dispose();
+  }
 
   if (obj.material) {
     if (obj.material.length) {
       for (let i = 0; i < obj.material.length; ++i) {
-
         if (obj.material[i].map) obj.material[i].map.dispose();
         if (obj.material[i].lightMap) obj.material[i].lightMap.dispose();
         if (obj.material[i].bumpMap) obj.material[i].bumpMap.dispose();
@@ -693,10 +730,9 @@ function removeObjectsWithChildren(obj) {
         if (obj.material[i].specularMap) obj.material[i].specularMap.dispose();
         if (obj.material[i].envMap) obj.material[i].envMap.dispose();
 
-        obj.material[i].dispose()
+        obj.material[i].dispose();
       }
-    }
-    else {
+    } else {
       if (obj.material.map) obj.material.map.dispose();
       if (obj.material.lightMap) obj.material.lightMap.dispose();
       if (obj.material.bumpMap) obj.material.bumpMap.dispose();

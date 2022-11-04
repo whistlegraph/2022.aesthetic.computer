@@ -50,6 +50,8 @@ function boot({
   }
 
   resize(160, 90); // 16x9
+
+  // TODO: Eek! Screen height is not changing after resize...
   // resize(screen.width, screen.height); // 16x9 // TODO: Double resize doesn't work... why is that?
 
   const scale = 9;
@@ -63,6 +65,7 @@ function boot({
 
   const w = 3 * 3,
     h = 4 * 3;
+
   buttons.load = new Button(3, screen.height - h - 3, w, h);
   buttons.save = new Button(
     buttons.load.box.x + buttons.load.box.w + 3,

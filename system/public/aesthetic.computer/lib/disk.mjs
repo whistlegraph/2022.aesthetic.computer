@@ -1641,12 +1641,8 @@ async function makeFrame({ data: { type, content } }) {
       //       regenerated on every frame.
       //graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
 
-      $api.screen = {
-        pixels: screen.pixels,
-        width: screen.width,
-        height: screen.height,
-        center: [screen.width / 2, screen.height / 2],
-      };
+      $api.screen = screen;
+      $api.screen.center = [screen.width / 2, screen.height / 2];
 
       $api.fps = function (newFps) {
         send({ type: "fps-change", content: newFps });

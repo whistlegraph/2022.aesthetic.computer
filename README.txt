@@ -37,6 +37,7 @@ Welcome to...
        and squash the main display.
   - [] The back button does not work in the Instagram in-app browser.
   + Dev Only
+  - [] Get ssh working in VS Code on windows via WSL: https://stackoverflow.com/questions/60150466/can-i-ssh-from-wsl-in-visual-studio-code
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   + Done
   - [x] Add `debug` as an import for the API.
@@ -44,14 +45,7 @@ Welcome to...
   - [x] Fix Firefox not working.
   - [x] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
 
-🌟 Projects In Progress 🌟
-
-*** Keyboard Input ***
-  - [] Debug keyboard input on every device again.
-    - [] Android
-    - [x] Meta (Seems good.) 22.11.03.23.34
-  + Done
-  - [x] Fix duplicate "Enter" event bug on desktop.
+🌟 Projects In Progress (PIP) 🌟
 
 ***Walkie Talkie***
 - [] Maybe recordings / videos can be sent back and forth between two parties?
@@ -132,7 +126,8 @@ Welcome to...
 
 *** (Wand) ***
  + Now
-  - [] Line thickness.
+  - [-] Line thickness.
+    - [-] Work on implementing: https://github.com/mrdoob/three.js/blob/master/examples/webgl_lines_fat.html
     - [] Billboarded MeshLine?
     - [] Tube geometry?
   - [] Replace Gl.lines with something cooler.
@@ -891,7 +886,17 @@ Welcome to...
   - [] Make a VSCode extension that opens an official aesthetic.computer pane?
 
 
-*Recently ✅ Completed*
+* Recently ✅ Completed (RC) *
+
+*** Tracker ***
+  - [x] Fix buttons.
+
+*** Keyboard Input ***
+  - [x] Debug keyboard input on every device again.
+    - [x] Android
+    - [x] Meta (Seems good.) 22.11.03.23.34
+  + Done
+  - [x] Fix duplicate "Enter" event bug on desktop.
 
 *** Friendlier Developer Logs ***
   - [x] Optimize the console.log output in production to be
