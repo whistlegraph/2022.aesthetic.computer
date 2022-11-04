@@ -54,14 +54,15 @@ Welcome to...
   - [] 🅰️ Client
     - [] Implement `connect` command in prompt. 
     - [] Add ethereum based client identity authentication.
-      - [] Shop around a bit.
-      - [] Examine token gate code on glitch: https://glitch.com/edit/#!/long-whistlegraph?path=public%2Fscript.js%3A14%3A23
       - [] Include web3.min as a dependency.
       - [] Then login via... 
           const accounts = await window.ethereum.request({
             method: "eth_requestAccounts",
           });
           const account = accounts[0];
+      + Later
+      - [] Shop around a bit.
+      - [] Examine token gate code on glitch: https://glitch.com/edit/#!/long-whistlegraph?path=public%2Fscript.js%3A14%3A23
     - [] Write more clientside code to trigger the mint. 
     - [] The data needs to be uploaded to the server and a signature
          for minting needs to be signed (payment processor).

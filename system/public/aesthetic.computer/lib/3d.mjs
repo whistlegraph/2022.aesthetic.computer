@@ -51,6 +51,7 @@ export function initialize(wrapper, loop, sendToPiece) {
   renderer = new THREE.WebGLRenderer({
     alpha: false,
     preserveDrawingBuffer: true,
+    antialias: false,
   });
 
   renderer.sortObjects = false;
@@ -273,6 +274,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     if (f.type === "line") {
       let material;
 
+      /*
       if (f.vertices[0].color) {
         // Only use a gloabl color if vertices don't have color.
         material = new THREE.LineBasicMaterial();
@@ -281,35 +283,67 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           color: rgbToHex(...(f.color || color)),
         });
       }
+      */
+
+      material = new LineMaterial({
+        color: 0xffffff,
+        linewidth: 0.010, // in world units with size attenuation, pixels otherwise
+        vertexColors: true,
+        //resolution:  // to be set by renderer, eventually
+        dashed: false,
+        alphaToCoverage: true,
+      });
+
 
       material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
-      material.linewidth = 1;
-      material.vertexColors = f.vertices[0].color ? true : false;
-      material.vertexAlphas = f.vertices[0].color?.length === 4 ? true : false;
+
+      //material.linewidth = 1;
+      //material.vertexColors = f.vertices[0].color ? true : false;
+      //material.vertexAlphas = f.vertices[0].color?.length === 4 ? true : false;
 
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
       const pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
-      const colors = new Float32Array(points.length * 4);
+      //const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      //const geometry = new THREE.TubeGeometry(points, 20, 2, 8, false);
+
+      const geometry = new LineGeometry();
+
+      const positions = new Float32Array(points.length * 3);
+      const colors = new Float32Array(pointColors.length * 3);
+      //const colors = new Float32Array(pointColors.length * 4);
 
       for (let i = 0; i < pointColors.length; i += 1) {
-        const colStart = i * 4;
+        //const colStart = i * 4;
+        const colStart = i * 3;
         colors[colStart] = pointColors[i].x / 255;
         colors[colStart + 1] = pointColors[i].y / 255;
         colors[colStart + 2] = pointColors[i].z / 255;
         colors[colStart + 3] = pointColors[i].w / 255;
       }
 
+      for (let i = 0; i < points.length; i += 1) {
+        const posStart = i * 3;
+        positions[posStart] = points[i].x;
+        positions[posStart + 1] = points[i].y;
+        positions[posStart + 2] = points[i].z;
+      }
+
+      /*
       geometry.setAttribute(
         "color",
         new THREE.BufferAttribute(colors, 4, true)
       );
+      */
 
-      const line = new THREE.Line(geometry, material);
+      geometry.setPositions(positions);
+      geometry.setColors(colors);
+
+      const line = new Line2(geometry, material);
+      //const line = new THREE.Mesh(geometry, material);
 
       line.translateX(f.position[0]);
       line.translateY(f.position[1]);
@@ -320,6 +354,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       line.scale.set(...f.scale);
 
       scene.add(line);
+
+      line.computeLineDistances();
+
       line.aestheticID = f.uid;
 
       disposal.push({
@@ -330,10 +367,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     }
 
     if (f.type === "line:buffered") {
-      // Line2 ( LineGeometry, LineMaterial )
+      // Work from here: https://codesandbox.io/s/threejs-basic-example-forked-ygjt9o?file=/src/index.js:1536-1549
 
       let material;
 
+      /*
       if (f.color) {
         // Only use a gloabl color if vertices don't have color.
         material = new THREE.LineBasicMaterial({
@@ -342,27 +380,24 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       } else {
         material = new THREE.LineBasicMaterial();
       }
+      */
 
-      /*
       material = new LineMaterial({
         color: 0xffffff,
-        linewidth: 5, // in world units with size attenuation, pixels otherwise
+        linewidth: 0.01, // in world units with size attenuation, pixels otherwise
         vertexColors: true,
-
         //resolution:  // to be set by renderer, eventually
         dashed: false,
         alphaToCoverage: true,
       });
-      */
 
-      material.side = THREE.DoubleSide;
       material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
-      material.linewidth = 1;
-      material.vertexColors = true;
-      material.vertexAlphas = true;
+      //material.linewidth = 1;
+      //material.vertexColors = true;
+      //material.vertexAlphas = true;
 
       let points = [];
       let pointColors = [];
@@ -373,8 +408,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
       }
 
-      const geometry = new THREE.BufferGeometry();
-      // const geometry = new LineGeometry();
+      //const geometry = new THREE.BufferGeometry();
+      const geometry = new LineGeometry();
+
       const positions = new Float32Array(f.MAX_POINTS * 3);
       const colors = new Float32Array(f.MAX_POINTS * 4);
 
@@ -415,21 +451,21 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         colors[colStart + 3] = pointColors[i].w / 255;
       }
 
-      geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3)
-      );
+      geometry.setPositions(positions);
+      geometry.setColors(colors);
 
-      geometry.setAttribute(
-        "color",
-        new THREE.BufferAttribute(colors, 4, true)
-      );
+      //geometry.setAttribute(
+      //  "position",
+      //  new THREE.BufferAttribute(positions, 3)
+      //);
 
-      //geometry.setPositions(positions);
-      //geometry.setColors(colors);
+      //geometry.setAttribute(
+      //  "color",
+      //  new THREE.BufferAttribute(colors, 4, true)
+      //);
 
-      const lineb = new THREE.LineSegments(geometry, material);
-      //const lineb = new Line2(geometry, material);
+      //const lineb = new THREE.LineSegments(geometry, material);
+      const lineb = new Line2(geometry, material);
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
@@ -446,15 +482,15 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       lineb.rotateZ(radians(f.rotation[2]));
       lineb.scale.set(...f.scale);
 
-      //lineb.computeLineDistances();
+      lineb.computeLineDistances();
 
       scene.add(lineb);
 
       geometry.setDrawRange(0, points.length);
-      geometry.attributes.position.needsUpdate = true;
-      geometry.attributes.color.needsUpdate = true;
-      geometry.computeBoundingBox();
-      geometry.computeBoundingSphere();
+      //geometry.attributes.position.needsUpdate = true;
+      //geometry.attributes.color.needsUpdate = true;
+      //geometry.computeBoundingBox();
+      //geometry.computeBoundingSphere();
 
       disposal.push({
         keep: f.gpuKeep,
@@ -532,9 +568,13 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         // TODO: How to make the buffer circular?
         //       (When would I want this?) 22.10.30.17.14
 
-        const positions = form.geometry.attributes.position.array;
-        const colors = form.geometry.attributes.color.array;
+        // const positions = form.geometry.attributes.position.array;
+        //const colors = form.geometry.attributes.colors.array;
+        // debugger;
 
+        console.log(form.geometry.attributes);
+
+        /*
         for (let i = 0; i < points.length; i += 1) {
           const posStart = (form.ac_lastLength + i) * 3;
           positions[posStart] = points[i].x;
@@ -556,6 +596,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
         form.geometry.computeBoundingBox();
         form.geometry.computeBoundingSphere();
+        */
 
         //form.geometry.setPositions(positions);
         //form.geometry.setColors(colors);
