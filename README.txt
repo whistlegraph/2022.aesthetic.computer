@@ -130,6 +130,10 @@ Welcome to...
     - [-] Work on implementing: https://github.com/mrdoob/three.js/blob/master/examples/webgl_lines_fat.html
     - [] Billboarded MeshLine?
     - [] Tube geometry?
+  - [] Add CSV unreal exporter that follows this pattern:
+      ---,Vertices,Color
+      NewRow,"((X=10.000000,Y=20.000000,Z=-30.000000))","((B=0,G=0,R=201,A=0))"
+      NewRow_0,"((X=10.000000,Y=20.000000,Z=-30.000000))","((B=0,G=0,R=201,A=0))"
   - [] Replace Gl.lines with something cooler.
   - [] Add / design / consider touch controls.
     - [F] [B] [W/L]
