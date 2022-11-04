@@ -29,75 +29,54 @@ Welcome to...
   - Reas: https://glitch.com/edit/#!/reas-aesthetic-computer
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
-🐞 Major Bugs & Regressions
+🐞 Annoying Bugs & Regressions (Some dev only.)
+  + In Production
   - [🍽️] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
-  - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
-  - [] (Related to reloading.) Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
-- [🆘] Add `debug` as an import for the API.
-  - [] Is there a memory leak in `prompt`?
+    - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
   - [] Zooming in on the page a lot will make the margin too large
        and squash the main display.
   - [] The back button does not work in the Instagram in-app browser.
+  + Dev Only
   - [] `npm run code` does not work offline, due to netlify relying on online conectivity.
   + Done
+  - [x] Add `debug` as an import for the API.
   - [x] Fix pen data being erased on click.
   - [x] Fix Firefox not working.
   - [x] Fix `@sage/@sage/@sage/@sage/hello_line` on development refresh.
 
 🌟 Projects In Progress 🌟
 
-*** Developers ***
- - [] Move `maya` from glitch to ssh.
-  - [] Document each step so that I can script adding new users in the future.
- - [] Figure out how to best automate the addition of a new developer... 
- - [] Why isn't artur's ssh key working?
+*** Keyboard Input ***
+  - [] Debug keyboard input on every device again.
+    - [] Android
+    - [x] Meta (Seems good.) 22.11.03.23.34
+  + Done
+  - [x] Fix duplicate "Enter" event bug on desktop.
 
-*** Sage Session TODOs ***
- - [] make sure color attributes work for QUADS.
- - [] flip the y on camera position initializer.
- - [] `Form` should scale and then rotate. See `Form.graph`.
- - [] `Form` should have a point / points option.
- - [] `point` primitive that is below forms. 
- - [] Make color vertices work in software3D.  
+***Walkie Talkie***
+- [] Maybe recordings / videos can be sent back and forth between two parties?
 
-*** i ***
- - [] Make `i` 2D multiplayer with UDP. 
-
-*** Ambient Presence ***
- - [] No matter what disk you're on... queue into the ambient presence of others. You should be able to meet others.
-
-*** MUD ***
- - [] Make a multi-user dungeon / room system, designed for single session play.
-  * welkum 2 mud *
-  & there r 32 playrz ONLINE
-
-*** Palette ***
-  - [] Create a basic palette that enables one finger drawing. 
-  - [] Add tools to palette that utilize existing toolset.
-  - [] Add save button to palette. (Fix `tracker` buttions?)
-  - [] Add "sign" and "mint" to palette as well.
-
-*** p1xelfool additions ***
- - [] Complete TODOS @p1xelgool/blank. 
- - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
-
-*** Communication ***
-  - [] Add text chat.
-    - [] Implement for both computer, phone, and headset.
-  - [] Add voice chat.
-    - [] Implement for both computer, phone, and headset.
-    - [] Use https://docs.daily.co for now.
-
-*** Identity ***
-
-  - [] Client
-    - [] Implement connect command in prompt. 
-    - [] Add ethereum based identity authentication.
+*** Mintable Paintings (Screen Buffers) ***
+  - [] 🅰️ Client
+    - [] Implement `connect` command in prompt. 
+    - [] Add ethereum based client identity authentication.
       - [] Shop around a bit.
-      - [] Examine token gate code on glitch.
-    - [] 
-  - [] Server
-    - [] Take description.
+      - [] Examine token gate code on glitch: https://glitch.com/edit/#!/long-whistlegraph?path=public%2Fscript.js%3A14%3A23
+      - [] Include web3.min as a dependency.
+      - [] Then login via... 
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+          const account = accounts[0];
+    - [] Write more clientside code to trigger the mint. 
+    - [] The data needs to be uploaded to the server and a signature
+         for minting needs to be signed (payment processor).
+    - [] Then a success or failure message needs to be shown to the user via the
+         prompt.
+    - [] The prompt should have some kind of progress bar...
+    - [] Show title and description in the waller signature message so the
+         minter can confirm they did not make a mistake!
+  - [] 🅱️ Server
     - [] Upload media to S3
       - [] Make a special S3 bucket for mints.
     - [] Upload media to IPFS
@@ -106,24 +85,32 @@ Welcome to...
       - [] Set up ipfs.aesthetic.computer gateway.
     - [] Create JSON record somewhere... in a noSQL database hosted by Digital Ocean?
       - [] Metadata:
-
-        image_url
-        
-  - [] Contract
+          {
+            name: `#${id}To be set by `painting:mint insert-message-here`",
+            description: "A default for all paintings?", // Or should I ask the user.
+            external_url: `https://aesthetic.computer/paintings/${id}`,
+            animation_url: ...,
+            image: "ipfs://",
+            attributes: [
+              {
+                "trait_type": "Artist", // or Creator? Research this...
+                "value": creator
+              },
+              {
+                "trait_type": // Date? See also: https://docs.opensea.io/docs/metadata-standards
+              }
+            ] 
+          }
+  - [] 🆑 Contract
     - [] Implement contract features: https://docs.openzeppelin.com/contracts/4.x/wizard
     - [] Open contract, mintable by everyone. 
     - [] Unlimited edition.
     - [] Charge a mint fee which goes back to the aesthetic.computer wallet and
          prevents spam and promotes quality.
     - [] Have a function that allows me to update the mint fee. 
-  
-
-*** Keyboard Input ***
-  - [] Debug keyboard input on every device again.
-    - [] Android
-    - [] Meta
-  + Done
-  - [x] Fix duplicate "Enter" event bug on desktop.
+    - [] Make a special wallet for aesthetic.computer.
+    - [] Deploy contract!
+    - [] Add media and metadata to OpenSea.
 
 *** (Wand) ***
  + Now
@@ -259,14 +246,52 @@ Welcome to...
  - [x] 3dline loading
  - [x] Smooth out everything.
 
+*** Developers ***
+ - [] Move `maya` from glitch to ssh.
+  - [] Document each step so that I can script adding new users in the future.
+ - [] Figure out how to best automate the addition of a new developer... 
+ - [] Why isn't artur's ssh key working?
+
+*** Sage Session TODOs ***
+ - [] make sure color attributes work for QUADS.
+ - [] flip the y on camera position initializer.
+ - [] `Form` should scale and then rotate. See `Form.graph`.
+ - [] `Form` should have a point / points option.
+ - [] `point` primitive that is below forms. 
+ - [] Make color vertices work in software3D.  
+
+*** i ***
+ - [] Make `i` 2D multiplayer with UDP. 
+
+*** Ambient Presence ***
+ - [] No matter what disk you're on... queue into the ambient presence of others. You should be able to meet others.
+
+*** MUD ***
+ - [] Make a multi-user dungeon / room system, designed for single session play.
+  * welkum 2 mud *
+  & there r 32 playrz ONLINE
+
+*** Palette ***
+  - [] Create a basic palette that enables one finger drawing. 
+  - [] Add tools to palette that utilize existing toolset.
+  - [] Add save button to palette. (Fix `tracker` buttions?)
+  - [] Add "sign" and "mint" to palette as well.
+
+*** p1xelfool additions ***
+ - [] Complete TODOS @p1xelgool/blank. 
+ - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
+
+*** Communication ***
+  - [] Add text chat.
+    - [] Implement for both computer, phone, and headset.
+  - [] Add voice chat.
+    - [] Implement for both computer, phone, and headset.
+    - [] Use https://docs.daily.co for now.
+
 *** Workers ***
  - [] Reconsider where the piece worker boundary is now.
       (It might be just a bad design.)
       (Or it's a great design and just works poorly with the WebXR animation loop.)
-
-*** Friendlier Developer Logs ***
-  - [] Optimize the console.log output in production to be
-       more terse, and make common sense.
 
 *** Physics ***
  - [] Add jumping / movement speed.
@@ -639,29 +664,6 @@ Welcome to...
     - [] Pen: Get a good mapping for Apple Pencil / normalize the data. 
     - [] Touch: Two finger pressure. (Second finger regulates it via Y axis.)
     - [] Mouse: Use scroll wheel for delta. 
-      
-***3D Spatial Co-present Drawing***
-  ***A-Frame Integration***
-    - [] Finish routing input events?
-    - Prototype:
-    - Either way:
-      [] Set up an orthographic camera and mouse-enabled drawing for desktop users
-        of the a-frame layer.
-      [] Read source code of a-painter: https://aframe.io/a-painter/
-
-    -  iframe method:
-        [X] Make sure the "escape" and "~" key is handled (see Whistlegraph).
-        [X] Set cursor to none on the iframe.
-        [X] Send events from the iframe back to the main window.
-        [X] Use those events to update the a.c cursor.
-
-    -  Non-iframe method (why would this be better... maybe for recording?) [hold off for now]
-        [] Get aframe script tag loading inside of the body then
-          inject the scene.
-***Explore VR without A-Frame***
-  ***Without A-Frame***
-   - [] Clone the basic WebXR examples, run them and and read them.
-        URL here: https://github.com/immersive-web/webxr-samples
 
 *** Re-organize Repository *** 
   - [] Make a better entry point for this repository, consider how far the
@@ -720,9 +722,6 @@ Welcome to...
 
 ***i***
   - [] See `disks/i.mjs` 
-
-***Walkie Talkie***
-- [] Maybe recordings / videos can be sent back and forth between two parties?
 
 ***Shortcuts / open a new URL ***
   - [] Figure out notation: ~user/piece, piece~param1, #notion
@@ -875,6 +874,10 @@ Welcome to...
 
 
 *Recently ✅ Completed*
+
+*** Friendlier Developer Logs ***
+  - [x] Optimize the console.log output in production to be
+       more terse, and make common sense.
 
 ***Android Day***
   - [x] Fix keyboard controls not working (this should also fix Meta Quest 2).

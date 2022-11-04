@@ -694,6 +694,9 @@ async function load(
   // to reload remotely on failure.
   let receiver; // Handles incoming messages from the socket.
 
+  // Add debug to the common api.
+  $commonApi.debug = debug;
+
   // Add reload to the common api.
   $commonApi.reload = ({ piece }) => {
     if (piece === "*refresh*") {
