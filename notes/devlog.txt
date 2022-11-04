@@ -33,6 +33,18 @@ Practical and conceptual notes weaved together.
 - [] Add hybrid bindings to fish: https://github.com/fish-shell/fish-shell/blob/master/share/functions/fish_hybrid_key_bindings.fish
 
 💻 Docs
+
+ -> How to Deploy & Mint Contracts
+  - (Replace NETWORK with either: `local`, `rinkeby`, `ropsten` or `mainnet`)
+  - `cd` into `ethereum-lwge` directory
+  - (`local` only) Start running in a separate terminal:
+    `npm run NETWORK:node`
+  - In a terminal: `npm run NETWORK:balance` 
+  - In a terminal: `npm run NETWORK:deploy` 
+  - Copy the address after "💚 Deployed to:"
+  - `npm run NETWORK:verify -- [PASTED ADDRESS]` to add the source to etherscan.
+  - `npm run NETWORK:mint -- [PASTED ADDRESS]`
+
 -> Meta Quest Remote Debugging (Manual Setup):
    https://developer.oculus.com/documentation/web/browser-remote-debugging/
 

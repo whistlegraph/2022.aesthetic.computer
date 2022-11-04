@@ -91,7 +91,37 @@ Welcome to...
     - [] Implement for both computer, phone, and headset.
   - [] Add voice chat.
     - [] Implement for both computer, phone, and headset.
-  - [] Add identity / authentication / JWT tokens.
+    - [] Use https://docs.daily.co for now.
+
+*** Identity ***
+
+  - [] Client
+    - [] Implement connect command in prompt. 
+    - [] Add ethereum based identity authentication.
+      - [] Shop around a bit.
+      - [] Examine token gate code on glitch.
+    - [] 
+  - [] Server
+    - [] Take description.
+    - [] Upload media to S3
+      - [] Make a special S3 bucket for mints.
+    - [] Upload media to IPFS
+      - [] Pinata: https://docs.pinata.cloud/pinata-api/authentication
+      - [] Mix pinata with server upload calls.
+      - [] Set up ipfs.aesthetic.computer gateway.
+    - [] Create JSON record somewhere... in a noSQL database hosted by Digital Ocean?
+      - [] Metadata:
+
+        image_url
+        
+  - [] Contract
+    - [] Implement contract features: https://docs.openzeppelin.com/contracts/4.x/wizard
+    - [] Open contract, mintable by everyone. 
+    - [] Unlimited edition.
+    - [] Charge a mint fee which goes back to the aesthetic.computer wallet and
+         prevents spam and promotes quality.
+    - [] Have a function that allows me to update the mint fee. 
+  
 
 *** (Wand) ***
  + Now
