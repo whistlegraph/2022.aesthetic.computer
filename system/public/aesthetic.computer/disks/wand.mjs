@@ -434,6 +434,7 @@ function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
 
 // ✒ Act
 function act({ event: e, color, gpu, screen, download, num: { timestamp } }) {
+
   // 👋 Right Hand
   if (e.is("3d:touch:2")) wand.start([e.pos.x, e.pos.y, e.pos.z, 0]); // ✏️
   if (e.is("3d:lift:2")) wand.stop(); // 🚩
@@ -845,7 +846,7 @@ class Wand {
     const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
     const quantizedSmoothing = true; // Regulate all segments while still smoothing.
     //const step = 0.001;
-    const step = 0.02;
+    const step = 0.12;
     const speed = 5;
     //const speed = iOS ? 40 : 20;
 

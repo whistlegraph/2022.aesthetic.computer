@@ -6,6 +6,7 @@ import {
 	Matrix4,
 	Mesh,
 	MeshStandardMaterial,
+	MathUtils,
 	Vector3
 } from './three.module.js';
 
@@ -130,7 +131,7 @@ function TubePainter() {
 
 	//
 
-	const up = new Vector3( 0, 0, 1 );
+	const up = new Vector3( 1, 0, 0 );
 
 	const point1 = new Vector3();
 	const point2 = new Vector3();
@@ -139,26 +140,21 @@ function TubePainter() {
 	const matrix2 = new Matrix4();
 
 	function moveTo( position ) {
-
 		point1.copy( position );
 		matrix1.lookAt( point2, point1, up );
 
 		point2.copy( position );
 		matrix2.copy( matrix1 );
-
 	}
 
 	function lineTo( position ) {
-
 		point1.copy( position );
-		//debugger;
 		matrix1.lookAt( point2, point1, up );
 
 		stroke( point1, point2, matrix1, matrix2 );
 
 		point2.copy( point1 );
 		matrix2.copy( matrix1 );
-
 	}
 
 	function setSize( value ) {

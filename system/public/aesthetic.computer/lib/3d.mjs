@@ -299,7 +299,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       material.depthTest = true;
 
       //material.linewidth = 1;
-      material.vertexColors = f.vertices[0].color ? true : false;
+      //material.vertexColors = f.vertices[0].color ? true : false;
       //material.vertexAlphas = f.vertices[0].color?.length === 4 ? true : false;
 
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
@@ -606,6 +606,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           pointColors.push(new THREE.Vector4(...formUpdate.vertices[i].color));
         }
 
+        console.log(points);
+
         const painter = form.userData.ac_painter;
 
         //points.forEach(p => {
@@ -613,7 +615,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
         for (let i = 0; i < points.length; i += 2) {
           //painter.moveTo(points[i]);
-          painter.lineTo(points[i]);
+          painter.lineTo(points[i + 1]);
           //painter.lineTo(points[i+1]);
         }
         painter.update();
@@ -722,9 +724,8 @@ export function checkForRemovedForms(formsBaked) {
 export function handleEvent(event) {
   const form = scene.getObjectByUserDataProperty("aestheticID", event.uid);
   const painter = form.userData.ac_painter;
-  console.log(event.to);
   painter.moveTo(new THREE.Vector3(...event.to));
-  console.log(form.userData.ac_painter, event);
+  console.log('move to', [...event.to])
 }
 
 function handleController(controller) {
