@@ -138,6 +138,8 @@ function segment({ Form, num }, position, rotation, length) {
 
     const pos = position.slice();
 
+    // TODO: These need to be rotated and pushed out on the Z axis also...
+
     // TODO: Why aren't these getting pushed out?
     surroundingPoints.push([
       sin(angle + rot) * thickness,
