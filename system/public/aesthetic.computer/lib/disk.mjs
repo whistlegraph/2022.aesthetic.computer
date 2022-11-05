@@ -59,7 +59,7 @@ const nopaint = {
     paste,
     num,
     screen,
-    store
+    store,
   }) {
     if (e.is("keyboard:down:enter")) {
       download(`painting-${num.timestamp()}.png`, sys.painting);
@@ -146,7 +146,6 @@ const store = {
     // TODO: Turn the existing key into a retrieval function / promise?
   },
   retrieve: function (key, method = "local") {
-
     const promise = new Promise((resolve) => {
       storeRetrievalResolution = resolve;
     });
@@ -159,7 +158,7 @@ const store = {
       },
     });
 
-    return promise
+    return promise;
   },
   delete: function (key, method = "local") {
     // Remove the key from the ram store, no matter what the method.
@@ -195,6 +194,7 @@ const $commonApi = {
   darkMode, // Toggle dark mode or set to `true` or `false`.
   // content: added programmatically: see Content class
   gpuReady: false,
+  gpu: { message: (content) => send({ type: "gpu-event", content }) },
   num: {
     even: num.even,
     odd: num.odd,
@@ -294,7 +294,7 @@ const LINE = {
   type: "line",
   positions: [
     [0, 0, 0, 1], // Bottom
-    [0, 1, 0, 1] // Top
+    [0, 1, 0, 1], // Top
   ],
   indices: [0, 1],
 };
@@ -392,7 +392,8 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
   if (cpu === true) {
     if (Array.isArray(forms)) forms.forEach((form) => form.graph(cam));
     else forms.graph(cam);
-  } else { // GPU forms.
+  } else {
+    // GPU forms.
     if (!Array.isArray(forms)) forms = [forms];
 
     // Build a list of forms to send, ignoring already sent ones by UID.
@@ -401,12 +402,10 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
     forms.filter(Boolean).forEach((form) => {
       // A. If the form has not been sent yet...
       if (formsSent[form.uid] === undefined) {
-
         // Set the form to expire automatically if keep is false.
         formsToSend.push(form);
         formsSent[form.uid] = true;
         form.gpuVerticesSent = form.vertices.length;
-
       } else {
         // B. If the form has been sent, but the form has changed and
         //    needs a partial update or is simply being redrawn.
@@ -445,7 +444,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
           // it will get cleared.
           formsToSend.push({
             update: "form:touch",
-            uid: form.uid
+            uid: form.uid,
           });
         }
       }
@@ -458,9 +457,16 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
     send({
       type: "forms",
       content: {
-        forms: formsToSend, cam: {
-          position: cam.position, rotation: cam.rotation, scale: cam.scale, fov: cam.fov, near: cam.near, far: cam.far
-        }, color: graph.color()
+        forms: formsToSend,
+        cam: {
+          position: cam.position,
+          rotation: cam.rotation,
+          scale: cam.scale,
+          fov: cam.fov,
+          near: cam.near,
+          far: cam.far,
+        },
+        color: graph.color(),
       },
     });
 
@@ -469,7 +475,6 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
     // paintFormsResolution = resolve;
     // });
   }
-
 }
 
 const $paintApiUnwrapped = {
@@ -641,7 +646,6 @@ async function load(
   { path, host, search, params, hash, text },
   fromHistory = false
 ) {
-
   if (loading === false) {
     loading = true;
   } else {
@@ -1038,7 +1042,6 @@ class Content {
 const signals = [];
 let reframed = false;
 async function makeFrame({ data: { type, content } }) {
-
   if (type === "init-from-bios") {
     debug = content.debug;
     ROOT_PIECE = content.rootPiece;
@@ -1205,7 +1208,8 @@ async function makeFrame({ data: { type, content } }) {
       console.warn(" 💗 Beat failure...", e);
     }
 
-    send({ type: "beat", content: { bpm: content.bpm, squares, bubbles } }//,
+    send(
+      { type: "beat", content: { bpm: content.bpm, squares, bubbles } } //,
       //[content.bpm]
     );
 
@@ -1292,21 +1296,22 @@ async function makeFrame({ data: { type, content } }) {
   // 2. Frame
   // This is where each...
   if (type === "frame") {
-
     // Take hold of a previously transferred screen buffer.
     let pixels;
     if (content.pixels) {
       //console.log(screen, content.pixels)
-      pixels = new Uint8ClampedArray(content.pixels)
+      pixels = new Uint8ClampedArray(content.pixels);
       if (screen) screen.pixels = pixels;
     }
 
     // Act & Sim (Occurs after first boot and paint.)
     if (booted && paintCount > 0n) {
       const $api = {};
-      Object.keys($commonApi).forEach(key => $api[key] = $commonApi[key]);
-      Object.keys($updateApi).forEach(key => $api[key] = $updateApi[key]);
-      Object.keys(painting.api).forEach(key => $api[key] = painting.api[key]);
+      Object.keys($commonApi).forEach((key) => ($api[key] = $commonApi[key]));
+      Object.keys($updateApi).forEach((key) => ($api[key] = $updateApi[key]));
+      Object.keys(painting.api).forEach(
+        (key) => ($api[key] = painting.api[key])
+      );
       //Object.assign($api, $commonApi);
       //Object.assign($api, $updateApi);
       //Object.assign($api, painting.api);
@@ -1324,7 +1329,6 @@ async function makeFrame({ data: { type, content } }) {
       $api.cursor = (code) => (cursorCode = code);
 
       if (content.pen) {
-
         const primaryPointer = help.findKeyAndValue(
           content.pen.pointers,
           "isPrimary",
@@ -1346,7 +1350,7 @@ async function makeFrame({ data: { type, content } }) {
           );
         };
 
-        $commonApi.pen = primaryPointer;// || { x: undefined, y: undefined };
+        $commonApi.pen = primaryPointer; // || { x: undefined, y: undefined };
       }
 
       // 🤖 Sim // no send
@@ -1371,7 +1375,7 @@ async function makeFrame({ data: { type, content } }) {
           initialSim = false;
         } else if (content.updateCount > 0 && paintCount > 0n) {
           // Update the number of times that are needed.
-          for (let i = content.updateCount; i--;) {
+          for (let i = content.updateCount; i--; ) {
             simCount += 1n;
             $api.simCount = simCount;
             try {
@@ -1507,8 +1511,13 @@ async function makeFrame({ data: { type, content } }) {
         Object.assign(data, {
           is: (e) => {
             let [prefix, event, pointer] = e.split(":");
-            if (prefix === "3d" && event === data.name && parseInt(pointer) === data.pointer) return true;
-          }
+            if (
+              prefix === "3d" &&
+              event === data.name &&
+              parseInt(pointer) === data.pointer
+            )
+              return true;
+          },
         });
         $api.event = data;
         try {
@@ -1587,8 +1596,10 @@ async function makeFrame({ data: { type, content } }) {
     // 🖼 Render // Two sends (Move one send up eventually? -- 2021.11.27.17.20)
     if (content.needsRender) {
       const $api = {};
-      Object.keys($commonApi).forEach(key => $api[key] = $commonApi[key]);
-      Object.keys(painting.api).forEach(key => $api[key] = painting.api[key]);
+      Object.keys($commonApi).forEach((key) => ($api[key] = $commonApi[key]));
+      Object.keys(painting.api).forEach(
+        (key) => ($api[key] = painting.api[key])
+      );
       // Object.assign($api, $commonApi);
       // Object.assign($api, painting.api);
 
@@ -1600,7 +1611,6 @@ async function makeFrame({ data: { type, content } }) {
         glazeAfterReframe = { type: "glaze", content };
       };
 
-
       // Make a screen buffer or resize it automatically if it doesn't exist.
       if (
         !screen ||
@@ -1608,7 +1618,8 @@ async function makeFrame({ data: { type, content } }) {
         screen.height !== content.height
       ) {
         screen = {
-          pixels: pixels || new Uint8ClampedArray(content.width * content.height * 4),
+          pixels:
+            pixels || new Uint8ClampedArray(content.width * content.height * 4),
           width: content.width,
           height: content.height,
           load: function load(name) {
@@ -1765,7 +1776,7 @@ async function makeFrame({ data: { type, content } }) {
         store["painting"] =
           store["painting"] ||
           (await store.retrieve("painting", "local:db")) ||
-          painting.api.painting(screen.width, screen.height, $ => {
+          painting.api.painting(screen.width, screen.height, ($) => {
             $.wipe(64);
           });
 
@@ -1774,7 +1785,7 @@ async function makeFrame({ data: { type, content } }) {
         try {
           boot($api);
         } catch (e) {
-          console.warn("🥾 Boot failure...", e)
+          console.warn("🥾 Boot failure...", e);
         }
         booted = true;
         send({ type: "disk-loaded-and-booted" });
@@ -1802,7 +1813,6 @@ async function makeFrame({ data: { type, content } }) {
           console.warn("🎨 Paint failure...", e);
         }
 
-
         // `DirtyBox` and `undefined` always set `noPaint` to `true`.
         noPaint =
           paintOut === false || (paintOut !== undefined && paintOut !== true);
@@ -1816,7 +1826,6 @@ async function makeFrame({ data: { type, content } }) {
         // console.log("!! Painted", paintCount, performance.now());
 
         if (paintOut) dirtyBox = paintOut;
-
 
         //console.log("bake")
         //send({ type: "3d-bake" });
@@ -1865,7 +1874,7 @@ async function makeFrame({ data: { type, content } }) {
         sendData.pixels = content.pixels;
       }
 
-      //else sendData.pixels = pixels; 
+      //else sendData.pixels = pixels;
 
       if (sendData.pixels?.byteLength === 0) {
         sendData.pixels = undefined;
@@ -1882,10 +1891,13 @@ async function makeFrame({ data: { type, content } }) {
       // Send update (sim).
       // TODO: How necessary is this - does any info ever need to actually
       //       get sent?
-      send({
-        type: "update",
-        content: { didntRender: true, loading, pixels: pixels?.buffer },
-      }, [pixels?.buffer]);
+      send(
+        {
+          type: "update",
+          content: { didntRender: true, loading, pixels: pixels?.buffer },
+        },
+        [pixels?.buffer]
+      );
     }
 
     // ***Frame State Reset***
@@ -1894,16 +1906,13 @@ async function makeFrame({ data: { type, content } }) {
 
     //console.log(performance.now() - frameTime, "ms");
 
-
     //performance.mark("b");
 
     //performance.measure("a", "b");
     //console.log("Frame perf:", performance.getEntriesByType("measure")[0].duration);
     //performance.clearMarks();
     //performance.clearMeasures();
-
   }
-
 }
 
 // 📚 Utilities

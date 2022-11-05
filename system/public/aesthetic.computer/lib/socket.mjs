@@ -39,7 +39,7 @@ export class Socket {
       console.warn("📡 Disconnected...", e.reason);
       // Only reconnect if we are not killing the socket and not in development mode.
       if (this.#killSocket === false) {
-        // console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
+        console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
         setTimeout(() => {
           this.#connect(host, receive, reload, protocol);
         }, this.#reconnectTime);

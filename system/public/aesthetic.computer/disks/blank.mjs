@@ -24,14 +24,33 @@
 function boot({ resize }) {
 
   // Perform basic setup here.
-  resize(50, 20); // Add a custom resolution. 
+  //resize(50, 20); // Add a custom resolution. 
 }
 
-// 🎨 Paint (Executes every display frame)
-function paint($api) {
-  $api.wipe(undefined, 100, 120); // Draw a background. (You can also use hex.)
+let rotY = 0;
 
-  $api.ink(0).line(0, 0, $api.screen.width, $api.screen.height);
+// 🎨 Paint (Executes every display frame)
+function paint({Camera, Form, TRI, form, painting: p}) {
+
+  /*
+  rotY += 1;
+  rotY %= 360;
+
+  const cam = new Camera(80, { z: 2, y: 0.8, scale: [1, 1, 1] }); // camera with fov
+
+  const tri = new Form(
+    TRI,
+    { tex: p(1, 8, (g) => g.noise16DIGITPAIN()), alpha: 0.75 },
+    { pos: [0, 0, 0], scale: [0.5, 0.5, 0.5], rot:  [0, rotY, 0] }
+  );
+
+  //form(tri, cam, { cpu: true });
+  form(tri, cam, { cpu: true });
+  */
+
+  //$api.wipe(undefined, 100, 120); // Draw a background. (You can also use hex.)
+
+  //$api.ink(0).line(0, 0, $api.screen.width, $api.screen.height);
 
   // Loop through / edit a pixel array. 
   //$api.edit((pix, w, h) => {
@@ -42,7 +61,7 @@ function paint($api) {
   //$api.ink(0, 0, 255); // Change colors.
   //$api.point(40, 40); // Set a pixel.
 
-  return false; // You can return false to draw only once!
+  //return false; // You can return false to draw only once!
 }
 
 // PS... I enjoy using `destructuring` to access the APIs!

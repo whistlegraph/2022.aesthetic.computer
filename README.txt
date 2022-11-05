@@ -47,6 +47,10 @@ Welcome to...
 
 🌟 Projects In Progress (PIP) 🌟
 
+***Live Reloading***
+- [] Fix live reloading for everyone / add some people to dev server.
+- [] Disable nginx cache? https://ubiq.co/tech-blog/disable-nginx-cache
+
 ***Walkie Talkie***
 - [] Maybe recordings / videos can be sent back and forth between two parties?
 
@@ -128,6 +132,7 @@ Welcome to...
 *** (Wand) ***
  + Now
   - [-] Line thickness.
+    - [] https://codepen.io/garciahurtado/pen/WNVjog?editors=0010
     - [-] Work on implementing: https://github.com/mrdoob/three.js/blob/master/examples/webgl_lines_fat.html
     - [] Billboarded MeshLine?
     - [] Tube geometry?

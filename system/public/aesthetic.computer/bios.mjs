@@ -957,8 +957,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               ThreeDBakeQueue.forEach((baker) => touchedForms.push(...baker()));
               ThreeD.checkForRemovedForms(touchedForms);
               ThreeDBakeQueue.length = 0;
+              ThreeD?.render();
             }
-            ThreeD?.render();
           }
         );
       } else {
@@ -1103,6 +1103,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       //   content: { width: screen.width, height: screen.height, pixels },
       // }, [pixels]);
 
+      return;
+    }
+
+    if (type ==="gpu-event") {
+      ThreeD?.handleEvent(content);
       return;
     }
 

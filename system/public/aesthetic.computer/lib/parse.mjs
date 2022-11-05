@@ -33,7 +33,6 @@ function parse(text, location = self?.location) {
   // 1.5 Strip any trailing slash off of 'text'. (So stuff like prompt/#nodebug works)
   // console.log(text);
   if (text.endsWith("/")) text = text.slice(0, -1);
-  console.log(text);
 
   // 2. Tokenize on " " or "~".
   const tokens = text.trim().split(/~| /);

@@ -433,15 +433,19 @@ function sim({ pen, pen3d, screen: { width, height }, num: { degrees: deg } }) {
 }
 
 // ✒ Act
-function act({ event: e, color, screen, download, num: { timestamp } }) {
+function act({ event: e, color, gpu, screen, download, num: { timestamp } }) {
   // 👋 Right Hand
   if (e.is("3d:touch:2")) wand.start([e.pos.x, e.pos.y, e.pos.z, 0]); // ✏️
   if (e.is("3d:lift:2")) wand.stop(); // 🚩
 
   // 🖱️ Mouse
   if (e.device === "mouse" && e.button === 0) {
-    if (e.is("touch")) wand.start(cam.ray(e.x, e.y, wandDepth2D), false); // ✏️ Start a mark.
-    if (e.is("lift")) wand.stop(); // 🚩 End a mark.
+    if (e.is("touch")) {
+      const point = cam.ray(e.x, e.y, wandDepth2D);
+      wand.start(point, false); // ✏️ Start a mark.
+      gpu.message({uid: wand.drawing.uid, to: point });
+    } 
+    if (e.is("lift")) { wand.stop(); } // 🚩 End a mark.
   }
 
   // 👀 Look around if 2nd mouse button is held.
@@ -840,8 +844,10 @@ class Wand {
     // *** Markmaking Configuration ***
     const smoothing = true; // Use a lazy moving cursor, or normal quantized lines.
     const quantizedSmoothing = true; // Regulate all segments while still smoothing.
-    const step = 0.001;
-    const speed = iOS ? 40 : 20;
+    //const step = 0.001;
+    const step = 0.02;
+    const speed = 5;
+    //const speed = iOS ? 40 : 20;
 
     this.race =
       smoothing === true
@@ -853,6 +859,8 @@ class Wand {
   }
 
   goto(target, remote = false) {
+
+    /*
     if (
       this.lastTarget !== undefined &&
       this.lastTarget[0] === target[0] &&
@@ -861,6 +869,7 @@ class Wand {
     ) {
       return;
     }
+    */
 
     this.lastTarget = target;
     if (this.drawing === null) return;
@@ -896,8 +905,9 @@ class Wand {
               segments[i].length = 0;
               if (segments[i + 1]) {
                 this.currentSegment = segments[i + 1];
+              } else { // Remove the else to enable segment stops.
+                needsStop = true;
               }
-              // needsStop = true;
             }
             break;
           }
