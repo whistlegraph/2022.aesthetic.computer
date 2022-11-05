@@ -1039,11 +1039,13 @@ class Camera {
 
   // Get an XYZ position on a plane at a given depth,
   // relative to screen coordinates.
-  ray(X = width / 2, Y = height / 2, depth = 1) {
+  ray(X = width / 2, Y = height / 2, depth = 1, flippedY = false) {
     this.#perspective(this.fov);
 
     // 1. Camera World Space
     const pos = [...this.position];
+
+    if (flippedY) pos[1] *= -1; // TODO: This is a little janky now, both CPU and GPU should have the same Y.
 
     const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
     const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY));
@@ -1084,6 +1086,7 @@ class Camera {
 
     // Subtract transformed point from camera position.
     const worldPos = vec4.sub(vec4.create(), pos, xyz);
+
 
     return worldPos;
   }
