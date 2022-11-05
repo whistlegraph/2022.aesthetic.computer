@@ -418,13 +418,16 @@ function lineAngle(x1, y1, dist, degrees) {
 
 // Take two vertices and plot a 3d line with depth information.
 function line3d(a, b, lineColor) {
+
+  const aColor = a.color;
+  const bColor = b.color;
+
   a = a.transform(screenMatrix).perspectiveDivide();
   b = b.transform(screenMatrix).perspectiveDivide();
 
   const [x0, y0, z0] = a.pos;
   const [x1, y1, z1] = b.pos;
   const points = bresenham(x0, y0, x1, y1);
-
 
   const saveColor = c.slice();
 
@@ -434,9 +437,19 @@ function line3d(a, b, lineColor) {
 
   //console.log(a.color[0], a.color[1], a.color[2])
 
+  // TODO: lerp from a.color to b.color.
+
   points.forEach((p, i) => {
-    const z = lerp(z0, z1, i / points.length);
-    const range = map(z, 0.4, 0.98, 255, 127);
+    const progress = i / points.length;
+    const z = lerp(z0, z1, progress);
+    //const range = map(z, 0.4, 0.98, 255, 127);
+
+    if (aColor && bColor) {
+      const R = lerp(aColor[0], bColor[0], progress);
+      const G = lerp(aColor[1], bColor[1], progress);
+      const B = lerp(aColor[2], bColor[2], progress);
+      color(R, G, B);
+    }
 
     plot(p.x, p.y);
 
@@ -1241,17 +1254,18 @@ class Form {
     if (type === "quad") this.primitive = "triangle";
     if (type === "line:buffered") this.primitive = "line";
 
+    this.indices = indices || repeat(positions.length, (i) => i);
+
     // 🌩️ Ingest positions and turn them into vertices.
     // ("Import" a model...)
 
     // TODO: There is no maxed out notice here.
-    if (positions?.length > 0) this.addPoints({ positions, colors }, indices);
+    if (positions?.length > 0) this.addPoints({ positions, colors }, this.indices);
 
     // Or just set vertices directly.
     if (vertices?.length > 0) {
       this.vertices = vertices;
       this.uvs = uvs;
-      this.indices = indices || repeat(vertices.length, (i) => i);
     }
 
     // Switch fill to transform if the was skipped.
@@ -1409,7 +1423,7 @@ class Form {
         drawLine3d(
           transformedVertices[this.indices[i]],
           transformedVertices[this.indices[i + 1]],
-          this.color
+          transformedVertices[this.indices[i]].color || this.color, // TODO: Add gradients here instead of defaulting to first vertex color..
         );
       }
     }

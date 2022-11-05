@@ -16,15 +16,7 @@ function boot({ Camera, Dolly }) {
 
 let rot = 0;
 
-function paint({
-  wipe,
-  pen,
-  Form,
-  num,
-  QUAD,
-  painting: p,
-  form,
-}) {
+function paint({ wipe, pen, Form, num, QUAD, painting: p, form }) {
   wipe(0, 0);
 
   /*
@@ -44,15 +36,29 @@ function paint({
 
   form(floor, cam, { cpu: true });
 
-  rot += 0.01;
+  rot += 0.5;
 
-  const cursorDepth = 2;
+  const cursorDepth = 1;
   const cursorPosition = cam.ray(pen.x, pen.y, cursorDepth, true);
   const cursorRotation = cam.rotation.slice();
   //cursorRotation[1] += rot;
   //cursorRotation[0] -= rot;
-  form(segment({ Form, num }, cursorPosition, cursorRotation, 0.5), cam, { cpu: true });
 
+  form(segment({ Form, num }, cursorPosition, cursorRotation, 0.5), cam, {
+    cpu: true,
+  });
+
+  const size = 0.25;
+
+  form(segment({ Form, num }, [0, 0, 0], [-90, 0, rot], size), cam, {
+    cpu: true,
+  });
+
+  const y = size + 0.1;
+
+  form(segment({ Form, num }, [0, y, 0], [-90, 10, rot], size), cam, {
+    cpu: true,
+  });
 }
 
 function sim() {
@@ -111,60 +117,124 @@ const { cos, sin } = Math;
 
 // Create a segment...
 function segment({ Form, num }, position, rotation, length) {
-  // 🅰️ Define a core center for this segment, based around the z axis.
+  // 🅰️ Define a core line for this segment, based around the z axis.
+
   const ZLINE = {
     type: "line",
     positions: [
-      [0, 0, -0.5, 1],
-      [0, 0, 0.5, 1],
+      // Center line.
+      [0, 0, 0, 1],
+      [0, 0, length, 1],
     ],
-    indices: [0, 1],
+    colors: [
+      [100, 0, 0, 255],
+      [255, 255, 255, 255]
+    ]
   };
 
-  const centerLine = new Form(
-    ZLINE,
-    { color: [255, 255, 0, 255] },
-    { pos: position, scale: [1, 1, length], rot: rotation }
-  );
+  // 🅱️ Circumnavigate points around the center core..
+  //const surroundingPoints = [];
 
-  // Circumnavigate points.
-  const surroundingPoints = [];
   const thickness = 0.3;
   const PI2 = Math.PI * 2;
-  const sides = 32; // TODO: Triangulate all the sides.
-  for (var i = 0; i < sides; i++) {
+  const sides = 32; // TODO: Add auto triangulation for N sides.
+  for (var i = 0; i < sides; i += 1) {
     const angle = (i / sides) * PI2;
-    //console.log(num.radians(rotation[1]));
-
-    const pos = position.slice();
 
     // TODO: These need to be rotated and pushed out on the Z axis also...
-
     // TODO: Why aren't these getting pushed out?
-    surroundingPoints.push([
-      sin(angle + rot) * thickness,
-      cos(angle + rot) * thickness,
-      0,
-    ]);
+
+    ZLINE.positions.push(
+      [sin(angle) * thickness, cos(angle) * thickness, 0, 1],
+      [sin(angle) * thickness, cos(angle) * thickness, length, 1]
+    );
+
+    ZLINE.colors.push(
+      [0, 100, 0, 255],
+      [255, 255, 0, 255]
+    );
 
   }
 
+  const wireframeSeg = new Form(
+    ZLINE,
+    { color: [255, 255, 0, 255] },
+    { scale: [1, 1, 1] }
+  );
+
+  wireframeSeg.position = position;
+  wireframeSeg.rotation = rotation;
+
+  return wireframeSeg;
+
+
+  /*
   const surroundingForms = [];
-
   surroundingPoints.forEach((sp) => {
-
-    sp[0] += position[0];
-    sp[1] += position[1];
-    sp[2] += position[2];
+    //sp[0] += position[0];
+    //sp[1] += position[1];
+    //sp[2] += position[2];
 
     surroundingForms.push(
       new Form(
         ZLINE,
         { color: [0, 255, 0, 100] },
-        { pos: sp, scale: [1, 1, length], rot: [rotation[0], rotation[1], rotation[2]] }
+        { pos: sp, scale: [1, 1, length] }
       )
     );
   });
+  */
 
-  return [centerLine, ...surroundingForms];
+  // Transform all points.
+
+  //const forms = [centerLine, ...surroundingForms];
+
+  forms.forEach((f) => {
+    // Get identity.
+    const mat = num.mat4.create();
+
+    // Translate object position to world position.
+    //num.mat4.translate(mat, mat, centerLine.position);
+
+    // Rotate object to world rotation.
+    num.mat4.translate(mat, mat, [...f.position, 1]);
+
+    num.mat4.rotateX(mat, mat, num.radians(rotation[0])); // Rotate X.
+    num.mat4.rotateY(mat, mat, num.radians(rotation[1])); // Rotate Y.
+    num.mat4.rotateZ(mat, mat, num.radians(rotation[2])); // Rotate Z.
+
+    // Translate identity to object position.
+    num.mat4.translate(mat, mat, position);
+
+    // Translate origin to object.
+    const pos = num.vec4.transformMat4(
+      num.vec4.create(),
+      [0, 0, 0, 1],
+      //[...f.position, 1],
+      mat
+    );
+
+    f.position[0] = pos[0];
+    f.position[1] = pos[1];
+    f.position[2] = pos[2];
+
+    const rot = rotation.slice();
+
+    if (f === centerLine) {
+      //rot[1] *= -1;
+    }
+
+    // TODO: Each object is being rotated individually here by it's own axis.
+    //       But their positions need to transform around the core position.
+
+    // And I don't have support for nested transforms?
+    //f.rotation = rot;
+
+
+    //console.log("X", position[0], pos[0]);
+    //console.log("Y", position[1], pos[1]);
+    //console.log("Z", position[2], pos[2]);
+  });
+
+  return forms;
 }
