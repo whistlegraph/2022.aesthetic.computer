@@ -47,6 +47,18 @@ Welcome to...
 
 🌟 Projects In Progress (PIP) 🌟
 
+*** BGM ***
+- READ Audio properties (Will do for bgm)
+  - [] Global amplitude read out.
+  - [] Amplitude within frequency range function. (Cropped amplitude)
+  - [] Time position (formattable as 00:00:00)
+- FILTER Audio properties (Will do later)
+  - [] High pass
+  - [] Low pass
+  - [] Panning
+  - [] Speed
+  - [] Spatialization
+
 ***Live Reloading***
 - [] Fix live reloading for everyone / add some people to dev server.
 - [] Disable nginx cache? https://ubiq.co/tech-blog/disable-nginx-cache

@@ -1352,9 +1352,42 @@ class Form {
     return maxedOut;
   }
 
+  // Get the world position of this form's local vertex.
+  transformVertex(vertex) {
+    // Build a matrix to represent this form's position, rotation and scale.
+    const panned = mat4.fromTranslation(mat4.create(), [
+      this.position[X],
+      this.position[Y],
+      this.position[Z],
+    ]);
+
+    const rotX = mat4.fromXRotation(mat4.create(), radians(this.rotation[X]));
+    const rotY = mat4.fromYRotation(mat4.create(), radians(this.rotation[Y]));
+    const rotZ = mat4.fromZRotation(mat4.create(), radians(this.rotation[Z]));
+
+    const rotatedX = mat4.mul(mat4.create(), panned, rotX);
+    const rotatedY = mat4.mul(mat4.create(), rotatedX, rotY);
+    const rotatedZ = mat4.mul(mat4.create(), rotatedY, rotZ);
+
+    const matrix = rotatedZ;
+
+    //mat4.translate(matrix, matrix, this.position);
+
+    // Apply scale.
+    mat4.scale(matrix, matrix, this.scale);
+
+    // Apply the world matrix.
+    //matrix = mat4.mul(mat4.create(), worldMatrix, matrix);
+
+    // const transformedVertices = [];
+    // Transform each vertex by the matrix.
+    //this.vertices.forEach((vertex) => {
+    return vertex.transformWorld(matrix);
+    //});
+  }
+
   graph({ matrix: cameraMatrix }) {
     // Build a matrix to represent this form's position, rotation and scale.
-
     const panned = mat4.fromTranslation(mat4.create(), [
       this.position[X] * -1,
       this.position[Y],
@@ -1495,7 +1528,7 @@ class Vertex {
   }
 
   // TODO: Optimize this function for large vertex counts. 22.10.13.00.14
-  transform(matrix) {
+  transform(matrix) { // Camera
     return new Vertex(
       vec4.transformMat4(
         vec4.create(),
@@ -1503,6 +1536,23 @@ class Vertex {
           this.pos[X] * -1, // FLIPPED
           this.pos[Y],
           this.pos[Z] * -1, // FLIPPED
+          this.pos[W],
+        ],
+        matrix
+      ),
+      this.color,
+      this.texCoords
+    );
+  }
+
+  transformWorld(matrix) {
+    return new Vertex(
+      vec4.transformMat4(
+        vec4.create(),
+        [
+          this.pos[X], // FLIPPED
+          this.pos[Y],
+          this.pos[Z], // FLIPPED
           this.pos[W],
         ],
         matrix

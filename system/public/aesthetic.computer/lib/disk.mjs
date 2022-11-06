@@ -15,6 +15,8 @@ import { headers } from "./console-headers.mjs";
 
 export const noWorker = { onMessage: undefined, postMessage: undefined };
 
+const { abs, cos, sin } = Math;
+
 const servers = {
   main: "server.aesthetic.computer",
   local: "localhost:8082",
@@ -187,9 +189,19 @@ let loadFailure;
 
 // 1. ✔ API
 
+// TODO: Eventually add a wiggle bank so all wiggles are indexed
+//       and start at random angles.
+let wiggler = 0;
+let wiggleAngle = 0;
+
 // For every function to access.
 const $commonApi = {
   system: {},
+  wiggle: function (n, level = 0.2, speed = 6) {
+    wiggleAngle = (wiggleAngle + 1 * speed) % 360;
+    const osc = sin(num.radians(wiggleAngle));
+    return n + (n * level) * osc;
+  },
   dark: true, // Dark mode. (Gets set on startup and on any change.)
   darkMode, // Toggle dark mode or set to `true` or `false`.
   // content: added programmatically: see Content class

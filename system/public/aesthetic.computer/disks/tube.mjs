@@ -10,55 +10,155 @@ let cam, dolly;
 let W, S, A, D, UP, DOWN, LEFT, RIGHT;
 
 function boot({ Camera, Dolly }) {
-  cam = new Camera(80, { z: 2, y: -0.5, scale: [1, 1, 1] });
+  cam = new Camera(80, { z: 1, y: -0.5, scale: [1, 1, 1] });
   dolly = new Dolly(cam); // moves the camera
 }
 
 let rot = 0;
+let sides = 8;
 
-function paint({ wipe, pen, Form, num, QUAD, painting: p, form }) {
+function paint({ wipe, pen, wiggle, Form, num, QUAD, painting: p, form }) {
   wipe(0, 0);
 
+  // Floor
+  form(
+    new Form(
+      QUAD,
+      { tex: p(2, 2, (g) => g.wipe(0, 0, 100)) },
+      { rot: [-90, 0, 0] }
+    ),
+    cam,
+    { cpu: true }
+  );
+
+  rot += 0.25;
+
+  // Cursor
+  const cDepth = 1;
+  const cPos = cam.ray(pen.x, pen.y, cDepth, true);
+  const cRot = cam.rotation.slice();
+  //form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
+
+  // Segments
+  const $ = { Form, num };
+
+  // - [🔥] Pass a series of vertices through several segments?
+  const vertices = [
+    [0, 0, 0],
+    [0, 0.1, 0],
+    [0, 0.2, 0],
+    [0, 0.3, 0],
+    [0., 0.4, 0],
+    [-0.1, 0.8, 0.1],
+  ];
+
+  let yw = wiggle(8);
+
+  const angles = [
+    [0, yw + rot, 0],
+    [0, -yw + rot, 0],
+    [0, yw + rot, 0],
+    [0, -yw + rot, 0],
+    [0, yw + rot, 0],
+    [0, rot, 15],
+  ];
+
+  // Draw lines between them using connector segment.
+
+  const path = [];
+  vertices.forEach((vertex, i) => {
+    path.push({ position: vertex, angle: angles[i], points: [] });
+  });
+
+  // Generate all the points in the "model"
+  const shape = segmentShape($, 0.21, sides);
+
+  // Copy each point in the shape and transform it by a path position and angle.
+  // TODO: - [] Would switching to quaternions make this shorter? 22.11.05.23.34
+  //            Should also be done in the `Camera` and `Form` class inside `graph.mjs`.
+  const { vec4, mat4, radians } = num;
+  path.forEach((p) => {
+    shape.forEach((point) => {
+      // ... by position
+      const panned = mat4.fromTranslation(mat4.create(), p.position);
+
+      // ... and around angle.
+      const rotX = mat4.fromXRotation(mat4.create(), radians(p.angle[0]));
+      const rotY = mat4.fromYRotation(mat4.create(), radians(p.angle[1]));
+      const rotZ = mat4.fromZRotation(mat4.create(), radians(p.angle[2]));
+
+      const rotatedX = mat4.mul(mat4.create(), panned, rotX);
+      const rotatedY = mat4.mul(mat4.create(), rotatedX, rotY);
+      const rotatedZ = mat4.mul(mat4.create(), rotatedY, rotZ);
+
+      const matrix = rotatedZ;
+
+      p.points.push(vec4.transformMat4(vec4.create(), [...point, 1], matrix));
+
+
+    });
+  });
+
+  // -> Connector Segment
+  const positions = [],
+    colors = [];
+
+  // Draw a line through the path for every side.
+  for (let i = 0; i < sides + 1; i += 1) {
+    // Order the positions as segments... [0, 1] -> [1, 2] -> [2, 3]
+    for (let p = 1; p < path.length; p += 1) {
+      positions.push(path[p - 1].points[i], path[p].points[i]);
+      colors.push([255, 0, 0, 255], [255, 255, 255, 255]);
+    }
+  }
+
+  // TODO: Add triangulation for sides.
+
+  //console.log(positions);
+
+  const seg = new Form(
+    { type: "line", positions, colors },
+    { color: [255, 255, 0, 255] },
+    { scale: [1, 1, 1] }
+  );
+
+  // Transform a copy of them to end vertex and orientation B.
+
+  form([seg], cam, { cpu: true });
+
+  // ️-> Segment 1
   /*
-  const tri = new Form(
-    TRI,
-    { tex: p(1, 8, (g) => g.noise16DIGITPAIN()), alpha: 0.75 },
-    { pos: [0, 0, 0], scale: [1, 1, 1], rot:  [0, 0, 0] }
+  const seg1 = segment(
+    $,
+    [0, 0, 0],
+    [-90, wiggle(30), rot],
+    length,
+    0.1,
+    sides
   );
   */
 
-  // Floor
-  const floor = new Form(
-    QUAD,
-    { tex: p(2, 2, (g) => g.wipe(0, 0, 100)) },
-    { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
+  // -> Segment 2
+  //const y = length + 0.4;
+  //const seg2 = segment($, [0, y, 0], [-90, 20, rot], length, 0.1, sides);
+
+  /*
+  const rseg1 = new Form(
+    { type: "line", positions: seg1.positions, colors: seg1.colors },
+    { color: [255, 255, 0, 255] },
+    { scale: [1, 1, 1] }
   );
 
-  form(floor, cam, { cpu: true });
 
-  rot += 0.5;
+  const rseg2 = new Form(
+    { type: "line", positions: seg2.positions, colors: seg2.colors },
+    { color: [255, 255, 0, 255] },
+    { scale: [1, 1, 1] }
+  );
+  */
 
-  const cursorDepth = 1;
-  const cursorPosition = cam.ray(pen.x, pen.y, cursorDepth, true);
-  const cursorRotation = cam.rotation.slice();
-  //cursorRotation[1] += rot;
-  //cursorRotation[0] -= rot;
-
-  form(segment({ Form, num }, cursorPosition, cursorRotation, 0.5), cam, {
-    cpu: true,
-  });
-
-  const size = 0.25;
-
-  form(segment({ Form, num }, [0, 0, 0], [-90, 0, rot], size), cam, {
-    cpu: true,
-  });
-
-  const y = size + 0.1;
-
-  form(segment({ Form, num }, [0, y, 0], [-90, 10, rot], size), cam, {
-    cpu: true,
-  });
+  // Rendering
+  //form([rseg1, rseg2], cam, { cpu: true });
 }
 
 function sim() {
@@ -78,6 +178,11 @@ function sim() {
 }
 
 function act({ event: e }) {
+  // Increase complexity
+  if (e.is("touch") && e.button === 0) {
+    sides += 1;
+  }
+
   // 👀 Look around if 2nd mouse button is held.
   if (e.is("draw") && e.button === 2) {
     cam.rotX -= e.delta.y / 3.5;
@@ -115,126 +220,34 @@ export { boot, paint, sim, act };
 
 const { cos, sin } = Math;
 
-// Create a segment...
-function segment({ Form, num }, position, rotation, length) {
-  // 🅰️ Define a core line for this segment, based around the z axis.
+// TODO: There should be an "inner" and "outer" triangulation option.
+//       - [] Inner ONLY for complexity 1 and 2.
+//       - [] Optional elsewhere.
 
-  const ZLINE = {
-    type: "line",
-    positions: [
-      // Center line.
-      [0, 0, 0, 1],
-      [0, 0, length, 1],
-    ],
-    colors: [
-      [100, 0, 0, 255],
-      [255, 255, 255, 255]
-    ]
-  };
+// Takes a starting position, direction and length.
+// Projects out a center core along with from there...
+// Eventually produces a circle.
+function segmentShape(
+  { Form, num },
+  //position,
+  //direction,
+  //length,
+  radius,
+  sides
+) {
+  const positions = [];
+
+  // 🅰️ Define a core line for this segment shape, based around the z axis.
+  positions.push([0, 0, 0, 1]);
 
   // 🅱️ Circumnavigate points around the center core..
-  //const surroundingPoints = [];
-
-  const thickness = 0.3;
   const PI2 = Math.PI * 2;
-  const sides = 32; // TODO: Add auto triangulation for N sides.
   for (var i = 0; i < sides; i += 1) {
     const angle = (i / sides) * PI2;
-
-    // TODO: These need to be rotated and pushed out on the Z axis also...
-    // TODO: Why aren't these getting pushed out?
-
-    ZLINE.positions.push(
-      [sin(angle) * thickness, cos(angle) * thickness, 0, 1],
-      [sin(angle) * thickness, cos(angle) * thickness, length, 1]
-    );
-
-    ZLINE.colors.push(
-      [0, 100, 0, 255],
-      [255, 255, 0, 255]
-    );
-
+    positions.push([sin(angle) * radius, 0, cos(angle) * radius, 1]);
   }
 
-  const wireframeSeg = new Form(
-    ZLINE,
-    { color: [255, 255, 0, 255] },
-    { scale: [1, 1, 1] }
-  );
+  // 🔥 TODO: Add a flag for triangulation of end caps.
 
-  wireframeSeg.position = position;
-  wireframeSeg.rotation = rotation;
-
-  return wireframeSeg;
-
-
-  /*
-  const surroundingForms = [];
-  surroundingPoints.forEach((sp) => {
-    //sp[0] += position[0];
-    //sp[1] += position[1];
-    //sp[2] += position[2];
-
-    surroundingForms.push(
-      new Form(
-        ZLINE,
-        { color: [0, 255, 0, 100] },
-        { pos: sp, scale: [1, 1, length] }
-      )
-    );
-  });
-  */
-
-  // Transform all points.
-
-  //const forms = [centerLine, ...surroundingForms];
-
-  forms.forEach((f) => {
-    // Get identity.
-    const mat = num.mat4.create();
-
-    // Translate object position to world position.
-    //num.mat4.translate(mat, mat, centerLine.position);
-
-    // Rotate object to world rotation.
-    num.mat4.translate(mat, mat, [...f.position, 1]);
-
-    num.mat4.rotateX(mat, mat, num.radians(rotation[0])); // Rotate X.
-    num.mat4.rotateY(mat, mat, num.radians(rotation[1])); // Rotate Y.
-    num.mat4.rotateZ(mat, mat, num.radians(rotation[2])); // Rotate Z.
-
-    // Translate identity to object position.
-    num.mat4.translate(mat, mat, position);
-
-    // Translate origin to object.
-    const pos = num.vec4.transformMat4(
-      num.vec4.create(),
-      [0, 0, 0, 1],
-      //[...f.position, 1],
-      mat
-    );
-
-    f.position[0] = pos[0];
-    f.position[1] = pos[1];
-    f.position[2] = pos[2];
-
-    const rot = rotation.slice();
-
-    if (f === centerLine) {
-      //rot[1] *= -1;
-    }
-
-    // TODO: Each object is being rotated individually here by it's own axis.
-    //       But their positions need to transform around the core position.
-
-    // And I don't have support for nested transforms?
-    //f.rotation = rot;
-
-
-    //console.log("X", position[0], pos[0]);
-    //console.log("Y", position[1], pos[1]);
-    //console.log("Z", position[2], pos[2]);
-  });
-
-  return forms;
+  return positions;
 }
