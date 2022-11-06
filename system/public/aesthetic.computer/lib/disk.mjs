@@ -198,7 +198,7 @@ let wiggleAngle = 0;
 const $commonApi = {
   system: {},
   wiggle: function (n, level = 0.2, speed = 6) {
-    wiggleAngle = (wiggleAngle + 1 * speed) % 360;
+    wiggleAngle = (wiggleAngle + (1 * speed)) % 360;
     const osc = sin(num.radians(wiggleAngle));
     return n + (n * level) * osc;
   },

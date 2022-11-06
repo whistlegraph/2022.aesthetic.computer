@@ -6,10 +6,8 @@
 // And now `nth-pointers` can be tacked on.
 
 // TODO:
-// - [🙋‍♂️] Add multi-touch support.
-//   - [] Convert specific pointer data to a collection that support
-//        the same properties for multiple pointers.
-//   - [] Update the API in `multipen` to reflect this.
+// - [] Add "wheel" (knob) event support with device type mouse.
+// - [] Add game controller / axis support.
 
 const { assign } = Object;
 const { round } = Math;
