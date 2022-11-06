@@ -2,7 +2,9 @@
 // A laboratory for designing the procedural geometry in `wand`.
 
 // TODO
-// - [] Draw all wireframe geometry.
+// - [] Add color support to path.
+// - [] Draw end caps wireframes.
+// - [] Draw diagonals.
 // - [] Make a turtle that can move the tube forward / generate a path over time.
 // - [] Then it up to the cursor via race.
 // - [] There should be an "inner" and "outer" triangulation option.
@@ -35,16 +37,17 @@ function paint({ wipe, pen, wiggle, Form, num, QUAD, painting: p, form }) {
 
   // 🌛 Segments: Here we pass a path of vertices through several segments.
 
-  // Add 
+  // Add
   rot += 0.25;
   let yw = wiggle(8);
 
   // TODO: Generate path.
 
+  // TODO: Add color and type information to path.
   const path = [
     { vertex: [0, 0.1, 0], angle: [0, -yw + rot, 0], points: [] },
     { vertex: [0, 0.2, 0], angle: [0, yw + rot, 0], points: [] },
-    { vertex: [0, 0.3, 0], angle: [0, -yw + rot, 0], points: [] },
+    { vertex: [0, 0.3, 0], angle: [80, -yw + rot, 0], points: [] },
     { vertex: [0, 0.4, 0], angle: [0, yw + rot, 0], points: [] },
     { vertex: [0, 0.5, 0], angle: [0, -yw + rot, 0], points: [] },
   ];
@@ -65,9 +68,9 @@ function paint({ wipe, pen, wiggle, Form, num, QUAD, painting: p, form }) {
       // ... by position
       const panned = mat4.fromTranslation(mat4.create(), pathP.vertex);
       // ... and around angle.
-      const rotX = mat4.fromXRotation( mat4.create(), radians(pathP.angle[0]));
-      const rotY = mat4.fromYRotation( mat4.create(), radians(pathP.angle[1]));
-      const rotZ = mat4.fromZRotation( mat4.create(), radians(pathP.angle[2]));
+      const rotX = mat4.fromXRotation(mat4.create(), radians(pathP.angle[0]));
+      const rotY = mat4.fromYRotation(mat4.create(), radians(pathP.angle[1]));
+      const rotZ = mat4.fromZRotation(mat4.create(), radians(pathP.angle[2]));
       // Note: Would switching to quaternions make this terse? 22.11.05.23.34
       //       Should also be done in the `Camera` and `Form` class inside `graph.mjs`.
       const rotatedX = mat4.mul(mat4.create(), panned, rotX);
@@ -180,14 +183,8 @@ export { boot, paint, sim, act };
 // Takes a starting position, direction and length.
 // Projects out a center core along with from there...
 // Eventually produces a circle.
-function segmentShape(
-  { Form, num },
-  //position,
-  //direction,
-  //length,
-  radius,
-  sides
-) {
+// 🔥 TODO: Add a flag for triangulation of end caps.
+function segmentShape({ Form, num }, radius, sides) {
   const positions = [];
 
   // 🅰️ Define a core line for this segment shape, based around the z axis.
@@ -200,15 +197,13 @@ function segmentShape(
     positions.push([sin(angle) * radius, 0, cos(angle) * radius, 1]);
   }
 
-  // 🔥 TODO: Add a flag for triangulation of end caps.
-
   return positions;
 }
 
 // 💀 Archives
 
-// Here the vertices ordered through each side as a path. 
-// This is probably not ideal but I'm leaving the code here just in case. 22.11.06.01.29 
+// Here the vertices ordered through each side as a path.
+// This is probably not ideal but I'm leaving the code here just in case. 22.11.06.01.29
 // Draw a line through the path for every side.
 // for (let i = 0; i < sides + 1; i += 1) {
 //   // Order the positions as segments... [0, 1] -> [1, 2] -> [2, 3]
