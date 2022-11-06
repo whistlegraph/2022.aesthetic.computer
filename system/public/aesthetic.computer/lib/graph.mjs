@@ -71,7 +71,7 @@ function setBuffer(buffer) {
 }
 
 function changePixels(changer) {
-  changer(pixels, width, height)
+  changer(pixels, width, height);
 }
 
 // Return a pixel from the main buffer.
@@ -91,7 +91,15 @@ function color(r, g, b, a = 255) {
   c[3] = floor(a);
 }
 
-export { makeBuffer, cloneBuffer, setBuffer, changePixels, depthBuffer, color, pixel };
+export {
+  makeBuffer,
+  cloneBuffer,
+  setBuffer,
+  changePixels,
+  depthBuffer,
+  color,
+  pixel,
+};
 
 // 2. 2D Drawing
 
@@ -417,8 +425,7 @@ function lineAngle(x1, y1, dist, degrees) {
 }
 
 // Take two vertices and plot a 3d line with depth information.
-function line3d(a, b, lineColor) {
-
+function line3d(a, b, lineColor, gradients) {
   const aColor = a.color;
   const bColor = b.color;
 
@@ -444,7 +451,7 @@ function line3d(a, b, lineColor) {
     const z = lerp(z0, z1, progress);
     //const range = map(z, 0.4, 0.98, 255, 127);
 
-    if (aColor && bColor) {
+    if (gradients && aColor && bColor) {
       const R = lerp(aColor[0], bColor[0], progress);
       const G = lerp(aColor[1], bColor[1], progress);
       const B = lerp(aColor[2], bColor[2], progress);
@@ -1073,15 +1080,18 @@ class Camera {
     const world = scaled;
 
     // Camera World Space -> Inverted Perspective Projection
-    const invertedProjection = mat4.invert(mat4.create(), this.perspectiveMatrix);
+    const invertedProjection = mat4.invert(
+      mat4.create(),
+      this.perspectiveMatrix
+    );
     const invWorldPersProj = mat4.mul(mat4.create(), world, invertedProjection);
 
     // 2. Screen Point -> Inverted World Perspective Projection
     const dist = 1;
 
     // Normalize from screen coordinates.
-    X = 1 - (X / width);
-    Y = 1 - (Y / height);
+    X = 1 - X / width;
+    Y = 1 - Y / height;
 
     // 2. -> Normalized Device Space (NDS)
     let x = 2.0 * X - 1;
@@ -1095,15 +1105,17 @@ class Camera {
     const shiftedScreenPos = vec4.scale(vec4.create(), screenPos, depth);
 
     // Get near plane.
-    const xyz = vec4.transformMat4(vec4.create(), shiftedScreenPos, invWorldPersProj);
+    const xyz = vec4.transformMat4(
+      vec4.create(),
+      shiftedScreenPos,
+      invWorldPersProj
+    );
 
     // Subtract transformed point from camera position.
     const worldPos = vec4.sub(vec4.create(), pos, xyz);
 
-
     return worldPos;
   }
-
 
   #transform() {
     // TODO: Why does this and the FPS camera control need to be inverted?
@@ -1130,7 +1142,7 @@ class Camera {
 
     // Scale
     // TODO: Add support for camera scaling.
-    const scaled = mat4.scale(mat4.create(), rotatedZ, this.scale)
+    const scaled = mat4.scale(mat4.create(), rotatedZ, this.scale);
 
     // Perspective
     this.#transformMatrix = mat4.multiply(
@@ -1187,7 +1199,7 @@ class Form {
   primitive = "triangle";
   type = "triangle";
 
-  uid;// = nanoid(); // An id to keep across threads.
+  uid; // = nanoid(); // An id to keep across threads.
 
   // Model
   vertices = [];
@@ -1201,7 +1213,7 @@ class Form {
   // GPU Specific Params & Buffers
   verticesSent = 0;
   gpuFlush = false; // A flag that flushes any left over vertices to add.
-  gpuReset = false; // Assumes this object is being recreated on the GPU. 
+  gpuReset = false; // Assumes this object is being recreated on the GPU.
   gpuKeep = true;
   gpuTransformed = false;
   MAX_POINTS = 100000; // Some buffered geometry gpu calls may use this hint.
@@ -1226,6 +1238,8 @@ class Form {
   rotation = [0, 0, 0];
   scale = [1, 1, 1];
 
+  gradients = true;
+
   // Blending
   alpha = 1.0;
 
@@ -1233,11 +1247,21 @@ class Form {
     // Model
     // `type` can be "triangle", or "line" or "line:buffered"
     // `positions` and colors can be sent and then verticies will be generated
-    { type, vertices, uvs = [], positions, colors, indices, keep = true },
+    {
+      type,
+      vertices,
+      uvs = [],
+      positions,
+      colors,
+      gradients,
+      indices,
+      keep = true,
+    },
     fill,
     // Transform
     transform
   ) {
+    this.gradients = gradients; // A flag to decide if we use gradients or not. Only for line3d right now. 22.11.06.02.00
 
     // Give an incremental id per session.
     this.uid = formId;
@@ -1260,7 +1284,8 @@ class Form {
     // ("Import" a model...)
 
     // TODO: There is no maxed out notice here.
-    if (positions?.length > 0) this.addPoints({ positions, colors }, this.indices);
+    if (positions?.length > 0)
+      this.addPoints({ positions, colors }, this.indices);
 
     // Or just set vertices directly.
     if (vertices?.length > 0) {
@@ -1287,7 +1312,6 @@ class Form {
   // TODO: This needs to support color (and eventually N vertex attributes).
 
   addPoints(attributes, indices) {
-
     const incomingLength = attributes.positions.length;
     const verticesLength = this.vertices.length;
     const pointsAvailable = this.MAX_POINTS - verticesLength;
@@ -1305,7 +1329,7 @@ class Form {
     */
 
     if (pointsAvailable < incomingLength) {
-      end = pointsAvailable
+      end = pointsAvailable;
       maxedOut = true;
     }
 
@@ -1324,7 +1348,7 @@ class Form {
 
       // 🔥
       // TODO:
-      // Wrap based on MAX_POINTS. 
+      // Wrap based on MAX_POINTS.
 
       this.uvs.push(...texCoord); // For sending to the GPU.
 
@@ -1338,7 +1362,7 @@ class Form {
         )
       );
 
-      if (!indices) this.indices.push((verticesLength - 1 + i));
+      if (!indices) this.indices.push(verticesLength - 1 + i);
     }
 
     if (indices) this.indices = indices;
@@ -1456,7 +1480,8 @@ class Form {
         drawLine3d(
           transformedVertices[this.indices[i]],
           transformedVertices[this.indices[i + 1]],
-          transformedVertices[this.indices[i]].color || this.color, // TODO: Add gradients here instead of defaulting to first vertex color..
+          transformedVertices[this.indices[i]].color || this.color,
+          this.gradients,
         );
       }
     }
@@ -1528,7 +1553,8 @@ class Vertex {
   }
 
   // TODO: Optimize this function for large vertex counts. 22.10.13.00.14
-  transform(matrix) { // Camera
+  transform(matrix) {
+    // Camera
     return new Vertex(
       vec4.transformMat4(
         vec4.create(),
@@ -1906,12 +1932,12 @@ class Gradients {
 
 // ?. Line Rendering
 
-function drawLine3d(a, b, color = c) {
+function drawLine3d(a, b, color = c, gradients) {
   const aInside = isInsideViewFrustum(a.pos);
   const bInside = isInsideViewFrustum(b.pos);
 
   if (aInside && bInside) {
-    line3d(a, b, color);
+    line3d(a, b, color, gradients);
     return;
   }
 
@@ -1928,7 +1954,7 @@ function drawLine3d(a, b, color = c) {
   ) {
     const initialVertex = vertices[0];
     for (let i = 1; i < vertices.length - 1; i += 1) {
-      line3d(initialVertex, vertices[i], color);
+      line3d(initialVertex, vertices[i], color, gradients);
     }
   }
 }

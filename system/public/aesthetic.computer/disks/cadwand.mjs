@@ -2,14 +2,18 @@
 // A laboratory for designing the procedural geometry in `wand`.
 
 // TODO
-// - [] Add color support to path.
-// - [] Draw end caps wireframes.
+// - [] Draw end cap wireframes.
 // - [] Draw diagonals.
 // - [] Make a turtle that can move the tube forward / generate a path over time.
 // - [] Then it up to the cursor via race.
+// - [] Render line geometry onto the GPU.
+// - [] Render triangulated geometry onto the GPU.
 // - [] There should be an "inner" and "outer" triangulation option.
 //       - [] Inner ONLY for complexity 1 and 2.
 //       - [] Optional elsewhere.
+// + Done
+// - [x] Add color support to path.
+// - [x] Make vertex gradients optional.
 
 const { cos, sin } = Math;
 
@@ -30,26 +34,27 @@ function boot({ Camera, Dolly, Form, QUAD, painting, fps }) {
   );
 }
 
-function paint({ wipe, pen, wiggle, Form, num, QUAD, painting: p, form }) {
-  wipe(0, 0); // Background.
+function paint({ ink, wipe, pen, box, screen, wiggle, Form, num, QUAD, painting: p, form }) {
+  //wipe(0, 10); // Background.
 
   form(floor, cam, { cpu: true }); // Floor
 
   // 🌛 Segments: Here we pass a path of vertices through several segments.
 
   // Add
-  rot += 0.25;
+  rot += 0.5;
   let yw = wiggle(8);
 
   // TODO: Generate path.
 
   // TODO: Add color and type information to path.
   const path = [
-    { vertex: [0, 0.1, 0], angle: [0, -yw + rot, 0], points: [] },
-    { vertex: [0, 0.2, 0], angle: [0, yw + rot, 0], points: [] },
-    { vertex: [0, 0.3, 0], angle: [80, -yw + rot, 0], points: [] },
-    { vertex: [0, 0.4, 0], angle: [0, yw + rot, 0], points: [] },
-    { vertex: [0, 0.5, 0], angle: [0, -yw + rot, 0], points: [] },
+    { vertex: [0, 0.1, 0], color: [0, 0, 255, 255], angle: [0, -yw + rot, 0], points: [] },
+    { vertex: [0, 0.2, 0], color: [255, 0, 0, 255], angle: [0, yw + rot, 0], points: [] },
+    { vertex: [0, 0.3, 0], color: [0, 255, 0, 255], angle: [0, -yw + rot, 0], points: [] },
+    { vertex: [0, 0.4, 0], color: [255, 0, 0, 255], angle: [0, yw + rot, 0], points: [] },
+    { vertex: [0, 0.5, 0], color: [255, 255, 255, 255], angle: [0, -yw + rot, 0], points: [] },
+    { vertex: [0, 1.6, 0], color: [255, 255, 255, 255], angle: [0, -yw + rot, 0], points: [] },
   ];
 
   // Generate all the points in the "model"
@@ -60,7 +65,7 @@ function paint({ wipe, pen, wiggle, Form, num, QUAD, painting: p, form }) {
   const positions = [],
     colors = [];
 
-  let lastPathPoint = path[0];
+  let lastPathP = path[0];
 
   // Generate path segments for each vertex around the shape.
   path.forEach((pathP, pi) => {
@@ -84,13 +89,17 @@ function paint({ wipe, pen, wiggle, Form, num, QUAD, painting: p, form }) {
 
       // Draw the outer points.
       if (pi > 0) {
-        positions.push(lastPathPoint.points[si], pathP.points[si]);
+        positions.push(lastPathP.points[si], pathP.points[si]);
         // Add separate color for the core.
-        colors.push([255, si > 0 ? 0 : 255, 0, 255], [255, 255, 255, 255]);
+        if (si === 0) {
+          colors.push([255, si > 0 ? 0 : 255, 0, 255], [255, 255, 255, 255]);
+        } else {
+          colors.push(lastPathP.color, pathP.color);
+        }
       }
     });
 
-    lastPathPoint = pathP;
+    lastPathP = pathP;
   }); // See `Archives` for path ordered vertices.
 
   // Add a limiter to positions and colors in order to know our drawing order...
@@ -106,8 +115,11 @@ function paint({ wipe, pen, wiggle, Form, num, QUAD, painting: p, form }) {
   }
 
   // TODO: Add triangulation / type "triangle" also.
+  // 💡 It would be cool to add per vertex gradient support.
+  //    Maybe if a gradients array was passed of trues and falses that
+  //    matched positions?
   const tube = new Form(
-    { type: "line", positions: pos, colors: cols },
+    { type: "line", positions: pos, colors: cols, gradients: false },
     { color: [255, 255, 0, 255] },
     { scale: [1, 1, 1] }
   );
@@ -120,6 +132,7 @@ function paint({ wipe, pen, wiggle, Form, num, QUAD, painting: p, form }) {
   //form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
 
   form([tube], cam, { cpu: true });
+  ink(0, 80).box(0, 0, screen.width, screen.height);
 }
 
 function sim() {
