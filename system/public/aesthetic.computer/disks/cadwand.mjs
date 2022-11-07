@@ -2,7 +2,7 @@
 // A laboratory for designing the procedural geometry in `wand`.
 
 // TODO
-// - [] Make a turtle that can move the tube forward and generate a path over time.
+// - [] Make a spider that can move the tube forward and generate a path over time.
 // ... media break
 // - [] Reload last camera position on refresh.
 // - [] Record some GIFs.
@@ -24,12 +24,10 @@
 // + Done
 
 import { CamDoll } from "../lib/cam-doll.mjs";
-
 const { max, cos, sin } = Math;
 
 let cd, floor;
-
-// Values specific to `Tube`.
+let spider; // Walks in 3D and creates a path.
 let tube,
   rot = 0,
   rotSpeed = 0.5,
@@ -38,15 +36,24 @@ let tube,
   radius = 0.2,
   limiter = 0;
 
-function boot({ Camera, Dolly, Form, QUAD, painting, num }) {
-  cd = new CamDoll(Camera, Dolly, { z: 0.8 });
-
+function boot({ Camera, Dolly, Form, QUAD, painting, num, debug }) {
+  cd = new CamDoll(Camera, Dolly, { z: 0.8 }); // FPS style camera controls.
   floor = new Form(
     QUAD,
     { tex: painting(2, 2, (g) => g.wipe(0, 0, 70)) },
     { rot: [-90, 0, 0] }
   );
+
+  const spider = new Spider({ num, debug });
+  sp.push(
+    spider.crawl(0.1),
+    spider.crawl(0.1),
+    spider.crawl(0.1),
+    spider.crawl(0.1)
+  );
 }
+
+let sp = [];
 
 function paint({ wipe, ink, screen, Form, form, num, wiggle }) {
   wipe(0, 0, 50); // Clear the background...
@@ -56,26 +63,10 @@ function paint({ wipe, ink, screen, Form, form, num, wiggle }) {
   tube.form.limiter = limiter; // Copy over its limiter.
   tube?.start(radius, sides); // Start a gesture.
   tube?.goto(
-    [
-      [0.05, 0.4, 0.05],
-      [0, 255, 0, 255],
-      [0, rot, 10],
-    ],
-    [
-      [0, 0.6, 0],
-      [255, 0, 0, 255],
-      [0, rot, 0],
-    ],
-    [
-      [0, 0.7, 0],
-      [255, 255, 255, 255],
-      [0, rot, 0],
-    ],
-    [
-      [0.1, 0.9, 0],
-      [255, 255, 255, 255],
-      [-10, rot, 10],
-    ]
+    [sp[0].position, sp[0].angle, [0, 255, 0, 255]],
+    [sp[1].position, sp[1].angle, [255, 0, 0, 255]],
+    [sp[2].position, sp[2].angle, [255, 255, 255, 255]],
+    [sp[3].position, sp[3].angle, [255, 255, 255, 255]]
   ); // Continue a gesture.
   tube?.stop(); // Finish a gesture.
 
@@ -96,7 +87,7 @@ function act({ event: e }) {
   }
 
   if (e.is("keyboard:down:j")) {
-    sides = max(0, sides - 1);
+    sides = max(1, sides - 1);
     limiter = 0;
   }
 
@@ -152,14 +143,14 @@ class Tube {
 
   start(radius, sides) {
     this.sides = sides;
-    //if (complexity === 1) this.sides = 2;
+    if (this.sides === 1) this.sides = 0;
     //else this.sides = complexity + 1;
 
     // Create an initial position in the path and generate points in the shape.
     this.shape = this.#segmentShape(radius, this.sides);
     const startPath = [
-      this.#pathp([0, 0.0, 0.01], [0, 0, 255, 255], [0, rot, 0]),
-      this.#pathp([0, 0.3, 0], [255, 0, 0, 255], [0, rot, 0]),
+      this.#pathp([0, 0.0, 0.01], [0, 0, 0], [0, 0, 255, 255]),
+      this.#pathp([0, 0.3, 0], [0, 0, 0], [255, 0, 0, 255]),
     ];
     this.lastPathP = startPath[0]; // Store an inital lastPath.
 
@@ -206,8 +197,8 @@ class Tube {
   }
 
   // Generate a path point with room for shape positions.
-  #pathp(pos, color, angle) {
-    return { pos, color, angle, shape: [] };
+  #pathp(pos, angle, color) {
+    return { pos, angle, color, shape: [] };
   }
 
   // Generate a start or end (where ring === false) cap to the tube.
@@ -328,5 +319,62 @@ class Tube {
     });
 
     if (positions.length > 0) this.form.addPoints({ positions, colors });
+  }
+}
+
+class Spider {
+  $;
+  position;
+  angle;
+
+  constructor($, pos = [0, 0, 0], ang = [0, 0, 0]) {
+    this.$ = $;
+    this.position = pos;
+    this.angle = ang;
+  }
+
+  crawl(steps) {
+    const {
+      num: { mat4, quat, vec4 },
+      debug,
+    } = this.$;
+
+    // Get the current rotated and translated position.
+    const rotation = quat.fromEuler(quat.create(), ...this.angle);
+    const m = mat4.fromRotationTranslation(mat4.create(), rotation, [
+      0,
+      steps,
+      0,
+    ]);
+    // Project it outwards by `steps`.
+    this.position = vec4.transformMat4(vec4.create(), [...this.position, 1], m);
+
+    if (debug) {
+      console.log(
+        "🕷️",
+        "X:",
+        this.position[0].toFixed(2),
+        "Y:",
+        this.position[1].toFixed(2),
+        "Z:",
+        this.position[1].toFixed(2),
+        "🟤",
+        "Yaw(X):",
+        this.angle[0].toFixed(2),
+        "Pitch(Y):",
+        this.angle[1].toFixed(2),
+        "Roll(Z):",
+        this.angle[1].toFixed(2)
+      );
+    }
+
+    return { position: this.position.slice(), angle: this.angle.slice() };
+  }
+
+  turn(x, y, z) {
+    this.angle[0] = (this.angle[0] + x) % 360;
+    this.angle[1] = (this.angle[1] + y) % 360;
+    this.angle[2] = (this.angle[2] + z) % 360;
+    return { position: this.position.slice(), angle: this.angle.slice() };
   }
 }

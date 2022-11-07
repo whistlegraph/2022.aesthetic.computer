@@ -227,6 +227,7 @@ const $commonApi = {
     vec3: num.vec3,
     vec4: num.vec4,
     mat4: num.mat4,
+    quat: num.quat
   },
   geo: {
     Box: geo.Box,
