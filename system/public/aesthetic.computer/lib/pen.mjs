@@ -214,6 +214,14 @@ export class Pen {
         console.log("Removed pointer by ID:", e.pointerId, this.pointers);
     });
 
+    // Mousewheel
+    // https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event
+    window.addEventListener("wheel", (e) => {
+      // Get the wheel direction... probably from the mouse.
+      const dir = Math.sign(e.deltaY);
+      pen.events.push({ name: "wheel", dir, device: "n/a", isPrimary: true });
+    });
+
     // Pressure Detection
     let forceTouchPressure = 0;
     let forceTouchEnabled = false;

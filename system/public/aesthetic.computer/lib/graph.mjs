@@ -16,7 +16,7 @@ import {
 import { repeat } from "./help.mjs";
 // import { nanoid } from "../dep/nanoid/nanoid.js";
 
-const { abs, sign, ceil, floor, sin, cos, tan } = Math;
+const { abs, sign, ceil, floor, sin, cos, tan, min, max } = Math;
 
 let width, height, pixels;
 const depthBuffer = [];
@@ -429,8 +429,14 @@ function line3d(a, b, lineColor, gradients) {
   const aColor = a.color;
   const bColor = b.color;
 
-  a = a.transform(screenMatrix).perspectiveDivide();
-  b = b.transform(screenMatrix).perspectiveDivide();
+  a = a.transform(screenMatrix);
+  b = b.transform(screenMatrix);
+
+  const aZ = a.pos[Z];
+  const bZ = a.pos[Z];
+
+  a = a.perspectiveDivide();
+  b = b.perspectiveDivide();
 
   const [x0, y0, z0] = a.pos;
   const [x1, y1, z1] = b.pos;
@@ -439,18 +445,13 @@ function line3d(a, b, lineColor, gradients) {
   const saveColor = c.slice();
 
   color(...lineColor); // Set color from lineColor or default to global color.
-  //color(...a.color); // Set color from lineColor or default to global color.
-  // color(randInt(255), randInt(255), randInt(255)); // Set color from lineColor or default to global color.
-
-  //console.log(a.color[0], a.color[1], a.color[2])
-
-  // TODO: lerp from a.color to b.color.
+  // color(randInt(255), randInt(255), randInt(255)); // Random colors.
 
   points.forEach((p, i) => {
     const progress = i / points.length;
-    const z = lerp(z0, z1, progress);
-    //const range = map(z, 0.4, 0.98, 255, 127);
+    //const z = lerp(z0, z1, progress);
 
+    // Lerp from a.color to b.color if gradients are enabled.
     if (gradients && aColor && bColor) {
       const R = lerp(aColor[0], bColor[0], progress);
       const G = lerp(aColor[1], bColor[1], progress);
@@ -458,10 +459,27 @@ function line3d(a, b, lineColor, gradients) {
       color(R, G, B);
     }
 
-    plot(p.x, p.y);
+    const newZ = lerp(aZ, bZ, progress);
+    const stretchedDepth = 1 - min(1, abs(newZ) / 2);
 
-    const index = p.x + p.y * width;
-    if (depthBuffer[index] !== undefined) depthBuffer[index] = z;
+    color(
+      lineColor[0] * stretchedDepth,
+      lineColor[1] * stretchedDepth,
+      lineColor[2] * stretchedDepth,
+    ); // Set color from lineColor or default to global color.
+
+    const depth = newZ * -1;
+    if (depthBuffer) {
+      const index = p.x + p.y * width;
+      if (depth > depthBuffer[index]) {
+      } else {
+        depthBuffer[index] = depth;
+        plot(p.x, p.y);
+      }
+    } else {
+      plot(p.x, p.y);
+    }
+
   });
 
   color(...saveColor); // Restore color.
@@ -1199,6 +1217,8 @@ class Form {
   primitive = "triangle";
   type = "triangle";
 
+  limiter = 0; // Only enabled on CPU rendered `line` at the moment. 22.11.06.18.19
+
   uid; // = nanoid(); // An id to keep across threads.
 
   // Model
@@ -1278,7 +1298,7 @@ class Form {
     if (type === "quad") this.primitive = "triangle";
     if (type === "line:buffered") this.primitive = "line";
 
-    this.indices = indices || repeat(positions.length, (i) => i);
+    this.indices = indices || repeat(positions?.length, (i) => i);
 
     // 🌩️ Ingest positions and turn them into vertices.
     // ("Import" a model...)
@@ -1362,7 +1382,11 @@ class Form {
         )
       );
 
-      if (!indices) this.indices.push(verticesLength - 1 + i);
+      // TODO: This may need to be turned back on for the GPU?
+      //       What was with the -1 here?  22.11.06.17.42
+      // if (!indices) this.indices.push(verticesLength - 1 + i);
+      if (!indices) this.indices.push(verticesLength + i);
+      // console.log(indices, !indices, i, verticesLength);
     }
 
     if (indices) this.indices = indices;
@@ -1473,15 +1497,20 @@ class Form {
     }
 
     if (this.primitive === "line") {
+      // Limit positions and colors in order to know their drawing order...
+      let posLimitMax = this.indices.length / 2;
+      let posLimit = this.limiter % (posLimitMax + 1);
+      // let posLimit = posLimitMax - ((limiter % posLimitMax) + 1); // Reverse the order.
+
       // Loop indices list to draw each triangle.
-      for (let i = 0; i < this.indices.length; i += 2) {
+      for (let i = 0; i < this.indices.length - posLimit * 2; i += 2) {
         // Draw each line by applying the screen transform &
         // perspective divide (with clipping).
         drawLine3d(
           transformedVertices[this.indices[i]],
           transformedVertices[this.indices[i + 1]],
           transformedVertices[this.indices[i]].color || this.color,
-          this.gradients,
+          this.gradients
         );
       }
     }

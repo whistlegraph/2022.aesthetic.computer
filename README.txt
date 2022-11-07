@@ -59,6 +59,12 @@ Welcome to...
   - [] Speed
   - [] Spatialization
 
+*** GIF Support ***
+- [] Add ability to store frames as gif frames and end a recording.
+- [] This can use ffmpeg behind the scenes in (almost) the same way I'm doing now...?
+- [] Just the software renderer for now? Or should I composite?
+- [] https://macr.ae/article/canvas-to-gif
+
 ***Live Reloading***
 - [] Fix live reloading for everyone / add some people to dev server.
 - [] Disable nginx cache? https://ubiq.co/tech-blog/disable-nginx-cache

@@ -1662,7 +1662,7 @@ async function makeFrame({ data: { type, content } }) {
 
       // TODO: Disable the depth buffer for now... it doesn't need to be
       //       regenerated on every frame.
-      //graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
+      graph.depthBuffer.fill(Number.MAX_VALUE); // Clear depthbuffer.
 
       $api.screen = screen;
       $api.screen.center = [screen.width / 2, screen.height / 2];
