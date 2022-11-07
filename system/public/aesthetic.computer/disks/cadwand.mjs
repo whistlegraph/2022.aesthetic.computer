@@ -22,18 +22,6 @@
 //      const cRot = cam.rotation.slice();
 //      form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
 // + Done
-// - [x] Clean up this file.
-// - [x] Abstract the FPS camera so it's easier to scaffold environments like this.
-// - [x] Draw diagonals in sections.
-//   - [x] Dynamically limit the number of sides with special edge cases.
-//        for sides 1->4 to prevent over-drawing.
-// - [x] Add the depth buffer back.
-// - [x] Draw start and end cap lines for the triangles.
-//   - [x] Start
-//   - [x] End
-// - [x] Refactor geometry generation into a dynamic `Tube` class.
-// - [x] Add color support to path.
-// - [x] Make vertex gradients optional.
 
 import { CamDoll } from "../lib/cam-doll.mjs";
 
