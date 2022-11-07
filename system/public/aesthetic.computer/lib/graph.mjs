@@ -460,7 +460,7 @@ function line3d(a, b, lineColor, gradients) {
     }
 
     const newZ = lerp(aZ, bZ, progress);
-    const stretchedDepth = 1 - min(1, abs(newZ) / 2);
+    const stretchedDepth = 1 - min(1, abs(newZ) / 2.5);
 
     color(
       lineColor[0] * stretchedDepth,

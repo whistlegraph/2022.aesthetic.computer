@@ -1,6 +1,10 @@
 // Wand, 22.10.29.01.50 https://wand.ac
 //       22.10.05.11.01
 
+// TODO
+// - [] Add Camdoll
+//      import { CamDoll } from "../lib/cam-doll.mjs";
+
 import { font1 } from "./common/fonts.mjs";
 import { MetaBrowser, iOS } from "../lib/platform.mjs";
 
