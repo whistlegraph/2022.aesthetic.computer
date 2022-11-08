@@ -40,11 +40,23 @@ let tube, // Tube geometry that surrounds the spider's path at even increments.
   radius = 0.2,
   limiter = 0;
 
+let race;
+
 let step = 0.15;
 let microstep = 0.05;
 let growing = false;
 
-function boot({ Camera, Dolly, Form, QUAD, painting, num, debug, help }) {
+function boot({
+  Camera,
+  Dolly,
+  Form,
+  QUAD,
+  painting,
+  num,
+  debug,
+  help,
+  geo: { Race },
+}) {
   cd = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // FPS style camera controls.
   stage = new Form(
     QUAD,
@@ -55,25 +67,77 @@ function boot({ Camera, Dolly, Form, QUAD, painting, num, debug, help }) {
   // Create a spider and set its starting state.
   spi = new Spider({ num, debug }, [0, 0, 0], [0, 0, 0], [255, 0, 0, 255]);
   spiStart = spi.state;
+
+  race = new Race();
+
+  race.start(spi.state.position);
+  racePoints.push(race.pos);
 }
+
+const racePoints = [];
 
 function sim({
   wiggle,
   simCount,
   pen,
-  num: { vec3, randIntRange: rr, dist3d, degrees },
+  num: { vec3, randIntRange: rr, dist3d, degrees, mat4, quat, radians },
   help,
 }) {
   yw = wiggle(8); // 🎡 Some dynamics for each frame
   rot += rotSpeed;
   cd.sim();
 
-  const ray = cd.cam.ray(pen.x, pen.y, 0.3);
-  console.log(ray);
-
-  // Create geometry by racing towards the cursor.
+  // Create geometry by racing towards the cursor from the center point.
   if (growing && simCount % 10n === 0n) {
+    const ray = cd.cam.ray(pen.x, pen.y, 0.3, true);
+    race.to(ray);
 
+    let lastSpiderState = tubeGoto[tubeGoto.length - 1] || spiStart;
+    let dist = distanceTo(lastSpiderState.position, race.pos); // vec3's distance was innacurate.
+
+    function lookAt() {
+      // Get rotation and position of spider. (Will follow racer.)
+      const spiderRot = quat.fromEuler(quat.create(), ...lastSpiderState.angle);
+
+      console.log(spiderRot);
+
+      const spiderPos = lastSpiderState.position;
+
+      // Racer lerps towards a future 3D target (mouse cursor)
+      const racerPos = race.pos; // Get position of racer.
+      const racerRot = [0, 0, 0]; // Racer has a zeroed rotation for now.
+
+      // https://gamedev.stackexchange.com/questions/126112/how-to-make-one-3d-object-face-another
+
+      // TODO:
+      // Spider needs to follow from behind by turning towards the destination
+      // and then moving forward, on a delay.
+
+      //console.log("Spider rotation:", spiderRot, "Target rotation", shortestRot);
+      //console.log("Spider position:", spiderPos, "Target position", racerPos);
+    }
+
+    lookAt();
+
+    racePoints.push(race.pos);
+
+    if (dist > step) {
+      // Rotate towards ray.
+      // This is the angle between the chaser and the cursor.
+      // const turn = lookAt();
+      // spi.angle = turn.slice();
+
+
+      console.log(spi.state);
+      tubeGoto.push({
+        position: race.pos,
+        angle: [0, 0, 0],
+        color: [255, 0, 0, 255],
+      });
+
+      spi.crawl(step);
+      //spi.turn(...turn);
+    }
   }
 
   /*
@@ -110,7 +174,6 @@ function sim({
     }
   }
   */
-
 }
 
 function paint({ wipe, Form, form, num, wiggle }) {
@@ -138,6 +201,28 @@ function paint({ wipe, Form, form, num, wiggle }) {
     { scale: [1, 1, 1] }
   );
 
+  // Draw the spider's path so far.
+  const racePositions = [];
+  const raceColors = [];
+
+  for (let r = 0; r < racePoints.length - 1; r += 1) {
+    racePositions.push(racePoints[r], racePoints[r + 1]);
+    raceColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
+    //spiderColors.push(spi.path[s + 1].color, spi.path[s + 1].color);
+  }
+
+  // Draw the path of the race.
+  const raceForm = new Form(
+    {
+      type: "line",
+      positions: racePositions,
+      colors: raceColors,
+      gradients: true,
+    },
+    { color: [255, 255, 0, 255] },
+    { scale: [1, 1, 1] }
+  );
+
   // And however far the tube has gotten, given the spider's length.
   tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
   tube.form.limiter = limiter; // Copy over its limiter.
@@ -145,7 +230,7 @@ function paint({ wipe, Form, form, num, wiggle }) {
   tube?.goto(...tubeGoto); // Continue a gesture.
   tube?.stop(); // Finish a gesture.
 
-  form([stage, spiderForm, tube?.form], cd.cam, { cpu: true }); // Draw the tube and floor.
+  form([stage, spiderForm, raceForm, tube?.form], cd.cam, { cpu: true }); // Draw the tube and floor.
   // return false;
 }
 
@@ -512,6 +597,9 @@ class Spider {
   }
 }
 
+// Helper functions to get the math working right.
+
+// Lifted from Three.JS
 function distanceTo(v1, v2) {
   return Math.sqrt(distanceToSquared(v1, v2));
 }
@@ -521,4 +609,43 @@ function distanceToSquared(v1, v2) {
     dy = v1[1] - v2[1],
     dz = v1[2] - v2[2];
   return dx * dx + dy * dy + dz * dz;
+}
+
+// See also: https://github.com/toji/gl-matrix/issues/329#issuecomment-404763425
+/**
+ * Returns an euler angle representation of a quaternion
+ * @param  {vec3} out Euler angles, pitch-yaw-roll
+ * @param  {quat} mat Quaternion
+ * @return {vec3} out
+ */
+export function getEuler(out, quat) {
+  let x = quat[0],
+    y = quat[1],
+    z = quat[2],
+    w = quat[3],
+    x2 = x * x,
+    y2 = y * y,
+    z2 = z * z,
+    w2 = w * w;
+  let unit = x2 + y2 + z2 + w2;
+  let test = x * w - y * z;
+  if (test > 0.499995 * unit) {
+    //TODO: Use glmatrix.EPSILON
+    // singularity at the north pole
+    out[0] = Math.PI / 2;
+    out[1] = 2 * Math.atan2(y, x);
+    out[2] = 0;
+  } else if (test < -0.499995 * unit) {
+    //TODO: Use glmatrix.EPSILON
+    // singularity at the south pole
+    out[0] = -Math.PI / 2;
+    out[1] = 2 * Math.atan2(y, x);
+    out[2] = 0;
+  } else {
+    out[0] = Math.asin(2 * (x * z - w * y));
+    out[1] = Math.atan2(2 * (x * w + y * z), 1 - 2 * (z2 + w2));
+    out[2] = Math.atan2(2 * (x * y + z * w), 1 - 2 * (y2 + z2));
+  }
+  // TODO: Return them as degrees and not as radians
+  return out;
 }

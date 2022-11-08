@@ -330,6 +330,8 @@ export function pointFrom(x, y, angle, dist) {
 }
 
 // Follows a point.
+// TODO: Also keep track of a target rotation?
+
 export class Race {
   pos;
   step;
