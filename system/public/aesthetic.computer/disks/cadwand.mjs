@@ -3,15 +3,15 @@
 
 // TODO
 // - [-] Turn / crawl towards the 3d cursor position.
-// - [] Reload last camera position on refresh.
-// - [] Record some GIFs.
 // ... gpu time!
 // - [] Render line geometry onto the GPU.
 // - [] Render triangulated geometry onto the GPU.
-// - [] Integrate into `wand`.
+// - [] Integrate into `wand` and VR.
 //   - [] Hook it up to the cursor via race.
 //   - [] Bring that code into `wand`.
 // + Later
+// - [] Reload last camera position on refresh.
+// - [] Record some GIFs.
 // - [] There should be an "inner" and "outer" triangulation option.
 //       - [] Inner ONLY for complexity 1 and 2.
 //       - [] Optional elsewhere.
@@ -60,6 +60,7 @@ function boot({ Camera, Dolly, Form, QUAD, painting, num, debug, help }) {
 function sim({
   wiggle,
   simCount,
+  pen,
   num: { vec3, randIntRange: rr, dist3d, degrees },
   help,
 }) {
@@ -67,6 +68,15 @@ function sim({
   rot += rotSpeed;
   cd.sim();
 
+  const ray = cd.cam.ray(pen.x, pen.y, 0.3);
+  console.log(ray);
+
+  // Create geometry by racing towards the cursor.
+  if (growing && simCount % 10n === 0n) {
+
+  }
+
+  /*
   if (simCount % 10n === 0n && growing) {
     let lastSpiderState = tubeGoto[tubeGoto.length - 1] || spiStart;
     const turn = [rr(-15, 15), 0, rr(-15, 15)];
@@ -99,6 +109,8 @@ function sim({
       spi.crawl(peekAmount);
     }
   }
+  */
+
 }
 
 function paint({ wipe, Form, form, num, wiggle }) {
