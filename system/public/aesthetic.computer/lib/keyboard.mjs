@@ -51,7 +51,7 @@ export class Keyboard {
 
       // Send a normal keyboard message if we are anywhere else.
       this.events.push({
-        name: "keyboard:down:" + key.toLowerCase(),
+        name: "keyboard:down:" + parseKey(key),
         key,
         repeat: e.repeat || repeat,
         shift: e.shiftKey,
@@ -64,10 +64,16 @@ export class Keyboard {
 
     window.addEventListener("keyup", (e) => {
       this.events.push({
-        name: "keyboard:up:" + e.key.toLowerCase(),
+        name: "keyboard:up:" + parseKey(e.key),
         key: e.key,
       });
       this.#lastKeyDown = null;
     });
   }
+}
+
+function parseKey(key) {
+  let parsedKey = key.toLowerCase();
+  if (parsedKey === " ") parsedKey = "space";
+  return parsedKey;
 }

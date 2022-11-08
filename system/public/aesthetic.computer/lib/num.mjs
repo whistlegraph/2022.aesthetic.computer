@@ -71,13 +71,14 @@ export function dist() {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+// TODO: Would 6 decimal places work? (Do some research) 22.11.08.00.21
 export function dist3d(p1, p2) {
   // Convert everything to 4 decimal places.
   // Drop some precision here so vec3.dist (Math.hypot) doesn't go crazy
   // on my Float32Array values.
-  p1 = p1.map((p) => p.toFixed(4));
-  p2 = p2.map((p) => p.toFixed(4));
-  return vec3.dist(p1, p2);
+  if (p1.buffer) p1 = p1.map((p) => p.toPrecision(4));
+  if (p2.buffer) p2 = p2.map((p) => p.toPrecision(4));
+  return Number(vec3.dist(p1, p2).toPrecision(4));
 }
 
 // Converts degrees to radians.

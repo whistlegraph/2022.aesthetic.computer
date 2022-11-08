@@ -1194,6 +1194,7 @@ class Dolly {
     this.zVel *= this.dec;
 
     if (abs(this.xVel) > 0) this.camera.x += this.xVel;
+    if (abs(this.yVel) > 0) this.camera.y += this.yVel;
     if (abs(this.zVel) > 0) this.camera.z += this.zVel;
   }
 
@@ -1207,7 +1208,7 @@ class Dolly {
     );
 
     this.xVel += xz[0] || 0;
-    // this.yVel += y || 0;
+    this.yVel += y || 0;
     this.zVel += xz[1] || 0;
   }
 }

@@ -6,6 +6,8 @@ export class CamDoll {
   #S;
   #A;
   #D;
+  #SPACE;
+  #SHIFT;
   #UP;
   #DOWN;
   #LEFT;
@@ -14,7 +16,7 @@ export class CamDoll {
   constructor(Camera, Dolly, opts) {
     this.cam = new Camera(80, {
       z: opts.z || 0,
-      y: opts.y * - 1 || -0.5,
+      y: opts.y * -1 || -0.5,
       scale: [1, 1, 1],
     });
     this.#dolly = new Dolly(this.cam); // moves the camera
@@ -23,14 +25,25 @@ export class CamDoll {
   sim() {
     // 🔫 FPS style camera movement.
     let forward = 0,
+      updown = 0,
       strafe = 0;
     if (this.#W) forward = -0.002;
     if (this.#S) forward = 0.002;
     if (this.#A) strafe = -0.002;
     if (this.#D) strafe = 0.002;
 
-    if (this.#W || this.#S || this.#A || this.#D) {
-      this.#dolly.push({ x: strafe, z: forward });
+    if (this.#SPACE) updown = 0.002;
+    if (this.#SHIFT) updown = -0.002;
+
+    if (
+      this.#W ||
+      this.#S ||
+      this.#A ||
+      this.#D ||
+      this.#SPACE ||
+      this.#SHIFT
+    ) {
+      this.#dolly.push({ x: strafe, y: updown, z: forward });
     }
 
     if (this.#UP) this.cam.rotX += 1;
@@ -41,7 +54,7 @@ export class CamDoll {
   }
 
   act(e) {
-    // 💻️ Keyboard: WASD for movement, arrows for looking.
+    // 💻️ Keyboard: WASD, SPACE and SHIFT for movement, ARROW KEYS for looking.
     if (e.is("keyboard:down:w")) this.#W = true;
     if (e.is("keyboard:down:s")) this.#S = true;
     if (e.is("keyboard:down:a")) this.#A = true;
@@ -51,6 +64,11 @@ export class CamDoll {
     if (e.is("keyboard:up:s")) this.#S = false;
     if (e.is("keyboard:up:a")) this.#A = false;
     if (e.is("keyboard:up:d")) this.#D = false;
+
+    if (e.is("keyboard:down:space")) this.#SPACE = true;
+    if (e.is("keyboard:down:shift")) this.#SHIFT = true;
+    if (e.is("keyboard:up:space")) this.#SPACE = false;
+    if (e.is("keyboard:up:shift")) this.#SHIFT = false;
 
     if (e.is("keyboard:down:arrowup")) this.#UP = true;
     if (e.is("keyboard:down:arrowdown")) this.#DOWN = true;

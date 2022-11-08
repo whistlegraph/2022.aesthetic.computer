@@ -2,8 +2,7 @@
 // A laboratory for designing the procedural geometry in `wand`.
 
 // TODO
-// - [-] Make a spider that can move the tube forward and generate a path over time.
-// ... media break
+// - [-] Turn / crawl towards the 3d cursor position.
 // - [] Reload last camera position on refresh.
 // - [] Record some GIFs.
 // ... gpu time!
@@ -22,27 +21,32 @@
 //      const cRot = cam.rotation.slice();
 //      form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
 // + Done
+// - [x] Make a spider that can move the tube forward and generate a path over time.
 
 import { CamDoll } from "../lib/cam-doll.mjs";
-const { max, cos, sin } = Math;
+const { max, floor, cos, sin } = Math;
 
-let cd, floor; // Camera and floor.
+let cd, stage; // Camera and floor.
 
 let spi, // Crawls in 3D and creates a path.
   spiStart,
-  spiGoto = [];
+  tubeGoto = [];
 
 let tube, // Tube geometry that surrounds the spider's path at even increments.
   rot = 0,
   rotSpeed = 0.5,
   yw = 8,
   sides = 2,
-  radius = 0.1,
+  radius = 0.2,
   limiter = 0;
+
+let step = 0.15;
+let microstep = 0.05;
+let growing = false;
 
 function boot({ Camera, Dolly, Form, QUAD, painting, num, debug, help }) {
   cd = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // FPS style camera controls.
-  floor = new Form(
+  stage = new Form(
     QUAD,
     { tex: painting(2, 2, (g) => g.wipe(0, 0, 70)) },
     { rot: [-90, 0, 0] }
@@ -51,46 +55,50 @@ function boot({ Camera, Dolly, Form, QUAD, painting, num, debug, help }) {
   // Create a spider and set its starting state.
   spi = new Spider({ num, debug }, [0, 0, 0], [0, 0, 0], [255, 0, 0, 255]);
   spiStart = spi.state;
-
-  const { randIntRange: rr } = num;
-  //help.repeat(8, () => {
-  //  spiderGoto.push(spi.crawl(0.1)); // Crawl forward in red.
-  //  spi.turn(2, 0, 4); // TODO: This needs to turn *towards* a cursor position.
-  //  spi.ink(rr(150, 255), rr(150, 255), rr(150, 255));
-  //});
 }
 
-let growing = false;
-
-function sim({ wiggle, simCount, num: { vec3, randIntRange: rr } }) {
+function sim({
+  wiggle,
+  simCount,
+  num: { vec3, randIntRange: rr, dist3d, degrees },
+  help,
+}) {
   yw = wiggle(8); // 🎡 Some dynamics for each frame
   rot += rotSpeed;
   cd.sim();
 
-  // TODO:
-  // - [] Create a crawl distance dead zone here.
-  // - [] Also turn / crawl towards the 3d cursor position.
+  if (simCount % 10n === 0n && growing) {
+    let lastSpiderState = tubeGoto[tubeGoto.length - 1] || spiStart;
+    const turn = [rr(-15, 15), 0, rr(-15, 15)];
+    const peekAmount = microstep;
 
-  if(simCount % 10n === 0n && growing) {
-    //spiGoto.push(spi.crawl(0.05));
+    let newSpiderState = spi.peek(peekAmount, turn); // Take a look outwards...
 
-    spi.turn(rr(-1, 1), 0, rr(-1, 1));
+    //const p1 = [...lastSpiderState.position].map((p) => Number(p.toPrecision(4)));
+    //const p2 = [...newSpiderState].map((p) => Number(p.toPrecision(4)));
+    let dist = distanceTo(lastSpiderState.position, newSpiderState); // vec3's distance was innacurate.
+    let angleBetween = vec3.angle(lastSpiderState.position, newSpiderState);
+    //const degreeThreshold = tubeGoto.length === 0 || degrees(angleBetween) < 10;
 
-    let spiderState = spi.crawl(0.01);
-
-
-    let lastSpiderState = spiGoto[spiGoto.length - 1] || spiStart; 
-
-    let dist = vec3.distance(lastSpiderState.position, spiderState.position);
-
-    if (dist > 0.1) {
-      spiGoto.push(spiderState);
-      spi.ink(rr(100, 255), rr(100, 255), rr(100, 255));
+    // If we have looked over the theshold step distance...
+    if (dist > step) {
+      // Then quantize some segments and push forward safely by amounts we can.
+      const repeatCount = floor(dist / step);
+      turn[0] /= repeatCount; // Not quite sure where the turns should go...
+      turn[1] /= repeatCount;
+      turn[2] /= repeatCount;
+      help.repeat(repeatCount, (i) => {
+        spi.turn(...turn); // Turn the amount we need to.
+        spi.ink(rr(100, 255), rr(100, 255), rr(100, 255)); // Set the color.
+        tubeGoto.push(spi.crawl(step));
+      });
+      // Note: To avoid quantizing, simply crawl by the distance.
+    } else {
+      // Otherwise just inch forward by the amount we peeked.
+      spi.turn(...turn); // Turn the amount we need to.
+      spi.crawl(peekAmount);
     }
-
   }
-
-
 }
 
 function paint({ wipe, Form, form, num, wiggle }) {
@@ -104,7 +112,7 @@ function paint({ wipe, Form, form, num, wiggle }) {
   for (let s = 0; s < spi.path.length - 1; s += 1) {
     spiderPositions.push(spi.path[s].position, spi.path[s + 1].position);
     spiderColors.push([255, 255, 255, 255], [0, 0, 0, 255]);
-    //spiderColors.push(spi.path[s].color, spi.path[s].color);
+    //spiderColors.push(spi.path[s + 1].color, spi.path[s + 1].color);
   }
 
   const spiderForm = new Form(
@@ -122,10 +130,10 @@ function paint({ wipe, Form, form, num, wiggle }) {
   tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
   tube.form.limiter = limiter; // Copy over its limiter.
   tube?.start(spiStart, radius, sides); // Start a gesture.
-  tube?.goto(...spiGoto); // Continue a gesture.
+  tube?.goto(...tubeGoto); // Continue a gesture.
   tube?.stop(); // Finish a gesture.
 
-  form([floor, spiderForm, tube?.form], cd.cam, { cpu: true }); // Draw the tube and floor.
+  form([stage, spiderForm, tube?.form], cd.cam, { cpu: true }); // Draw the tube and floor.
   // return false;
 }
 
@@ -323,8 +331,8 @@ class Tube {
     [...arguments].forEach((pathP, pi) => {
       for (let si = 0; si < pathP.shape.length; si += 1) {
         if (si === 0) {
-          positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 1. Core
-          colors.push(pathP.color, pathP.color);
+          // positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 1. Core
+          // colors.push(pathP.color, pathP.color);
           // colors.push([127, 127, 127, 255], [127, 127, 127, 255]);
         }
 
@@ -374,25 +382,30 @@ class Tube {
 class Spider {
   $;
   position;
-  orientation;
-  turnDelta;
+  angle;
   color;
 
   path = []; // A built up path.
 
-  constructor($, pos = [0, 0, 0], ang = [0, 0, 0], col = [255, 255, 255, 255]) {
+  constructor(
+    $,
+    pos = [0, 0, 0, 1],
+    ang = [0, 0, 0],
+    col = [255, 255, 255, 255]
+  ) {
     this.$ = $;
     this.position = pos;
-    this.orientation = ang;
-    this.turnDelta = ang;
+    if (pos.length === 3) pos.push(1); // Make sure pos has a W.
+    this.angle = ang;
     this.color = col;
+    this.path.push(this.state);
   }
 
   get state() {
     // TODO: Is slicing necessary? (Try a complex path with it off.)
     return {
       position: this.position.slice(),
-      angle: this.orientation.slice(),
+      angle: this.angle.slice(),
       color: this.color.slice(),
     };
   }
@@ -404,70 +417,96 @@ class Spider {
   ink() {
     if (arguments.length === 3) {
       this.color = [...arguments, 255];
-    } else { // Assume 4
+    } else {
+      // Assume 4
       this.color = [...arguments];
     }
   }
 
-  // Move the spider forward in 3D by n steps.
-  crawl(steps) {
+  // Move the spider forward in 3D by n steps, or imagine a forward move.
+  // Turning is optional.
+  crawl(steps, turn, peeking = false) {
     const {
-      num: { mat4, quat, vec4 },
+      num: { mat4, quat, vec4, radians },
       debug,
     } = this.$;
 
-    // Get the current rotated and translated position.
-
-    const rotation = quat.fromEuler(quat.create(), ...this.turnDelta);
-    const m = mat4.fromRotationTranslation(mat4.create(), rotation, [
-      0,
-      steps,
-      0,
-    ]);
-    this.turnDelta = [0, 0, 0];
-
-    // Project it outwards by `steps`.
-    this.position = vec4.transformMat4(vec4.create(), [...this.position, 1], m);
-
-    if (debug) {
-      /*
-      console.log(
-        "🕷️ Pos",
-        "X:",
-        this.position[0].toFixed(2),
-        "Y:",
-        this.position[1].toFixed(2),
-        "Z:",
-        this.position[1].toFixed(2)
-      );
-      console.log(
-        "🕷️ Rot",
-        "X:",
-        this.angle[0].toFixed(2),
-        "Y:",
-        this.angle[1].toFixed(2),
-        "Z:",
-        this.angle[1].toFixed(2)
-      );
-      */
+    // Turn for real if we are not peeking, or imagine turning if we are.
+    let turnAmount = this.angle.slice();
+    if (peeking && turn) {
+      turnAmount[0] = (this.angle[0] + turn[0]) % 360;
+      turnAmount[1] = (this.angle[1] + turn[1]) % 360;
+      turnAmount[2] = (this.angle[2] + turn[2]) % 360;
     }
 
+    // 💆 These quaternions don't really work / they squash eventually?
+    //    (Ask sage - should I factor out glMatrix entirely?)
+    // Get the current rotated and translated position.
+    // const rotation = quat.normalize(
+    //   quat.create(),
+    //   quat.fromEuler(quat.create(), ...turnAmount)
+    // );
+    // const m = mat4.fromRotationTranslation(
+    //   mat4.create(),
+    //   rotation,
+    //   this.position
+    // );
+    //const pos = vec4.transformMat4(vec4.create(), [0, steps, 0, 1], m);
+
+    const panned = mat4.fromTranslation(mat4.create(), this.position);
+    // ... and around angle.
+    const rotX = mat4.fromXRotation(mat4.create(), radians(turnAmount[0]));
+    const rotY = mat4.fromYRotation(mat4.create(), radians(turnAmount[1]));
+    const rotZ = mat4.fromZRotation(mat4.create(), radians(turnAmount[2]));
+    // Note: Would switching to quaternions make this terse? 22.11.05.23.34
+    //       Should also be done in the `Camera` and `Form` class inside `graph.mjs`.
+    const rotatedX = mat4.mul(mat4.create(), panned, rotX);
+    const rotatedY = mat4.mul(mat4.create(), rotatedX, rotY);
+    const rotatedZ = mat4.mul(mat4.create(), rotatedY, rotZ);
+    const m = rotatedZ;
+
+    // Project it outwards by `steps`.
+    const pos = vec4.transformMat4(vec4.create(), [0, steps, 0, 1], m);
+
+    // if (debug) { // TODO: Log peek position.
+    //   const p = this.position.map(p => p.toFixed(2)),
+    //     a = this.angle.map(a => a.toFixed(2));
+    //   console.log( "🕷️ Pos", "X:", p[0], "Y:", p[1], "Z:", p[2]);
+    //   console.log( "🕷️ Rot", "X:", a[0], "Y:", a[1], "Z:", a[2]);
+    // }
+
+    // Don't actually go further if we are only taking a peek.
+    if (peeking) return pos;
+
+    //this.turnDelta = [0, 0, 0]; // Consume turn angle.
+    this.position = pos;
     const state = this.state;
     this.path.push(state);
-
     return state;
+  }
+
+  // Imagine a future position, turning an optional amount beforehand.
+  peek(steps, turn) {
+    return this.crawl(steps, turn, true);
   }
 
   // Turn the spider on any axis.
   // TODO: Eventually add named parameters or more shorthand functions.
   turn(x, y, z) {
-    this.turnDelta[0] = (this.turnDelta[0] + x) % 360;
-    this.turnDelta[1] = (this.turnDelta[1] + y) % 360;
-    this.turnDelta[2] = (this.turnDelta[2] + z) % 360;
-
-    this.orientation[0] = (this.orientation[0] + x) % 360;
-    this.orientation[1] = (this.orientation[1] + y) % 360;
-    this.orientation[2] = (this.orientation[2] + z) % 360;
+    this.angle[0] = (this.angle[0] + x) % 360;
+    this.angle[1] = (this.angle[1] + y) % 360;
+    this.angle[2] = (this.angle[2] + z) % 360;
     return this.state;
   }
+}
+
+function distanceTo(v1, v2) {
+  return Math.sqrt(distanceToSquared(v1, v2));
+}
+
+function distanceToSquared(v1, v2) {
+  const dx = v1[0] - v2[0],
+    dy = v1[1] - v2[1],
+    dz = v1[2] - v2[2];
+  return dx * dx + dy * dy + dz * dz;
 }

@@ -59,10 +59,17 @@ Welcome to...
   - [] Speed
   - [] Spatialization
 
-*** 3D Camera ***
+*** Important 3D Details ***
 - [] Invert Y position in original constructor.
+- [] vec3.dist from glMatrix yields innacurate numbers. Factor it out of the project. 
+- [] The quaternions also don't seem to work?
 
 *** GIF Support ***
+- [] Add keyboard shortcut to download a still frame of whatever you're 
+     looking at, (a 100% accurate screenshot in the presented resolution).
+     - [] Get working with normal buffer.
+     - [] Get working with glaze and mouse.
+     - [] Have mouse be optional.
 - [] Add ability to store frames as gif frames and end a recording.
 - [] This can use ffmpeg behind the scenes in (almost) the same way I'm doing now...?
 - [] Just the software renderer for now? Or should I composite?
