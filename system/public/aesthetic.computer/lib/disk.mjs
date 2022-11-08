@@ -198,9 +198,9 @@ let wiggleAngle = 0;
 const $commonApi = {
   system: {},
   wiggle: function (n, level = 0.2, speed = 6) {
-    wiggleAngle = (wiggleAngle + (1 * speed)) % 360;
+    wiggleAngle = (wiggleAngle + 1 * speed) % 360;
     const osc = sin(num.radians(wiggleAngle));
-    return n + (n * level) * osc;
+    return n + n * level * osc;
   },
   dark: true, // Dark mode. (Gets set on startup and on any change.)
   darkMode, // Toggle dark mode or set to `true` or `false`.
@@ -227,7 +227,7 @@ const $commonApi = {
     vec3: num.vec3,
     vec4: num.vec4,
     mat4: num.mat4,
-    quat: num.quat
+    quat: num.quat,
   },
   geo: {
     Box: geo.Box,
@@ -403,7 +403,8 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
   if (forms === undefined || forms?.length === 0) return;
 
   if (cpu === true) {
-    if (Array.isArray(forms)) forms.forEach((form) => form.graph(cam));
+    if (Array.isArray(forms))
+      forms.filter(Boolean).forEach((form) => form.graph(cam));
     else forms.graph(cam);
   } else {
     // GPU forms.
@@ -1657,6 +1658,7 @@ async function makeFrame({ data: { type, content } }) {
 
         // TODO: Add the depth buffer back here.
         // Reset the depth buffer.
+        // TODO: I feel like this is causing a memory leak...
         graph.depthBuffer.length = screen.width * screen.height;
         graph.depthBuffer.fill(Number.MAX_VALUE);
       }

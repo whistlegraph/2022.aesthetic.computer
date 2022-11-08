@@ -26,76 +26,114 @@
 import { CamDoll } from "../lib/cam-doll.mjs";
 const { max, cos, sin } = Math;
 
-let cd, floor;
-let spider; // Walks in 3D and creates a path.
-let tube,
+let cd, floor; // Camera and floor.
+
+let spi, // Crawls in 3D and creates a path.
+  spiStart,
+  spiGoto = [];
+
+let tube, // Tube geometry that surrounds the spider's path at even increments.
   rot = 0,
   rotSpeed = 0.5,
   yw = 8,
-  sides = 6,
-  radius = 0.2,
+  sides = 2,
+  radius = 0.1,
   limiter = 0;
 
-function boot({ Camera, Dolly, Form, QUAD, painting, num, debug }) {
-  cd = new CamDoll(Camera, Dolly, { z: 0.8 }); // FPS style camera controls.
+function boot({ Camera, Dolly, Form, QUAD, painting, num, debug, help }) {
+  cd = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // FPS style camera controls.
   floor = new Form(
     QUAD,
     { tex: painting(2, 2, (g) => g.wipe(0, 0, 70)) },
     { rot: [-90, 0, 0] }
   );
 
-  const spider = new Spider(
-    { num, debug },
-    [0, 0.0, 0],
-    [0, 0, 0],
-    [255, 0, 0, 255]
-  );
+  // Create a spider and set its starting state.
+  spi = new Spider({ num, debug }, [0, 0, 0], [0, 0, 0], [255, 0, 0, 255]);
+  spiStart = spi.state;
 
-  //sp.push(spider.state); // First position, red.
-
-  spiderStart = spider.state; // First position, red.
-  spiderGoto.push(spider.crawl(0.2)); // Crawl forward in red.
-  spider.ink(0, 255, 0, 255); // Change to green.
-  spiderGoto.push(spider.crawl(0.1)); // Crawl forward in green.
-  spider.turn(0, 0, 20);
-  spiderGoto.push(spider.crawl(0.3)); // Crawl forward in green.
-  spider.turn(0, 0, 10);
-  spider.ink(255, 0, 0);
-  spiderGoto.push(spider.crawl(0.2)); // Crawl forward in green.
-  spider.ink(255, 255, 0);
-  spiderGoto.push(spider.crawl(0.1)); // Crawl forward in green.
-  spider.ink(0, 255, 0);
-  spider.turn(10, 0, -10);
-  spiderGoto.push(spider.crawl(0.4)); // Crawl forward in green.
-  //spider.ink(255, 150, 0, 255); // Change to orange.
-  //spider.turn(0, 10, 0);
-  //spiderGoto.push(spider.crawl(0.2)); // Crawl forward in green.
+  const { randIntRange: rr } = num;
+  //help.repeat(8, () => {
+  //  spiderGoto.push(spi.crawl(0.1)); // Crawl forward in red.
+  //  spi.turn(2, 0, 4); // TODO: This needs to turn *towards* a cursor position.
+  //  spi.ink(rr(150, 255), rr(150, 255), rr(150, 255));
+  //});
 }
 
-let spiderStart;
-let spiderGoto = [];
+let growing = false;
 
-function paint({ wipe, ink, screen, Form, form, num, wiggle }) {
-  wipe(0, 0, 50); // Clear the background...
-  //ink(0, 1).box(0, 0, screen.width, screen.height); // Or use a fade effect.
-
-  tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
-  tube.form.limiter = limiter; // Copy over its limiter.
-  tube?.start(spiderStart, radius, sides); // Start a gesture.
-  tube?.goto(...spiderGoto); // Continue a gesture.
-  tube?.stop(); // Finish a gesture.
-
-  form([floor, tube?.form], cd.cam, { cpu: true }); // Draw the tube and floor.
-  // return false;
-}
-
-function sim({ wiggle }) {
+function sim({ wiggle, simCount, num: { vec3, randIntRange: rr } }) {
   yw = wiggle(8); // 🎡 Some dynamics for each frame
   rot += rotSpeed;
   cd.sim();
+
+  // TODO:
+  // - [] Create a crawl distance dead zone here.
+  // - [] Also turn / crawl towards the 3d cursor position.
+
+  if(simCount % 10n === 0n && growing) {
+    //spiGoto.push(spi.crawl(0.05));
+
+    spi.turn(rr(-1, 1), 0, rr(-1, 1));
+
+    let spiderState = spi.crawl(0.01);
+
+
+    let lastSpiderState = spiGoto[spiGoto.length - 1] || spiStart; 
+
+    let dist = vec3.distance(lastSpiderState.position, spiderState.position);
+
+    if (dist > 0.1) {
+      spiGoto.push(spiderState);
+      spi.ink(rr(100, 255), rr(100, 255), rr(100, 255));
+    }
+
+  }
+
+
+}
+
+function paint({ wipe, Form, form, num, wiggle }) {
+  wipe(0, 0, 50); // Clear the background...
+  //ink(0, 1).box(0, 0, screen.width, screen.height); // Or use a fade effect.
+
+  // Draw the spider's path so far.
+  const spiderPositions = [];
+  const spiderColors = [];
+
+  for (let s = 0; s < spi.path.length - 1; s += 1) {
+    spiderPositions.push(spi.path[s].position, spi.path[s + 1].position);
+    spiderColors.push([255, 255, 255, 255], [0, 0, 0, 255]);
+    //spiderColors.push(spi.path[s].color, spi.path[s].color);
+  }
+
+  const spiderForm = new Form(
+    {
+      type: "line",
+      positions: spiderPositions,
+      colors: spiderColors,
+      gradients: true,
+    },
+    { color: [255, 255, 0, 255] },
+    { scale: [1, 1, 1] }
+  );
+
+  // And however far the tube has gotten, given the spider's length.
+  tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
+  tube.form.limiter = limiter; // Copy over its limiter.
+  tube?.start(spiStart, radius, sides); // Start a gesture.
+  tube?.goto(...spiGoto); // Continue a gesture.
+  tube?.stop(); // Finish a gesture.
+
+  form([floor, spiderForm, tube?.form], cd.cam, { cpu: true }); // Draw the tube and floor.
+  // return false;
 }
 
 function act({ event: e }) {
+  // Grow model.
+  if (e.is("touch") && e.button === 0) growing = true;
+  if (e.is("lift") && e.button === 0) growing = false;
+
   // Increase model complexity.
   if (e.is("keyboard:down:k")) {
     sides += 1;
@@ -107,12 +145,12 @@ function act({ event: e }) {
     limiter = 0;
   }
 
-  if (e.is("wheel") && e.dir > 0) {
+  if (e.is("wheel") && e.dir > 0 && tube) {
     limiter += 1;
     tube.form.limiter = limiter;
   }
 
-  if (e.is("wheel") && e.dir < 0) {
+  if (e.is("wheel") && e.dir < 0 && tube) {
     limiter -= 1;
     if (limiter < 0) limiter = tube.form.vertices.length / 2;
     tube.form.limiter = limiter;
@@ -176,8 +214,6 @@ class Tube {
   goto() {
     // Add new points to the path.
     const path = [...arguments].map((p) => this.#pathp(p));
-
-    console.log(path);
 
     // Extrude shape points from and in the direction of each path vertex.
     path.forEach((p) => this.#transformShape(p));
@@ -257,7 +293,6 @@ class Tube {
   }
 
   #transformShape(pathP) {
-    console.log(pathP.angle)
     const { mat4, radians, vec4 } = this.$.num;
     this.shape.forEach((shapePos) => {
       // ... by position
@@ -343,7 +378,7 @@ class Spider {
   turnDelta;
   color;
 
-  path; // A built up path.
+  path = []; // A built up path.
 
   constructor($, pos = [0, 0, 0], ang = [0, 0, 0], col = [255, 255, 255, 255]) {
     this.$ = $;
@@ -367,7 +402,11 @@ class Spider {
 
   // Set the color.
   ink() {
-    this.color = [...arguments];
+    if (arguments.length === 3) {
+      this.color = [...arguments, 255];
+    } else { // Assume 4
+      this.color = [...arguments];
+    }
   }
 
   // Move the spider forward in 3D by n steps.
@@ -385,7 +424,7 @@ class Spider {
       steps,
       0,
     ]);
-   this.turnDelta = [0, 0, 0];
+    this.turnDelta = [0, 0, 0];
 
     // Project it outwards by `steps`.
     this.position = vec4.transformMat4(vec4.create(), [...this.position, 1], m);
@@ -412,7 +451,11 @@ class Spider {
       );
       */
     }
-    return this.state;
+
+    const state = this.state;
+    this.path.push(state);
+
+    return state;
   }
 
   // Turn the spider on any axis.

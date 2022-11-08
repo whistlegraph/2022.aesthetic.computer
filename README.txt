@@ -59,6 +59,9 @@ Welcome to...
   - [] Speed
   - [] Spatialization
 
+*** 3D Camera ***
+- [] Invert Y position in original constructor.
+
 *** GIF Support ***
 - [] Add ability to store frames as gif frames and end a recording.
 - [] This can use ffmpeg behind the scenes in (almost) the same way I'm doing now...?

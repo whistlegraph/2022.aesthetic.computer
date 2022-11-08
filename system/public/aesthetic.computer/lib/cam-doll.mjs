@@ -12,7 +12,11 @@ export class CamDoll {
   #RIGHT;
 
   constructor(Camera, Dolly, opts) {
-    this.cam = new Camera(80, { z: opts.z || 0, y: -0.5, scale: [1, 1, 1] });
+    this.cam = new Camera(80, {
+      z: opts.z || 0,
+      y: opts.y * - 1 || -0.5,
+      scale: [1, 1, 1],
+    });
     this.#dolly = new Dolly(this.cam); // moves the camera
   }
 
@@ -59,7 +63,9 @@ export class CamDoll {
     if (e.is("keyboard:up:arrowright")) this.#RIGHT = false;
 
     // 👀 Look around if 2nd mouse button is held.
-    if (e.is("draw") && e.button === 2) {
+    // Note: Sometimes multiple mouse buttons can be held... in which case
+    //       e.button only holds the original (duplicate events are not sent).
+    if (e.is("draw") && e.buttons.includes(2)) {
       this.cam.rotX -= e.delta.y / 3.5;
       this.cam.rotY -= e.delta.x / 3.5;
     }

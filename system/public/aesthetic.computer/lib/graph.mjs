@@ -462,11 +462,13 @@ function line3d(a, b, lineColor, gradients) {
     const newZ = lerp(aZ, bZ, progress);
     const stretchedDepth = 1 - min(1, abs(newZ) / 2.5);
 
+    /*
     color(
-      lineColor[0] * stretchedDepth,
-      lineColor[1] * stretchedDepth,
-      lineColor[2] * stretchedDepth,
+      c[0] * stretchedDepth,
+      c[1] * stretchedDepth,
+      c[2] * stretchedDepth,
     ); // Set color from lineColor or default to global color.
+    */
 
     const depth = newZ * -1;
     if (depthBuffer) {
@@ -551,10 +553,10 @@ function bresenham(x0, y0, x1, y1) {
   const points = [];
 
   // Make sure everything is floor'd.
-  x0 = floor(x0);
-  y0 = floor(y0);
-  x1 = floor(x1);
-  y1 = floor(y1);
+  x0 = floor(x0) || 0;
+  y0 = floor(y0) || 0;
+  x1 = floor(x1) || 0;
+  y1 = floor(y1) || 0;
 
   // Bresenham's Algorithm
   const dx = abs(x1 - x0);

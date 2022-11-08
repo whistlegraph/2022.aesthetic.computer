@@ -5,15 +5,16 @@
 // The 'primary' behavior is already defined below.
 // And now `nth-pointers` can be tacked on.
 
-// TODO:
-// - [] Add "wheel" (knob) event support with device type mouse.
+// TODO
+// - [-] Add mouse support for handling multiple mouse button presses:
+//      See also: https://github.com/testing-library/user-event/issues/803p
 // - [] Add game controller / axis support.
+
+import { Point } from "./geo.mjs";
 
 const { assign } = Object;
 const { round } = Math;
 const debug = window.acDEBUG;
-
-import { Point } from "./geo.mjs";
 
 class Pointer {
   x;
@@ -80,9 +81,35 @@ export class Pen {
       e.preventDefault();
     });
 
+    // Mouse only...
+    window.addEventListener("mousedown", (e) => {
+      const pointer = pen.pointers[1];
+      if (!pointer) return;
+
+      if (pointer.button !== e.button) {
+        if (!pointer.buttons.includes(e.button)) pointer.buttons.push(e.button);
+        const newPointer = { ...pointer };
+        newPointer.button = e.button;
+        pen.#event("touch", newPointer);
+      }
+    });
+
+    window.addEventListener("mouseup", (e) => {
+      const pointer = pen.pointers[1];
+      if (!pointer) return;
+
+      const buttonIndex = pointer.buttons.indexOf(e.button);
+      if (buttonIndex > -1) pointer.buttons.splice(buttonIndex, 1);
+
+      if (pointer.button !== e.button) {
+        const newPointer = { ...pointer };
+        newPointer.button = e.button;
+        pen.#event("lift", newPointer);
+      }
+    });
+
     // ***Touch***
     window.addEventListener("pointerdown", (e) => {
-
       // Make sure the pointer we are using is already being tracked.
       let pointer = pen.pointers[e.pointerId];
 
@@ -102,7 +129,8 @@ export class Pen {
         //pointer.down = true;
         //console.log("pointerdown", pointer.down);
         pointer.drawing = true;
-        pointer.button = e.button;
+        pointer.button = e.button; // Should this be deprecated? 22.11.07.22.13
+        pointer.buttons = [e.button];
 
         pointer.penDragStartPos = { x: pointer.x, y: pointer.y };
 
@@ -113,7 +141,8 @@ export class Pen {
 
         pen.pointers[e.pointerId] = pointer;
       } else {
-        pointer.button = e.button;
+        pointer.button = e.button; // Should this be deprecated? 22.11.07.22.13
+        pointer.buttons = [e.button];
         pointer.drawing = true;
         pointer.penDragStartPos = { x: pointer.x, y: pointer.y };
       }
@@ -137,8 +166,8 @@ export class Pen {
         pointer.py = pointer.y;
         pointer.untransformedPosition = { x: e.x, y: e.y };
         pointer.pressure = reportPressure(e);
-
-        pointer.button = e.button;
+        pointer.button = e.button; // Should this be deprecated? 22.11.07.22.13
+        pointer.buttons = [e.button];
         pointer.device = e.pointerType;
         pointer.pointerId = e.pointerId;
         pointer.isPrimary = e.isPrimary;
@@ -199,7 +228,6 @@ export class Pen {
       const pointer = pen.pointers[e.pointerId];
       if (!pointer) return;
 
-      //pointer.down = false;
       if (pointer.drawing) pen.#event("lift", pointer);
 
       pointer.drawing = false;
@@ -314,6 +342,7 @@ export class Pen {
       // index: pointer.pointerIndex, // 0 based index of pointers.
       pointer: pointer.pointerIndex + 1, // 1 based index of pointers.
       button: pointer.button,
+      buttons: pointer.buttons,
       x: pointer.x,
       y: pointer.y,
       px: pointer.px,
