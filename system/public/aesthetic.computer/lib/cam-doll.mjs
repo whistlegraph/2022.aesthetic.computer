@@ -29,10 +29,10 @@ export class CamDoll {
       this.#dolly.push({ x: strafe, z: forward });
     }
 
-    if (this.#UP) cam.rotX += 1;
-    if (this.#DOWN) cam.rotX -= 1;
-    if (this.#LEFT) cam.rotY += 1;
-    if (this.#RIGHT) cam.rotY -= 1;
+    if (this.#UP) this.cam.rotX += 1;
+    if (this.#DOWN) this.cam.rotX -= 1;
+    if (this.#LEFT) this.cam.rotY += 1;
+    if (this.#RIGHT) this.cam.rotY -= 1;
     this.#dolly.sim();
   }
 

@@ -2,7 +2,7 @@
 // A laboratory for designing the procedural geometry in `wand`.
 
 // TODO
-// - [] Make a spider that can move the tube forward and generate a path over time.
+// - [-] Make a spider that can move the tube forward and generate a path over time.
 // ... media break
 // - [] Reload last camera position on refresh.
 // - [] Record some GIFs.
@@ -44,16 +44,36 @@ function boot({ Camera, Dolly, Form, QUAD, painting, num, debug }) {
     { rot: [-90, 0, 0] }
   );
 
-  const spider = new Spider({ num, debug });
-  sp.push(
-    spider.crawl(0.1),
-    spider.crawl(0.1),
-    spider.crawl(0.1),
-    spider.crawl(0.1)
+  const spider = new Spider(
+    { num, debug },
+    [0, 0.0, 0],
+    [0, 0, 0],
+    [255, 0, 0, 255]
   );
+
+  //sp.push(spider.state); // First position, red.
+
+  spiderStart = spider.state; // First position, red.
+  spiderGoto.push(spider.crawl(0.2)); // Crawl forward in red.
+  spider.ink(0, 255, 0, 255); // Change to green.
+  spiderGoto.push(spider.crawl(0.1)); // Crawl forward in green.
+  spider.turn(0, 0, 20);
+  spiderGoto.push(spider.crawl(0.3)); // Crawl forward in green.
+  spider.turn(0, 0, 10);
+  spider.ink(255, 0, 0);
+  spiderGoto.push(spider.crawl(0.2)); // Crawl forward in green.
+  spider.ink(255, 255, 0);
+  spiderGoto.push(spider.crawl(0.1)); // Crawl forward in green.
+  spider.ink(0, 255, 0);
+  spider.turn(10, 0, -10);
+  spiderGoto.push(spider.crawl(0.4)); // Crawl forward in green.
+  //spider.ink(255, 150, 0, 255); // Change to orange.
+  //spider.turn(0, 10, 0);
+  //spiderGoto.push(spider.crawl(0.2)); // Crawl forward in green.
 }
 
-let sp = [];
+let spiderStart;
+let spiderGoto = [];
 
 function paint({ wipe, ink, screen, Form, form, num, wiggle }) {
   wipe(0, 0, 50); // Clear the background...
@@ -61,16 +81,12 @@ function paint({ wipe, ink, screen, Form, form, num, wiggle }) {
 
   tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
   tube.form.limiter = limiter; // Copy over its limiter.
-  tube?.start(radius, sides); // Start a gesture.
-  tube?.goto(
-    [sp[0].position, sp[0].angle, [0, 255, 0, 255]],
-    [sp[1].position, sp[1].angle, [255, 0, 0, 255]],
-    [sp[2].position, sp[2].angle, [255, 255, 255, 255]],
-    [sp[3].position, sp[3].angle, [255, 255, 255, 255]]
-  ); // Continue a gesture.
+  tube?.start(spiderStart, radius, sides); // Start a gesture.
+  tube?.goto(...spiderGoto); // Continue a gesture.
   tube?.stop(); // Finish a gesture.
 
   form([floor, tube?.form], cd.cam, { cpu: true }); // Draw the tube and floor.
+  // return false;
 }
 
 function sim({ wiggle }) {
@@ -141,31 +157,27 @@ class Tube {
     //       animate things / turn on or off certain low level effects etc.
   }
 
-  start(radius, sides) {
+  // Creates an initial position, orientation and end cap geometry.
+  start(p, radius, sides) {
     this.sides = sides;
     if (this.sides === 1) this.sides = 0;
-    //else this.sides = complexity + 1;
 
     // Create an initial position in the path and generate points in the shape.
     this.shape = this.#segmentShape(radius, this.sides);
-    const startPath = [
-      this.#pathp([0, 0.0, 0.01], [0, 0, 0], [0, 0, 255, 255]),
-      this.#pathp([0, 0.3, 0], [0, 0, 0], [255, 0, 0, 255]),
-    ];
-    this.lastPathP = startPath[0]; // Store an inital lastPath.
+    const start = this.#pathp(p);
+    this.lastPathP = start; // Store an inital lastPath.
 
     // 1. Transform the first shape and add an end cap. Draw triangle ring.
-    this.#transformShape(startPath[0]);
-    if (this.sides > 1) this.#cap(startPath[0]);
-
-    // 2. Transform second shape and then consume the point. Draw bars.
-    this.#transformShape(startPath[1]);
-    this.#consumePath(startPath[1]);
+    this.#transformShape(start);
+    if (this.sides > 1) this.#cap(start);
   }
 
+  // Adds additonal points as as args in [position, rotation, color] format.
   goto() {
     // Add new points to the path.
-    const path = [...arguments].map((p) => this.#pathp(...p));
+    const path = [...arguments].map((p) => this.#pathp(p));
+
+    console.log(path);
 
     // Extrude shape points from and in the direction of each path vertex.
     path.forEach((p) => this.#transformShape(p));
@@ -197,8 +209,8 @@ class Tube {
   }
 
   // Generate a path point with room for shape positions.
-  #pathp(pos, angle, color) {
-    return { pos, angle, color, shape: [] };
+  #pathp({ position, angle, color }) {
+    return { pos: position, angle, color, shape: [] };
   }
 
   // Generate a start or end (where ring === false) cap to the tube.
@@ -245,6 +257,7 @@ class Tube {
   }
 
   #transformShape(pathP) {
+    console.log(pathP.angle)
     const { mat4, radians, vec4 } = this.$.num;
     this.shape.forEach((shapePos) => {
       // ... by position
@@ -276,15 +289,15 @@ class Tube {
       for (let si = 0; si < pathP.shape.length; si += 1) {
         if (si === 0) {
           positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 1. Core
-          colors.push(this.lastPathP.color, this.lastPathP.color);
-          // [255, 255, 0, 255], [255, 255, 255, 255]
+          colors.push(pathP.color, pathP.color);
+          // colors.push([127, 127, 127, 255], [127, 127, 127, 255]);
         }
 
         if (this.sides === 1) return;
 
         if (si > 0) {
           positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 2. Vertical
-          colors.push(this.lastPathP.color, pathP.color);
+          colors.push(pathP.color, pathP.color);
         }
 
         if (si > 1) {
@@ -295,7 +308,7 @@ class Tube {
 
         if (si > 0 && si < pathP.shape.length - 1) {
           positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]); // 4. Diagonal
-          colors.push(this.lastPathP.color, this.lastPathP.color);
+          colors.push(pathP.color, pathP.color);
           // [0, 180, 180, 255], [0, 180, 180, 255]
         }
       }
@@ -306,7 +319,7 @@ class Tube {
           this.lastPathP.shape[1],
           pathP.shape[pathP.shape.length - 1]
         );
-        colors.push(this.lastPathP.color, this.lastPathP.color);
+        colors.push(pathP.color, pathP.color);
         // [200, 100, 0, 255], [200, 100, 0, 255]
 
         // 6. Final across
@@ -322,17 +335,42 @@ class Tube {
   }
 }
 
+// Turtle graphics in 3D.
 class Spider {
   $;
   position;
-  angle;
+  orientation;
+  turnDelta;
+  color;
 
-  constructor($, pos = [0, 0, 0], ang = [0, 0, 0]) {
+  path; // A built up path.
+
+  constructor($, pos = [0, 0, 0], ang = [0, 0, 0], col = [255, 255, 255, 255]) {
     this.$ = $;
     this.position = pos;
-    this.angle = ang;
+    this.orientation = ang;
+    this.turnDelta = ang;
+    this.color = col;
   }
 
+  get state() {
+    // TODO: Is slicing necessary? (Try a complex path with it off.)
+    return {
+      position: this.position.slice(),
+      angle: this.orientation.slice(),
+      color: this.color.slice(),
+    };
+  }
+
+  // TODO: See if this can support all color parameters via the color parser
+  //       in disk.
+
+  // Set the color.
+  ink() {
+    this.color = [...arguments];
+  }
+
+  // Move the spider forward in 3D by n steps.
   crawl(steps) {
     const {
       num: { mat4, quat, vec4 },
@@ -340,41 +378,53 @@ class Spider {
     } = this.$;
 
     // Get the current rotated and translated position.
-    const rotation = quat.fromEuler(quat.create(), ...this.angle);
+
+    const rotation = quat.fromEuler(quat.create(), ...this.turnDelta);
     const m = mat4.fromRotationTranslation(mat4.create(), rotation, [
       0,
       steps,
       0,
     ]);
+   this.turnDelta = [0, 0, 0];
+
     // Project it outwards by `steps`.
     this.position = vec4.transformMat4(vec4.create(), [...this.position, 1], m);
 
     if (debug) {
+      /*
       console.log(
-        "🕷️",
+        "🕷️ Pos",
         "X:",
         this.position[0].toFixed(2),
         "Y:",
         this.position[1].toFixed(2),
         "Z:",
-        this.position[1].toFixed(2),
-        "🟤",
-        "Yaw(X):",
+        this.position[1].toFixed(2)
+      );
+      console.log(
+        "🕷️ Rot",
+        "X:",
         this.angle[0].toFixed(2),
-        "Pitch(Y):",
+        "Y:",
         this.angle[1].toFixed(2),
-        "Roll(Z):",
+        "Z:",
         this.angle[1].toFixed(2)
       );
+      */
     }
-
-    return { position: this.position.slice(), angle: this.angle.slice() };
+    return this.state;
   }
 
+  // Turn the spider on any axis.
+  // TODO: Eventually add named parameters or more shorthand functions.
   turn(x, y, z) {
-    this.angle[0] = (this.angle[0] + x) % 360;
-    this.angle[1] = (this.angle[1] + y) % 360;
-    this.angle[2] = (this.angle[2] + z) % 360;
-    return { position: this.position.slice(), angle: this.angle.slice() };
+    this.turnDelta[0] = (this.turnDelta[0] + x) % 360;
+    this.turnDelta[1] = (this.turnDelta[1] + y) % 360;
+    this.turnDelta[2] = (this.turnDelta[2] + z) % 360;
+
+    this.orientation[0] = (this.orientation[0] + x) % 360;
+    this.orientation[1] = (this.orientation[1] + y) % 360;
+    this.orientation[2] = (this.orientation[2] + z) % 360;
+    return this.state;
   }
 }
