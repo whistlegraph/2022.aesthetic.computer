@@ -226,6 +226,7 @@ const $commonApi = {
     vec2: num.vec2,
     vec3: num.vec3,
     vec4: num.vec4,
+    mat3: num.mat3,
     mat4: num.mat4,
     quat: num.quat,
   },
