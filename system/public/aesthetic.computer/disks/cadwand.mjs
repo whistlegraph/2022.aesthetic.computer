@@ -36,7 +36,9 @@ let tube, // Tube geometry that surrounds the spider's path at even increments.
   //  rot = 0,
   //  yw = 8,
   rotSpeed = 0.5,
-  sides = 16,
+  //sides = 16,
+  sides = 2,
+  // radius = 1,
   radius = 0.2,
   limiter = 0;
 
@@ -70,7 +72,8 @@ function boot({
   race = new Race();
 
   // Create a buffered tube to follow our gesture.
-  tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
+  tube = new Tube({ Form, painting, num, wiggle }, "triangles"); // Make a new tube.
+  //tube = new Tube({ Form, painting, num, wiggle }, "lines"); // Make a new tube.
 }
 
 const racePoints = [],
@@ -214,16 +217,8 @@ function paint({ wipe, Form, form, num, wiggle }) {
   );
   */
 
-  // And however far the tube has gotten, given the spider's length.
-  //tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
-  //tube.form.limiter = limiter; // Copy over its limiter.
-  //tube?.start(spiStart, radius, sides); // Start a gesture.
-  //tube?.goto(...tubeGoto); // Continue a gesture.
-  //tube?.stop(); // Finish a gesture.
-
-  //form([stage, spiderForm, raceForm, tube?.form], cd.cam, { cpu: true });
-  form([stage, raceForm, spiderForm, tube.form], cd.cam);
-  //form([stage, raceForm, spiderForm, tube?.form], cd.cam, { cpu: true });
+  //form([raceForm, spiderForm, tube.form], cd.cam, { cpu: true });
+  form([stage, tube.form], cd.cam, { cpu: true });
 }
 
 function act({ event: e, pen, num, debug, num: { vec3, randIntRange: rr } }) {
@@ -298,12 +293,21 @@ class Tube {
   colors = [];
   sides;
 
-  constructor($) {
+  geometry = "triangles"; // or "lines"
+
+  constructor($, geometry) {
     this.$ = $; // Hold onto the API.
 
-    // Make the buffered geometry form.
+    this.geometry = geometry;
+
+    // Make the buffered geometry form, given the geometry type.
     this.form = new $.Form(
-      { type: "line:buffered", gradients: false },
+      {
+        type: this.geometry === "triangles" ? "triangle" : "line:buffered",
+        gradients: false,
+      },
+      //{ type: "line:buffered", gradients: false },
+      //{ tex: this.$.painting(2, 2, (g) => g.wipe(0, 0, 70)) },
       { color: [255, 255, 255, 255] }, // If vertices are passed then this number blends down.
       { scale: [1, 1, 1] }
     );
@@ -374,6 +378,23 @@ class Tube {
 
   // Generate a start or end (where ring === false) cap to the tube.
   #cap(pathP, ring = true) {
+    /*
+    this.form.addPoints({
+      positions: [
+        [-1, -1, 0, 1], // Bottom Left
+        [0, 1, 0, 1], // Top Left
+        [1, -1, 0, 1], // Top Right
+      ],
+      colors: [
+        [255, 0, 0, 255],
+        [0, 255, 0, 255],
+        [0, 0, 255, 255],
+      ],
+    });
+    */
+
+    // If the type is lines...
+    /*
     if (this.sides > 2) {
       for (let i = 0; i < pathP.shape.length; i += 1) {
         // Pie: Radiate out from core point
@@ -405,6 +426,8 @@ class Tube {
       }
     }
 
+    */
+
     // Ring: add final point
     if (ring) {
       this.form.addPoints({
@@ -431,7 +454,6 @@ class Tube {
         vec4.transformMat4(vec4.create(), [...shapePos, 1], finalMat)
       );
     });
-
   }
 
   // Copy each point in the shape, transforming it by the added path positions
@@ -439,36 +461,67 @@ class Tube {
   #consumePath() {
     const positions = [];
     const colors = [];
+    const tris = this.geometry === "triangles";
 
     [...arguments].forEach((pathP, pi) => {
+      this.path.push(pathP);
+
       for (let si = 0; si < pathP.shape.length; si += 1) {
         if (si === 0) {
-          positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 1. Core
-          colors.push(pathP.color, pathP.color);
+          //positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 1. Core line
+          //colors.push(pathP.color, pathP.color);
           // colors.push([127, 127, 127, 255], [127, 127, 127, 255]);
         }
 
         if (this.sides === 1) return;
 
+        console.log(this.path.length);
+
+        // 2. Vertical
         if (si > 0) {
-          positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 2. Vertical
-          colors.push(pathP.color, pathP.color);
+          if (tris) {
+
+            if (this.path.length > 1) { // This may only be a sides 2 thing...
+              positions.push(this.lastPathP.shape[si]); // First tri complete for side length of 2.
+              colors.push(pathP.color);
+            }
+
+            positions.push(pathP.shape[si]); // First tri complete for side length of 2.
+            colors.push(pathP.color);
+          } else {
+            positions.push(this.lastPathP.shape[si], pathP.shape[si]);
+            colors.push(pathP.color, pathP.color);
+          }
         }
 
+        // 3. Across
         if (si > 1) {
-          positions.push(pathP.shape[si], pathP.shape[si - 1]); // 3. Across
-          colors.push(pathP.color, pathP.color);
+          if (tris) {
+            positions.push(pathP.shape[si - 1]);
+            colors.push(pathP.color);
+          } else {
+            positions.push(pathP.shape[si], pathP.shape[si - 1]);
+            colors.push(pathP.color, pathP.color);
+          }
           // [255, 180, 180, 255], [255, 180, 180, 255]
         }
 
+        // 4. Diagonal
         if (si > 0 && si < pathP.shape.length - 1) {
-          positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]); // 4. Diagonal
-          colors.push(pathP.color, pathP.color);
+          if (tris) {
+            positions.push(this.lastPathP.shape[si + 1]);
+            colors.push(pathP.color);
+          } else {
+            positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]);
+            colors.push(pathP.color, pathP.color);
+          }
           // [0, 180, 180, 255], [0, 180, 180, 255]
         }
+
       }
 
       // 5. Final diagonal
+      /*
       if (this.sides > 2) {
         positions.push(
           this.lastPathP.shape[1],
@@ -482,6 +535,7 @@ class Tube {
         colors.push(pathP.color, pathP.color);
         // [255, 180, 180, 255], [255, 180, 180, 255]
       }
+      */
 
       this.lastPathP = pathP;
     });

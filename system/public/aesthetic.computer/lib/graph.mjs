@@ -481,7 +481,6 @@ function line3d(a, b, lineColor, gradients) {
     } else {
       plot(p.x, p.y);
     }
-
   });
 
   color(...saveColor); // Restore color.
@@ -1484,8 +1483,15 @@ class Form {
     //       22.10.11.20.21
 
     if (this.primitive === "triangle") {
+      //if (this.indices.length % 3 !== 0) return; // Since it's triangles, make sure we always draw have a multiple of 3 indices.
+
+      let posLimitMax = this.indices.length / 3;
+      let posLimit = this.limiter % (posLimitMax + 1);
+
       // Loop indices list to draw each triangle.
-      for (let i = 0; i < this.indices.length; i += 3) {
+      for (let i = 0; i < this.indices.length - posLimit * 3; i += 3) {
+        if (i + 1 > this.indices.length || i + 3 > this.indices.length) return;
+
         // Draw each triangle by applying the screen transform &
         // perspective divide (with clipping).
         drawTriangle(
@@ -2059,23 +2065,23 @@ function fillTriangle(minYVert, midYVert, maxYVert, texture, alpha) {
   // TODO: How to accurately outline a triangle?
   // in drawScanLine: Add border at xMin and xMax and also use j to know if we are at the bottom.
 
-  //const tempColor = c.slice();
-  //color(127, 127, 127);
+  const tempColor = c.slice();
+  color(127, 127, 127);
 
-  //line(minYVert.x, minYVert.y, midYVert.x, midYVert.y);
-  //line(midYVert.x, midYVert.y, maxYVert.x, maxYVert.y);
-  //line(minYVert.x, minYVert.y, maxYVert.x, maxYVert.y);
+  line(minYVert.x, minYVert.y, midYVert.x, midYVert.y);
+  line(midYVert.x, midYVert.y, maxYVert.x, maxYVert.y);
+  line(minYVert.x, minYVert.y, maxYVert.x, maxYVert.y);
 
-  //color(...tempColor);
+  color(...minYVert.color);
+  plot(minYVert.x, minYVert.y);
 
-  //color(...minYVert.color24bit);
-  //plot(minYVert.x, minYVert.y);
+  color(...midYVert.color);
+  plot(midYVert.x, midYVert.y);
 
-  //color(...midYVert.color24bit);
-  //plot(midYVert.x, midYVert.y);
+  color(...maxYVert.color);
+  plot(maxYVert.x, maxYVert.y);
 
-  //color(...maxYVert.color24bit);
-  //plot(maxYVert.x, maxYVert.y);
+  color(...tempColor);
 }
 
 function triangleAreaDouble(a, b, c) {
@@ -2140,16 +2146,16 @@ function drawScanLine(
   const xPrestep = xMin - left.x;
 
   // Texture
-
   const xDist = right.x - left.x;
   const texCoordXXStep = (right.texCoordX - left.texCoordX) / xDist;
   const texCoordYXStep = (right.texCoordY - left.texCoordY) / xDist;
-  const oneOverZXStep = (right.oneOverZ - left.oneOverZ) / xDist;
-
-  const depthXStep = (right.depth - left.depth) / xDist;
 
   let texCoordX = left.texCoordX + texCoordXXStep * xPrestep;
   let texCoordY = left.texCoordY + texCoordYXStep * xPrestep;
+
+  // Depth
+  const depthXStep = (right.depth - left.depth) / xDist;
+  const oneOverZXStep = (right.oneOverZ - left.oneOverZ) / xDist;
   let oneOverZ = left.oneOverZ + oneOverZXStep * xPrestep;
   let depth = left.depth + depthXStep * xPrestep;
 
@@ -2180,21 +2186,24 @@ function drawScanLine(
 
     const z = 1 / oneOverZ;
 
-    const srcX = texCoordX * z * (texture.width - 1) + 0.5;
-    const srcY = texCoordY * z * (texture.height - 1) + 0.5;
+    if (texture) {
+      const srcX = texCoordX * z * (texture.width - 1) + 0.5;
+      const srcY = texCoordY * z * (texture.height - 1) + 0.5;
 
-    //console.log(alpha);
+      if (render) {
+        copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
+        //plot(i, j);
+      }
 
-    //pixels.set(blend(c, pixels.slice(i, i + 4)), i);
-    if (render) {
-      copy(i, j, srcX, srcY, texture, alpha); // TODO: Eventually remove alpha from here.
-      //plot(i, j);
+      texCoordX += texCoordXXStep;
+      texCoordY += texCoordYXStep;
+    } else {
+      vec4.add(gradientColor, gradientColor, gradients.colorXStep);
+      color(...gradientColor);
+      plot(i, j);
     }
-    //}
 
-    //vec4.add(gradientColor, gradientColor, gradients.colorXStep);
-    texCoordX += texCoordXXStep;
-    texCoordY += texCoordYXStep;
+    // Depth
     oneOverZ += oneOverZXStep;
     depth += depthXStep;
   }
