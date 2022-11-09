@@ -3,6 +3,7 @@
 
 // TODO
 // - [-] Render triangulated geometry onto the GPU.
+//   - [] Get it working on the CPU first.
 // - [] Set up both lines and triangles mode using buffered geometry.
 // - [] Prevent the tube's circle from twisting on its Y axis.
 // - [] Integrate into `wand` and VR.
@@ -32,19 +33,21 @@ let cd, stage; // Camera and floor.
 let spi, // Crawls in 3D and creates a path.
   spiStart;
 //tubeGoto = [];
-let tube, // Tube geometry that surrounds the spider's path at even increments.
+let tube,
+  tube2, // Tube geometry that surrounds the spider's path at even increments.
   //  rot = 0,
   //  yw = 8,
   rotSpeed = 0.5,
   //sides = 16,
   sides = 2,
   // radius = 1,
-  radius = 0.2,
-  limiter = 0;
+  radius = 0.4,
+  limiter = 0,
+  limiter2 = 0;
 
 let race;
 
-let step = 0.15;
+let step = 0.25;
 //let microstep = 0.05;
 let growing = false;
 
@@ -73,7 +76,7 @@ function boot({
 
   // Create a buffered tube to follow our gesture.
   tube = new Tube({ Form, painting, num, wiggle }, "triangles"); // Make a new tube.
-  //tube = new Tube({ Form, painting, num, wiggle }, "lines"); // Make a new tube.
+  tube2 = new Tube({ Form, painting, num, wiggle }, "lines"); // Make a new tube.
 }
 
 const racePoints = [],
@@ -100,6 +103,7 @@ function sim({
     spi.crawl(step);
     //tubeGoto.push(spi.state);
     tube.goto(spi.state);
+    tube2.goto(spi.state);
     spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
 
     //if (dist > step) {
@@ -218,7 +222,9 @@ function paint({ wipe, Form, form, num, wiggle }) {
   */
 
   //form([raceForm, spiderForm, tube.form], cd.cam, { cpu: true });
-  form([stage, tube.form], cd.cam, { cpu: true });
+  console.log("Tube verts:", tube.form.vertices.length);
+  //form([stage, tube.form, tube2.form], cd.cam, { cpu: true });
+  form([tube.form, tube2.form], cd.cam, { cpu: true });
 }
 
 function act({ event: e, pen, num, debug, num: { vec3, randIntRange: rr } }) {
@@ -240,23 +246,27 @@ function act({ event: e, pen, num, debug, num: { vec3, randIntRange: rr } }) {
     race.start(spi.state.position);
     racePoints.push(race.pos);
     tube.start(spiStart, radius, sides); // Start a gesture.
+    tube2.start(spiStart, radius, sides); // Start a gesture.
     growing = true;
   }
 
   if (e.is("lift") && e.button === 0) {
     growing = false;
     tube.stop();
+    tube2.stop();
   }
 
   // Increase model complexity.
   if (e.is("keyboard:down:k")) {
     sides += 1;
     limiter = 0;
+    limiter2 = 0;
   }
 
   if (e.is("keyboard:down:j")) {
     sides = max(1, sides - 1);
     limiter = 0;
+    limiter2 = 0;
   }
 
   if (e.is("wheel") && e.dir > 0 && tube) {
@@ -268,6 +278,17 @@ function act({ event: e, pen, num, debug, num: { vec3, randIntRange: rr } }) {
     limiter -= 1;
     if (limiter < 0) limiter = tube.form.vertices.length / 2;
     tube.form.limiter = limiter;
+  }
+
+  if (e.is("keyboard:down:[")) {
+    limiter2 += 1;
+    tube2.form.limiter = limiter2;
+  }
+
+  if (e.is("keyboard:down:]")) {
+    limiter2 -= 1;
+    if (limiter2 < 0) limiter2 = tube2.form.vertices.length / 2;
+    tube2.form.limiter = limiter2;
   }
 
   cd.act(e);
@@ -285,7 +306,10 @@ export { boot, paint, sim, act };
 
 class Tube {
   $; // api
-  path = []; // Set up points for a path / gesture.
+
+  gesture = []; // Set up points on a path / gesture. (Resets on each gesture.)
+  // Used for triangulation logic.
+
   lastPathP;
   shape;
   form;
@@ -349,6 +373,7 @@ class Tube {
 
   stop() {
     this.#cap(this.lastPathP, false);
+    this.gesture.length = 0;
   }
 
   // Takes a starting position, direction and length.
@@ -378,35 +403,25 @@ class Tube {
 
   // Generate a start or end (where ring === false) cap to the tube.
   #cap(pathP, ring = true) {
-    /*
-    this.form.addPoints({
-      positions: [
-        [-1, -1, 0, 1], // Bottom Left
-        [0, 1, 0, 1], // Top Left
-        [1, -1, 0, 1], // Top Right
-      ],
-      colors: [
-        [255, 0, 0, 255],
-        [0, 255, 0, 255],
-        [0, 0, 255, 255],
-      ],
-    });
-    */
+    const tris = this.geometry === "triangles";
 
-    // If the type is lines...
-    /*
-    if (this.sides > 2) {
-      for (let i = 0; i < pathP.shape.length; i += 1) {
-        // Pie: Radiate out from core point
+    // 📐 Triangles
+    if (tris) {
+
+      if (this.sides > 2) {
+        for (let i = 0; i < pathP.shape.length; i += 1) {
+          // Pie: Radiate out from core point
+          /*
         if (i > 0 && this.sides > 4) {
           this.form.addPoints({
-            positions: [pathP.shape[0], pathP.shape[i]],
-            colors: [pathP.color, pathP.color],
-            // [255, 0, 0, 255], [255, 0, 0, 255]
+            positions: [pathP.shape[0]],
+            colors: [pathP.color],
           });
         }
+        */
 
-        // Single diagonal for a quad.
+          // Single diagonal for a quad.
+          /*
         if (i === 0 && this.sides === 4) {
           this.form.addPoints({
             positions: [pathP.shape[1], pathP.shape[3]],
@@ -414,27 +429,102 @@ class Tube {
             //[255, 0, 0, 255], [255, 0, 0, 255],
           });
         }
+        */
 
-        // Ring: Skip core point
-        if (i > 1 && ring) {
+          // Ring: Skip core point
+          if (i > 1 && ring) {
+            this.form.addPoints({
+              positions: [pathP.shape[i]],
+              colors: [pathP.color],
+              // [0, 100, 0, 255], [0, 100, 0, 255],
+            });
+          }
+        }
+      }
+
+      if (ring) {
+        if (this.sides > 2) {
           this.form.addPoints({
-            positions: [pathP.shape[i - 1], pathP.shape[i]],
+            positions: [pathP.shape[1]],
+            //colors: [pathP.color],
+            colors: [[0, 50, 255, 255], [0, 50, 255, 255]],
+            // [255, 100, 0, 255], [255, 100, 0, 255],
+          });
+        } else {
+          this.form.addPoints({
+            positions: [pathP.shape[1], pathP.shape[pathP.shape.length - 1]],
             colors: [pathP.color, pathP.color],
-            // [0, 100, 0, 255], [0, 100, 0, 255],
+            // [255, 100, 0, 255], [255, 100, 0, 255],
           });
         }
       }
-    }
 
-    */
 
-    // Ring: add final point
-    if (ring) {
-      this.form.addPoints({
-        positions: [pathP.shape[1], pathP.shape[pathP.shape.length - 1]],
-        colors: [pathP.color, pathP.color],
-        // [255, 100, 0, 255], [255, 100, 0, 255],
-      });
+      // Ending cap for three sides.
+      if (!ring && this.sides === 3) {
+        this.form.addPoints({
+          positions: [pathP.shape[1], pathP.shape[2], pathP.shape[3]],
+          colors: [pathP.color, pathP.color, pathP.color],
+          // [255, 100, 0, 255], [255, 100, 0, 255],
+        });
+      }
+
+
+
+    } else {
+      // 📈 Lines 
+
+      if (this.sides > 2) {
+        for (let i = 0; i < pathP.shape.length; i += 1) {
+          // Pie: Radiate out from core point
+          if (i > 0 && this.sides > 4) {
+            this.form.addPoints({
+              positions: [pathP.shape[0], pathP.shape[i]],
+              // colors: [pathP.color, pathP.color],
+              colors: [
+                [255, 0, 0, 255],
+                [255, 0, 0, 255],
+              ],
+            });
+          }
+
+          // Single diagonal for a quad.
+          if (i === 0 && this.sides === 4) {
+            this.form.addPoints({
+              positions: [pathP.shape[1], pathP.shape[3]],
+              // colors: [pathP.color, pathP.color],
+              colors: [
+                [255, 0, 0, 255],
+                [255, 0, 0, 255],
+              ],
+            });
+          }
+
+          // Ring: Skip core point
+          if (i > 1 && ring) {
+            this.form.addPoints({
+              positions: [pathP.shape[i - 1], pathP.shape[i]],
+              // colors: [pathP.color, pathP.color],
+              colors: [
+                [0, 100, 0, 255],
+                [0, 100, 0, 255],
+              ],
+            });
+          }
+        }
+      }
+
+      // Ring: add final point
+      if (ring) {
+        this.form.addPoints({
+          positions: [pathP.shape[1], pathP.shape[pathP.shape.length - 1]],
+          // colors: [pathP.color, pathP.color],
+          colors: [
+            [255, 100, 0, 255],
+            [255, 100, 0, 255],
+          ],
+        });
+      }
     }
   }
 
@@ -464,7 +554,8 @@ class Tube {
     const tris = this.geometry === "triangles";
 
     [...arguments].forEach((pathP, pi) => {
-      this.path.push(pathP);
+      this.gesture.push(pathP);
+      console.log("Number of sections so far:", this.gesture.length);
 
       for (let si = 0; si < pathP.shape.length; si += 1) {
         if (si === 0) {
@@ -475,30 +566,48 @@ class Tube {
 
         if (this.sides === 1) return;
 
-        console.log(this.path.length);
-
         // 2. Vertical
         if (si > 0) {
           if (tris) {
+            // 💡 This shouldn't be path based... should be "gesture" based.
 
-            if (this.path.length > 1) { // This may only be a sides 2 thing...
+            if (this.gesture.length > 1 && this.sides === 2) {
+              // This may only be a sides 2 thing...
               positions.push(this.lastPathP.shape[si]); // First tri complete for side length of 2.
               colors.push(pathP.color);
             }
 
+            if (this.sides === 3) {
+              //positions.push(pathP.shape[si]); // First tri complete for side length of 2.
+            }
+
+            console.log(si)
+
             positions.push(pathP.shape[si]); // First tri complete for side length of 2.
-            colors.push(pathP.color);
+                                             // + Start of second tri for side length of 3.
+
+            if (si === 3) {
+              colors.push([0, 255, 0, 100]);
+            } else {
+              colors.push(pathP.color);
+            }
+
           } else {
             positions.push(this.lastPathP.shape[si], pathP.shape[si]);
             colors.push(pathP.color, pathP.color);
           }
         }
 
-        // 3. Across
+        // 3. Across (We skip the first shape points here.)
         if (si > 1) {
           if (tris) {
             positions.push(pathP.shape[si - 1]);
             colors.push(pathP.color);
+
+            if (this.sides === 3) {
+              positions.push(this.lastPathP.shape[si]);
+              colors.push(pathP.color);
+            }
           } else {
             positions.push(pathP.shape[si], pathP.shape[si - 1]);
             colors.push(pathP.color, pathP.color);
@@ -509,33 +618,69 @@ class Tube {
         // 4. Diagonal
         if (si > 0 && si < pathP.shape.length - 1) {
           if (tris) {
-            positions.push(this.lastPathP.shape[si + 1]);
-            colors.push(pathP.color);
+
+            // Two sided
+            if (sides === 2) {
+              positions.push(this.lastPathP.shape[si + 1]);
+              colors.push([255, 255, 255, 255]);
+              //colors.push(pathP.color);
+            }
+
+            // Three sided
+            if (this.sides === 3) {
+
+              if (si === 1) {
+                positions.push(this.lastPathP.shape[si + 1]);
+                colors.push([255, 255, 255, 255]);
+
+                positions.push(this.lastPathP.shape[si]);
+                colors.push([255, 0, 255, 100]);
+              } else if (si === 2) {
+               // positions.push(pathP.shape[si]);
+               // colors.push([0, 255, 0, 100]);
+                positions.push(this.lastPathP.shape[si], this.lastPathP.shape[si + 1], pathP.shape[si]);
+                colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
+
+              }
+
+            }
+
           } else {
             positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]);
-            colors.push(pathP.color, pathP.color);
+            colors.push([255, 0, 0, 255], [255, 0, 0, 255]);
+            //colors.push(pathP.color, pathP.color);
           }
           // [0, 180, 180, 255], [0, 180, 180, 255]
         }
-
       }
 
       // 5. Final diagonal
-      /*
       if (this.sides > 2) {
         positions.push(
           this.lastPathP.shape[1],
           pathP.shape[pathP.shape.length - 1]
         );
-        colors.push(pathP.color, pathP.color);
-        // [200, 100, 0, 255], [200, 100, 0, 255]
+
+        //colors.push(pathP.color, pathP.color);
+        colors.push([0, 0, 255, 255], [0, 0, 255, 255]);
+
+        if (tris) {
+          //positions.
+         positions.push(this.lastPathP.shape[3]);
+         colors.push([255, 255, 0, 255]);
+        }
 
         // 6. Final across
         positions.push(pathP.shape[1], pathP.shape[pathP.shape.length - 1]);
-        colors.push(pathP.color, pathP.color);
-        // [255, 180, 180, 255], [255, 180, 180, 255]
+        //colors.push(pathP.color, pathP.color);
+        colors.push([255, 180, 180, 255], [255, 180, 180, 255]);
+
+        if (tris) {
+         positions.push(this.lastPathP.shape[1]);
+         colors.push([0, 0, 0, 255]);
+        }
+
       }
-      */
 
       this.lastPathP = pathP;
     });
