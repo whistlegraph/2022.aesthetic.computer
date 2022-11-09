@@ -389,6 +389,7 @@ export class Race {
     return out;
   }
 
+  // Should also reset.
   start(point) {
     this.quantizer?.start(point);
     this.pos = vec4.clone(point);

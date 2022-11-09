@@ -4,11 +4,8 @@
 
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
-import { LineGeometry } from "../dep/three/LineGeometry.js";
-import { LineMaterial } from "../dep/three/LineMaterial.js";
-import { Line2 } from "../dep/three/Line2.js";
 import { radians, rgbToHex } from "./num.mjs";
-import { TubePainter } from '../dep/three/TubePainter.js';
+//import { TubePainter } from '../dep/three/TubePainter.js';
 
 let scene,
   renderer,
@@ -164,7 +161,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     camera.rotation.order = "YXZ"; // Set to match the software renderer.
     camera.rotation.set(radians(cam.rotation[0]), radians(cam.rotation[1]), 0);
     camera.scale.set(...cam.scale);
-    camera.position.set(...cam.position);
+    camera.position.set(cam.position[0], -cam.position[1], cam.position[2]);
   }
 
   if (!Array.isArray(forms)) forms = [forms];
@@ -264,7 +261,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     if (f.type === "line") {
       let material;
 
-      /*
       if (f.vertices[0].color) {
         // Only use a gloabl color if vertices don't have color.
         material = new THREE.LineBasicMaterial();
@@ -273,85 +269,43 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           color: rgbToHex(...(f.color || color)),
         });
       }
-      */
-
-      const resolution = new THREE.Vector2();
-      renderer.getSize(resolution);
-
-      material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-
-      /*
-      material = new LineMaterial({
-        color: 0xffffff,
-        linewidth: 0.01, // in world units with size attenuation, pixels otherwise
-        vertexColors: true,
-        resolution, 
-        dashed: false,
-        alphaToCoverage: false,
-      });
-      */
-
-      //material.worldUnits = true; 
 
       material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
-
-      //material.linewidth = 1;
-      //material.vertexColors = f.vertices[0].color ? true : false;
-      //material.vertexAlphas = f.vertices[0].color?.length === 4 ? true : false;
+      material.linewidth = 1;
+      material.vertexColors = f.vertices[0].color ? true : false;
+      material.vertexAlphas = f.vertices[0].color?.length === 4 ? true : false;
 
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
       const pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
 
-      //const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      //const geometry = new THREE.TubeGeometry(points, 20, 2, 8, false);
+      //console.log(points.length, points.length - f.limiter * 2);
+      let posLimitMax = points.length / 2;
+      let posLimit = f.limiter % (posLimitMax + 1);
 
-      const path = new THREE.CatmullRomCurve3(points);
+      points.length = points.length - posLimit * 2;
+      pointColors.length = pointColors.length - posLimit * 2;
 
-      //const geometry = new LineGeometry();
-      const geometry = new THREE.TubeGeometry(path, 20, 0.01, 8, false);
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
-      //console.log(geometry)
-      //console.log(pointColors.length, path, geometry.attributes.position)
-
-      // const positions = new Float32Array(points.length * 3);
-      const colors = new Float32Array(pointColors.length * 3);
+      const colors = new Float32Array(points.length * 4);
 
       for (let i = 0; i < pointColors.length; i += 1) {
-      //  const colStart = i * 4;
-
-        const colStart = i * 3;
+        const colStart = i * 4;
         colors[colStart] = pointColors[i].x / 255;
         colors[colStart + 1] = pointColors[i].y / 255;
         colors[colStart + 2] = pointColors[i].z / 255;
-
-       // colors[colStart + 3] = pointColors[i].w / 255;
+        colors[colStart + 3] = pointColors[i].w / 255;
       }
-
-      // for (let i = 0; i < points.length; i += 1) {
-      //   const posStart = i * 3;
-      //   positions[posStart] = points[i].x;
-      //   positions[posStart + 1] = points[i].y;
-      //   positions[posStart + 2] = points[i].z;
-      // }
 
       geometry.setAttribute(
         "color",
-        new THREE.BufferAttribute(colors, 3, true)
+        new THREE.BufferAttribute(colors, 4, true)
       );
 
-      geometry.attributes.color.needsUpdate = true;
-
-      //console.log(geometry);
-      //geometry.generateUVs();
-
-      //geometry.setPositions(positions);
-      //geometry.setColors(colors);
-
-      //const line = new Line2(geometry, material);
-      const line = new THREE.Mesh(geometry, material);
+      const line = new THREE.LineSegments(geometry, material);
 
       line.translateX(f.position[0]);
       line.translateY(f.position[1]);
@@ -362,10 +316,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       line.scale.set(...f.scale);
 
       scene.add(line);
-
-      //line.computeLineDistances();
-
-      line.userData.aestheticID = f.uid;
+      line.aestheticID = f.uid;
 
       disposal.push({
         keep: f.gpuKeep,
@@ -375,25 +326,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     }
 
     if (f.type === "line:buffered") {
-      // Work from here: https://codesandbox.io/s/threejs-basic-example-forked-ygjt9o?file=/src/index.js:1536-1549
+      let material;
 
-
-      const painter = new TubePainter();
-
-      painter.mesh.userData.aestheticID = f.uid;
-      painter.mesh.userData.ac_painter = painter;
-
-      scene.add(painter.mesh);
-
-      disposal.push({
-        keep: f.gpuKeep,
-        form: painter.mesh,
-        resources: [painter.material, painter.geometry],
-      });
-
-      // let material;
-
-      /*
+      console.log(f.color, color);
       if (f.color) {
         // Only use a gloabl color if vertices don't have color.
         material = new THREE.LineBasicMaterial({
@@ -402,30 +337,15 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       } else {
         material = new THREE.LineBasicMaterial();
       }
-      */
 
-      /*
-      const resolution = new THREE.Vector2();
-      renderer.getSize(resolution);
-
-      material = new LineMaterial({
-        color: 0xffffff,
-        linewidth: 0.01, // in world units with size attenuation, pixels otherwise
-        vertexColors: true,
-        resolution,
-        dashed: false,
-        alphaToCoverage: true,
-      });
-
-      material.worldUnits = true; 
-      material.fog = true;
-
-      //material.transparent = true;
-      //material.opacity = f.alpha;
+      material.side = THREE.DoubleSide;
+      material.transparent = true;
+      material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
+      material.linewidth = 1;
       material.vertexColors = true;
-      //material.vertexAlphas = true;
+      material.vertexAlphas = true;
 
       let points = [];
       let pointColors = [];
@@ -436,24 +356,19 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
       }
 
-      //const geometry = new THREE.BufferGeometry();
-      const geometry = new LineGeometry();
-
+      const geometry = new THREE.BufferGeometry();
+      // const geometry = new LineGeometry();
       const positions = new Float32Array(f.MAX_POINTS * 3);
       const colors = new Float32Array(f.MAX_POINTS * 4);
-      */
 
       // CTO Rapter Notes:
 
       /*
       *** Optimized Vertex Model for Dynamic Data ***
-
       - Future line renderer...
-
       - Each position is a Float32 right now.
       - These need to be carved up to store more data.
       - So `positions` should just become `vertices`.
-
       - Of the 32 bits.
         - 24 bits per x, y or z 
         - 1 byte left over
@@ -465,7 +380,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           - left for everything else
       */
 
-      /*
       for (let i = 0; i < points.length; i += 1) {
         const posStart = i * 3;
         positions[posStart] = points[i].x;
@@ -481,33 +395,29 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         colors[colStart + 3] = pointColors[i].w / 255;
       }
 
-      geometry.setPositions(positions);
-      geometry.setColors(colors);
-      */
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3)
+      );
 
-      //geometry.setAttribute(
-      //  "position",
-      //  new THREE.BufferAttribute(positions, 3)
-      //);
+      geometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(colors, 4, true)
+      );
 
-      //geometry.setAttribute(
-      //  "color",
-      //  new THREE.BufferAttribute(colors, 4, true)
-      //);
+      //geometry.setPositions(positions);
+      //geometry.setColors(colors);
 
-      //const lineb = new THREE.LineSegments(geometry, material);
+      const lineb = new THREE.LineSegments(geometry, material);
       //const lineb = new Line2(geometry, material);
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
-      /*
-      lineb.userData.ac_length = points.length;
-      lineb.userData.ac_lastLength = lineb.userData.ac_length;
-      lineb.userData.ac_MAX_POINTS = f.MAX_POINTS;
-      lineb.userData.aestheticID = f.uid;
-      */
+      lineb.ac_length = points.length;
+      lineb.ac_lastLength = lineb.ac_length;
+      lineb.ac_MAX_POINTS = f.MAX_POINTS;
+      lineb.aestheticID = f.uid;
 
-      /*
       lineb.translateX(f.position[0]);
       lineb.translateY(f.position[1]);
       lineb.translateZ(f.position[2]);
@@ -516,24 +426,21 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       lineb.rotateZ(radians(f.rotation[2]));
       lineb.scale.set(...f.scale);
 
-      lineb.computeLineDistances();
+      //lineb.computeLineDistances();
 
       scene.add(lineb);
 
       geometry.setDrawRange(0, points.length);
-      //geometry.attributes.position.needsUpdate = true;
-      //geometry.attributes.color.needsUpdate = true;
-      //geometry.computeBoundingBox();
-      //geometry.computeBoundingSphere();
-      */
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
 
-      /*
       disposal.push({
         keep: f.gpuKeep,
         form: lineb,
         resources: [material, geometry],
       });
-      */
     }
 
     if (f.update === "form:touch") {
@@ -546,8 +453,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const fu = f; // formUpdate
 
       const form = scene.getObjectByProperty("aestheticID", fu.uid);
-
-      console.log(form);
 
       if (!form) return;
 
@@ -577,24 +482,19 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     if (f.update === "form:buffered:add-vertices") {
       const formUpdate = f;
 
-      const form = scene.getObjectByUserDataProperty(
-        "aestheticID",
-        formUpdate.uid
-      );
-
-      // console.log(scene.children, form);
-
+      const form = scene.getObjectByProperty("aestheticID", formUpdate.uid);
       if (!form) return;
 
       jiggleForm = form; // for jiggleForm
 
       // See: https://threejs.org/docs/#manual/en/introduction/How-to-update-things,
       //      https://jsfiddle.net/t4m85pLr/1
+
       if (form) {
         // Flush if necessary.
         if (formUpdate.reset) {
-          form.userData.ac_length = 0;
-          form.userData.ac_lastLength = 0;
+          form.ac_length = 0;
+          form.ac_lastLength = 0;
         }
 
         // Add points.
@@ -606,92 +506,53 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           pointColors.push(new THREE.Vector4(...formUpdate.vertices[i].color));
         }
 
-        console.log(points);
-
-        const painter = form.userData.ac_painter;
-
-        //points.forEach(p => {
-        //});
-
-        for (let i = 0; i < points.length; i += 2) {
-          //painter.moveTo(points[i]);
-          painter.lineTo(points[i + 1]);
-          //painter.lineTo(points[i+1]);
-        }
-        painter.update();
-
-
-        //painter.lineTo(cursor);
-
         // Set custom properties on the form to keep track of where we are
         // in the previously allocated vertex buffer.
-        // form.userData.ac_lastLength = form.userData.ac_length;
-        // form.userData.ac_length += points.length;
+        form.ac_lastLength = form.ac_length;
+        form.ac_length += points.length;
 
         // ⚠️ Reset the buffer if we were go over the max, by default.
-        // if (form.userData.ac_length > form.userData.ac_MAX_POINTS) {
-        //   form.userData.ac_lastLength = 0;
-        //   form.userData.ac_length = points.length;
-        // }
+        if (form.ac_length > form.ac_MAX_POINTS) {
+          form.ac_lastLength = 0;
+          form.ac_length = points.length;
+        }
 
         // TODO: How to make the buffer circular?
         //       (When would I want this?) 22.10.30.17.14
 
-        // const positions = form.geometry.attributes.position.array;
-        // const colors = form.geometry.attributes.colors.array;
-        // debugger;
+        const positions = form.geometry.attributes.position.array;
+        const colors = form.geometry.attributes.color.array;
 
-        /*
-        console.log(
-          "position",
-          form.geometry.attributes.instanceStart.data.array
-        );
-        console.log(
-          "color",
-          form.geometry.attributes.instanceColorStart.data.array
-        );
-        */
+        for (let i = 0; i < points.length; i += 1) {
+          const posStart = (form.ac_lastLength + i) * 3;
+          positions[posStart] = points[i].x;
+          positions[posStart + 1] = points[i].y;
+          positions[posStart + 2] = points[i].z;
+        }
 
-        // const positions = form.geometry.attributes.instanceStart.data.array;
-        // const colors = form.geometry.attributes.instanceColorStart.data.array;
+        for (let i = 0; i < pointColors.length; i += 1) {
+          const colStart = (form.ac_lastLength + i) * 4;
+          colors[colStart] = pointColors[i].x / 255;
+          colors[colStart + 1] = pointColors[i].y / 255;
+          colors[colStart + 2] = pointColors[i].z / 255;
+          colors[colStart + 3] = pointColors[i].w / 255;
+        }
 
-        // for (let i = 0; i < points.length; i += 1) {
-        //   const posStart = ((form.userData.ac_lastLength + i) * 3);
-        //   positions[posStart] = points[i].x;
-        //   positions[posStart + 1] = points[i].y;
-        //   positions[posStart + 2] = points[i].z;
-        // }
+        form.geometry.setDrawRange(0, form.ac_length);
+        form.geometry.attributes.position.needsUpdate = true;
+        form.geometry.attributes.color.needsUpdate = true;
 
-        // for (let i = 0; i < pointColors.length; i += 1) {
-        //   const colStart = (form.userData.ac_lastLength + i) * 3;
-        //   colors[colStart] = pointColors[i].x / 255;
-        //   colors[colStart + 1] = pointColors[i].y / 255;
-        //   colors[colStart + 2] = pointColors[i].z / 255;
-        //   //colors[colStart + 3] = pointColors[i].w / 255;
-        //   //colors[colStart + 3] = 255;
-        // }
+        form.geometry.computeBoundingBox();
+        form.geometry.computeBoundingSphere();
 
-        // //form.geometry.setDrawRange(0, form.ac_length);
-        // form.geometry.setDrawRange(0, form.userData.ac_length * 6);
+        //form.geometry.setPositions(positions);
+        //form.geometry.setColors(colors);
+        //form.computeLineDistances();
 
-        // //form.geometry.attributes.position.needsUpdate = true;
-        // //form.geometry.attributes.color.needsUpdate = true;
-        // form.geometry.attributes.instanceStart.needsUpdate = true;
-        // form.geometry.attributes.instanceColorStart.needsUpdate = true;
-
-        // //form.geometry.computeLineDistances?.();
-        // form.geometry.computeBoundingBox();
-        // form.geometry.computeBoundingSphere();
-
-        // //form.geometry.setPositions(positions);
-        // //form.geometry.setColors(colors);
-        // //form.computeLineDistances();
-
-        // needsSphere = true; // for jiggleForm
+        needsSphere = true; // for jiggleForm
       }
     }
   });
-
 
   // In case we ever need to render off screen...
   //renderer.render(scene, camera);
@@ -700,7 +561,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
   return forms.map((f) => f.uid); // Return UIDs of every added or adjusted form.
 }
-
 
 export function checkForRemovedForms(formsBaked) {
   const currentFormIDs = scene.children
@@ -725,7 +585,7 @@ export function handleEvent(event) {
   const form = scene.getObjectByUserDataProperty("aestheticID", event.uid);
   const painter = form.userData.ac_painter;
   painter.moveTo(new THREE.Vector3(...event.to));
-  console.log('move to', [...event.to])
+  console.log("move to", [...event.to]);
 }
 
 function handleController(controller) {
@@ -860,7 +720,7 @@ export function collectGarbage() {
   disposal = disposal.filter(Boolean);
 }
 
-// 📚 Library 
+// 📚 Library
 
 // Completely dispose of an object and all its children.
 // TODO: Eventually replace disposal's "resources" with this. 22.10.31.17.44
@@ -905,7 +765,7 @@ function removeObjectsWithChildren(obj) {
   return true;
 }
 
-// See also: https://discourse.threejs.org/t/getobject-by-any-custom-property-present-in-userdata-of-object/3378/2 
+// See also: https://discourse.threejs.org/t/getobject-by-any-custom-property-present-in-userdata-of-object/3378/2
 THREE.Object3D.prototype.getObjectByUserDataProperty = function (name, value) {
   if (this.userData[name] === value) return this;
 

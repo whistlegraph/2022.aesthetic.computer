@@ -2,8 +2,9 @@
 // A laboratory for designing the procedural geometry in `wand`.
 
 // TODO
-// - [-] Render line geometry onto the GPU.
-// - [] Render triangulated geometry onto the GPU.
+// - [-] Render triangulated geometry onto the GPU.
+// - [] Set up both lines and triangles mode using buffered geometry.
+// - [] Prevent the tube's circle from twisting on its Y axis.
 // - [] Integrate into `wand` and VR.
 //   - [] Hook it up to the cursor via race.
 //   - [] Bring that code into `wand`.
@@ -19,22 +20,22 @@
 //      const cRot = cam.rotation.slice();
 //      form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
 // + Done
+// - [x] Make the lines buffered.
+// - [x] Render line geometry onto the GPU.
 // - [x] Make a spider that can move the tube forward and generate a path over time.
 // - [x] Turn / crawl towards the 3d cursor position.
 
 import { CamDoll } from "../lib/cam-doll.mjs";
-const { max, floor, cos, sin } = Math;
+const { max, acos, cos, sin } = Math;
 
 let cd, stage; // Camera and floor.
-
 let spi, // Crawls in 3D and creates a path.
-  spiStart,
-  tubeGoto = [];
-
+  spiStart;
+//tubeGoto = [];
 let tube, // Tube geometry that surrounds the spider's path at even increments.
-  rot = 0,
+  //  rot = 0,
+  //  yw = 8,
   rotSpeed = 0.5,
-  yw = 8,
   sides = 16,
   radius = 0.2,
   limiter = 0;
@@ -42,7 +43,7 @@ let tube, // Tube geometry that surrounds the spider's path at even increments.
 let race;
 
 let step = 0.15;
-let microstep = 0.05;
+//let microstep = 0.05;
 let growing = false;
 
 function boot({
@@ -53,6 +54,7 @@ function boot({
   painting,
   num,
   debug,
+  wiggle,
   geo: { Race },
 }) {
   cd = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // FPS style camera controls.
@@ -64,14 +66,11 @@ function boot({
     { rot: [-90, 0, 0] }
   );
 
-  // Create a spider and set its starting state.
-  spi = new Spider({ num, debug }, [0, 0, 0], [0, 0, 0], [255, 0, 0, 255]);
-  spiStart = spi.state;
-
+  // Create a spider and set its starting state and orientation.
   race = new Race();
 
-  race.start(spi.state.position);
-  racePoints.push(race.pos);
+  // Create a buffered tube to follow our gesture.
+  tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
 }
 
 const racePoints = [],
@@ -84,30 +83,26 @@ function sim({
   num: { vec3, randIntRange: rr, dist3d, degrees, mat4, mat3, quat, radians },
   help,
 }) {
-  yw = wiggle(8); // 🎡 Some dynamics for each frame
-  rot += rotSpeed;
-
-  cd.sim();
+  //yw = wiggle(8); // 🎡 Some dynamics for each frame
+  //rot += rotSpeed;
+  cd.sim(); // Update the camera + dolly.
 
   // Create geometry by racing towards the cursor from the center point.
   if (growing && simCount % 10n === 0n) {
-
     const ray = cd.cam.ray(pen.x, pen.y, 0.3, true);
     race.to(ray); // Race towards current position.
-
-    let lastSpiderState = tubeGoto[tubeGoto.length - 1] || spiStart;
-    let dist = distanceTo(lastSpiderState.position, race.pos); // vec3's distance was innacurate.
 
     racePoints.push(race.pos);
     spi.rotateTowards(race.pos, 10);
     spi.crawl(step);
-    tubeGoto.push(spi.state);
+    //tubeGoto.push(spi.state);
+    tube.goto(spi.state);
+    spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
 
-    if (dist > step) {
-      //racePoints.push(race.pos);
-      //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255)); // Set the color.
-      //spi.crawl(step);
-    }
+    //if (dist > step) {
+    //racePoints.push(race.pos);
+    //spi.crawl(step);
+    //}
   }
 
   /*
@@ -146,30 +141,35 @@ function sim({
   */
 }
 
+let spiderForm;
+
 function paint({ wipe, Form, form, num, wiggle }) {
-  wipe(0, 0, 50); // Clear the background...
+  wipe(0, 0, 0, 0); // Clear the background...
   //ink(0, 1).box(0, 0, screen.width, screen.height); // Or use a fade effect.
 
   // Draw the spider's path so far.
-  const spiderPositions = [];
-  const spiderColors = [];
+  if (spi) {
+    const spiderPositions = [];
+    const spiderColors = [];
 
-  for (let s = 0; s < spi.path.length - 1; s += 1) {
-    spiderPositions.push(spi.path[s].position, spi.path[s + 1].position);
-    spiderColors.push([255, 255, 255, 255], [0, 0, 0, 255]);
-    //spiderColors.push(spi.path[s + 1].color, spi.path[s + 1].color);
+    for (let s = 0; s < spi.path.length - 1; s += 1) {
+      spiderPositions.push(spi.path[s].position, spi.path[s + 1].position);
+      spiderColors.push([255, 255, 255, 255], [0, 0, 0, 255]);
+      //spiderColors.push(spi.path[s + 1].color, spi.path[s + 1].color);
+    }
+
+    spiderForm = new Form(
+      {
+        type: "line",
+        positions: spiderPositions,
+        colors: spiderColors,
+        gradients: true,
+        keep: false,
+      },
+      { color: [255, 255, 255, 255] },
+      { scale: [1, 1, 1] }
+    );
   }
-
-  const spiderForm = new Form(
-    {
-      type: "line",
-      positions: spiderPositions,
-      colors: spiderColors,
-      gradients: true,
-    },
-    { color: [255, 255, 0, 255] },
-    { scale: [1, 1, 1] }
-  );
 
   const racePositions = [];
   const raceColors = [];
@@ -177,7 +177,6 @@ function paint({ wipe, Form, form, num, wiggle }) {
   for (let r = 0; r < racePoints.length - 1; r += 1) {
     racePositions.push(racePoints[r], racePoints[r + 1]);
     raceColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
-    //spiderColors.push(spi.path[s + 1].color, spi.path[s + 1].color);
   }
 
   // Draw the path of the race.
@@ -187,8 +186,9 @@ function paint({ wipe, Form, form, num, wiggle }) {
       positions: racePositions,
       colors: raceColors,
       gradients: true,
+      keep: false,
     },
-    { color: [255, 255, 0, 255] },
+    { color: [255, 255, 255, 255] },
     { scale: [1, 1, 1] }
   );
 
@@ -215,19 +215,43 @@ function paint({ wipe, Form, form, num, wiggle }) {
   */
 
   // And however far the tube has gotten, given the spider's length.
-  tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
-  tube.form.limiter = limiter; // Copy over its limiter.
-  tube?.start(spiStart, radius, sides); // Start a gesture.
-  tube?.goto(...tubeGoto); // Continue a gesture.
-  tube?.stop(); // Finish a gesture.
+  //tube = new Tube({ Form, num, wiggle }, radius); // Make a new tube.
+  //tube.form.limiter = limiter; // Copy over its limiter.
+  //tube?.start(spiStart, radius, sides); // Start a gesture.
+  //tube?.goto(...tubeGoto); // Continue a gesture.
+  //tube?.stop(); // Finish a gesture.
 
-  form([stage, spiderForm, raceForm, tube?.form], cd.cam, { cpu: true }); // Draw the tube and floor.
+  //form([stage, spiderForm, raceForm, tube?.form], cd.cam, { cpu: true });
+  form([stage, raceForm, spiderForm, tube.form], cd.cam);
+  //form([stage, raceForm, spiderForm, tube?.form], cd.cam, { cpu: true });
 }
 
-function act({ event: e }) {
+function act({ event: e, pen, num, debug, num: { vec3, randIntRange: rr } }) {
   // Grow model.
-  if (e.is("touch") && e.button === 0) growing = true;
-  if (e.is("lift") && e.button === 0) growing = false;
+  if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
+    const ray = cd.cam.ray(pen.x, pen.y, 2.3, true);
+    const rayb = cd.cam.ray(pen.x, pen.y, 0.1, true);
+
+    const diff = [...vec3.sub(vec3.create(), rayb, ray)];
+    const spiderOrientation = vec3.normalize(vec3.create(), diff);
+
+    spi = new Spider({ num, debug }, ray, spiderOrientation, [
+      rr(100, 255),
+      rr(100, 255),
+      rr(100, 255),
+      255,
+    ]);
+    spiStart = spi.state;
+    race.start(spi.state.position);
+    racePoints.push(race.pos);
+    tube.start(spiStart, radius, sides); // Start a gesture.
+    growing = true;
+  }
+
+  if (e.is("lift") && e.button === 0) {
+    growing = false;
+    tube.stop();
+  }
 
   // Increase model complexity.
   if (e.is("keyboard:down:k")) {
@@ -279,10 +303,13 @@ class Tube {
 
     // Make the buffered geometry form.
     this.form = new $.Form(
-      { type: "line", gradients: false },
-      { color: [255, 255, 0, 255] },
+      { type: "line:buffered", gradients: false },
+      { color: [255, 255, 255, 255] }, // If vertices are passed then this number blends down.
       { scale: [1, 1, 1] }
     );
+
+    const totalLength = 1;
+    this.form.MAX_POINTS = totalLength * 2 * 32000; // Must be a multiple of two for "line".
     //  Note: It would be cool to add per vertex gradient support.
     //        Maybe if a gradients array was passed of trues and falses that
     //        matched positions?
@@ -347,7 +374,6 @@ class Tube {
 
   // Generate a start or end (where ring === false) cap to the tube.
   #cap(pathP, ring = true) {
-
     if (this.sides > 2) {
       for (let i = 0; i < pathP.shape.length; i += 1) {
         // Pie: Radiate out from core point
@@ -387,21 +413,17 @@ class Tube {
         // [255, 100, 0, 255], [255, 100, 0, 255],
       });
     }
-
   }
 
   #transformShape(pathP) {
-    const { mat4, vec4, vec3 } = this.$.num;
+    const { mat4, vec4, vec3, radians } = this.$.num;
 
     const dir = pathP.direction;
-    //console.log(dir);
-    //const dir = [0, 0, -1];
 
+    // Method 1: Using normalized orientation vector.
     const nd = vec3.scale(vec3.create(), dir, -1);
     const rm = mat4.targetTo(mat4.create(), [0, 0, 0], nd, [0, 1, 0]);
-
     const panned = mat4.fromTranslation(mat4.create(), pathP.pos);
-
     const finalMat = mat4.mul(mat4.create(), panned, rm);
 
     this.shape.forEach((shapePos) => {
@@ -409,6 +431,7 @@ class Tube {
         vec4.transformMat4(vec4.create(), [...shapePos, 1], finalMat)
       );
     });
+
   }
 
   // Copy each point in the shape, transforming it by the added path positions
@@ -420,16 +443,16 @@ class Tube {
     [...arguments].forEach((pathP, pi) => {
       for (let si = 0; si < pathP.shape.length; si += 1) {
         if (si === 0) {
-          // positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 1. Core
-          // colors.push(pathP.color, pathP.color);
+          positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 1. Core
+          colors.push(pathP.color, pathP.color);
           // colors.push([127, 127, 127, 255], [127, 127, 127, 255]);
         }
 
         if (this.sides === 1) return;
 
         if (si > 0) {
-          //positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 2. Vertical
-          //colors.push(pathP.color, pathP.color);
+          positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 2. Vertical
+          colors.push(pathP.color, pathP.color);
         }
 
         if (si > 1) {
@@ -439,19 +462,19 @@ class Tube {
         }
 
         if (si > 0 && si < pathP.shape.length - 1) {
-          //positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]); // 4. Diagonal
-          //colors.push(pathP.color, pathP.color);
+          positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]); // 4. Diagonal
+          colors.push(pathP.color, pathP.color);
           // [0, 180, 180, 255], [0, 180, 180, 255]
         }
       }
 
       // 5. Final diagonal
       if (this.sides > 2) {
-        // positions.push(
-        //   this.lastPathP.shape[1],
-        //   pathP.shape[pathP.shape.length - 1]
-        // );
-        // colors.push(pathP.color, pathP.color);
+        positions.push(
+          this.lastPathP.shape[1],
+          pathP.shape[pathP.shape.length - 1]
+        );
+        colors.push(pathP.color, pathP.color);
         // [200, 100, 0, 255], [200, 100, 0, 255]
 
         // 6. Final across
@@ -471,8 +494,7 @@ class Tube {
 class Spider {
   $;
   position;
-  //angle;
-  direction; // Eventually replace angle with this.
+  direction;
   color;
 
   path = []; // A built up path.
@@ -480,13 +502,13 @@ class Spider {
   constructor(
     $,
     pos = [0, 0, 0, 1],
-    ang = [0, 0, 0],
+    dir = [0.00001, 1, 0.00001],
     col = [255, 255, 255, 255]
   ) {
     this.$ = $;
     this.position = pos;
-    if (pos.length === 3) pos.push(1); // Make sure pos has a W.
-    this.direction = [0.0001, 1, 0.0001];
+    if (pos.length === 3) pos.push(1); // Make sure pos has a W. TODO: Eventually fix this up-chain.
+    this.direction = dir;
     this.color = col;
     this.path.push(this.state);
   }
@@ -576,7 +598,17 @@ class Spider {
       num: { mat4, vec3, radians },
     } = this.$;
 
-    const diff = vec3.sub(vec3.create(), targetPosition, this.position);
+    const diff = [...vec3.sub(vec3.create(), targetPosition, this.position)];
+
+    // Cut off the math if any diff value is 0.
+    if (
+      Number(diff[0].toFixed(4)) === 0 ||
+      Number(diff[1].toFixed(4)) === 0 ||
+      Number(diff[2].toFixed(4)) === 0
+    ) {
+      return;
+    }
+
     const normDiff = vec3.normalize(vec3.create(), diff);
 
     // Line from...
@@ -591,6 +623,7 @@ class Spider {
     );
 
     const normDir = vec3.normalize(vec3.create(), this.direction);
+
     diffPoints.push(
       this.position,
       vec3.add(
@@ -615,7 +648,10 @@ class Spider {
 
     // Rotate vector around angle axis.
     //export function fromRotation(out, rad, axis) {
+
     const rm = mat4.fromRotation(mat4.create(), radians(-deg), crossProduct);
+    if (!rm) return; // Return if this matrix is null.
+
     const steppedDir = vec3.transformMat4(vec3.create(), normDir, rm);
 
     this.direction = steppedDir;
@@ -624,62 +660,9 @@ class Spider {
   // Turn the spider on any axis.
   // TODO: Eventually add named parameters or more shorthand functions.
   //turn(x, y, z) {
-    //this.angle[0] = (this.angle[0] + x) % 360;
-    //this.angle[1] = (this.angle[1] + y) % 360;
-    //this.angle[2] = (this.angle[2] + z) % 360;
+  //this.angle[0] = (this.angle[0] + x) % 360;
+  //this.angle[1] = (this.angle[1] + y) % 360;
+  //this.angle[2] = (this.angle[2] + z) % 360;
   //  return this.state;
   //}
-}
-
-// Helper functions to get the math working right.
-
-// Lifted from Three.JS
-function distanceTo(v1, v2) {
-  return Math.sqrt(distanceToSquared(v1, v2));
-}
-
-function distanceToSquared(v1, v2) {
-  const dx = v1[0] - v2[0],
-    dy = v1[1] - v2[1],
-    dz = v1[2] - v2[2];
-  return dx * dx + dy * dy + dz * dz;
-}
-
-// See also: https://github.com/toji/gl-matrix/issues/329#issuecomment-404763425
-/**
- * Returns an euler angle representation of a quaternion
- * @param  {vec3} out Euler angles, pitch-yaw-roll
- * @param  {quat} mat Quaternion
- * @return {vec3} out
- */
-export function getEuler(out, quat) {
-  let x = quat[0],
-    y = quat[1],
-    z = quat[2],
-    w = quat[3],
-    x2 = x * x,
-    y2 = y * y,
-    z2 = z * z,
-    w2 = w * w;
-  let unit = x2 + y2 + z2 + w2;
-  let test = x * w - y * z;
-  if (test > 0.499995 * unit) {
-    //TODO: Use glmatrix.EPSILON
-    // singularity at the north pole
-    out[0] = Math.PI / 2;
-    out[1] = 2 * Math.atan2(y, x);
-    out[2] = 0;
-  } else if (test < -0.499995 * unit) {
-    //TODO: Use glmatrix.EPSILON
-    // singularity at the south pole
-    out[0] = -Math.PI / 2;
-    out[1] = 2 * Math.atan2(y, x);
-    out[2] = 0;
-  } else {
-    out[0] = Math.asin(2 * (x * z - w * y));
-    out[1] = Math.atan2(2 * (x * w + y * z), 1 - 2 * (z2 + w2));
-    out[2] = Math.atan2(2 * (x * y + z * w), 1 - 2 * (y2 + z2));
-  }
-  // TODO: Return them as degrees and not as radians
-  return out;
 }

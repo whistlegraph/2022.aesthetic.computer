@@ -416,7 +416,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
 
     forms.filter(Boolean).forEach((form) => {
       // A. If the form has not been sent yet...
-      if (formsSent[form.uid] === undefined) {
+      if (formsSent[form.uid] === undefined && form.vertices.length > 0) {
         // Set the form to expire automatically if keep is false.
         formsToSend.push(form);
         formsSent[form.uid] = true;

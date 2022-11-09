@@ -1043,7 +1043,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // console.log(content.text);
 
       // TODO: Make this automatic for pieces that use 3d.
-      if (content.text === "wand" || content.text.indexOf("wand") === 0) {
+      if (
+        content.text === "wand" ||
+        content.text.indexOf("wand") === 0 ||
+        content.text === "cadwand" ||
+        content.text.indexOf("cadwand") === 0
+      ) {
         loadThreeD();
       }
 
@@ -1106,7 +1111,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       return;
     }
 
-    if (type ==="gpu-event") {
+    if (type === "gpu-event") {
       ThreeD?.handleEvent(content);
       return;
     }
