@@ -15,7 +15,7 @@
 //    - [-] Flip any inverted triangles. Check to see if enabling two sided triangles flip anything.
 //      - [x] 5 sides or greater
 //    - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
-//    - [] Add a "fake" end cap while drawing. 
+//    - [] Add a "fake" end cap while drawing.
 //    - [] Re-enable THREE.FrontSide.
 // + Later
 // - [] Reload last camera position on refresh.
@@ -49,11 +49,11 @@ let tube,
   limiter = 0,
   limiter2 = 0;
 
-const rayDist = 0.1;
+const rayDist = 1.2;
 
 let race;
 
-let step = 0.05;
+let step = 0.15;
 //let microstep = 0.05;
 let growing = false;
 
@@ -78,7 +78,7 @@ function boot({
   );
 
   // Create a spider and set its starting state and orientation.
-  race = new Race();
+  race = new Race({ speed: 25 });
 
   // Create a buffered tube to follow our gesture.
   tube = new Tube({ Form, painting, num, wiggle }, "triangles"); // Make a new tube.
@@ -112,11 +112,10 @@ function sim({
     //console.log(d);
 
     if (d > step) {
-      spi.rotateTowards(race.pos, 5);
+
+      spi.rotateTowards(race.pos, 25);
 
       spi.crawl(step);
-
-      //tubeGoto.push(spi.state);
       tube.goto(spi.state);
       tube2.goto(spi.state);
       spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
@@ -240,9 +239,14 @@ function paint({ wipe, Form, form, num, wiggle }) {
   //form([raceForm, spiderForm, tube.form], cd.cam, { cpu: true });
   //form([stage, tube.form, tube2.form], cd.cam, { cpu: true });
   //form([stage, tube2.form, raceForm, diffForm, spiderForm], cd.cam);
-  form([stage, tube.form], cd.cam);
-  //form([tube2.form], cd.cam);
+  if (noTube) {
+    form([stage, raceForm, spiderForm, diffForm], cd.cam);
+  } else {
+    form([stage, tube2.form, raceForm, spiderForm, diffForm], cd.cam);
+  }
 }
+
+let noTube = false;
 
 function act({
   event: e,
@@ -255,7 +259,7 @@ function act({
   // Grow model.
   if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
     const ray = cd.cam.ray(pen.x, pen.y, rayDist, true);
-    const rayb = cd.cam.ray(pen.x, pen.y, rayDist / 2, true);
+    const rayb = cd.cam.ray(pen.x, pen.y, rayDist / 4, true);
 
     const diff = [...vec3.sub(vec3.create(), rayb, ray)];
     const spiderOrientation = vec3.normalize(vec3.create(), diff);
@@ -273,6 +277,8 @@ function act({
     tube2.start(spiStart, radius, sides); // Start a gesture.
     growing = true;
   }
+
+  if (e.is("keyboard:down:t")) noTube = !noTube; // TODO: Why can't this toggle on?
 
   if (e.is("lift") && e.button === 0) {
     growing = false;
@@ -1076,6 +1082,7 @@ class Spider {
   color;
 
   path = []; // A built up path.
+  lastPosition;
 
   constructor(
     $,
@@ -1090,6 +1097,7 @@ class Spider {
     this.lastDirection = dir; // Should only ever be re-assigning.
     this.color = col;
     this.path.push(this.state);
+    this.lastPosition = this.state.position;
   }
 
   get state() {
@@ -1123,34 +1131,10 @@ class Spider {
       debug,
     } = this.$;
 
-    // TODO: Hold onto the last direction and check it's difference between
-    //       this one.
+    //const pos = vec3.transformQuat(vec3.create(), this.position, this.rotQua);
 
-    /*
-      const diff = [
-        ...vec3.sub(vec3.create(), this.lastDirection, this.direction),
-      ];
-      const normDiff = vec3.normalize(vec3.create(), diff);
-      // Find the smallest rotational quaternion from lastDirection -> direction.
-      const shortestRotation = quat.rotationTo(quat.create(), this.lastDirection, this.direction);
-      // Get a vector out of that quaternion...
-      const newDirection = vec3.transformQuat(vec3.create(), this.lastDirection, shortestRotation);
-      const newDiff = [
-        ...vec3.sub(vec3.create(), this.lastDirection, newDirection),
-      ];
-      const newNormDiff = vec3.normalize(vec3.create(), newDiff);
-      this.direction = newDirection;
-      */
-
-    //console.log(newNormDiff);
-
-    // Project the current direction vector outwards by `steps`.
-    //const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
     const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
-
     const pos = vec3.add(vec3.create(), this.position, scaledDir);
-
-    //const pos = vec4.transformMat4(vec4.create(), [0, stepSize, 0, 1], m);
 
     // if (debug) { // TODO: Log peek position.
     //   const p = this.position.map(p => p.toFixed(2)),
@@ -1163,6 +1147,7 @@ class Spider {
     if (peeking) return pos;
 
     //this.turnDelta = [0, 0, 0]; // Consume turn angle.
+    this.lastPosition = this.position;
     this.position = [...pos, 1];
 
     const state = this.state;
@@ -1177,84 +1162,71 @@ class Spider {
 
   rotateTowards(targetPosition, deg) {
     const {
-      num: { mat4, vec3, quat, radians },
+      num: { mat3, mat4, vec3, quat, radians },
     } = this.$;
 
-    const diff = [...vec3.sub(vec3.create(), targetPosition, this.position)];
-
-    const diff2 = [...vec3.sub(vec3.create(), this.position, targetPosition)];
-
-    // Cut off the math if any diff value is 0.
-    if (
-      Number(diff[0].toFixed(4)) === 0 ||
-      Number(diff[1].toFixed(4)) === 0 ||
-      Number(diff[2].toFixed(4)) === 0
-    ) {
-      return;
-    }
-
-    // The normalized difference between two vec3's is the orientation vector
-    // between the two.
-    const normDiff = vec3.normalize(vec3.create(), diff);
-
-    // Line from...
-    // spiderPosition -> spiderPosition + diff.
-    diffPoints.push(
-      this.position,
-      vec3.add(
-        vec3.create(),
-        this.position,
-        vec3.scale(vec3.create(), normDiff, 0.1)
-      )
+    const firstTangent = vec3.normalize(
+      vec3.create(),
+      vec3.sub(vec3.create(), this.position, this.lastPosition)
     );
 
-    diffColors.push([255, 0, 0, 255], [255, 255, 0, 255]);
+    const nextTangent = vec3.normalize(
+      vec3.create(),
+      vec3.sub(vec3.create(), targetPosition, this.position)
+    )
 
-    let normDir = vec3.normalize(vec3.create(), this.direction);
-    //c onst lastNormDir = vec3.normalize(vec3.create(), this.lastDirection);
+    //diffPoints.push( this.position, vec3.add( vec3.create(), this.position, vec3.scale(vec3.create(), firstTangent, 0.5)));
+    //diffColors.push([255, 0, 0, 255], [255, 255, 0, 255]);
 
-    // 🔥
-    // Check difference between normDir and lastnormDir here with the quaternion.
+    let firstNormal = [0, 1, 0];
+    const helper = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), firstNormal, firstTangent));
+    firstNormal = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), firstTangent, helper));
 
-    diffPoints.push(
-      this.position,
-      vec3.add(
-        vec3.create(),
-        this.position,
-        vec3.scale(vec3.create(), normDir, 0.1)
-      )
-    );
-
+    diffPoints.push(this.lastPosition, vec3.add( vec3.create(), this.lastPosition, vec3.scale(vec3.create(), firstTangent, 0.5)));
     diffColors.push([0, 0, 255, 255], [0, 0, 255, 255]);
 
-    // Find perpendicular direction among two normal vectors.
-    // TODO: ❓ Watch videos about cross product.
-    const crossProduct = vec3.cross(vec3.create(), normDiff, normDir);
+    let bitangent = [0, 0, 0];
+    let theta = 0;
+    let newNormal;
 
-    diffPoints.push(
-      this.position,
-      vec3.add(
-        vec3.create(),
-        this.position,
-        vec3.scale(vec3.create(), crossProduct, 0.1)
-      )
+    bitangent = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), firstTangent, nextTangent));
+
+    if (vec3.length(bitangent) === 0) {
+      newNormal = firstNormal;
+    } else {
+      theta = acos(vec3.dot(firstTangent, nextTangent));
+
+      const mat = mat4.fromRotation(mat4.create(), theta, bitangent); // Rotate theta radians around bitangent.
+
+      newNormal = vec3.transformMat4(vec3.create(), firstNormal, mat);
+
+      diffPoints.push(this.position, vec3.add( vec3.create(), this.position, vec3.scale(vec3.create(), newNormal, 0.5)));
+      diffColors.push([0, 255, 0, 255], [0, 255, 0, 255]);
+
+      bitangent = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), newNormal, firstTangent));
+
+      diffPoints.push(this.position, vec3.add(vec3.create(), this.position, vec3.scale(vec3.create(), bitangent, 0.5)));
+      diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
+    }
+
+    const rotMat = mat3.fromValues(
+      ...bitangent,
+      ...newNormal,
+      ...firstTangent,
     );
 
-    diffColors.push([80, 0, 150, 255], [80, 0, 150, 255]);
+    // And convert it to a quaternion.
+    //const qua = quat.normalize(quat.create(), quat.fromMat3(quat.create(), rotMat));
 
-    // Rotate vector around angle axis.
-    const rq = quat.create();
-    quat.setAxisAngle(rq, crossProduct, radians(-deg));
-    if (!rq) return; // Return if this quaternion is null.
+    //const finalDir = vec3.transformQuat(vec3.create(), nextTangent, qua);
 
-    // Transform the current direction by it, using crossProduct as the anchor.
-    //const steppedDir = vec3.transformQuat(vec3.create(), normDir, rq);
+    //this.lastDirection = this.direction.slice();
+    //this.direction = nextTangent;
 
-    //const sq = quat.rotationTo(quat.create(), this.lastDirection, normDiff);
-    //const finalDir = vec3.transformQuat(vec3.create(), this.lastDirection, sq);
+    //this.rotQua = qua;
 
-    this.lastDirection = this.direction.slice();
-    this.direction = normDiff;
+    this.direction = nextTangent;
+    j
   }
 
   // Turn the spider on any axis.
