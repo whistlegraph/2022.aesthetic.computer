@@ -39,7 +39,7 @@ let tube,
   //  yw = 8,
   rotSpeed = 0.5,
   //sides = 16,
-  sides = 4,
+  sides = 3,
   // radius = 1,
   radius = 0.4,
   limiter = 0,
@@ -106,7 +106,7 @@ function sim({
     tube2.goto(spi.state);
     spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
 
-    //growing = false;
+    growing = false;
 
     //if (dist > step) {
     //racePoints.push(race.pos);
@@ -374,7 +374,7 @@ class Tube {
   }
 
   stop() {
-    this.#cap(this.lastPathP, false); // no cap
+    // this.#cap(this.lastPathP, false); // no cap
     this.gesture.length = 0;
   }
 
@@ -822,21 +822,26 @@ class Tube {
         }
 
         if (this.sides === 3) {
+
           positions.push(
             this.lastPathP.shape[1],
             pathP.shape[pathP.shape.length - 1]
           );
 
           //colors.push(pathP.color, pathP.color);
-          colors.push([0, 0, 255, 255], [0, 0, 255, 255]);
+          colors.push([255, 255, 255, 255], [255, 255, 255, 255]);
 
           // 6. Final across
-          positions.push(pathP.shape[1], pathP.shape[pathP.shape.length - 1]);
+          //positions.push(pathP.shape[1], pathP.shape[pathP.shape.length - 1]);
           //colors.push(pathP.color, pathP.color);
-          colors.push([255, 180, 180, 255], [255, 180, 180, 255]);
+          //colors.push([255, 180, 180, 255], [255, 180, 180, 255]);
 
-          positions.push(this.lastPathP.shape[1]);
-          colors.push([0, 0, 0, 255]);
+          //positions.push(this.lastPathP.shape[1]);
+          //colors.push([0, 0, 0, 255]);
+
+          if (positions.length > 0) this.form.addPoints({ positions, colors });
+          return;
+
         }
 
         if (this.sides === 4) {
