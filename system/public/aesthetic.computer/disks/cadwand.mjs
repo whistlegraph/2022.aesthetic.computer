@@ -2,20 +2,21 @@
 // A laboratory / development piece for designing the procedural geometry in `wand`.
 
 // TODO
-// - [-] Integrate into `wand` and VR.
-//   - [] Bring this code into `wand`.
-//   - [] Get it working with wands by replacing lines.
 // - [] Prevent the tube's circle from twisting on its Y axis.
 //   - [] Implement this algorithm:
 //     - [] https://vimeo.com/251091418
 //     - [] Or... https://threejs.org/docs/#api/en/math/Quaternion.setFromUnitVectors
 //     - [] http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
+// - [-] Integrate into `wand` and VR.
+//   - [] Bring this code into `wand`.
+//   - [] Get it working with wands by replacing lines.
 // * Optimization
 //  - [] Two sided triangle optimization.
 //    - [-] Flip any inverted triangles. Check to see if enabling two sided triangles flip anything.
 //      - [x] 5 sides or greater
 //    - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
 //    - [] Add a "fake" end cap while drawing. 
+//    - [] Re-enable THREE.FrontSide.
 // + Later
 // - [] Reload last camera position on refresh.
 // - [] Record some GIFs.
@@ -28,22 +29,6 @@
 //      const cRot = cam.rotation.slice();
 //      form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
 // + Done
-// - [x] Export a mesh for barry.
-// - [x] Test these code changes with workers off.
-// - [x] Set up both lines and triangles mode using buffered geometry.
-//   - [x] Triangles
-//   - [x] Lines
-// - [x] Render triangulated geometry onto the GPU.
-//   - [x] Get it working on the CPU first.
-//   - [x] N Sided
-//   - [x] 2 Sided
-//   - [x] 3 Sided
-//   - [x] 4 Sided
-// - [x] Make the lines buffered.
-// - [x] Hook it up to the cursor via race.
-// - [x] Render line geometry onto the GPU.
-// - [x] Make a spider that can move the tube forward and generate a path over time.
-// - [x] Turn / crawl towards the 3d cursor position.
 
 import { CamDoll } from "../lib/cam-doll.mjs";
 const { max, acos, cos, sin } = Math;
