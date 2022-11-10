@@ -126,7 +126,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let ThreeDBakeQueue = [];
   async function loadThreeD() {
     ThreeD = await import(`./lib/3d.mjs`);
-    ThreeD.initialize(wrapper, Loop.mainLoop, send);
+    ThreeD.initialize(wrapper, Loop.mainLoop, receivedDownload, send);
   }
 
   // Used by `disk` to set the metatags by default when a piece loads. It can
@@ -576,7 +576,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // 🔥 Optionally use workers or not.
   // Always use workers if they are supported, except for
   // when we are in VR (MetaBrowser).
-  if (!MetaBrowser) {
+
+  // const workersEnabled = true;
+  const workersEnabled = false;
+
+  if (!MetaBrowser && workersEnabled) {
     const worker = new Worker(new URL(fullPath, window.location.href), {
       type: "module",
     });
@@ -1910,12 +1914,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // Reads the extension off of filename to determine the mimetype and then
   // handles the data accordingly and downloads the file in the browser.
   async function receivedDownload({ filename, data }) {
-    console.log("💾 Downloading locally:", filename, data);
+    console.log("💾 Downloading locally:", filename, typeof data);
 
     let object;
     let MIME = "application/octet-stream"; // TODO: Default content type?
 
-    if (extension(filename) === "json") {
+    if (extension(filename) === "json" || extension(filename) === "gltf") {
       // JSON
       MIME = "application/json";
       object = URL.createObjectURL(new Blob([data], { type: MIME }));

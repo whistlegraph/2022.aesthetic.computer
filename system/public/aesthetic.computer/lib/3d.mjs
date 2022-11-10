@@ -2,9 +2,28 @@
 // Render geometry and scenes on the GPU via Three.js.
 // Also handles VR scenes.
 
+// CTO Rapter Notes:
+/*
+*** Optimized Vertex Model for Dynamic Data ***
+- Future line renderer...
+- Each position is a Float32 right now.
+- These need to be carved up to store more data.
+- So `positions` should just become `vertices`.
+- Of the 32 bits.
+  - 24 bits per x, y or z 
+  - 1 byte left over
+    - 0-8 would be indexed color that pulls from a shader const
+    - 0-8 for alpha
+    - (1bit) flag properties
+      blinking
+    - oscillating / lerping
+    - left for everything else
+*/
+
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
-import { radians, rgbToHex } from "./num.mjs";
+import { GLTFExporter } from '../dep/three/GLTFExporter.js';
+import { radians, rgbToHex, timestamp } from "./num.mjs";
 //import { TubePainter } from '../dep/three/TubePainter.js';
 
 let scene,
@@ -15,7 +34,7 @@ let scene,
   renderedOnce = false,
   target;
 
-let send;
+let send, download;
 
 let jiggleForm,
   needsSphere = false;
@@ -26,8 +45,9 @@ export const penEvents = []; // VR pointer events.
 export const bakeQueue = [];
 export const status = { alive: false };
 
-export function initialize(wrapper, loop, sendToPiece) {
+export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
   send = sendToPiece;
+  download = receivedDownload;
 
   renderer = new THREE.WebGLRenderer({
     alpha: false,
@@ -46,14 +66,14 @@ export function initialize(wrapper, loop, sendToPiece) {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
   //scene.fog = new THREE.Fog(0x111111, 0.2, 2); // More basic fog.
-  scene.fog = new THREE.FogExp2(0x030303, 0.4);
+  scene.fog = new THREE.FogExp2(0x030303, 0.1);
   //scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
-  const ambientLight = new THREE.AmbientLight();
-  const pointLight = new THREE.PointLight();
+  //const ambientLight = new THREE.AmbientLight();
+  //const pointLight = new THREE.PointLight();
   //pointLight.position.set(10, 10, 10);
-  scene.add(ambientLight);
-  scene.add(pointLight);
+  //scene.add(ambientLight);
+  //scene.add(pointLight);
 
   // Set up VR.
   button = VRButton.createButton(
@@ -256,6 +276,123 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       });
     }
 
+    if (f.type === "triangle:buffered") {
+      let material;
+      let tex;
+
+      if (f.texture) {
+        // Add texture if one exists.
+        tex = new THREE.DataTexture(
+          f.texture.pixels,
+          f.texture.width,
+          f.texture.height,
+          THREE.RGBAFormat
+        );
+        tex.needsUpdate = true;
+        material = new THREE.MeshBasicMaterial({ map: tex });
+      } else {
+        if (f.vertices[0].color) {
+          material = new THREE.MeshBasicMaterial();
+        } else {
+          material = new THREE.MeshBasicMaterial({
+            color: rgbToHex(...(f.color || color)),
+          });
+        }
+      }
+
+      //material.side = THREE.DoubleSide; // Should this be true? It might disable some triangles in my models but is ultimately faster?
+
+      material.side = THREE.FrontSide;
+
+      material.transparent = true;
+      material.opacity = f.alpha;
+      material.depthWrite = true;
+      material.depthTest = true;
+
+      material.vertexColors = true;
+      material.vertexAlphas = true;
+
+      let points = [];
+      let pointColors = [];
+
+      // Generate points from vertices if there are any to load at the start.
+      if (f.vertices.length > 0) {
+        points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
+        pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(f.MAX_POINTS * 3);
+      const colors = new Float32Array(f.MAX_POINTS * 4);
+
+      for (let i = 0; i < points.length; i += 1) {
+        const posStart = i * 3;
+        positions[posStart] = points[i].x;
+        positions[posStart + 1] = points[i].y;
+        positions[posStart + 2] = points[i].z;
+      }
+
+      for (let i = 0; i < pointColors.length; i += 1) {
+        const colStart = i * 4;
+        colors[colStart] = pointColors[i].x / 255;
+        colors[colStart + 1] = pointColors[i].y / 255;
+        colors[colStart + 2] = pointColors[i].z / 255;
+        colors[colStart + 3] = pointColors[i].w / 255;
+      }
+
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3)
+      );
+
+      geometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(colors, 4, true)
+      );
+
+      if (tex) {
+        geometry.setAttribute(
+          "uv",
+          new THREE.BufferAttribute(new Float32Array(f.uvs), 2)
+        );
+      }
+
+      //geometry.setPositions(positions);
+      //geometry.setColors(colors);
+
+      const tri = new THREE.Mesh(geometry, material);
+
+      // Custom properties added from the aesthetic.computer runtime.
+      // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
+      tri.ac_length = points.length;
+      tri.ac_lastLength = tri.ac_length;
+      tri.ac_MAX_POINTS = f.MAX_POINTS;
+
+      tri.userData.aestheticID = f.uid;
+
+      tri.translateX(f.position[0]);
+      tri.translateY(f.position[1]);
+      tri.translateZ(f.position[2]);
+      tri.rotateX(radians(f.rotation[0]));
+      tri.rotateY(radians(f.rotation[1]));
+      tri.rotateZ(radians(f.rotation[2]));
+      tri.scale.set(...f.scale);
+
+      scene.add(tri);
+
+      geometry.setDrawRange(0, points.length);
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
+
+      disposal.push({
+        keep: f.gpuKeep,
+        form: tri,
+        resources: [material, geometry],
+      });
+    }
+
     // *** 🟥 Quad ***
     if (f.type === "quad") {
       // Add texture.
@@ -400,25 +537,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const positions = new Float32Array(f.MAX_POINTS * 3);
       const colors = new Float32Array(f.MAX_POINTS * 4);
 
-      // CTO Rapter Notes:
-
-      /*
-      *** Optimized Vertex Model for Dynamic Data ***
-      - Future line renderer...
-      - Each position is a Float32 right now.
-      - These need to be carved up to store more data.
-      - So `positions` should just become `vertices`.
-      - Of the 32 bits.
-        - 24 bits per x, y or z 
-        - 1 byte left over
-          - 0-8 would be indexed color that pulls from a shader const
-          - 0-8 for alpha
-          - (1bit) flag properties
-            blinking
-          - oscillating / lerping
-          - left for everything else
-      */
-
       for (let i = 0; i < points.length; i += 1) {
         const posStart = i * 3;
         positions[posStart] = points[i].x;
@@ -522,7 +640,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     if (f.update === "form:buffered:add-vertices") {
       const formUpdate = f;
 
-      const form = scene.getObjectByProperty("aestheticID", formUpdate.uid);
+      const form = scene.getObjectByUserDataProperty(
+        "aestheticID",
+        formUpdate.uid
+      );
       if (!form) return;
 
       jiggleForm = form; // for jiggleForm
@@ -622,10 +743,34 @@ export function checkForRemovedForms(formsBaked) {
 
 // Receives events from aesthetic.computer.
 export function handleEvent(event) {
+  if (event.type === "export-scene") {
+    // Instantiate a exporter
+    const exporter = new GLTFExporter();
+
+    const options = {}; // https://threejs.org/docs/#examples/en/exporters/GLTFExporter
+
+    // Parse the input and generate the glTF output
+    exporter.parse(
+      scene,
+      // called when the gltf has been generated
+      function (gltf) {
+        download({filename: `${timestamp()}-sculpture-digitpain.gltf`, data: JSON.stringify(gltf)});
+      },
+      // called when there is an error in the generation
+      function (error) {
+        console.log("An error happened");
+      },
+      options
+    );
+
+    return;
+  }
+
+  // Otherwise assume a different kind of event...
   const form = scene.getObjectByUserDataProperty("aestheticID", event.uid);
   const painter = form.userData.ac_painter;
   painter.moveTo(new THREE.Vector3(...event.to));
-  console.log("move to", [...event.to]);
+  // console.log("move to", [...event.to]);
 }
 
 function handleController(controller) {

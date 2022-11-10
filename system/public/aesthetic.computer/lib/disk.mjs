@@ -429,7 +429,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
         // Set the form to expire automatically if keep is false.
         formsToSend.push(form);
         formsSent[form.uid] = form;
-        // console.log("Forms sent:", Object.keys(formsSent).length);
+        //console.log("Forms sent:", Object.keys(formsSent).length);
         form.gpuVerticesSent = form.vertices.length;
       } else {
         // B. If the form has been sent, but the form has changed and
@@ -446,6 +446,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
           });
           form.gpuTransformed = false;
         } else if (form.vertices.length > form.gpuVerticesSent) {
+
           // Add vertices to buffered forms.
           formsToSend.push({
             update: "form:buffered:add-vertices",

@@ -1298,6 +1298,7 @@ class Form {
 
     // Take into account form -> primitive relationships.
     if (type === "quad") this.primitive = "triangle";
+    if (type === "triangle:buffered") this.primitive = "triangle";
     if (type === "line:buffered") this.primitive = "line";
 
     this.indices = indices || repeat(positions?.length, (i) => i);
