@@ -2,13 +2,11 @@
 // A laboratory for designing the procedural geometry in `wand`.
 
 // TODO
-// - [-] Render triangulated geometry onto the GPU.
-//   - [] Get it working on the CPU first.
 // - [] Set up both lines and triangles mode using buffered geometry.
-// - [] Prevent the tube's circle from twisting on its Y axis.
 // - [] Integrate into `wand` and VR.
 //   - [] Hook it up to the cursor via race.
 //   - [] Bring that code into `wand`.
+// - [] Prevent the tube's circle from twisting on its Y axis.
 // + Later
 // - [] Reload last camera position on refresh.
 // - [] Record some GIFs.
@@ -21,6 +19,12 @@
 //      const cRot = cam.rotation.slice();
 //      form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
 // + Done
+// - [x] Render triangulated geometry onto the GPU.
+//   - [x] Get it working on the CPU first.
+//   - [x] N Sided
+//   - [x] 2 Sided
+//   - [x] 3 Sided
+//   - [x] 4 Sided
 // - [x] Make the lines buffered.
 // - [x] Render line geometry onto the GPU.
 // - [x] Make a spider that can move the tube forward and generate a path over time.
@@ -106,7 +110,7 @@ function sim({
     tube2.goto(spi.state);
     spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
 
-    // growing = false;
+    //growing = false;
 
     //if (dist > step) {
     //racePoints.push(race.pos);
@@ -224,9 +228,9 @@ function paint({ wipe, Form, form, num, wiggle }) {
   */
 
   //form([raceForm, spiderForm, tube.form], cd.cam, { cpu: true });
-  console.log("Tube verts:", tube.form.vertices.length);
   //form([stage, tube.form, tube2.form], cd.cam, { cpu: true });
-  form([tube.form, tube2.form], cd.cam, { cpu: true });
+  form([tube2.form], cd.cam);
+  //form([tube2.form], cd.cam);
 }
 
 function act({ event: e, pen, num, debug, num: { vec3, randIntRange: rr } }) {
@@ -329,8 +333,9 @@ class Tube {
     // Make the buffered geometry form, given the geometry type.
     this.form = new $.Form(
       {
-        type: this.geometry === "triangles" ? "triangle" : "line:buffered",
+        type: this.geometry === "triangles" ? "triangle" : "line",
         gradients: false,
+        keep: false
       },
       //{ type: "line:buffered", gradients: false },
       //{ tex: this.$.painting(2, 2, (g) => g.wipe(0, 0, 70)) },
@@ -424,7 +429,6 @@ class Tube {
       // 3️⃣ Three Sides
       if (this.sides === 3) {
         // Start cap.
-
         if (ring) {
           for (let i = 0; i < pathP.shape.length; i += 1) {
             if (i > 1) {
@@ -447,8 +451,6 @@ class Tube {
           });
         } else {
           // End cap.
-
-
           this.form.addPoints({
             positions: [pathP.shape[1], pathP.shape[2], pathP.shape[3]],
             colors: [pathP.color, pathP.color, pathP.color],
@@ -480,11 +482,39 @@ class Tube {
         });
       }
 
-      // It should be a general case now.
-      if (this.sides > 4) {
+      // This is a general case now.
+      if (this.sides >= 5) {
+        const center = pathP.shape[0]; // Hold onto center point.
+
+        // Radiate around each point, plotting a triangle towards the center,
+        // between this and the next point, skipping the last.
+        for (let i = 1; i < pathP.shape.length - 1; i += 1) {
+          this.form.addPoints({
+            positions: [center, pathP.shape[i], pathP.shape[i + 1]],
+            colors: [
+              [255, 0, 0, 255],
+              [0, 255, 0, 255],
+              [0, 255, 0, 255],
+            ],
+          });
+        }
+
+        // And wrap around to the beginning for the final point.
+        this.form.addPoints({
+          positions: [
+            center,
+            pathP.shape[pathP.shape.length - 1],
+            pathP.shape[1],
+          ],
+          colors: [
+            [255, 0, 0, 255],
+            [0, 255, 0, 255],
+            [0, 255, 0, 255],
+          ],
+        });
       }
     } else {
-      // 📈 Lines
+      // 📈 Lines (TODO: This branch could be simplified and broken down)
 
       if (this.sides > 2) {
         for (let i = 0; i < pathP.shape.length; i += 1) {
@@ -573,7 +603,7 @@ class Tube {
       const pathP = args[pi];
 
       this.gesture.push(pathP);
-      console.log("Number of sections so far:", this.gesture.length);
+      // console.log("Number of sections so far:", this.gesture.length);
 
       for (let si = 0; si < pathP.shape.length; si += 1) {
         if (si === 0) {
@@ -654,18 +684,17 @@ class Tube {
                 colors.push([255, 255, 0, 200]);
                 colors.push([255, 255, 0, 200]);
               }
-
-              //colors.push(pathP.color);
               // colors.push(pathP.color);
-
-              //colors.push([255, 0, 0, 200]);
-
-              if (si === 3) {
-                //colors.push([0, 255, 0, 100]);
-              } else {
-                //colors.push([255, 0, 0, 255]);
-              }
+              // colors.push(pathP.color);
             }
+
+            if (this.sides >= 5) {
+              positions.push(this.lastPathP.shape[si]);
+              positions.push(pathP.shape[si]);
+              colors.push([255 / si, 0, 0, 200]);
+              colors.push([0, 0, 255 / si, 200]);
+            }
+
           } else {
             // 📈 Lines
             positions.push(this.lastPathP.shape[si], pathP.shape[si]);
@@ -711,10 +740,15 @@ class Tube {
               if (si === 4) {
                 positions.push(pathP.shape[si - 1]);
                 colors.push([255, 255, 0, 255]);
-                // if (positions.length > 0) this.form.addPoints({ positions, colors });
-                // return;
               }
+
             }
+
+            if (this.sides >= 5) {
+              positions.push(pathP.shape[si - 1]);
+              colors.push([255, 255, 0, 255]);
+            }
+
           } else {
             // 📈 Lines
             positions.push(pathP.shape[si], pathP.shape[si - 1]);
@@ -797,20 +831,26 @@ class Tube {
                 colors.push([0, 255, 255, 255]);
                 colors.push([0, 255, 255, 255]);
               }
-
-              if (si === 4) {
-                // positions.push(
-                //   this.lastPathP.shape[si],
-                //   this.lastPathP.shape[si + 1],
-                //   pathP.shape[si]
-                // );
-                // colors.push([0, 0, 100, 255]);
-                // colors.push([0, 0, 100, 255]);
-                // colors.push([0, 0, 100, 255]);
-                //if (positions.length > 0) this.form.addPoints({ positions, colors });
-                //return;
-              }
             }
+
+            if (this.sides >= 5) {
+
+              if (si === 1) {
+                positions.push(this.lastPathP.shape[si + 1]);
+                colors.push([255, 255, 255, 255]);
+              } else {
+                positions.push(
+                  this.lastPathP.shape[si],
+                  this.lastPathP.shape[si + 1],
+                  pathP.shape[si]
+                );
+                colors.push([0, 255, 255, 255]);
+                colors.push([0, 255, 255, 255]);
+                colors.push([0, 255, 255, 255]);
+              }
+
+            }
+
           } else {
             // 📈 Lines
             positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]);
@@ -912,6 +952,30 @@ class Tube {
 
           // positions.push(this.lastPathP.shape[1]);
           // colors.push([0, 0, 0, 255]);
+        }
+
+        if (this.sides >= 5) {
+          // First closer.
+          positions.push(
+            pathP.shape[pathP.shape.length - 1],
+            this.lastPathP.shape[1],
+            this.lastPathP.shape[pathP.shape.length - 1]
+          );
+
+          colors.push(
+            [255, 255, 255, 255],
+            [255, 255, 255, 255],
+            [255, 255, 255, 255]
+          );
+          //colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
+
+          positions.push(
+            pathP.shape[pathP.shape.length - 1],
+            this.lastPathP.shape[1],
+            pathP.shape[1]
+          );
+
+          colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
         }
       } else {
         // Lines

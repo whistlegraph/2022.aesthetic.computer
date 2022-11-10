@@ -171,30 +171,70 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   forms.forEach((f) => {
     // *** 🔺 Triangle ***
     if (f.type === "triangle") {
-      // Add texture.
-      const tex = new THREE.DataTexture(
-        f.texture.pixels,
-        f.texture.width,
-        f.texture.height,
-        THREE.RGBAFormat
-      );
+      let material;
+      let tex;
 
-      tex.needsUpdate = true;
+      if (f.texture) {
+        // Add texture if one exists.
+        tex = new THREE.DataTexture(
+          f.texture.pixels,
+          f.texture.width,
+          f.texture.height,
+          THREE.RGBAFormat
+        );
+        tex.needsUpdate = true;
+        material = new THREE.MeshBasicMaterial({ map: tex });
+      } else {
+        if (f.vertices[0].color) {
+          material = new THREE.MeshBasicMaterial();
+        } else {
+          material = new THREE.MeshBasicMaterial({
+            color: rgbToHex(...(f.color || color)),
+          });
+        }
+      }
 
-      const material = new THREE.MeshBasicMaterial({ map: tex });
       material.side = THREE.DoubleSide;
       material.transparent = true;
       material.opacity = f.alpha;
       material.depthWrite = true;
       material.depthTest = true;
 
+      material.vertexColors = f.vertices[0].color ? true : false;
+      material.vertexAlphas = f.vertices[0].color?.length === 4 ? true : false;
+
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
+      const pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
+
+      let posLimitMax = points.length / 3;
+      let posLimit = f.limiter % (posLimitMax + 1);
+
+      points.length = points.length - posLimit * 3;
+      pointColors.length = pointColors.length - posLimit * 3;
+
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
+      const colors = new Float32Array(points.length * 4);
+
+      for (let i = 0; i < pointColors.length; i += 1) {
+        const colStart = i * 4;
+        colors[colStart] = pointColors[i].x / 255;
+        colors[colStart + 1] = pointColors[i].y / 255;
+        colors[colStart + 2] = pointColors[i].z / 255;
+        colors[colStart + 3] = pointColors[i].w / 255;
+      }
+
       geometry.setAttribute(
-        "uv",
-        new THREE.BufferAttribute(new Float32Array(f.uvs), 2)
+        "color",
+        new THREE.BufferAttribute(colors, 4, true)
       );
+
+      if (tex) {
+        geometry.setAttribute(
+          "uv",
+          new THREE.BufferAttribute(new Float32Array(f.uvs), 2)
+        );
+      }
 
       const tri = new THREE.Mesh(geometry, material);
 
@@ -281,7 +321,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
       const pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
 
-      //console.log(points.length, points.length - f.limiter * 2);
       let posLimitMax = points.length / 2;
       let posLimit = f.limiter % (posLimitMax + 1);
 
@@ -316,7 +355,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       line.scale.set(...f.scale);
 
       scene.add(line);
-      line.aestheticID = f.uid;
+      line.userData.aestheticID = f.uid;
 
       disposal.push({
         keep: f.gpuKeep,
@@ -328,7 +367,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     if (f.type === "line:buffered") {
       let material;
 
-      console.log(f.color, color);
+      // console.log(f.color, color);
       if (f.color) {
         // Only use a gloabl color if vertices don't have color.
         material = new THREE.LineBasicMaterial({
@@ -416,7 +455,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       lineb.ac_length = points.length;
       lineb.ac_lastLength = lineb.ac_length;
       lineb.ac_MAX_POINTS = f.MAX_POINTS;
-      lineb.aestheticID = f.uid;
+
+      lineb.userData.aestheticID = f.uid;
 
       lineb.translateX(f.position[0]);
       lineb.translateY(f.position[1]);
@@ -708,9 +748,12 @@ export function collectGarbage() {
   // ♻️ De-allocation.
   // Note: This should do the trick, but I should still
   //       check for leaks. 22.10.14.02.21
+  const removedFormIDs = [];
+
   disposal.forEach((d, i) => {
     if (d.keep === false) {
-      d.resources.forEach((r) => r.dispose());
+      d.resources.filter(Boolean).forEach((r) => r.dispose());
+      removedFormIDs.push(d.form.userData.aestheticID);
       d.form.removeFromParent();
     }
     disposal[i] = undefined;
@@ -718,6 +761,12 @@ export function collectGarbage() {
   // Free memory from forms if they have been marked as `keep === false`.
   // (Or only drawn one time.)
   disposal = disposal.filter(Boolean);
+
+  // Send a list of removed forms back to the running peace, so `formsSent` can
+  // be updated and not grow for ♾️.
+  if (removedFormIDs.length > 0) {
+    send({ type: "gpu-forms-removed", content: removedFormIDs });
+  }
 }
 
 // 📚 Library

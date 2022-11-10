@@ -398,6 +398,9 @@ const $paintApi = {
 // code that represents them...
 
 // Rendering of 3D forms.
+
+const formsToClear = [];
+
 // `cpu: true` enabled software rendering
 function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
   // Exit silently if no forms are present.
@@ -411,15 +414,22 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
     // GPU forms.
     if (!Array.isArray(forms)) forms = [forms];
 
+    // Clear out any forms that need deleting.
+    formsToClear.forEach((id) => delete formsSent[id]);
+
     // Build a list of forms to send, ignoring already sent ones by UID.
     const formsToSend = [];
 
     forms.filter(Boolean).forEach((form) => {
+      // Clear out any trash in `formsSent` that do not have IDs left in forms.
+      //if (formsSent[forms.uid])
+
       // A. If the form has not been sent yet...
       if (formsSent[form.uid] === undefined && form.vertices.length > 0) {
         // Set the form to expire automatically if keep is false.
         formsToSend.push(form);
-        formsSent[form.uid] = true;
+        formsSent[form.uid] = form;
+        // console.log("Forms sent:", Object.keys(formsSent).length);
         form.gpuVerticesSent = form.vertices.length;
       } else {
         // B. If the form has been sent, but the form has changed and
@@ -534,7 +544,7 @@ const $paintApiUnwrapped = {
   // glaze: ...
 };
 
-let formsSent = {};
+let formsSent = {}; // TODO: This should be cleared more often...
 let paintFormsResolution;
 
 // TODO: Eventually restructure this a bit. 2021.12.16.16.0
@@ -1088,6 +1098,14 @@ async function makeFrame({ data: { type, content } }) {
 
   if (type === "gpu-rendered-once") {
     $commonApi.gpuReady = true;
+    return;
+  }
+
+  if (type === "gpu-forms-removed") {
+    // Delete forms from the sent list that have been removed from the GPU scene.
+    content.forEach((id) => {
+      formsToClear.push(id);
+    });
     return;
   }
 

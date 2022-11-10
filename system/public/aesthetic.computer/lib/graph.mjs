@@ -14,7 +14,7 @@ import {
 } from "./num.mjs";
 
 import { repeat } from "./help.mjs";
-// import { nanoid } from "../dep/nanoid/nanoid.js";
+import { nanoid } from "../dep/nanoid/nanoid.js";
 
 const { abs, sign, ceil, floor, sin, cos, tan, min, max } = Math;
 
@@ -1212,7 +1212,7 @@ class Dolly {
   }
 }
 
-let formId = 0;
+//let formId = 0;
 
 // Mesh
 class Form {
@@ -1221,7 +1221,7 @@ class Form {
 
   limiter = 0; // Only enabled on CPU rendered `line` at the moment. 22.11.06.18.19
 
-  uid; // = nanoid(); // An id to keep across threads.
+  uid = nanoid(); // An id to keep across threads.
 
   // Model
   vertices = [];
@@ -1286,8 +1286,8 @@ class Form {
     this.gradients = gradients; // A flag to decide if we use gradients or not. Only for line3d right now. 22.11.06.02.00
 
     // Give an incremental id per session.
-    this.uid = formId;
-    formId += 1;
+    //this.uid = formId;
+    //formId += 1;
 
     // Set the primitive type.
     this.primitive = type;
@@ -1332,6 +1332,10 @@ class Form {
   }
 
   // TODO: This needs to support color (and eventually N vertex attributes).
+
+  resetUID() {
+    this.uid = nanoid();
+  }
 
   addPoints(attributes, indices) {
     const incomingLength = attributes.positions.length;
