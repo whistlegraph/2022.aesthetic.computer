@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "code": "cd system; npm run codespaces-dev",
+    "code:live": "cd system; npm run codespaces-dev-public",
     "new-piece": "f() { cd system/public/aesthetic.computer/disks; cp blank.mjs $1.mjs; };f",
     "reload-piece": "curl -X POST -H \"Content-Type: application/json\" -d '{\"piece\": \"@digitpain/hello\"}' http://localhost:8082/reload",
     "server:socket": "cd socket-server; npm run server",

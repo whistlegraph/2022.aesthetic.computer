@@ -15,8 +15,8 @@
   NODE_ENV = "development"
   framework = "#custom"
   command = "npm run spaces-dev-netlify"
-  targetPort = 8080
-  port = 8000
+  targetPort = 3333
+  port = 8888
   autoLaunch = false
 [dev.https]
   certFile = "../ssl-dev/localhost.pem"
