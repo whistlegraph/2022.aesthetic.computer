@@ -44,10 +44,10 @@ let tube,
   //  yw = 8,
   rotSpeed = 0.5,
   //sides = 16,
-  sides = 16,
+  sides = 6,
   // radius = 1,
-  radius = 0.25,
-  step = 0.05,
+  radius = 0.025,
+  step = 0.1,
   limiter = 0,
   limiter2 = 0;
 
@@ -76,7 +76,7 @@ function boot({
   stage = new Form(
     QUAD,
     { tex: painting(2, 2, (g) => g.wipe(0, 0, 70)) },
-    { rot: [-90, 0, 0] }
+    { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
   );
 
   // Create a spider and set its starting state and orientation.
@@ -84,7 +84,7 @@ function boot({
 
   // Create a buffered tube to follow our gesture.
   //tube = new Tube({ Form, painting, num, wiggle }, "triangles"); // Make a new tube.
-  tube2 = new Tube({ Form, painting, num, wiggle }, "lines"); // Make a new tube.
+  tube2 = new Tube({ Form, painting, num, wiggle }, "triangles"); // Make a new tube.
 }
 
 const racePoints = [],
@@ -96,7 +96,8 @@ let trackerPoints = [],
 function sim({
   wiggle,
   simCount,
-  pen, pen3d,
+  pen,
+  pen3d,
   Form,
   num: { vec3, randIntRange: rr, dist3d, degrees, mat4, mat3, quat, radians },
   help,
@@ -106,16 +107,13 @@ function sim({
   cd.sim(); // Update the camera + dolly.
 
   // Create geometry by racing towards the cursor from the center point.
-  if (growing && simCount % 10n === 0n) {
-
+  if (growing) {
     if (pen3d) {
-      race.to(pen3d.pos); // Race towards current position using VR controller.
+      race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]); // Race towards current position using VR controller.
     } else {
       const ray = cd.cam.ray(pen.x, pen.y, 0.1, true);
       race.to(ray); // Race towards current position.
     }
-
-
 
     racePoints.push(race.pos);
 
@@ -135,7 +133,6 @@ function sim({
     ];
 
     let dot = vec3.dot(diff, spi.state.direction);
-    console.log(dot);
 
     if (dot > 0.5) {
       trackerColors = [
@@ -177,6 +174,7 @@ function paint({ wipe, Form, form, num, wiggle }) {
   //ink(0, 1).box(0, 0, screen.width, screen.height); // Or use a fade effect.
 
   // Draw the spider's path so far.
+  /*
   if (spi) {
     const spiderPositions = [];
     const spiderColors = [];
@@ -199,7 +197,10 @@ function paint({ wipe, Form, form, num, wiggle }) {
       { scale: [1, 1, 1] }
     );
   }
+  */
 
+  // Draw the path of the race.
+  /*
   const racePositions = [];
   const raceColors = [];
 
@@ -208,7 +209,6 @@ function paint({ wipe, Form, form, num, wiggle }) {
     raceColors.push([127, 0, 127, 255], [127, 0, 127, 255]);
   }
 
-  // Draw the path of the race.
   const raceForm = new Form(
     {
       type: "line",
@@ -220,8 +220,10 @@ function paint({ wipe, Form, form, num, wiggle }) {
     { color: [255, 255, 255, 255] },
     { scale: [1, 1, 1] }
   );
+  */
 
   // Draw some measurement lines.
+  /*
   const diffPositions = [];
   const diffCol = [];
 
@@ -254,10 +256,15 @@ function paint({ wipe, Form, form, num, wiggle }) {
     { color: [255, 255, 255, 255] },
     { scale: [1, 1, 1] }
   );
+  */
 
   //form([raceForm, spiderForm, tube.form], cd.cam, { cpu: true });
   //form([stage, tube.form, tube2.form], cd.cam, { cpu: true });
   //form([stage, tube2.form, raceForm, diffForm, spiderForm], cd.cam);
+
+  form([stage, tube2.form], cd.cam);
+
+  /*
   if (noTube) {
     form([stage, trackerForm, raceForm, spiderForm, diffForm], cd.cam);
   } else {
@@ -266,6 +273,8 @@ function paint({ wipe, Form, form, num, wiggle }) {
       cd.cam
     );
   }
+  */
+
 }
 
 let noTube = false;
@@ -278,39 +287,45 @@ function act({
   debug,
   num: { vec3, quat, randIntRange: rr },
 }) {
-  // Grow model.
-  if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
-    const ray = cd.cam.ray(pen.x, pen.y, rayDist, true);
-    const rayb = cd.cam.ray(pen.x, pen.y, rayDist / 4, true);
+
+  if (e.is("3d:touch:2")) {
+
+    // const ray = cd.cam.ray(pen.x, pen.y, rayDist, true);
+    // const rayb = cd.cam.ray(pen.x, pen.y, rayDist / 4, true);
+
+    const ray = [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z];
+    const rayb = [e.pos.x, e.pos.y, e.pos.z];
+
+    console.log(ray, rayb);
 
     const diff = [...vec3.sub(vec3.create(), rayb, ray)];
     const spiderOrientation = vec3.normalize(vec3.create(), diff);
 
-    let firstNormal = [0, 0, 1];
+    spi = new Spider({ num, debug }, rayb, ray, spiderOrientation, [
+      rr(100, 255),
+      rr(100, 255),
+      rr(100, 255),
+      255,
+    ]);
 
-    const helper = vec3.normalize(
-      vec3.create(),
-      vec3.cross(vec3.create(), firstNormal, spiderOrientation)
-    );
+    //spi.lastPosition = ray;
 
-    const rn = vec3.normalize(
-      vec3.create(),
-      vec3.cross(vec3.create(), spiderOrientation, helper)
-    );
+    spiStart = spi.state;
+    race.start(spi.state.position);
+    racePoints.push(race.pos);
+    //tube.start(spiStart, radius, sides); // Start a gesture.
+    tube2.start(spiStart, radius, sides); // Start a gesture.
+    growing = true;
+  }
 
-    //  Helper
-    //diffPoints.push( ray, vec3.add( vec3.create(), ray, vec3.scale(vec3.create(), helper, 0.5)));
-    //diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
-    // rn
-    //diffPoints.push( ray, vec3.add( vec3.create(), ray, vec3.scale(vec3.create(), rn, 0.5)));
-    //diffColors.push([0, 255, 0, 255], [0, 255, 0, 255]);
-    // Tangent
-    //diffPoints.push( ray, vec3.add( vec3.create(), ray, vec3.scale(vec3.create(), spiderOrientation, 0.5)));
-    //diffColors.push([0, 0, 255, 255], [0, 0, 255, 255]);
-
-    const q = quat.rotationTo(quat.create(), [0, 0, 1], spiderOrientation);
-
-    // console.log("Spider Orientation", q);
+  // Grow model.
+  if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
+    // wand.start([e.pos.x, e.pos.y, e.pos.z, 0]); // ✏️
+    //if (e.is("3d:lift:2"))
+    const ray = cd.cam.ray(pen.x, pen.y, rayDist, true);
+    const rayb = cd.cam.ray(pen.x, pen.y, rayDist / 4, true);
+    const diff = [...vec3.sub(vec3.create(), rayb, ray)];
+    const spiderOrientation = vec3.normalize(vec3.create(), diff);
 
     spi = new Spider({ num, debug }, rayb, ray, spiderOrientation, [
       rr(100, 255),
@@ -331,7 +346,7 @@ function act({
 
   if (e.is("keyboard:down:t")) noTube = !noTube; // TODO: Why can't this toggle on?
 
-  if (e.is("lift") && e.button === 0) {
+  if ((e.is("lift") && e.button === 0) || e.is("3d:lift:2")) {
     growing = false;
     //tube.stop();
     tube2.stop();
