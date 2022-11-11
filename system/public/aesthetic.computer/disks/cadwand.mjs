@@ -2,7 +2,7 @@
 // A laboratory / development piece for designing the procedural geometry in `wand`.
 
 // 🏁 TODO
-// - [] Clean up this `cadwand` code.
+// - [-] Clean up this `cadwand` code.
 // - [] Add a "fake" end cap / cursor that represents an endcap, while drawing.
 //      const cDepth = 1;
 //      const cPos = cam.ray(pen.x, pen.y, cDepth, true);
@@ -14,11 +14,13 @@
 // - [] Make scale test drawings for Barry / UE export.
 //   - [] Enable saving of files to the network instead of the device...
 //        (But what happens if I try to download something on the device?)
-//   - [] Add some keyboard and VR controller button options for complexity / color / radius.
+//   - [] Add some keyboard and VR controller button options for complexity
+//        and color / radius.
 // - [] Decide on an overall look / palette and subject matter for the pieces.
 // * Optimization
 //  - [] Two sided triangle optimization.
-//    - [-] Flip any inverted triangles. Check to see if enabling two sided triangles flip anything.
+//    - [-] Flip any inverted triangles. Check to see if enabling two sided
+//           triangles flip anything.
 //      - [x] 5 sides or greater
 //    - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
 //    - [] Re-enable THREE.FrontSide / BackSide?
@@ -26,7 +28,8 @@
 // + Later
 //  - [] Integrate into `wand`.
 //    - [] Read both pieces side by side.
-//    - [] Model each wand as a single skinny tube (with colored stripes). (Bring Tube geometry into Wand)
+//    - [] Model each wand as a single skinny tube (with colored stripes).
+//        (Bring Tube geometry into Wand)
 //    - [] Remove strips from the tube as needed.
 //    - [] Allow
 // - [] Reload last camera position on refresh.
