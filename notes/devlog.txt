@@ -47,19 +47,23 @@ Practical and conceptual notes weaved together.
 
 -> Meta Quest Remote Debugging (Manual Setup):
    https://developer.oculus.com/documentation/web/browser-remote-debugging/
+   (All commands can be entered in order except on Windows / WSL2 setups)
 
   1 ❯ adb devices 
       List of devices attached
       1WMHHA62V22187	device
     
-  2 ❯ adb shell ip route
+  2 ❯ adb shell ip route (also run in Windows?) (This is for websockets...)
       192.168.1.0/24 dev wlan0 proto kernel scope link src 192.168.1.31 
     
-  3 ❯ adb tcpip 5555
+  3 ❯ adb tcpip 5555 (run in Windows)
       restarting in TCP mode port: 5555
     
-  4 ❯ adb connect 192.168.1.31:5555
+  4 ❯ adb connect 192.168.1.31:5555 (run in WSL2)
       connected to 192.168.1.31:5555
+
+  * On Windows with WSL2 some of these steps need to be duplicated across OS's.
+    - See also: https://stackoverflow.com/questions/60166965/adb-device-list-empty-using-wsl2
 
 -> GitHub Codespaces (Manual Setup):
   A. Clone my dotfiles repo and install chezmoi via the chezmoi/dotfiles install.sh script.
