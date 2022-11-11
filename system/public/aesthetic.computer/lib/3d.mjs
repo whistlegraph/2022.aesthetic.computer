@@ -300,9 +300,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         }
       }
 
-      //material.side = THREE.DoubleSide; // Should this be true? It might disable some triangles in my models but is ultimately faster?
+      material.side = THREE.DoubleSide; // Should this be true? It might disable some triangles in my models but is ultimately faster?
 
-      material.side = THREE.BackSide;
+      // material.side = THREE.BackSide;
 
       material.transparent = false;
       material.opacity = f.alpha;

@@ -1,51 +1,53 @@
 // ️🪄 Cadwand, 22.11.05.00.30 ⚙️
-// A laboratory / development piece for designing the procedural geometry in `wand`.
+// A laboratory & development piece for designing the geometry in `wand`.
 
-// 🏁 TODO
-// - [-] Clean up this `cadwand` code.
-// - [] Add a "fake" end cap / cursor that represents an endcap, while drawing.
-//      const cDepth = 1;
-//      const cPos = cam.ray(pen.x, pen.y, cDepth, true);
-//      const cRot = cam.rotation.slice();
-//      form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
-//   - [] Put it on the end of a wand-like form?
-// - [] Get all the kinks out of VR drawing / make it as nice as possible.
-//   - [] Use the position of the cursor.
-// - [] Make scale test drawings for Barry / UE export.
-//   - [] Enable saving of files to the network instead of the device...
-//        (But what happens if I try to download something on the device?)
-//   - [] Add some keyboard and VR controller button options for complexity
-//        and color / radius.
-// - [] Decide on an overall look / palette and subject matter for the pieces.
-// * Optimization
-//  - [] Two sided triangle optimization.
-//    - [-] Flip any inverted triangles. Check to see if enabling two sided
-//           triangles flip anything.
-//      - [x] 5 sides or greater
-//    - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
-//    - [] Re-enable THREE.FrontSide / BackSide?
-//    - [] Better curve fitting.
-// + Later
-//  - [] Integrate into `wand`.
-//    - [] Read both pieces side by side.
-//    - [] Model each wand as a single skinny tube (with colored stripes).
-//        (Bring Tube geometry into Wand)
-//    - [] Remove strips from the tube as needed.
-//    - [] Allow
-// - [] Reload last camera position on refresh.
-// - [] Record some GIFs.
-// - [] There should be an "inner" and "outer" triangulation option.
-//       - [] Inner ONLY for complexity 1 and 2.
-//       - [] Optional elsewhere.
-//  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
-// + Done
-// - [x] Get Chrome debugging working on Windows w/ WSL.
-// - [x] Get kinks out of middle section? https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
-// - [x] Remove starting kink.
-// - [x] Prevent the tube's circle from twisting on its Y axis.
-//   - [x] Implement this algorithm:
-//     - [x] https://vimeo.com/251091418
+/* #region 🏁 todo
+- [💛] Add a "fake" end cap / cursor that represents an endcap, while drawing.
+     const cDepth = 1;
+     const cPos = cam.ray(pen.x, pen.y, cDepth, true);
+     const cRot = cam.rotation.slice();
+     form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
+  - [] Put it on the end of a wand-like form?
+- [] Get all the kinks out of VR drawing / make it as nice as possible.
+  - [] Use the position of the cursor.
+- [] Make scale test drawings for Barry / UE export.
+  - [] Enable saving of files to the network instead of the device...
+       (But what happens if I try to download something on the device?)
+  - [] Add some keyboard and VR controller button options for complexity
+       and color / radius.
+- [] Decide on an overall look / palette and subject matter for the pieces.
+* Optimization
+ - [] Two sided triangle optimization.
+   - [-] Flip any inverted triangles. Check to see if enabling two sided
+          triangles flip anything.
+     - [x] 5 sides or greater
+   - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
+   - [] Re-enable THREE.FrontSide / BackSide?
+   - [] Better curve fitting.
++ Later
+ - [] Integrate into `wand`.
+   - [] Read both pieces side by side.
+   - [] Model each wand as a single skinny tube (with colored stripes).
+       (Bring Tube geometry into Wand)
+   - [] Remove strips from the tube as needed.
+   - [] Allow
+- [] Reload last camera position on refresh.
+- [] Record some GIFs.
+- [] There should be an "inner" and "outer" triangulation option.
+      - [] Inner ONLY for complexity 1 and 2.
+      - [] Optional elsewhere.
+ - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
++ Done
+- [x] Clean up this `cadwand` code.
+- [x] Get Chrome debugging working on Windows w/ WSL.
+- [x] Get kinks out of middle section? https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
+- [x] Remove starting kink.
+- [x] Prevent the tube's circle from twisting on its Y axis.
+  - [x] Implement this algorithm:
+    - [x] https://vimeo.com/251091418
+#endregion */
 
+// #region 🗺️ global
 import { CamDoll } from "../lib/cam-doll.mjs";
 const { max, acos, cos, sin } = Math;
 
@@ -55,20 +57,21 @@ let race,
   speed = 12; // Race after the cursor quickly.
 let spi, spiStart; // Follow it in even increments.
 let tube, // Circumscribe the spider's path with a form.
-  sides = 6, // Number of tube sides. 1 or 2 means flat.
+  sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.025, // The width of the tube.
   rayDist = 1.2, // How far away to draw the tube on non-spatial devices.
   step = 0.1; // The length of each tube segment.
 
 const racePoints = [], // Extra stuff for CAD-style drawing.
   diffPoints = [],
-  diffColors = [],
-  trackerPoints = [],
+  diffColors = [];
+let trackerPoints = [],
   trackerColors = [];
 let spiderForm, trackerForm;
 let limiter = 0;
+// #endregion
 
-function boot({ Camera, Dolly, Form, QUAD, painting, num, wiggle, geo }) {
+function boot({ Camera, Dolly, Form, QUAD, painting, wipe, num, wiggle, geo }) {
   camdoll = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // Camera controls.
   stage = new Form(
     QUAD,
@@ -138,7 +141,7 @@ function sim({ pen, pen3d, num: { vec3, randIntRange: rr, dist3d } }) {
   }
 }
 
-function paint({ wipe, form }) {
+function paint({ form }) {
   //#region 🐛 Debugging drawing.
   // Draw the path of the race.
   /*
@@ -325,7 +328,7 @@ function act({ event: e, pen, gpu, debug, num }) {
 
 export { boot, paint, sim, act };
 
-// 📑 Library
+// #region 📑 library
 
 // Here we build a path out of points, which draws
 // tubular segments by adding them to a geometric form.
@@ -337,11 +340,8 @@ class Tube {
   gesture = []; // Set up points on a path / gesture. (Resets on each gesture.)
   //               Used for triangulation logic.
   lastPathP; // Keep track of the most recent "path point".
-  positions = [];
-  colors = [];
-  sides;
-  form;
-
+  sides; // Number of sides the tube has. (See the top of this file.)
+  form; // 
   geometry = "triangles"; // or "lines"
 
   constructor($, geometry) {
@@ -426,8 +426,8 @@ class Tube {
   }
 
   // Generate a path point with room for shape positions.
-  #pathp({ position, direction, color, quat }) {
-    return { pos: position, direction, color, quat, shape: [] };
+  #pathp({ position, direction, rotation, color }) {
+    return { pos: position, direction, rotation, color, shape: [] };
   }
 
   // Generate a start or end (where ring === false) cap to the tube.
@@ -621,42 +621,16 @@ class Tube {
   #transformShape(pathP) {
     const { quat, mat4, vec4, vec3, radians } = this.$.num;
 
-    //const lastDir = this.lastPathP.direction;
-    //console.log(dir, lastDir);
-    //const sq = quat.rotationTo(quat.create(), lastDir, dir);
-    //const finalDir = vec3.transformQuat(vec3.create(), lastDir, sq);
-    // const nd = vec3.scale(vec3.create(), finalDir, -1);
-
-    // Method 1: Using normalized orientation vector.
-    //const nd = vec3.scale(vec3.create(), dir, -1);
-
-    // console.log(pathP.quat);
-
-    //const dir = pathP.direction;
-
-    //const rm = mat4.targetTo(mat4.create(), [0, 0, 0], dir, [0, 1, 0]);
-
     const rm = mat4.fromRotationTranslationScaleOrigin(
       mat4.create(),
-      pathP.quat,
+      pathP.rotation,
       pathP.pos,
       [1, 1, 1],
       [0, 0, 0]
     );
 
-    // console.log(this.gesture.length, pathP.quat)
-
-    //const sq = quat.rotationTo(quat.create(), normDir, steppedDir);
-    //const finalDir = vec3.transformQuat(vec3.create(), normDir, sq);
-
-    //const panned = mat4.fromTranslation(mat4.create(), pathP.pos);
-    //const finalMat = mat4.mul(mat4.create(), panned, rm);
-
     this.shape.forEach((shapePos) => {
-      pathP.shape.push(
-        vec4.transformMat4(vec4.create(), [...shapePos, 1], rm)
-        //vec4.transformQuat(vec3.create(), [...shapePos, 1], pathP.quat)
-      );
+      pathP.shape.push(vec4.transformMat4(vec4.create(), [...shapePos, 1], rm));
     });
   }
 
@@ -667,8 +641,6 @@ class Tube {
     const colors = [];
     const tris = this.geometry === "triangles";
 
-    //[...arguments].forEach((pathP, pi) => {
-
     const args = [...arguments];
 
     for (let pi = 0; pi < args.length; pi += 1) {
@@ -677,11 +649,16 @@ class Tube {
       this.gesture.push(pathP);
       // console.log("Number of sections so far:", this.gesture.length);
 
+      // ⚠️
+      // This is a complicated loop that generates triangulated vertices
+      // or line segment vertices and sets all their colors for a given
+      // parallel tube section.
       for (let si = 0; si < pathP.shape.length; si += 1) {
-        if (si === 0) {
-          //positions.push(this.lastPathP.shape[si], pathP.shape[si]); // 1. Core line
-          //colors.push(pathP.color, pathP.color);
-          // colors.push([127, 127, 127, 255], [127, 127, 127, 255]);
+
+        if (!tris && si === 0) {
+          // 1. 📉 Core / center line.
+          positions.push(this.lastPathP.shape[si], pathP.shape[si]);
+          colors.push(pathP.color, pathP.color);
         }
 
         if (this.sides === 1) return;
@@ -693,15 +670,10 @@ class Tube {
             // Two Sides
             if (this.sides === 2) {
               // This may *not* only be a sides 2 thing...
-
               if (this.gesture.length > 1) {
                 positions.push(this.lastPathP.shape[si]); // First tri complete for side length of 2.
                 colors.push(pathP.color);
               }
-
-              //positions.push(pathP.shape[si]);
-              //colors.push([255, 0, 0, 255]);
-
               if (si > 1) {
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si - 1]);
@@ -709,13 +681,8 @@ class Tube {
                 colors.push([255, 0, 0, 200]);
                 colors.push([0, 255, 0, 200]);
                 colors.push([0, 0, 255, 200]);
-
-                //if (positions.length > 0)
-                //  this.form.addPoints({ positions, colors });
-                //return;
               }
             }
-
             // Three Sides
             if (this.sides === 3) {
               positions.push(pathP.shape[si]);
@@ -726,7 +693,6 @@ class Tube {
                 colors.push([255, 0, 0, 255]);
               }
             }
-
             // Four Sides
             if (this.sides === 4) {
               if (si === 1) {
@@ -757,7 +723,6 @@ class Tube {
                 colors.push([255, 255, 0, 200]);
               }
             }
-
             if (this.sides >= 5) {
               if (si === 1) {
                 positions.push(pathP.shape[si]);
@@ -784,15 +749,6 @@ class Tube {
         if (si > 1) {
           // 📐
           if (tris) {
-            if (this.sides === 2) {
-              // TODO: I guess this isn't needed? 22.11.11.10.28
-              //positions.push(pathP.shape[si - 1]);
-              //colors.push(pathP.color);
-              //   if (positions.length > 0)
-              //     this.form.addPoints({ positions, colors });
-              //   return;
-            }
-
             if (this.sides === 3) {
               positions.push(pathP.shape[si - 1], this.lastPathP.shape[si]);
               colors.push(pathP.color, pathP.color);
@@ -829,19 +785,19 @@ class Tube {
           // 📐
           if (tris) {
             // Two sided
-            if (sides === 2) {
-              if (si === 1) {
-                positions.push(pathP.shape[si]);
-                colors.push([0, 255, 0, 255]);
-              }
-              //colors.push(pathP.color);
+            if (sides === 2 && si === 1) {
+              positions.push(pathP.shape[si]);
+              colors.push([0, 255, 0, 255]);
             }
 
             // 3️⃣
             // Three sided
             if (this.sides === 3) {
               if (si === 1) {
-                positions.push(this.lastPathP.shape[si + 1], this.lastPathP.shape[si]);
+                positions.push(
+                  this.lastPathP.shape[si + 1],
+                  this.lastPathP.shape[si]
+                );
                 colors.push([255, 255, 255, 255], [255, 0, 255, 100]);
               } else if (si === 2) {
                 positions.push(
@@ -896,44 +852,20 @@ class Tube {
                 colors.push([0, 255, 255, 255]);
                 colors.push([0, 255, 255, 255]);
                 colors.push([0, 255, 255, 255]);
+              }
             }
           } else {
             // 📈 Lines
             positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]);
             colors.push([255, 0, 0, 255], [255, 0, 0, 255]);
-            // colors.push(pathP.color, pathP.color);
           }
         }
       }
 
-      // 5. Final side / diagonal
+      //  5. Final side / diagonal
 
-
-      // ❤️ 🔥 Finish going through this class!
-
-
-      // Triangles
+      // 📐 Triangles
       if (tris) {
-        if (sides === 2) {
-          //if (positions.length > 0)
-          //  this.form.addPoints({ positions, colors });
-          //return;
-          /*
-          positions.push(
-            this.lastPathP.shape[1],
-            pathP.shape[pathP.shape.length - 1]
-          );
-
-          //colors.push(pathP.color, pathP.color);
-          colors.push([0, 0, 255, 255], [0, 0, 255, 255]);
-
-          positions.push(this.lastPathP.shape[3]);
-          colors.push([255, 255, 0, 255]);
-
-          console.log(positions);
-          */
-        }
-
         if (this.sides === 3) {
           positions.push(
             pathP.shape[pathP.shape.length - 1],
@@ -941,20 +873,11 @@ class Tube {
             this.lastPathP.shape[pathP.shape.length - 1]
           );
 
-          //colors.push(pathP.color, pathP.color);
           colors.push(
             [255, 255, 255, 255],
             [255, 255, 255, 255],
             [255, 255, 255, 255]
           );
-
-          // 6. Final across
-          //positions.push(pathP.shape[1], pathP.shape[pathP.shape.length - 1]);
-          //colors.push(pathP.color, pathP.color);
-          //colors.push([255, 180, 180, 255], [255, 180, 180, 255]);
-
-          //positions.push(this.lastPathP.shape[1]);
-          //colors.push([0, 0, 0, 255]);
 
           positions.push(
             pathP.shape[pathP.shape.length - 1],
@@ -963,9 +886,6 @@ class Tube {
           );
 
           colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
-
-          //if (positions.length > 0) this.form.addPoints({ positions, colors });
-          //return;
         }
 
         if (this.sides === 4) {
@@ -981,7 +901,6 @@ class Tube {
             [255, 255, 255, 255],
             [255, 255, 255, 255]
           );
-          //colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
 
           positions.push(
             pathP.shape[pathP.shape.length - 1],
@@ -990,21 +909,9 @@ class Tube {
           );
 
           colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
-
-          //if (positions.length > 0) this.form.addPoints({ positions, colors });
-          //return;
-
-          // 6. Final across
-          // positions.push(pathP.shape[1], pathP.shape[pathP.shape.length - 1]);
-          //colors.push(pathP.color, pathP.color);
-          // colors.push([255, 180, 180, 255], [255, 180, 180, 255]);
-
-          // positions.push(this.lastPathP.shape[1]);
-          // colors.push([0, 0, 0, 255]);
         }
 
         if (this.sides >= 5) {
-          // First closer.
           positions.push(
             pathP.shape[pathP.shape.length - 1],
             this.lastPathP.shape[pathP.shape.length - 1],
@@ -1016,7 +923,6 @@ class Tube {
             [255, 255, 255, 255],
             [255, 255, 255, 255]
           );
-          //colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
 
           positions.push(
             pathP.shape[pathP.shape.length - 1],
@@ -1027,8 +933,7 @@ class Tube {
           colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
         }
       } else {
-        // Lines
-
+        // 📈 Lines
         if (this.sides > 2) {
           positions.push(
             this.lastPathP.shape[1],
@@ -1040,7 +945,6 @@ class Tube {
         if (this.sides > 2) {
           // 6. Final across
           positions.push(pathP.shape[1], pathP.shape[pathP.shape.length - 1]);
-          //colors.push(pathP.color, pathP.color);
           colors.push([255, 180, 180, 255], [255, 180, 180, 255]);
         }
       }
@@ -1086,7 +990,7 @@ class Spider {
     // TODO: Is slicing necessary? (Try a complex path with it off.)
     return {
       direction: this.direction.slice(),
-      quat: this.rotQuat,
+      rotation: this.rotation,
       position: this.position.slice(),
       //angle: this.angle.slice(),
       color: this.color.slice(),
@@ -1223,3 +1127,4 @@ class Spider {
     this.lastNormal = newNormal; // Keep track of last normal.
   }
 }
+// #endregion
