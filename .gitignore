@@ -27,4 +27,4 @@ system/types/
 .netlify
 
 # Parcel's caching folder (I don't even really use parcel.)
-.parcel-cache
+.parcel-cache/
