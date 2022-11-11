@@ -34,6 +34,7 @@
 // - [] There should be an "inner" and "outer" triangulation option.
 //       - [] Inner ONLY for complexity 1 and 2.
 //       - [] Optional elsewhere.
+//  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 // + Done
 // - [x] Get Chrome debugging working on Windows w/ WSL.
 // - [x] Get kinks out of middle section? https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
@@ -45,93 +46,58 @@
 import { CamDoll } from "../lib/cam-doll.mjs";
 const { max, acos, cos, sin } = Math;
 
-let cd, stage; // Camera and floor.
-let spi, // Crawls in 3D and creates a path.
-  spiStart;
-//tubeGoto = [];
-let tube,
-  tube2, // Tube geometry that surrounds the spider's path at even increments.
-  //  rot = 0,
-  //  yw = 8,
-  sides = 6,
-  rotSpeed = 0.5,
-  radius = 0.025,
-  step = 0.1,
-  limiter = 0,
-  limiter2 = 0;
+let camdoll, stage; // Camera and floor.
+let waving = false; // Whether we are making tubes or not.
+let race,
+  speed = 12; // Race after the cursor quickly.
+let spi, spiStart; // Follow it in even increments.
+let tube, // Circumscribe the spider's path with a form.
+  sides = 6, // Number of tube sides. 1 or 2 means flat.
+  radius = 0.025, // The width of the tube.
+  rayDist = 1.2, // How far away to draw the tube on non-spatial devices.
+  step = 0.1; // The length of each tube segment.
 
-const rayDist = 1.2;
+const racePoints = [], // Extra stuff for CAD-style drawing.
+  diffPoints = [],
+  diffColors = [],
+  trackerPoints = [],
+  trackerColors = [];
+let spiderForm, trackerForm;
+let limiter = 0;
 
-let race;
-
-//let step = 0.05;
-//let microstep = 0.05;
-let growing = false;
-
-function boot({
-  Camera,
-  Dolly,
-  Form,
-  QUAD,
-  painting,
-  num,
-  debug,
-  wiggle,
-  geo: { Race },
-}) {
-  cd = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // FPS style camera controls.
-
-  // Make a floor platform.
+function boot({ Camera, Dolly, Form, QUAD, painting, num, wiggle, geo }) {
+  camdoll = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // Camera controls.
   stage = new Form(
     QUAD,
-    { tex: painting(2, 2, (g) => g.wipe(0, 0, 70)) },
+    { tex: painting(16, 16, (g) => g.noise16DIGITPAIN()) },
     { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
   );
-
-  // Create a spider and set its starting state and orientation.
-  race = new Race({ speed: 15 });
-
-  // Create a buffered tube to follow our gesture.
-  //tube = new Tube({ Form, painting, num, wiggle }, "triangles"); // Make a new tube.
-  tube2 = new Tube({ Form, painting, num, wiggle }, "triangles"); // Make a new tube.
+  race = new geo.Race({ speed });
+  tube = new Tube({ Form, num }, "triangles"); // or "lines" for wireframes
+  wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
 
-const racePoints = [],
-  diffPoints = [],
-  diffColors = [];
-let trackerPoints = [],
-  trackerColors = [];
+function sim({ pen, pen3d, num: { vec3, randIntRange: rr, dist3d } }) {
+  camdoll.sim(); // Update the camera + dolly.
 
-function sim({
-  wiggle,
-  simCount,
-  pen,
-  pen3d,
-  Form,
-  num: { vec3, randIntRange: rr, dist3d, degrees, mat4, mat3, quat, radians },
-  help,
-}) {
-  //yw = wiggle(8); // 🎡 Some dynamics for each frame
-  //rot += rotSpeed;
-  cd.sim(); // Update the camera + dolly.
-
-  // Create geometry by racing towards the cursor from the center point.
-  if (growing) {
+  // Compute an in-progress gesture.
+  if (waving) {
     if (pen3d) {
-      race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]); // Race towards current position using VR controller.
+      race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]); // Race towards cursor.
     } else {
-      const ray = cd.cam.ray(pen.x, pen.y, 0.1, true);
-      race.to(ray); // Race towards current position.
+      const ray = camdoll.cam.ray(pen.x, pen.y, 0.1, true);
+      race.to(ray);
     }
 
-    racePoints.push(race.pos);
+    // racePoints.push(race.pos); // For debugging.
 
-    const d = dist3d(spi.state.position, race.pos); // vec3's distance was innacurate.
+    const d = dist3d(spi.state.position, race.pos);
 
     const diff = vec3.normalize(
       vec3.create(),
       vec3.sub(vec3.create(), race.pos, spi.state.position)
     );
+
     const scaledDiff = vec3.scale(vec3.create(), diff, 2);
 
     trackerPoints = [
@@ -143,46 +109,58 @@ function sim({
 
     let dot = vec3.dot(diff, spi.state.direction);
 
-    if (dot > 0.5) {
-      trackerColors = [
-        [255, 0, 0, 255],
-        [255, 0, 0, 255],
-        [255, 255, 0, 255],
-        [255, 255, 0, 255],
-      ];
-    } else {
-      trackerColors = [
-        [0, 255, 0, 255],
-        [0, 255, 0, 255],
-        [255, 255, 0, 255],
-        [255, 255, 0, 255],
-      ];
-    }
+    // if (dot > 0.5) { // For debugging.
+    //   trackerColors = [
+    //     [255, 0, 0, 255],
+    //     [255, 0, 0, 255],
+    //     [255, 255, 0, 255],
+    //     [255, 255, 0, 255],
+    //   ];
+    // } else {
+    //   trackerColors = [
+    //     [0, 255, 0, 255],
+    //     [0, 255, 0, 255],
+    //     [255, 255, 0, 255],
+    //     [255, 255, 0, 255],
+    //   ];
+    // }
 
-    // if (d > step * 1.5 && (dot > 0.5 || dot === 0)) {
     if (d > step && (dot > 0.5 || dot === 0)) {
-      //if (dot > 0.5 || dot === 0) {
       spi.rotateTowards(race.pos, dot / 2); // 1 is a tightness fit.
-      //}
-
       spi.crawl(step / 2);
-
       //tube.goto(spi.state);
-      tube2.goto(spi.state);
+      tube.goto(spi.state);
       spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
     }
-    //}
   }
 }
 
-let spiderForm;
-let trackerForm;
+function paint({ wipe, form }) {
+  //#region 🐛 Debugging drawing.
+  // Draw the path of the race.
+  /*
+  const racePositions = [];
+  const raceColors = [];
 
-function paint({ wipe, Form, form, num, wiggle }) {
-  wipe(0, 0, 0, 0); // Clear the background...
-  //ink(0, 1).box(0, 0, screen.width, screen.height); // Or use a fade effect.
+  for (let r = 0; r < racePoints.length - 1; r += 1) {
+    racePositions.push(racePoints[r], racePoints[r + 1]);
+    raceColors.push([127, 0, 127, 255], [127, 0, 127, 255]);
+  }
 
-  // Draw the spider's path so far.
+  const raceForm = new Form(
+    {
+      type: "line",
+      positions: racePositions,
+      colors: raceColors,
+      gradients: true,
+      keep: false,
+    },
+    { color: [255, 255, 255, 255] },
+    { scale: [1, 1, 1] }
+  );
+  */
+
+  // The spider's path so far.
   /*
   if (spi) {
     const spiderPositions = [];
@@ -208,30 +186,7 @@ function paint({ wipe, Form, form, num, wiggle }) {
   }
   */
 
-  // Draw the path of the race.
-  /*
-  const racePositions = [];
-  const raceColors = [];
-
-  for (let r = 0; r < racePoints.length - 1; r += 1) {
-    racePositions.push(racePoints[r], racePoints[r + 1]);
-    raceColors.push([127, 0, 127, 255], [127, 0, 127, 255]);
-  }
-
-  const raceForm = new Form(
-    {
-      type: "line",
-      positions: racePositions,
-      colors: raceColors,
-      gradients: true,
-      keep: false,
-    },
-    { color: [255, 255, 255, 255] },
-    { scale: [1, 1, 1] }
-  );
-  */
-
-  // Draw some measurement lines.
+  // Other measurement lines.
   /*
   const diffPositions = [];
   const diffCol = [];
@@ -266,73 +221,45 @@ function paint({ wipe, Form, form, num, wiggle }) {
     { scale: [1, 1, 1] }
   );
   */
+  //#endregion
 
-  //form([raceForm, spiderForm, tube.form], cd.cam, { cpu: true });
-  //form([stage, tube.form, tube2.form], cd.cam, { cpu: true });
-  //form([stage, tube2.form, raceForm, diffForm, spiderForm], cd.cam);
-
-  form([stage, tube2.form], cd.cam);
-
-  /*
-  if (noTube) {
-    form([stage, trackerForm, raceForm, spiderForm, diffForm], cd.cam);
-  } else {
-    form(
-      [stage, trackerForm, tube2.form, raceForm, spiderForm, diffForm],
-      cd.cam
-    );
-  }
-  */
-
+  //form([stage, raceForm, spiderForm, diffForm, tube.form], cd.cam, { cpu: true });
+  form([stage, tube.form], camdoll.cam);
 }
 
-let noTube = false;
+function act({ event: e, pen, gpu, debug, num }) {
+  const { vec3, randIntRange: rr } = num;
 
-function act({
-  event: e,
-  pen,
-  gpu,
-  num,
-  debug,
-  num: { vec3, quat, randIntRange: rr },
-}) {
-
+  // 🥽 Start a gesture. (Spatial)
   if (e.is("3d:touch:2")) {
+    const last = [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z];
+    const cur = [e.pos.x, e.pos.y, e.pos.z];
 
-    // const ray = cd.cam.ray(pen.x, pen.y, rayDist, true);
-    // const rayb = cd.cam.ray(pen.x, pen.y, rayDist / 4, true);
+    // TODO: Get orientation differently here... using the rotation of
+    //       the controller.
+    console.log("Controller orientation", e.rot);
 
-    const ray = [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z];
-    const rayb = [e.pos.x, e.pos.y, e.pos.z];
-
-    console.log(ray, rayb);
-
-    const diff = [...vec3.sub(vec3.create(), rayb, ray)];
+    const diff = [...vec3.sub(vec3.create(), cur, ray)];
     const spiderOrientation = vec3.normalize(vec3.create(), diff);
 
-    spi = new Spider({ num, debug }, rayb, ray, spiderOrientation, [
+    spi = new Spider({ num, debug }, cur, last, spiderOrientation, [
       rr(100, 255),
       rr(100, 255),
       rr(100, 255),
       255,
     ]);
 
-    //spi.lastPosition = ray;
-
     spiStart = spi.state;
     race.start(spi.state.position);
-    racePoints.push(race.pos);
-    //tube.start(spiStart, radius, sides); // Start a gesture.
-    tube2.start(spiStart, radius, sides); // Start a gesture.
-    growing = true;
+    // racePoints.push(race.pos); // For debugging.
+    tube.start(spiStart, radius, sides); // Start a gesture.
+    waving = true;
   }
 
-  // Grow model.
+  // 🖱️ Start a gesture. (Screen)
   if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
-    // wand.start([e.pos.x, e.pos.y, e.pos.z, 0]); // ✏️
-    //if (e.is("3d:lift:2"))
-    const ray = cd.cam.ray(pen.x, pen.y, rayDist, true);
-    const rayb = cd.cam.ray(pen.x, pen.y, rayDist / 4, true);
+    const ray = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
+    const rayb = camdoll.cam.ray(pen.x, pen.y, rayDist / 4, true);
     const diff = [...vec3.sub(vec3.create(), rayb, ray)];
     const spiderOrientation = vec3.normalize(vec3.create(), diff);
 
@@ -343,39 +270,33 @@ function act({
       255,
     ]);
 
-    //spi.lastPosition = ray;
-
     spiStart = spi.state;
     race.start(spi.state.position);
-    racePoints.push(race.pos);
-    //tube.start(spiStart, radius, sides); // Start a gesture.
-    tube2.start(spiStart, radius, sides); // Start a gesture.
-    growing = true;
+    // racePoints.push(race.pos); // For debugging.
+    tube.start(spiStart, radius, sides); // Start a gesture.
+    waving = true;
   }
 
-  if (e.is("keyboard:down:t")) noTube = !noTube; // TODO: Why can't this toggle on?
-
+  // 🛑 Stop a gesture.
   if ((e.is("lift") && e.button === 0) || e.is("3d:lift:2")) {
-    growing = false;
-    //tube.stop();
-    tube2.stop();
+    waving = false;
+    tube.stop();
   }
 
-  if (e.is("keyboard:down:enter")) {
-    gpu.message({ type: "export-scene" });
-  }
+  if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
 
-  // Increase model complexity.
+  camdoll.act(e); // Wire up FPS style navigation events.
+
+  //#region 🐛 Debugging controls.
+  // Adjust model complexity. (Only works if geometry is non-buffered atm.)
   if (e.is("keyboard:down:k")) {
     sides += 1;
     limiter = 0;
-    limiter2 = 0;
   }
 
   if (e.is("keyboard:down:j")) {
     sides = max(1, sides - 1);
     limiter = 0;
-    limiter2 = 0;
   }
 
   if (e.is("wheel") && e.dir > 0 && tube) {
@@ -389,18 +310,14 @@ function act({
     tube.form.limiter = limiter;
   }
 
-  if (e.is("keyboard:down:[")) {
-    limiter2 += 1;
-    tube2.form.limiter = limiter2;
-  }
+  // In case we need a wireframe form too.
+  // if (e.is("keyboard:down:[")) tubeWire.form.limiter = limiter2;
 
-  if (e.is("keyboard:down:]")) {
-    limiter2 -= 1;
-    if (limiter2 < 0) limiter2 = tube2.form.vertices.length / 2;
-    tube2.form.limiter = limiter2;
-  }
-
-  cd.act(e);
+  // if (e.is("keyboard:down:]")) {
+  //   if (limiter2 < 0) limiter2 = tubeWire.form.vertices.length / 2;
+  //   tubeWire.form.limiter = limiter2;
+  // }
+  //#endregion
 }
 
 export { boot, paint, sim, act };
@@ -409,22 +326,18 @@ export { boot, paint, sim, act };
 
 // Here we build a path out of points, which draws
 // tubular segments by adding them to a geometric form.
-
 // It does this by producing a cookie cutter shape that gets
 // extruded in a transformed direction according to the path data.
-
 class Tube {
   $; // api
-
+  shape; // This hold the vertices in our cookie cutter shape.
   gesture = []; // Set up points on a path / gesture. (Resets on each gesture.)
-  // Used for triangulation logic.
-
-  lastPathP;
-  shape;
-  form;
+  //               Used for triangulation logic.
+  lastPathP; // Keep track of the most recent "path point".
   positions = [];
   colors = [];
   sides;
+  form;
 
   geometry = "triangles"; // or "lines"
 
@@ -840,8 +753,6 @@ class Tube {
                 colors.push([255, 255, 0, 200]);
                 colors.push([255, 255, 0, 200]);
               }
-              // colors.push(pathP.color);
-              // colors.push(pathP.color);
             }
 
             if (this.sides >= 5) {
@@ -871,6 +782,7 @@ class Tube {
           // 📐
           if (tris) {
             if (this.sides === 2) {
+              // TODO: I guess this isn't needed? 22.11.11.10.28
               //positions.push(pathP.shape[si - 1]);
               //colors.push(pathP.color);
               //   if (positions.length > 0)
@@ -879,28 +791,19 @@ class Tube {
             }
 
             if (this.sides === 3) {
-              positions.push(pathP.shape[si - 1]);
-              colors.push(pathP.color);
-
-              positions.push(this.lastPathP.shape[si]);
-              colors.push(pathP.color);
+              positions.push(pathP.shape[si - 1], this.lastPathP.shape[si]);
+              colors.push(pathP.color, pathP.color);
             }
 
             if (this.sides === 4) {
-              // if (positions.length > 0) this.form.addPoints({ positions, colors });
-              // return;
-
-              //colors.push(pathP.color);
               if (si === 2) {
                 positions.push(pathP.shape[si - 1]);
                 colors.push([0, 0, 255, 255]);
               }
-
               if (si === 3) {
                 positions.push(pathP.shape[si - 1]);
                 colors.push([255, 0, 0, 255]);
               }
-
               if (si === 4) {
                 positions.push(pathP.shape[si - 1]);
                 colors.push([255, 255, 0, 255]);
@@ -916,7 +819,6 @@ class Tube {
             positions.push(pathP.shape[si], pathP.shape[si - 1]);
             colors.push(pathP.color, pathP.color);
           }
-          // [255, 180, 180, 255], [255, 180, 180, 255]
         }
 
         // 4. Diagonal
@@ -929,7 +831,6 @@ class Tube {
                 positions.push(pathP.shape[si]);
                 colors.push([0, 255, 0, 255]);
               }
-
               //colors.push(pathP.color);
             }
 
@@ -937,14 +838,9 @@ class Tube {
             // Three sided
             if (this.sides === 3) {
               if (si === 1) {
-                positions.push(this.lastPathP.shape[si + 1]);
-                colors.push([255, 255, 255, 255]);
-
-                positions.push(this.lastPathP.shape[si]);
-                colors.push([255, 0, 255, 100]);
+                positions.push(this.lastPathP.shape[si + 1], this.lastPathP.shape[si]);
+                colors.push([255, 255, 255, 255], [255, 0, 255, 100]);
               } else if (si === 2) {
-                // positions.push(pathP.shape[si]);
-                // colors.push([0, 255, 0, 100]);
                 positions.push(
                   this.lastPathP.shape[si],
                   this.lastPathP.shape[si + 1],
@@ -962,13 +858,8 @@ class Tube {
             // Four sided
             if (this.sides === 4) {
               if (si === 1) {
-                // positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]);
-
                 positions.push(this.lastPathP.shape[si + 1]);
                 colors.push([255, 255, 255, 255]);
-
-                //  if (positions.length > 0) this.form.addPoints({ positions, colors });
-                //  return;
               }
               if (si === 2) {
                 positions.push(
@@ -979,9 +870,6 @@ class Tube {
                 colors.push([0, 255, 0, 255]);
                 colors.push([0, 255, 0, 255]);
                 colors.push([0, 255, 0, 255]);
-
-                // if (positions.length > 0) this.form.addPoints({ positions, colors });
-                // return;
               }
               if (si === 3) {
                 positions.push(
@@ -996,10 +884,7 @@ class Tube {
             }
 
             if (this.sides >= 5) {
-              if (si === 1) {
-                //positions.push(this.lastPathP.shape[si + 1]);
-                //colors.push([255, 255, 255, 255]);
-              } else {
+              if (si > 1) {
                 positions.push(
                   this.lastPathP.shape[si],
                   this.lastPathP.shape[si + 1],
@@ -1008,19 +893,21 @@ class Tube {
                 colors.push([0, 255, 255, 255]);
                 colors.push([0, 255, 255, 255]);
                 colors.push([0, 255, 255, 255]);
-              }
             }
           } else {
             // 📈 Lines
             positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]);
             colors.push([255, 0, 0, 255], [255, 0, 0, 255]);
-            //colors.push(pathP.color, pathP.color);
+            // colors.push(pathP.color, pathP.color);
           }
-          // [0, 180, 180, 255], [0, 180, 180, 255]
         }
       }
 
       // 5. Final side / diagonal
+
+
+      // ❤️ 🔥 Finish going through this class!
+
 
       // Triangles
       if (tris) {
@@ -1166,15 +1053,13 @@ class Tube {
 class Spider {
   $;
   position;
-  direction;
+  lastPosition;
+  direction; // A directional axis-orientation vector around [0, 0, 1].
   lastDirection;
   color;
-
-  rotQuat;
-
+  rotation; // A quaternion.
   path = []; // A built up path.
-  lastPosition;
-  lastNormal;
+  lastNormal; // Remembered for parallel transport / `rotateTowards`.
 
   constructor(
     $,
@@ -1183,18 +1068,12 @@ class Spider {
     dir = [0.00001, 1, 0.00001],
     col = [255, 255, 255, 255]
   ) {
-    this.$ = $;
+    this.$ = $; // Shorthand any dependencies.
+    if (pos.length === 3) pos.push(1); // Make sure pos has a W coordinate.
     this.position = pos;
-    if (pos.length === 3) pos.push(1); // Make sure pos has a W. TODO: Eventually fix this up-chain.
-
-    this.direction = dir;
-    this.lastDirection = dir; // Should only ever be re-assigning.
-
-    this.color = col;
-
-    //this.rotQuat = quat;
-
     this.lastPosition = lp;
+    this.direction = this.lastDirection = dir;
+    this.color = col;
     this.lastNormal = [0, 0, 1];
     this.rotateTowards(this.position);
     this.path.push(this.state);
@@ -1211,61 +1090,45 @@ class Spider {
     };
   }
 
-  // TODO: See if this can support all color parameters via the color parser
-  //       in disk.
-
   // Set the color.
+  // Note: Why not invoke the full `ink` / `color` parser from `disk` here?
   ink() {
-    if (arguments.length === 3) {
-      this.color = [...arguments, 255];
-    } else {
-      // Assume 4
-      this.color = [...arguments];
-    }
+    this.color = arguments.length === 3 ? [...arguments, 255] : [...arguments];
   }
 
-  // Move the spider forward in 3D by n steps, or imagine a forward move.
-  // Turning is optional.
-  crawl(stepSize, turn, peeking = false) {
+  // Move (or project) the spider forward by n steps.
+  crawl(stepSize, peeking = false) {
     const {
-      num: { mat3, mat4, quat, vec4, vec3, radians },
-      debug,
+      num: { vec3 },
     } = this.$;
 
-    // Old
     const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
     const pos = vec3.add(vec3.create(), this.position, scaledDir);
 
-    // if (debug) { // TODO: Log peek position.
-    //   const p = this.position.map(p => p.toFixed(2)),
-    //     a = this.angle.map(a => a.toFixed(2));
-    //   console.log( "🕷️ Pos", "X:", p[0], "Y:", p[1], "Z:", p[2]);
-    //   console.log( "🕷️ Rot", "X:", a[0], "Y:", a[1], "Z:", a[2]);
-    // }
+    // const p = this.position.map(p => p.toFixed(2)),
+    //   a = this.angle.map(a => a.toFixed(2));
+    // console.log( "🕷️ Pos", "X:", p[0], "Y:", p[1], "Z:", p[2]);
+    // console.log( "🕷️ Rot", "X:", a[0], "Y:", a[1], "Z:", a[2]);
 
-    // Don't actually go further if we are only taking a peek.
-    if (peeking) return pos;
+    if (peeking) return pos; // Return early if we are just measuring.
 
-    //this.turnDelta = [0, 0, 0]; // Consume turn angle.
     this.lastPosition = this.position;
-    // this.position = [...pos, 1];
-    this.position = [...pos];
-
+    this.position = [...pos, 1];
     const state = this.state;
     this.path.push(state);
     return state;
   }
 
-  // Imagine a future position, turning an optional amount beforehand.
+  // Imagine a future forward position, turning an optional amount beforehand.
   peek(steps, turn) {
-    return this.crawl(steps, turn, true);
+    return this.crawl(steps, true);
   }
 
-  // TODO: Keep track of the last normal...
-
+  // Turn the spider towards a target, with a given tightness 0-1.
+  // This uses "parallel transport" of normals to maintain orientation.
   rotateTowards(targetPosition, tightness) {
     const {
-      num: { mat3, mat4, vec3, quat, radians },
+      num: { mat3, mat4, vec3, quat },
     } = this.$;
 
     const firstTangent = vec3.normalize(
@@ -1288,97 +1151,72 @@ class Spider {
       vec3.cross(vec3.create(), firstTangent, helper)
     );
 
-    diffPoints.push(
-      this.position,
-      vec3.add(
-        vec3.create(),
-        this.position,
-        vec3.scale(vec3.create(), firstTangent, 0.01)
-      )
-    );
-    diffColors.push([0, 0, 255, 255], [0, 0, 255, 255]);
+    // diffPoints.push( // For debugging.
+    //   this.position,
+    //   vec3.add(
+    //     vec3.create(),
+    //     this.position,
+    //     vec3.scale(vec3.create(), firstTangent, 0.01)
+    //   )
+    // );
+    // diffColors.push([0, 0, 255, 255], [0, 0, 255, 255]);
 
     let newNormal;
-
     let bitangent = vec3.cross(vec3.create(), firstTangent, nextTangent);
-
-    const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
 
     if (vec3.length(bitangent) === 0) {
       newNormal = lastNormal;
-      // TODO: Starting angle is fucking up.
-
-      diffPoints.push(
-        this.position,
-        vec3.add(
-          vec3.create(),
-          this.position,
-          vec3.scale(vec3.create(), newNormal, 0.01)
-        )
-      );
-      diffColors.push([0, 255, 0, 255], [0, 255, 0, 255]);
     } else {
       // Get angle between first and next tangent.
       bitangent = vec3.normalize(vec3.create(), bitangent);
-
-      const mat = mat4.fromRotation(mat4.create(), theta, bitangent); // Rotate theta radians around bitangent.
+      // Rotate around bitangent by `theta` radians.
+      const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
+      const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
       newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
-
-      // This also works...
-      //let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
-      //newNormal = vec3.transformQuat(vec3.create(), firstNormal, rq)
-
-      diffPoints.push(
-        this.position,
-        vec3.add(
-          vec3.create(),
-          this.position,
-          vec3.scale(vec3.create(), newNormal, 0.01)
-        )
-      );
-      diffColors.push([0, 255, 0, 255], [0, 255, 0, 255]);
+      // Could also be using a quaternion here...
+      // let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
+      // newNormal = vec3.transformQuat(vec3.create(), firstNormal, rq)
     }
+
+    // diffPoints.push( // For debugging.
+    //   this.position,
+    //   vec3.add(
+    //     vec3.create(),
+    //     this.position,
+    //     vec3.scale(vec3.create(), newNormal, 0.01)
+    //   )
+    // );
+    // diffColors.push([0, 255, 0, 255], [0, 255, 0, 255]);
 
     bitangent = vec3.normalize(
       vec3.create(),
       vec3.cross(vec3.create(), newNormal, firstTangent)
     );
 
-    diffPoints.push(
-      this.position,
-      vec3.add(
-        vec3.create(),
-        this.position,
-        vec3.scale(vec3.create(), bitangent, 0.01)
-      )
-    );
-    diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
+    // diffPoints.push( // For debugging.
+    //   this.position,
+    //   vec3.add(
+    //     vec3.create(),
+    //     this.position,
+    //     vec3.scale(vec3.create(), bitangent, 0.01)
+    //   )
+    // );
+    // diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
 
+    // Build the full rotation quaternion.
     const rotMat = mat3.fromValues(...bitangent, ...newNormal, ...firstTangent);
     const qua = quat.normalize(
       quat.create(),
       quat.fromMat3(quat.create(), rotMat)
     );
-
-    this.lastNormal = newNormal; // Keep track of last normal.
-
-    // Interpolate the quaternion by a turn radius.
-
+    // Interpolate it / only apply a section via `tightness` from 0-1.
     let fq = qua;
     if (this.rotQua) {
       fq = quat.slerp(quat.create(), this.rotQuat, qua, tightness);
     }
 
-    this.rotQuat = fq; // Only update the quaternion if it makes sense with the bitangent result.
+    this.rotation = fq; // Only update the quaternion if it makes sense with the bitangent result.
     this.direction = nextTangent;
+    this.lastNormal = newNormal; // Keep track of last normal.
   }
-
-  // Turn the spider on any axis.
-  // TODO: Eventually add named parameters or more shorthand functions.
-  //turn(x, y, z) {
-  //this.angle[0] = (this.angle[0] + x) % 360;
-  //this.angle[1] = (this.angle[1] + y) % 360;
-  //this.angle[2] = (this.angle[2] + z) % 360;
-  //  return this.state;
-  //}
 }
