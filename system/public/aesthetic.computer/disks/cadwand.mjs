@@ -1,29 +1,40 @@
 // ️🪄 Cadwand, 22.11.05.00.30 ⚙️
 // A laboratory / development piece for designing the procedural geometry in `wand`.
 
-// TODO
-// - [-] Integrate into `wand` and VR.
-//   - [] Should I bring this code into `wand` or bring wand code into here?
-//   - [] Get it working with wands by replacing lines.
+// 🏁 TODO
+// - [🟡] Get Chrome debugging working on Windows w/ WSL.
+// - [] Clean up `cadwand` this code.
+// - [] Add a "fake" end cap / cursor that represents an endcap, while drawing.
+//      const cDepth = 1;
+//      const cPos = cam.ray(pen.x, pen.y, cDepth, true);
+//      const cRot = cam.rotation.slice();
+//      form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
+//   - [] Put it on the end of a wand-like form?
+// - [] Get all the kinks out of VR drawing / make it as nice as possible.
+//   - [] Use the position of the cursor.
+// - [] Make scale test drawings for Barry / UE export.
+//   - [] Enable saving of files to the network instead of the device...
+//        (But what happens if I try to download something on the device?)
+//   - [] Add some keyboard and VR controller button options for complexity / color / radius.
+// - [] Decide on an overall look / palette and subject matter for the pieces.
 // * Optimization
 //  - [] Two sided triangle optimization.
 //    - [-] Flip any inverted triangles. Check to see if enabling two sided triangles flip anything.
 //      - [x] 5 sides or greater
 //    - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
-//    - [] Add a "fake" end cap while drawing.
-//    - [] Re-enable THREE.FrontSide.
+//    - [] Re-enable THREE.FrontSide / BackSide?
 //    - [] Better curve fitting.
 // + Later
+//  - [] Integrate into `wand`.
+//    - [] Read both pieces side by side.
+//    - [] Model each wand as a single skinny tube (with colored stripes). (Bring Tube geometry into Wand)
+//    - [] Remove strips from the tube as needed.
+//    - [] Allow
 // - [] Reload last camera position on refresh.
 // - [] Record some GIFs.
 // - [] There should be an "inner" and "outer" triangulation option.
 //       - [] Inner ONLY for complexity 1 and 2.
 //       - [] Optional elsewhere.
-// - [] Draw an interactive cursor again using the end cap.
-//      const cDepth = 1;
-//      const cPos = cam.ray(pen.x, pen.y, cDepth, true);
-//      const cRot = cam.rotation.slice();
-//      form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
 // + Done
 // - [x] Get kinks out of middle section? https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
 // - [x] Remove starting kink.
@@ -43,9 +54,6 @@ let tube,
   //  rot = 0,
   //  yw = 8,
   rotSpeed = 0.5,
-  //sides = 16,
-  sides = 6,
-  // radius = 1,
   radius = 0.025,
   step = 0.1,
   limiter = 0,
