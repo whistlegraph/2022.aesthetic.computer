@@ -19,10 +19,7 @@ const { abs, cos, sin } = Math;
 
 const servers = {
   main: "server.aesthetic.computer",
-  local: "localhost:8082",
-  julias: "192.168.1.120:8082",
-  lucias: "192.168.1.245:8082",
-  ashland_mbp: "192.168.1.18",
+  local: `${location.hostname}:8082`,
 };
 
 let ROOT_PIECE = "prompt"; // This gets set straight from the host html file for the ac.

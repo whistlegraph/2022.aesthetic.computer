@@ -4,7 +4,8 @@
 // TODO: 🔐 Setup client<->server identity validation for both anonymous users and
 //          authenticated ones.
 
-import { createServer } from 'http';
+import { createServer } from "http";
+import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
@@ -20,26 +21,26 @@ import twilio from "twilio";
 const client = twilio(accountSid, authToken);
 
 // console.log(client);
-client.tokens.create({ ttl: 3600 }).then(token => {
+client.tokens.create({ ttl: 3600 }).then((token) => {
   console.log("Twilio:", token);
 });
 
-import geckos from '@geckos.io/server';
+import geckos from "@geckos.io/server";
 
-const io = geckos()
+const io = geckos();
 
 io.listen(3000); // default port is 9208
 
-io.onConnection(channel => {
+io.onConnection((channel) => {
   channel.onDisconnect(() => {
-    console.log(`${channel.id} got disconnected`)
+    console.log(`${channel.id} got disconnected`);
   });
 
-  channel.on('chat message', data => {
-    console.log(`got ${data} from "chat message"`)
+  channel.on("chat message", (data) => {
+    console.log(`got ${data} from "chat message"`);
     // emit the "chat message" data to all channels in the same room
-    io.room(channel.roomId).emit('chat message', data)
-  })
+    io.room(channel.roomId).emit("chat message", data);
+  });
 });
 
 // File Watching for Remote Development Mode (HTTP Server)
@@ -47,25 +48,25 @@ let port = 8080;
 if (process.env.NODE_ENV === "development") port = 8082;
 
 const server = createServer((req, res) => {
-
-  if (req.method === 'POST') {
+  if (req.method === "POST") {
     if (req.url === "/reload") {
-      let body = '';
-      req.on('data', (data) => body += data);
-      req.on('end', () => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+      let body = "";
+      req.on("data", (data) => (body += data));
+      req.on("end", () => {
+        res.writeHead(200, { "Content-Type": "application/json" });
         everyone(pack("reload", body, "pieces"));
         res.end(JSON.stringify({ msg: "Reload request sent!" }));
       });
     } else {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('Sorry.');
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end("Sorry.");
     }
   } else {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(JSON.stringify({ msg: "🏀 Sorry. Please visit aesthetic.computer!" }));
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(
+      JSON.stringify({ msg: "🏀 Sorry. Please visit aesthetic.computer!" })
+    );
   }
-
 });
 
 server.listen(port);
@@ -78,19 +79,17 @@ let connectionId = 0; // TODO: Eventually replace with a username arrived at thr
 //                             a client <-> server authentication function.
 
 if (process.env.NODE_ENV === "development") {
-  /*
   // Put the development environment behind a local https server.
-  const server = createServer({
-    cert: readFileSync("../ssl-dev/localhost.pem"),
-    key: readFileSync("../ssl-dev/localhost-key.pem"),
-  });
-  port = 8082;
-  server.listen(port, () => {
-    console.log(
-      `🤖 server.aesthetic.computer (Development) socket: wss://${ip.address()}:${port}`
-    );
-  });
-  */
+  // const server = createServer({
+  //   cert: readFileSync("../ssl-dev/localhost.pem"),
+  //   key: readFileSync("../ssl-dev/localhost-key.pem"),
+  // });
+  // port = 8083;
+  // server.listen(port, () => {
+  //   console.log(
+  //     `🤖 server.aesthetic.computer (Development) socket: wss://${ip.address()}:${port}`
+  //   );
+  // });
   wss = new WebSocketServer({ server });
   //wss = new WebSocketServer({ port });
   console.log(
@@ -135,7 +134,9 @@ wss.on("connection", (ws, req) => {
   others(
     pack(
       "message",
-      JSON.stringify({ text: `${connectionId} has joined from ${ip}. Connections open: ${content.playerCount}` }),
+      JSON.stringify({
+        text: `${connectionId} has joined from ${ip}. Connections open: ${content.playerCount}`,
+      }),
       id
     )
   );
@@ -176,7 +177,6 @@ wss.on("connection", (ws, req) => {
     everyone(pack("left", { id, count: wss.clients.size }));
     clearInterval(interval);
   });
-
 });
 
 // Sends a message to all connected clients.
@@ -209,6 +209,7 @@ if (process.env.NODE_ENV === "development") {
     ])
     .on("all", (event, path) => {
       // console.log("System:", event, path);
-      if (event === "change") everyone(pack("reload", { piece: "*refresh*" }, "local"));
+      if (event === "change")
+        everyone(pack("reload", { piece: "*refresh*" }, "local"));
     });
 }

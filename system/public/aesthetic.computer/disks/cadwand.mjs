@@ -2,8 +2,7 @@
 // A laboratory / development piece for designing the procedural geometry in `wand`.
 
 // 🏁 TODO
-// - [🟡] Get Chrome debugging working on Windows w/ WSL.
-// - [] Clean up `cadwand` this code.
+// - [] Clean up this `cadwand` code.
 // - [] Add a "fake" end cap / cursor that represents an endcap, while drawing.
 //      const cDepth = 1;
 //      const cPos = cam.ray(pen.x, pen.y, cDepth, true);
@@ -36,6 +35,7 @@
 //       - [] Inner ONLY for complexity 1 and 2.
 //       - [] Optional elsewhere.
 // + Done
+// - [x] Get Chrome debugging working on Windows w/ WSL.
 // - [x] Get kinks out of middle section? https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
 // - [x] Remove starting kink.
 // - [x] Prevent the tube's circle from twisting on its Y axis.
@@ -53,6 +53,7 @@ let tube,
   tube2, // Tube geometry that surrounds the spider's path at even increments.
   //  rot = 0,
   //  yw = 8,
+  sides = 6,
   rotSpeed = 0.5,
   radius = 0.025,
   step = 0.1,

@@ -181,6 +181,7 @@ Welcome to...
   - [] Add user connected messages.
   - [] Better mouse and keyboard controls.
   - [] Automatically reload the socket server?
+    - [] Try and get web sockets working locally with SSL enabled (in general).
     - [] Try to get websockets server locally connectable in Meta Quest browser.
          https://github.com/nekocode/Websocket-Adb-Forward/blob/master/example-py-client/client.py
   - [] Does each player bring their lines with them?

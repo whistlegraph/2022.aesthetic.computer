@@ -13,9 +13,10 @@
   external_node_modules = ["chrome-aws-lambda"]
 [dev]
   NODE_ENV = "development"
-  framework = "#custom"
-  command = "npm run spaces-dev-netlify"
-  targetPort = 3333
+  publish = "public/"
+  framework = "#static"
+  #command = "npm run spaces-dev-netlify"
+  #targetPort = 8111
   port = 8888
   autoLaunch = false
 [dev.https]
