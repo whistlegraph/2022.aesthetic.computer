@@ -24,10 +24,10 @@ const c = [255, 255, 255, 255];
 const panTranslation = { x: 0, y: 0 }; // For 2d shifting using `pan` and `unpan`.
 const skips = [];
 
+let debug = false;
+export function setDebug(newDebug) { debug = newDebug; }
+
 // 1. Configuration & State
-
-// TODO: Can't fill process have just one argument coming in?
-
 function makeBuffer(width, height, fillProcess, painting) {
   const imageData = new ImageData(width, height);
 
@@ -1005,6 +1005,11 @@ class Camera {
     return this.#rotZ;
   }
 
+  // Returns the rotation of the camera in radians.
+  get rot() {
+    return [this.#rotX, this.#rotY, this.#rotZ]
+  }
+
   set x(n = 0) {
     this.#x = n;
     this.#perspective(this.fov);
@@ -1084,7 +1089,8 @@ class Camera {
     // 1. Camera World Space
     const pos = [...this.position];
 
-    if (flippedY) pos[1] *= -1; // TODO: This is a little janky now, both CPU and GPU should have the same Y.
+    if (flippedY) pos[1] *= -1; // TODO: This is a little janky now, both CPU
+    //                                   and GPU should have the same Y.
 
     const rotX = mat4.fromXRotation(mat4.create(), radians(this.#rotX));
     const rotY = mat4.fromYRotation(mat4.create(), radians(this.#rotY));
@@ -1233,8 +1239,7 @@ class Form {
   color;
 
   // GPU Specific Params & Buffers
-  verticesSent = 0;
-  gpuFlush = false; // A flag that flushes any left over vertices to add.
+  gpuVerticesSent = 0;
   gpuReset = false; // Assumes this object is being recreated on the GPU.
   gpuKeep = true;
   gpuTransformed = false;
@@ -1338,6 +1343,15 @@ class Form {
     this.uid = nanoid();
   }
 
+  // Clears vertex and index attributes to prepare for replacement geometry. 
+  clear() {
+    this.uvs = [];
+    this.vertices = [];
+    this.indices = [];
+    this.gpuReset = true;
+    this.gpuVerticesSent = 0;
+  }
+
   addPoints(attributes, indices) {
     const incomingLength = attributes.positions.length;
     const verticesLength = this.vertices.length;
@@ -1358,6 +1372,7 @@ class Form {
     if (pointsAvailable < incomingLength) {
       end = pointsAvailable;
       maxedOut = true;
+      if (debug) console.warn("Max. cutoff in GPU form!", this);
     }
 
     // Create new vertices from incoming positions.

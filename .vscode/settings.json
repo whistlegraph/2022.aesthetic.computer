@@ -4,6 +4,6 @@
     "**/node_modules": true
   },
   "search.useIgnoreFiles": true,
-  "editor.minimap.scale": 3,
+  "editor.minimap.scale": 1,
   "editor.minimap.autohide": false
 }

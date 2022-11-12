@@ -6,10 +6,15 @@
      const cDepth = 1;
      const cPos = cam.ray(pen.x, pen.y, cDepth, true);
      const cRot = cam.rotation.slice();
-     form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
+ -    form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
+
+ Try taking the dot product of your two quaternions (i.e., the 4-D dot product),
+  and if the dot product is negative, replace your quaterions q1 and q2 with -q1 and q2 before performing Slerp.
+
   - [] Put it on the end of a wand-like form?
 - [] Get all the kinks out of VR drawing / make it as nice as possible.
   - [] Use the position of the cursor.
+- [] Finish all todos in this file.
 - [] Make scale test drawings for Barry / UE export.
   - [] Enable saving of files to the network instead of the device...
        (But what happens if I try to download something on the device?)
@@ -55,9 +60,9 @@ let camdoll, stage; // Camera and floor.
 let waving = false; // Whether we are making tubes or not.
 let race,
   speed = 12; // Race after the cursor quickly.
-let spi, spiStart; // Follow it in even increments.
+let spi; // Follow it in even increments.
 let tube, // Circumscribe the spider's path with a form.
-  sides = 2, // Number of tube sides. 1 or 2 means flat.
+  sides = 32, // Number of tube sides. 1 or 2 means flat.
   radius = 0.025, // The width of the tube.
   rayDist = 1.2, // How far away to draw the tube on non-spatial devices.
   step = 0.1; // The length of each tube segment.
@@ -79,12 +84,51 @@ function boot({ Camera, Dolly, Form, QUAD, painting, wipe, num, wiggle, geo }) {
     { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
   );
   race = new geo.Race({ speed });
-  tube = new Tube({ Form, num }, "triangles"); // or "lines" for wireframes
+  tube = new Tube({ Form, num }, radius, sides, "triangles"); // or "lines" for wireframes
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
 
-function sim({ pen, pen3d, num: { vec3, randIntRange: rr, dist3d } }) {
+let wandForm;
+
+function sim({
+  pen,
+  pen3d,
+  Form,
+  num: { vec3, randIntRange: rr, dist3d, quat, degrees: deg, radians, mat4 },
+}) {
   camdoll.sim(); // Update the camera + dolly.
+  // racePoints.push(race.pos); // For debugging.
+
+  // Generate the preview cursor from a given orientation.
+  let position, rotation;
+  if (pen3d) {
+    position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
+
+    const worldDir = [pen3d.worldDir.x, pen3d.worldDir.y, pen3d.worldDir.z];
+
+    wandForm = new Form({
+      type: "line",
+      positions: [position, vec3.sub(vec3.create(), position, worldDir)],
+      colors: [
+        [255, 0, 0, 255],
+        [255, 0, 0, 255],
+      ],
+      keep: false,
+    });
+
+    const rotation = quat.fromValues(
+      pen3d.quat._x,
+      pen3d.quat._y,
+      pen3d.quat._z,
+      pen3d.quat._w
+    );
+
+    tube.preview({ position, rotation, color: [255, 0, 0, 255] });
+  } else if (pen) {
+    position = camdoll.cam.ray(pen.x, pen.y, 0.1, true);
+    rotation = quat.fromEuler(quat.create(), ...camdoll.cam.rot);
+    tube.preview({ position, rotation, color: [255, 0, 0, 255] });
+  }
 
   // Compute an in-progress gesture.
   if (waving) {
@@ -94,8 +138,6 @@ function sim({ pen, pen3d, num: { vec3, randIntRange: rr, dist3d } }) {
       const ray = camdoll.cam.ray(pen.x, pen.y, 0.1, true);
       race.to(ray);
     }
-
-    // racePoints.push(race.pos); // For debugging.
 
     const d = dist3d(spi.state.position, race.pos);
 
@@ -230,7 +272,8 @@ function paint({ form }) {
   //#endregion
 
   //form([stage, raceForm, spiderForm, diffForm, tube.form], cd.cam, { cpu: true });
-  form([stage, tube.form], camdoll.cam);
+  form([stage, tube.capForm, tube.form, wandForm], camdoll.cam);
+  // form([stage, tube.capForm], camdoll.cam);
 }
 
 function act({ event: e, pen, gpu, debug, num }) {
@@ -241,11 +284,11 @@ function act({ event: e, pen, gpu, debug, num }) {
     const last = [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z];
     const cur = [e.pos.x, e.pos.y, e.pos.z];
 
-    // TODO: Get orientation differently here... using the rotation of
-    //       the controller.
-    console.log("Controller orientation", e.rot);
+    // TODO: - [] Get orientation differently here... using the rotation of
+    //            the controller.
+    // console.log("Controller orientation", e.rot);
 
-    const diff = [...vec3.sub(vec3.create(), cur, ray)];
+    const diff = [...vec3.sub(vec3.create(), cur, last)];
     const spiderOrientation = vec3.normalize(vec3.create(), diff);
 
     spi = new Spider({ num, debug }, cur, last, spiderOrientation, [
@@ -255,10 +298,10 @@ function act({ event: e, pen, gpu, debug, num }) {
       255,
     ]);
 
-    spiStart = spi.state;
     race.start(spi.state.position);
     // racePoints.push(race.pos); // For debugging.
-    tube.start(spiStart, radius, sides); // Start a gesture.
+    tube.start(spi.state, radius, sides); // Start a gesture, adding radius and
+    //                                       size for an optional update.
     waving = true;
   }
 
@@ -276,10 +319,9 @@ function act({ event: e, pen, gpu, debug, num }) {
       255,
     ]);
 
-    spiStart = spi.state;
     race.start(spi.state.position);
     // racePoints.push(race.pos); // For debugging.
-    tube.start(spiStart, radius, sides); // Start a gesture.
+    tube.start(spi.state, radius, sides); // Start a gesture.
     waving = true;
   }
 
@@ -341,16 +383,27 @@ class Tube {
   //               Used for triangulation logic.
   lastPathP; // Keep track of the most recent "path point".
   sides; // Number of sides the tube has. (See the top of this file.)
-  form; // 
+  radius; // Thickness of the tube.
+  form; // Represents the tube...
+  capForm; // " a cursor that presents the cap of the tube.
   geometry = "triangles"; // or "lines"
+  // TODO: ^ Some of these fields could still be privated. 22.11.11.15.50
 
-  constructor($, geometry) {
+  // ☁️
+  // Note: I could eventually add behavioral data into these vertices that
+  //       animate things / turn on or off certain low level effects etc.
+
+  constructor($, radius, sides, geometry) {
     this.$ = $; // Hold onto the API.
+    this.geometry = geometry; // Set the geometry type.
+    this.radius = radius;
+    this.sides = sides;
+    this.shape = this.#segmentShape(radius, sides); // Set shape to start.
 
-    this.geometry = geometry;
+    // Make the buffered geometry form, given the geometry type.,
+    // and another to represent a dynamic cursor.
 
-    // Make the buffered geometry form, given the geometry type.
-    this.form = new $.Form(
+    const formType = [
       {
         type:
           this.geometry === "triangles" ? "triangle:buffered" : "line:buffered",
@@ -362,35 +415,52 @@ class Tube {
       //{ type: "line:buffered", gradients: false },
       //{ tex: this.$.painting(2, 2, (g) => g.wipe(0, 0, 70)) },
       { color: [255, 255, 255, 255] }, // If vertices are passed then this number blends down.
-      { scale: [1, 1, 1] }
-    );
+      { scale: [1, 1, 1] },
+    ];
+
+    this.form = new $.Form(...formType); // Main form.
+    this.capForm = new $.Form(...formType); // Cursor.
 
     const totalLength = 1;
     this.form.MAX_POINTS = totalLength * 2 * 32000; // Must be a multiple of two for "line".
-    //  Note: It would be cool to add per vertex gradient support.
-    //        Maybe if a gradients array was passed of trues and falses that
-    //        matched positions?
-    // Note: I could eventually add behavioral data into these vertices that
-    //       animate things / turn on or off certain low level effects etc.
+    this.capForm.MAX_POINTS = totalLength * 128;
+    // That should be enough to cover a healthy range of composition vertices
+    // and sidecounts. 😱 22.11.11.16.13
   }
 
   // Creates an initial position, orientation and end cap geometry.
-  start(p, radius, sides) {
+  start(p, radius = this.radius, sides = this.sides) {
     this.sides = sides;
+    this.radius = radius;
+
     if (this.sides === 1) this.sides = 0;
 
     // Create an initial position in the path and generate points in the shape.
-    this.shape = this.#segmentShape(radius, this.sides);
+    // this.shape = this.#segmentShape(radius, sides); // Update radius and sides.
     const start = this.#pathp(p);
     this.lastPathP = start; // Store an inital lastPath.
 
-    // 1. Transform the first shape and add an end cap. Draw triangle ring.
-
+    // Transform the first shape and add an end cap to the form.
     this.#transformShape(start);
-    if (this.sides > 1) this.#cap(start);
+    if (this.sides > 1) this.#cap(start, this.form);
   }
 
-  // Adds additonal points as as args in [position, rotation, color] format.
+  // Produces the `capForm` cursor.
+  preview(p) {
+    // TODO: - [] Test all sides here. 22.11.11.16.23
+    // Replace the current capForm shape values with transformed ones.
+    // TODO: get color out of p here
+    this.capForm.clear();
+    this.#cap(
+      this.#transformShape(
+        this.#pathp({ ...p, shape: this.shape.slice() }),
+        false
+      ),
+      this.capForm
+    );
+  }
+
+  // Adds additonal points as args in [position, rotation, color] format.
   goto() {
     // Add new points to the path.
     const path = [...arguments].map((p) => this.#pathp(p));
@@ -401,7 +471,8 @@ class Tube {
   }
 
   stop() {
-    this.#cap(this.lastPathP, false); // no cap
+    if (this.lastPathP) this.#cap(this.lastPathP, this.form, false);
+    //                                                      `false` for no ring
     this.gesture.length = 0;
   }
 
@@ -426,12 +497,15 @@ class Tube {
   }
 
   // Generate a path point with room for shape positions.
-  #pathp({ position, direction, rotation, color }) {
-    return { pos: position, direction, rotation, color, shape: [] };
+  // A spatial snapshot of state used around as `spider.state`.
+  // 😱 (This method is dumb, it only adds a shape array. 22.11.12.01.28)
+  #pathp({ position, direction, rotation, color, shape = [] }) {
+    return { pos: position, direction, rotation, color, shape };
   }
 
   // Generate a start or end (where ring === false) cap to the tube.
-  #cap(pathP, ring = true) {
+  // Has a form input that is either `form` or `capForm`.
+  #cap(pathP, form, ring = true) {
     const tris = this.geometry === "triangles";
 
     // 📐 Triangles
@@ -440,7 +514,7 @@ class Tube {
       // 2️⃣ Two Sides
       if (this.sides === 2) {
         if (ring) {
-          this.form.addPoints({
+          form.addPoints({
             positions: [pathP.shape[1], pathP.shape[pathP.shape.length - 1]],
             colors: [pathP.color, pathP.color],
             // [255, 100, 0, 255], [255, 100, 0, 255],
@@ -454,7 +528,7 @@ class Tube {
         if (ring) {
           for (let i = 0; i < pathP.shape.length; i += 1) {
             if (i > 1) {
-              this.form.addPoints({
+              form.addPoints({
                 positions: [pathP.shape[i]],
                 colors: [pathP.color],
                 // [0, 100, 0, 255], [0, 100, 0, 255],
@@ -462,7 +536,7 @@ class Tube {
             }
           }
 
-          this.form.addPoints({
+          form.addPoints({
             positions: [pathP.shape[1]],
             //colors: [pathP.color],
             colors: [
@@ -473,7 +547,7 @@ class Tube {
           });
         } else {
           // End cap.
-          this.form.addPoints({
+          form.addPoints({
             positions: [pathP.shape[1], pathP.shape[2], pathP.shape[3]],
             colors: [pathP.color, pathP.color, pathP.color],
             // [255, 100, 0, 255], [255, 100, 0, 255],
@@ -483,7 +557,7 @@ class Tube {
 
       // 4️⃣ Four sides.
       if (this.sides === 4) {
-        this.form.addPoints({
+        form.addPoints({
           positions: [
             pathP.shape[1],
             pathP.shape[2],
@@ -512,7 +586,7 @@ class Tube {
         // between this and the next point, skipping the last.
         for (let i = 1; i < pathP.shape.length - 1; i += 1) {
           if (!ring) {
-            this.form.addPoints({
+            form.addPoints({
               positions: [center, pathP.shape[i], pathP.shape[i + 1]],
               colors: [
                 [255, 0, 0, 255],
@@ -521,7 +595,7 @@ class Tube {
               ],
             });
           } else {
-            this.form.addPoints({
+            form.addPoints({
               positions: [center, pathP.shape[i + 1], pathP.shape[i]],
               colors: [
                 [255, 0, 0, 255],
@@ -534,7 +608,7 @@ class Tube {
 
         if (!ring) {
           // And wrap around to the beginning for the final point.
-          this.form.addPoints({
+          form.addPoints({
             positions: [
               center,
               pathP.shape[pathP.shape.length - 1],
@@ -547,7 +621,7 @@ class Tube {
             ],
           });
         } else {
-          this.form.addPoints({
+          form.addPoints({
             positions: [
               center,
               pathP.shape[1],
@@ -568,7 +642,7 @@ class Tube {
         for (let i = 0; i < pathP.shape.length; i += 1) {
           // Pie: Radiate out from core point
           if (i > 0 && this.sides > 4) {
-            this.form.addPoints({
+            form.addPoints({
               positions: [pathP.shape[0], pathP.shape[i]],
               // colors: [pathP.color, pathP.color],
               colors: [
@@ -580,7 +654,7 @@ class Tube {
 
           // Single diagonal for a quad.
           if (i === 0 && this.sides === 4) {
-            this.form.addPoints({
+            form.addPoints({
               positions: [pathP.shape[1], pathP.shape[3]],
               // colors: [pathP.color, pathP.color],
               colors: [
@@ -592,7 +666,7 @@ class Tube {
 
           // Ring: Skip core point
           if (i > 1 && ring) {
-            this.form.addPoints({
+            form.addPoints({
               positions: [pathP.shape[i - 1], pathP.shape[i]],
               // colors: [pathP.color, pathP.color],
               colors: [
@@ -606,7 +680,7 @@ class Tube {
 
       // Ring: add final point
       if (ring) {
-        this.form.addPoints({
+        form.addPoints({
           positions: [pathP.shape[1], pathP.shape[pathP.shape.length - 1]],
           // colors: [pathP.color, pathP.color],
           colors: [
@@ -618,7 +692,10 @@ class Tube {
     }
   }
 
-  #transformShape(pathP) {
+  // TODO: Get shape transforming here!
+
+  // Transform the cookie-cutter by the pathP, returning the pathP back.
+  #transformShape(pathP, append = true) {
     const { quat, mat4, vec4, vec3, radians } = this.$.num;
 
     const rm = mat4.fromRotationTranslationScaleOrigin(
@@ -629,9 +706,20 @@ class Tube {
       [0, 0, 0]
     );
 
-    this.shape.forEach((shapePos) => {
-      pathP.shape.push(vec4.transformMat4(vec4.create(), [...shapePos, 1], rm));
+    quat.normalize(rm, rm);
+
+    this.shape.forEach((shapePos, i) => {
+      const newShapePos = vec4.transformMat4(
+        vec4.create(),
+        [...shapePos, 1],
+        rm
+      );
+
+      if (append) pathP.shape.push(newShapePos);
+      else pathP.shape[i] = newShapePos;
     });
+
+    return pathP;
   }
 
   // Copy each point in the shape, transforming it by the added path positions
@@ -654,7 +742,6 @@ class Tube {
       // or line segment vertices and sets all their colors for a given
       // parallel tube section.
       for (let si = 0; si < pathP.shape.length; si += 1) {
-
         if (!tris && si === 0) {
           // 1. 📉 Core / center line.
           positions.push(this.lastPathP.shape[si], pathP.shape[si]);

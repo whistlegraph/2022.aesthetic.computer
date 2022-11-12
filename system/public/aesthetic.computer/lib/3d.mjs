@@ -24,7 +24,8 @@ import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from '../dep/three/GLTFExporter.js';
 import { radians, rgbToHex, timestamp } from "./num.mjs";
-//import { TubePainter } from '../dep/three/TubePainter.js';
+
+const debug = window.acDEBUG;
 
 let scene,
   renderer,
@@ -65,15 +66,15 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  //scene.fog = new THREE.Fog(0x111111, 0.2, 2); // More basic fog.
+  //  scene.fog = new THREE.Fog(0x111111, 0.2, 2); // More basic fog.
   scene.fog = new THREE.FogExp2(0x030303, 0.1);
-  //scene.fog = new THREE.FogExp2(0x030303, 0.5);
+  //  scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
-  //const ambientLight = new THREE.AmbientLight();
-  //const pointLight = new THREE.PointLight();
-  //pointLight.position.set(10, 10, 10);
-  //scene.add(ambientLight);
-  //scene.add(pointLight);
+  //  const ambientLight = new THREE.AmbientLight();
+  //  const pointLight = new THREE.PointLight();
+  //  pointLight.position.set(10, 10, 10);
+  //  scene.add(ambientLight);
+  //  scene.add(pointLight);
 
   // Set up VR.
   button = VRButton.createButton(
@@ -652,7 +653,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       //      https://jsfiddle.net/t4m85pLr/1
 
       if (form) {
-        // Flush if necessary.
+        // Reset / flush vertex data if necessary.
         if (formUpdate.reset) {
           form.ac_length = 0;
           form.ac_lastLength = 0;
@@ -674,6 +675,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
         // ⚠️ Reset the buffer if we were go over the max, by default.
         if (form.ac_length > form.ac_MAX_POINTS) {
+          if (debug) console.warn("Max. cutoff in GPU form!", form);
           form.ac_lastLength = 0;
           form.ac_length = points.length;
         }
@@ -786,20 +788,25 @@ function handleController(controller) {
   //}
 
   // Record pen events to send through to the piece.
-  if (controller.userData.lastPosition) {
+  if (userData.lastPosition) {
     const delta = controller.position.distanceTo(
-      controller.userData.lastPosition
+      userData.lastPosition
     );
     // Add a small deadzone to controller movements.
-    if (delta > 0.0001) {
+    if (delta > 0.00001) {
       penEvent(userData.isSelecting ? "draw" : "move", controller);
     }
   }
 
-  controller.userData.lastPosition = { ...controller.position };
+  const lastPos = userData.lastPosition;
+  userData.lastPosition = { ...controller.position };
 
-  // TODO: Also return controller angle here.
-  return { pos: controller.position, rot: controller.rotation };
+  const p = new THREE.Vector3();
+  controller.getWorldDirection(p);
+  const q = new THREE.Quaternion()
+  controller.getWorldQuaternion(q);
+
+  return { pos: controller.position, rot: controller.rotation, lastPos, worldDir: p, quat: q };
 }
 
 // Get controller data to send to a piece.
@@ -813,6 +820,8 @@ export function pollControllers() {
 
 // Create a pen event.
 function penEvent(name, controller) {
+
+  // TODO: Could use worldDir and quat here too. 22.11.12.01.54
   penEvents.push({
     name,
     pointer: parseInt(controller.name.split("-")[1]),

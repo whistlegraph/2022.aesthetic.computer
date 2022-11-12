@@ -428,6 +428,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
         formsSent[form.uid] = form;
         //console.log("Forms sent:", Object.keys(formsSent).length);
         form.gpuVerticesSent = form.vertices.length;
+        form.gpuReset = false;
       } else {
         // B. If the form has been sent, but the form has changed and
         //    needs a partial update or is simply being redrawn.
@@ -448,7 +449,6 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
           formsToSend.push({
             update: "form:buffered:add-vertices",
             uid: form.uid,
-            // flush: form.gpuFlush,
             reset: form.gpuReset,
             vertices: form.vertices.slice(form.gpuVerticesSent),
             length: form.vertices.length, // TODO: These aren't being used anymore / they are generated from the GPU.
@@ -457,9 +457,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
 
           // Update form state now that we are sending the message.
           // TODO: Put these both under a "gpu" object in form.
-          // TODO: Both gpuFlush and gpuReset could have better names
-          //       once I start scaling the renderer. 22.10.16.20.49
-          // form.gpuFlush = false;
+          //console.log(form.gpuReset);
           form.gpuReset = false;
           form.gpuVerticesSent = form.vertices.length;
         } else {
@@ -1067,6 +1065,7 @@ let reframed = false;
 async function makeFrame({ data: { type, content } }) {
   if (type === "init-from-bios") {
     debug = content.debug;
+    graph.setDebug(content.debug);
     ROOT_PIECE = content.rootPiece;
     originalHost = content.parsed.host;
     load(content.parsed);
@@ -1897,8 +1896,6 @@ async function makeFrame({ data: { type, content } }) {
       }
       if (cursorCode) sendData.cursorCode = cursorCode;
 
-      //console.log(sendData);
-
       // Note: transferredPixels will be undefined when sendData === {}.
       if (sendData.pixels) {
         sendData.pixels = sendData.pixels.buffer;
@@ -1906,13 +1903,7 @@ async function makeFrame({ data: { type, content } }) {
         sendData.pixels = content.pixels;
       }
 
-      //else sendData.pixels = pixels;
-
-      if (sendData.pixels?.byteLength === 0) {
-        sendData.pixels = undefined;
-      }
-
-      //console.log(sendData.pixels.byteLength)
+      if (sendData.pixels?.byteLength === 0) sendData.pixels = undefined;
 
       send({ type: "render", content: sendData }, [sendData.pixels]);
 
