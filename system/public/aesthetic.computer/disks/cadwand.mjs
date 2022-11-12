@@ -2,18 +2,11 @@
 // A laboratory & development piece for designing the geometry in `wand`.
 
 /* #region 🏁 todo
-- [💛] Add a "fake" end cap / cursor that represents an endcap, while drawing.
-     const cDepth = 1;
-     const cPos = cam.ray(pen.x, pen.y, cDepth, true);
-     const cRot = cam.rotation.slice();
- -    form(segment({ Form, num }, cPos, cRot, 0.1, 0.1, sides), cam, { cpu: true });
-
- Try taking the dot product of your two quaternions (i.e., the 4-D dot product),
-  and if the dot product is negative, replace your quaterions q1 and q2 with -q1 and q2 before performing Slerp.
-
-  - [] Put it on the end of a wand-like form?
+- [] Put it on the end of a wand-like form?
 - [] Get all the kinks out of VR drawing / make it as nice as possible.
   - [] Use the position of the cursor.
+    Try taking the dot product of your two quaternions (i.e., the 4-D dot product),
+      and if the dot product is negative, replace your quaterions q1 and q2 with -q1 and q2 before performing Slerp.
 - [] Finish all todos in this file.
 - [] Make scale test drawings for Barry / UE export.
   - [] Enable saving of files to the network instead of the device...
@@ -43,6 +36,7 @@
       - [] Optional elsewhere.
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Add a "fake" end cap / cursor that represents an endcap, while drawing.
 - [x] Clean up this `cadwand` code.
 - [x] Get Chrome debugging working on Windows w/ WSL.
 - [x] Get kinks out of middle section? https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
