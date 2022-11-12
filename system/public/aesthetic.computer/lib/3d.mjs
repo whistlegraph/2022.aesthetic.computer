@@ -52,9 +52,10 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
 
   renderer = new THREE.WebGLRenderer({
     alpha: false,
-    preserveDrawingBuffer: true,
     antialias: false,
   });
+
+  renderer.debug.checkShaderErrors = false;
 
   renderer.sortObjects = false;
   renderer.xr.enabled = true;
@@ -167,7 +168,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   if (!target || target.width !== width || target.height !== height) {
     target = new THREE.WebGLRenderTarget(width, height);
     renderer.setSize(size.width, size.height);
-    renderer.setPixelRatio(1 / 2.2);
+    //renderer.setPixelRatio(1 / 2.2);
+    renderer.outputEncoding = THREE.sRGBEncoding;
     // renderer.setRenderTarget(target); // For rendering offsceen.
     // pixels = new Uint8Array(width * height * 4);
     const fov = cam.fov;
@@ -303,7 +305,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       material.side = THREE.DoubleSide; // Should this be true? It might disable some triangles in my models but is ultimately faster?
 
-      // material.side = THREE.BackSide;
+      material.side = THREE.BackSide;
 
       material.transparent = false;
       material.opacity = f.alpha;
@@ -323,33 +325,31 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       }
 
       const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(f.MAX_POINTS * 3);
-      const colors = new Float32Array(f.MAX_POINTS * 4);
+      const positionsArr = new Float32Array(f.MAX_POINTS * 3);
+      const colorsArr = new Float32Array(f.MAX_POINTS * 4);
 
       for (let i = 0; i < points.length; i += 1) {
         const posStart = i * 3;
-        positions[posStart] = points[i].x;
-        positions[posStart + 1] = points[i].y;
-        positions[posStart + 2] = points[i].z;
+        positionsArr[posStart] = points[i].x;
+        positionsArr[posStart + 1] = points[i].y;
+        positionsArr[posStart + 2] = points[i].z;
       }
 
       for (let i = 0; i < pointColors.length; i += 1) {
         const colStart = i * 4;
-        colors[colStart] = pointColors[i].x / 255;
-        colors[colStart + 1] = pointColors[i].y / 255;
-        colors[colStart + 2] = pointColors[i].z / 255;
-        colors[colStart + 3] = pointColors[i].w / 255;
+        colorsArr[colStart] = pointColors[i].x / 255;
+        colorsArr[colStart + 1] = pointColors[i].y / 255;
+        colorsArr[colStart + 2] = pointColors[i].z / 255;
+        colorsArr[colStart + 3] = pointColors[i].w / 255;
       }
 
-      geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3)
-      );
+      const positions = new THREE.BufferAttribute( positionsArr, 3 );
+      const colors = new THREE.BufferAttribute( colorsArr, 4, true);
+      positions.usage = THREE.DynamicDrawUsage;
+      colors.usage = THREE.DynamicDrawUsage;
 
-      geometry.setAttribute(
-        "color",
-        new THREE.BufferAttribute(colors, 4, true)
-      );
+      geometry.setAttribute("position", positions);
+      geometry.setAttribute("color", colors);
 
       if (tex) {
         geometry.setAttribute(
@@ -362,6 +362,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       //geometry.setColors(colors);
 
       const tri = new THREE.Mesh(geometry, material);
+    	tri.frustumCulled = false;
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
@@ -705,8 +706,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         form.geometry.attributes.position.needsUpdate = true;
         form.geometry.attributes.color.needsUpdate = true;
 
-        form.geometry.computeBoundingBox();
-        form.geometry.computeBoundingSphere();
+        // form.geometry.computeBoundingBox();
+        // form.geometry.computeBoundingSphere();
 
         //form.geometry.setPositions(positions);
         //form.geometry.setColors(colors);

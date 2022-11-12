@@ -948,7 +948,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             // TODO: Key.input();
             // TODO: Voice.input();
           },
-          async function (needsRender, updateTimes, nowUpdate) {
+          function (needsRender, updateTimes, nowUpdate) {
             // TODO: How can I get the pen data into the disk and back
             //       to Three.JS as fast as possible? 22.10.26.23.25
 
