@@ -22,7 +22,7 @@
 
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
-import { GLTFExporter } from '../dep/three/GLTFExporter.js';
+import { GLTFExporter } from "../dep/three/GLTFExporter.js";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
 
 const debug = window.acDEBUG;
@@ -53,6 +53,7 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
   renderer = new THREE.WebGLRenderer({
     alpha: false,
     antialias: false,
+    preserveDrawingBuffer: true,
   });
 
   renderer.debug.checkShaderErrors = false;
@@ -303,9 +304,13 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         }
       }
 
-      material.side = THREE.DoubleSide; // Should this be true? It might disable some triangles in my models but is ultimately faster?
+      // TODO: ❤️‍🔥 I should be able to set this per form...
 
-      material.side = THREE.BackSide;
+      material.side = THREE.DoubleSide; // Should this be true? It might disable
+      //                                   some triangles in my models but is
+      //                                   ultimately faster?
+
+      // material.side = THREE.BackSide;
 
       material.transparent = false;
       material.opacity = f.alpha;
@@ -343,8 +348,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         colorsArr[colStart + 3] = pointColors[i].w / 255;
       }
 
-      const positions = new THREE.BufferAttribute( positionsArr, 3 );
-      const colors = new THREE.BufferAttribute( colorsArr, 4, true);
+      const positions = new THREE.BufferAttribute(positionsArr, 3);
+      const colors = new THREE.BufferAttribute(colorsArr, 4, true);
       positions.usage = THREE.DynamicDrawUsage;
       colors.usage = THREE.DynamicDrawUsage;
 
@@ -362,7 +367,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       //geometry.setColors(colors);
 
       const tri = new THREE.Mesh(geometry, material);
-    	tri.frustumCulled = false;
+      tri.frustumCulled = false;
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
@@ -757,7 +762,10 @@ export function handleEvent(event) {
       scene,
       // called when the gltf has been generated
       function (gltf) {
-        download({filename: `${timestamp()}-sculpture-digitpain.gltf`, data: JSON.stringify(gltf)});
+        download({
+          filename: `${timestamp()}-sculpture-digitpain.gltf`,
+          data: JSON.stringify(gltf),
+        });
       },
       // called when there is an error in the generation
       function (error) {
@@ -790,9 +798,7 @@ function handleController(controller) {
 
   // Record pen events to send through to the piece.
   if (userData.lastPosition) {
-    const delta = controller.position.distanceTo(
-      userData.lastPosition
-    );
+    const delta = controller.position.distanceTo(userData.lastPosition);
     // Add a small deadzone to controller movements.
     if (delta > 0.00001) {
       penEvent(userData.isSelecting ? "draw" : "move", controller);
@@ -804,10 +810,25 @@ function handleController(controller) {
 
   const p = new THREE.Vector3();
   controller.getWorldDirection(p);
-  const q = new THREE.Quaternion()
+  const q = new THREE.Quaternion();
   controller.getWorldQuaternion(q);
 
-  return { pos: controller.position, rot: controller.rotation, lastPos, worldDir: p, quat: q };
+  return {
+    pos: controller.position,
+    rot: {
+      _x: controller.rotation._x,
+      _y: controller.rotation._y,
+      _z: controller.rotation._z,
+    },
+    lastPos,
+    worldDir: p,
+    quat: {
+      _x: q._x,
+      _y: q._y,
+      _z: q._z,
+      _w: q._w,
+    },
+  };
 }
 
 // Get controller data to send to a piece.
@@ -815,19 +836,22 @@ export function pollControllers() {
   if (vrSession) {
     handleController(controller1);
     const pen = handleController(controller2);
-    return { events: penEvents.slice(), pen };
+    return { events: penEvents, pen };
   }
 }
 
 // Create a pen event.
 function penEvent(name, controller) {
-
   // TODO: Could use worldDir and quat here too. 22.11.12.01.54
   penEvents.push({
     name,
     pointer: parseInt(controller.name.split("-")[1]),
     pos: { ...controller.position },
-    rot: { ...controller.rotation },
+    rot: {
+      _x: controller.rotation._x,
+      _y: controller.rotation._y,
+      _z: controller.rotation._z,
+    },
     lastPosition: { ...controller.userData.lastPosition },
   });
 }

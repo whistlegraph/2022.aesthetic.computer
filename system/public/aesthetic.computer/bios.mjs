@@ -580,7 +580,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // const workersEnabled = true;
   const workersEnabled = false;
 
-  if (!MetaBrowser && workersEnabled) {
+  if (workersEnabled) {
+  // if (!MetaBrowser && workersEnabled) {
     const worker = new Worker(new URL(fullPath, window.location.href), {
       type: "module",
     });
@@ -673,6 +674,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // console.log("Sending frame...", frameCount, performance.now())
 
+    // 
     send(
       {
         type: "frame",

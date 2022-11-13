@@ -447,8 +447,7 @@ class Tube {
     this.capForm.clear();
     this.#cap(
       this.#transformShape(
-        this.#pathp({ ...p, shape: this.shape.slice() }),
-        false
+        this.#pathp({ ...p }),
       ),
       this.capForm
     );
@@ -689,7 +688,7 @@ class Tube {
   // TODO: Get shape transforming here!
 
   // Transform the cookie-cutter by the pathP, returning the pathP back.
-  #transformShape(pathP, append = true) {
+  #transformShape(pathP) {
     const { quat, mat4, vec4, vec3, radians } = this.$.num;
 
     const rm = mat4.fromRotationTranslationScaleOrigin(
@@ -709,8 +708,9 @@ class Tube {
         rm
       );
 
-      if (append) pathP.shape.push(newShapePos);
-      else pathP.shape[i] = newShapePos;
+      //if (append)
+      pathP.shape.push(newShapePos);
+      //else pathP.shape[i] = newShapePos;
     });
 
     return pathP;

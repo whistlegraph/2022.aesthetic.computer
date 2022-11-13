@@ -444,7 +444,6 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
           });
           form.gpuTransformed = false;
         } else if (form.vertices.length > form.gpuVerticesSent) {
-
           // Add vertices to buffered forms.
           formsToSend.push({
             update: "form:buffered:add-vertices",
@@ -1367,18 +1366,23 @@ async function makeFrame({ data: { type, content } }) {
 
         // Returns all [pens] if n is undefined, or can return a specific pen by 1 based index.
         // [pens] are sorted by `pointerIndex`
-        $commonApi.pens = (n) => {
-          if (n === undefined) {
-            return Object.values(content.pen.pointers).reduce((arr, value) => {
-              arr[value.pointerIndex] = value;
-              return arr;
-            }, []);
-          }
-          return (
-            help.findKeyAndValue(content.pen.pointers, "pointerIndex", n - 1) ||
-            {}
-          );
-        };
+
+        // TODO: Including "help.findKeyAndValue" seems to bring a lot of
+        //       allocation here because it keeps the whole API around?
+        //       Re-test this when pointers is not empty! 22.11.12.20.02
+        const pointers = content.pen.pointers;
+
+        if (content.pen.pointers.length > 0) {
+          $commonApi.pens = function (n) {
+            if (n === undefined) {
+              return Object.values(pointers).reduce((arr, value) => {
+                arr[value.pointerIndex] = value;
+                return arr;
+              }, []);
+            }
+            return help.findKeyAndValue(pointers, "pointerIndex", n - 1) || {};
+          };
+        }
 
         $commonApi.pen = primaryPointer; // || { x: undefined, y: undefined };
       }
