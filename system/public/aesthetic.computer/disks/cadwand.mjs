@@ -2,26 +2,26 @@
 // A laboratory & development piece for designing the geometry in `wand`.
 
 /* #region 🏁 todo
-- [] Put it on the end of a wand-like form?
 - [] Get all the kinks out of VR drawing / make it as nice as possible.
-  - [] Use the position of the cursor.
-    Try taking the dot product of your two quaternions (i.e., the 4-D dot product),
-      and if the dot product is negative, replace your quaterions q1 and q2 with -q1 and q2 before performing Slerp.
-- [] Finish all todos in this file.
+  - [] Better curve fitting.
+- [] Decide on a basic look / pallette that I could make some good drawings with.
 - [] Make scale test drawings for Barry / UE export.
   - [] Enable saving of files to the network instead of the device...
        (But what happens if I try to download something on the device?)
-  - [] Add some keyboard and VR controller button options for complexity
-       and color / radius.
-- [] Decide on an overall look / palette and subject matter for the pieces.
+  - [] Make two or three different samples with no options.
+- [] Add some keyboard and VR controller button options for complexity
+      and color / radius.
 * Optimization
+ - [] Profile tube creation performance.
  - [] Two sided triangle optimization.
+   - []  Be able to set whether to use DoubleSided or not on the Tube start / init level.
    - [-] Flip any inverted triangles. Check to see if enabling two sided
           triangles flip anything.
      - [x] 5 sides or greater
    - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
    - [] Re-enable THREE.FrontSide / BackSide?
-   - [] Better curve fitting.
+   - [] Try to re-enable workers again.
+   - [] Finish all extranerous TODOS in this file.
 + Later
  - [] Integrate into `wand`.
    - [] Read both pieces side by side.
@@ -36,6 +36,7 @@
       - [] Optional elsewhere.
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Put it on the end of a wand-like form / draw a ray?
 - [x] Add a "fake" end cap / cursor that represents an endcap, while drawing.
 - [x] Clean up this `cadwand` code.
 - [x] Get Chrome debugging working on Windows w/ WSL.
