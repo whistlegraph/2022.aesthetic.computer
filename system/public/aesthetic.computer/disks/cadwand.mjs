@@ -3,7 +3,7 @@
 
 /* #region 🏁 todo
 - [] Get all the kinks out of VR drawing / make it as nice as possible.
-  - [-] Better curve fitting.
+  - [-] Better curve fitting / draw in any starting direction?
 - [] Decide on a basic look / pallette that I could make some good drawings with.
 - [] Make scale test drawings for Barry / UE export.
   - [] Enable saving of files to the network instead of the device...
@@ -82,7 +82,7 @@ function boot({ Camera, Dolly, Form, QUAD, painting, wipe, num, wiggle, geo }) {
     { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
   );
   race = new geo.Race({ speed });
-  tube = new Tube({ Form, num }, radius, sides, "lines"); // or "lines" for wireframes
+  tube = new Tube({ Form, num }, radius, sides, "triangles"); // or "lines" for wireframes
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
 
@@ -172,10 +172,10 @@ function sim({
           vec3.add(
             vec3.create(),
             pos,
-            vec3.scale(vec3.create(), lastNormal, 0.25)
+            vec3.scale(vec3.create(), lastNormal, 0.05)
           ),
           pos,
-          vec3.add(vec3.create(), pos, vec3.scale(vec3.create(), helper, 0.25))
+          vec3.add(vec3.create(), pos, vec3.scale(vec3.create(), helper, 0.05))
         );
         diffPrevColors.push(
           [255, 255, 100, 255],
@@ -215,13 +215,13 @@ function sim({
           vec3.add(
             vec3.create(),
             pos,
-            vec3.scale(vec3.create(), newNormal, 0.15)
+            vec3.scale(vec3.create(), newNormal, 0.05)
           ),
           pos,
           vec3.add(
             vec3.create(),
             pos,
-            vec3.scale(vec3.create(), bitangent, 0.15)
+            vec3.scale(vec3.create(), bitangent, 0.05)
           )
         );
         diffPrevColors.push(
@@ -1352,7 +1352,7 @@ class Spider {
       vec3.add(
         vec3.create(),
         this.position,
-        vec3.scale(vec3.create(), firstTangent, 0.15)
+        vec3.scale(vec3.create(), firstTangent, 0.05)
       )
     );
     diffColors.push([0, 255, 255, 255], [0, 255, 255, 255]);
@@ -1388,7 +1388,7 @@ class Spider {
       vec3.add(
         vec3.create(),
         this.position,
-        vec3.scale(vec3.create(), newNormal, 0.15)
+        vec3.scale(vec3.create(), newNormal, 0.05)
       )
     );
     diffColors.push([0, 255, 0, 255], [0, 255, 0, 255]);
@@ -1399,7 +1399,7 @@ class Spider {
       vec3.add(
         vec3.create(),
         this.position,
-        vec3.scale(vec3.create(), bitangent, 0.15)
+        vec3.scale(vec3.create(), bitangent, 0.05)
       )
     );
     diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
