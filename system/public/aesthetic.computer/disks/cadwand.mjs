@@ -3,6 +3,7 @@
 
 /* #region 🏁 todo
 - [] Get all the kinks out of VR drawing / make it as nice as possible.
+  - [] Start drawing from proper orientation.
   - [] Better curve fitting.
 - [] Decide on a basic look / pallette that I could make some good drawings with.
 - [] Make scale test drawings for Barry / UE export.
@@ -99,23 +100,23 @@ function sim({
   if (pen3d) {
     position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
 
-    const worldDir = [pen3d.worldDir.x, pen3d.worldDir.y, pen3d.worldDir.z];
+    const dir = [pen3d.direction.x, pen3d.direction.y, pen3d.direction.z];
 
     wandForm = new Form({
       type: "line",
-      positions: [position, vec3.sub(vec3.create(), position, worldDir)],
+      positions: [position, vec3.add(vec3.create(), position, dir)],
       colors: [
-        [255, 0, 0, 255],
-        [255, 0, 0, 255],
+        [255, 0, 255, 255],
+        [255, 0, 255, 255],
       ],
       keep: false,
     });
 
     const rotation = quat.fromValues(
-      pen3d.quat._x,
-      pen3d.quat._y,
-      pen3d.quat._z,
-      pen3d.quat._w
+      pen3d.rotation._x,
+      pen3d.rotation._y,
+      pen3d.rotation._z,
+      pen3d.rotation._w
     );
 
     tube.preview({ position, rotation, color: [255, 0, 0, 255] });
@@ -127,58 +128,60 @@ function sim({
 
   // Compute an in-progress gesture.
   if (waving) {
+    // Modify the race finish line to the current cursor position.
     if (pen3d) {
-      race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]); // Race towards cursor.
+      race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]);
     } else {
-      const ray = camdoll.cam.ray(pen.x, pen.y, 0.1, true);
-      race.to(ray);
+      race.to(camdoll.cam.ray(pen.x, pen.y, 0.1, true));
     }
 
-    const d = dist3d(spi.state.position, race.pos);
-
+    // Project a line out into the direction we might be moving in to measure.
     const diff = vec3.normalize(
       vec3.create(),
       vec3.sub(vec3.create(), race.pos, spi.state.position)
     );
+    const dot = vec3.dot(diff, spi.state.direction);
+    const d = dist3d(spi.state.position, race.pos);
 
+    if (d > step && (dot > 0.5 || dot === 0)) {
+      spi.rotateTowards(race.pos, 1); // <- is a tightness fit for a
+      //                                       rotation generated between the
+      //                                       last and current spider position.
+
+      spi.crawl(step / 2); // Only ever push forward half a step right now.
+
+      tube.goto(spi.state); // "Knot" the tube at the spider position and orientation.
+
+      spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+    }
+
+    // Add some debug data to show the future direction.
     const scaledDiff = vec3.scale(vec3.create(), diff, 2);
-
     trackerPoints = [
       spi.state.position,
       vec3.add(vec3.create(), spi.state.position, scaledDiff),
       spi.state.position,
       vec3.add(vec3.create(), spi.state.position, spi.state.direction),
     ];
-
-    let dot = vec3.dot(diff, spi.state.direction);
-
-    // if (dot > 0.5) { // For debugging.
-    //   trackerColors = [
-    //     [255, 0, 0, 255],
-    //     [255, 0, 0, 255],
-    //     [255, 255, 0, 255],
-    //     [255, 255, 0, 255],
-    //   ];
-    // } else {
-    //   trackerColors = [
-    //     [0, 255, 0, 255],
-    //     [0, 255, 0, 255],
-    //     [255, 255, 0, 255],
-    //     [255, 255, 0, 255],
-    //   ];
-    // }
-
-    if (d > step && (dot > 0.5 || dot === 0)) {
-      spi.rotateTowards(race.pos, dot / 2); // 1 is a tightness fit.
-      spi.crawl(step / 2);
-      //tube.goto(spi.state);
-      tube.goto(spi.state);
-      spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+    if (dot > 0.5) { // For debugging.
+      trackerColors = [
+        [0, 255, 0, 255],
+        [0, 255, 0, 255],
+        [255, 255, 0, 255],
+        [255, 255, 0, 255],
+      ];
+    } else {
+      trackerColors = [
+        [255, 0, 0, 255],
+        [255, 0, 0, 255],
+        [255, 255, 0, 255],
+        [255, 255, 0, 255],
+      ];
     }
   }
 }
 
-function paint({ form }) {
+function paint({ form, Form }) {
   //#region 🐛 Debugging drawing.
   // Draw the path of the race.
   /*
@@ -266,16 +269,30 @@ function paint({ form }) {
   */
   //#endregion
 
+  // Draw some cursor measurement lines.
+  trackerForm = new Form(
+    {
+      type: "line",
+      positions: trackerPoints,
+      colors: trackerColors,
+      gradients: true,
+      keep: false,
+    },
+    { color: [255, 255, 255, 255] },
+    { scale: [1, 1, 1] }
+  );
+
   //form([stage, raceForm, spiderForm, diffForm, tube.form], cd.cam, { cpu: true });
-  form([stage, tube.capForm, tube.form, wandForm], camdoll.cam);
+  form([stage, tube.capForm, tube.form, wandForm, trackerForm], camdoll.cam);
   // form([stage, tube.capForm], camdoll.cam);
 }
 
 function act({ event: e, pen, gpu, debug, num }) {
-  const { vec3, randIntRange: rr } = num;
+  const { vec3, quat, randIntRange: rr } = num;
 
   // 🥽 Start a gesture. (Spatial)
   if (e.is("3d:touch:2")) {
+
     const last = [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z];
     const cur = [e.pos.x, e.pos.y, e.pos.z];
 
@@ -283,18 +300,42 @@ function act({ event: e, pen, gpu, debug, num }) {
     //            the controller.
     // console.log("Controller orientation", e.rot);
 
-    const diff = [...vec3.sub(vec3.create(), cur, last)];
-    const spiderOrientation = vec3.normalize(vec3.create(), diff);
+    const color = [rr(100, 255), rr(100, 255), rr(100, 255), 255];
 
-    spi = new Spider({ num, debug }, cur, last, spiderOrientation, [
-      rr(100, 255),
-      rr(100, 255),
-      rr(100, 255),
-      255,
-    ]);
+    const rot = quat.fromValues(
+      e.rotation._x,
+      e.rotation._y,
+      e.rotation._z,
+      e.rotation._w
+    );
+
+    const dir = [e.direction.x, e.direction.y, e.direction.z];
+
+    // Are the default direction and rotation connected?
+
+    //console.log("new spid:", cur, last);
+
+    spi = new Spider({ num, debug }, cur, last, dir, rot, color);
+
+    // Spider will 'rotateTowards' now using the last and current position
+    // with a lastNormal of [0, 0, 1]...
+
+    // `rotateTowards` will only update the spider's ROTATION which is then used
+    // inside of #transformShape which gets called by both
+    // tube.start (not a big real rn)
+    // tube.preview already has the proper spider.rotation set because it doesn't
+    //              read from the spider.
+    // and tube.goto() <- which reads from the spider's state, and doesn't have ROTATION!
+    //
+    //         ^ the spider.rotation here at the moment will be set by
+    //           the `rotateTowards` function using the lastNormal [0, 0, 1]
+    //           the targetPosition, the currentPosition and the lastPosition.
 
     race.start(spi.state.position);
     // racePoints.push(race.pos); // For debugging.
+
+    // spi.state needs a rotation at this point...
+
     tube.start(spi.state, radius, sides); // Start a gesture, adding radius and
     //                                       size for an optional update.
     waving = true;
@@ -302,12 +343,11 @@ function act({ event: e, pen, gpu, debug, num }) {
 
   // 🖱️ Start a gesture. (Screen)
   if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
+    /*
     const ray = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
     const rayb = camdoll.cam.ray(pen.x, pen.y, rayDist / 4, true);
-    const diff = [...vec3.sub(vec3.create(), rayb, ray)];
-    const spiderOrientation = vec3.normalize(vec3.create(), diff);
 
-    spi = new Spider({ num, debug }, rayb, ray, spiderOrientation, [
+    spi = new Spider({ num, debug }, rayb, ray, [
       rr(100, 255),
       rr(100, 255),
       rr(100, 255),
@@ -318,6 +358,7 @@ function act({ event: e, pen, gpu, debug, num }) {
     // racePoints.push(race.pos); // For debugging.
     tube.start(spi.state, radius, sides); // Start a gesture.
     waving = true;
+    */
   }
 
   // 🛑 Stop a gesture.
@@ -445,13 +486,8 @@ class Tube {
     // TODO: - [] Test all sides here. 22.11.11.16.23
     // Replace the current capForm shape values with transformed ones.
     // TODO: get color out of p here
-    this.capForm.clear();
-    this.#cap(
-      this.#transformShape(
-        this.#pathp({ ...p }),
-      ),
-      this.capForm
-    );
+    //this.capForm.clear();
+    //this.#cap(this.#transformShape(this.#pathp({ ...p })), this.capForm);
   }
 
   // Adds additonal points as args in [position, rotation, color] format.
@@ -500,6 +536,7 @@ class Tube {
   // Generate a start or end (where ring === false) cap to the tube.
   // Has a form input that is either `form` or `capForm`.
   #cap(pathP, form, ring = true) {
+
     const tris = this.geometry === "triangles";
 
     // 📐 Triangles
@@ -691,6 +728,8 @@ class Tube {
   // Transform the cookie-cutter by the pathP, returning the pathP back.
   #transformShape(pathP) {
     const { quat, mat4, vec4, vec3, radians } = this.$.num;
+
+    // console.log("transform rot:", pathP.rotation);
 
     const rm = mat4.fromRotationTranslationScaleOrigin(
       mat4.create(),
@@ -1044,7 +1083,6 @@ class Spider {
   position;
   lastPosition;
   direction; // A directional axis-orientation vector around [0, 0, 1].
-  lastDirection;
   color;
   rotation; // A quaternion.
   path = []; // A built up path.
@@ -1054,17 +1092,40 @@ class Spider {
     $,
     pos = [0, 0, 0, 1],
     lp = [0, 0, 0, 1],
-    dir = [0.00001, 1, 0.00001],
+    dir, // A starting directional vector.
+    rot, // A quaternion.
     col = [255, 255, 255, 255]
   ) {
     this.$ = $; // Shorthand any dependencies.
+    const { num: { vec3 } } = $;
+
     if (pos.length === 3) pos.push(1); // Make sure pos has a W coordinate.
     this.position = pos;
     this.lastPosition = lp;
-    this.direction = this.lastDirection = dir;
     this.color = col;
-    this.lastNormal = [0, 0, 1];
-    this.rotateTowards(this.position);
+
+    /*
+    this.lastNormal = vec3.normalize(
+      vec3.create(),
+      vec3.sub(vec3.create(), this.position, this.lastPosition)
+    );
+    */
+
+    this.lastNormal = [0, 0, 0]; // Or 0, 0, 1?
+
+    // this.lastNormal = dir; // TODO: Could / should this actually be tracked?
+    // TODO: This should be set to something related to lastPosition?
+
+    this.direction = dir;
+
+    //console.log(this.direction);
+
+    this.rotation = rot;
+
+    //this.rotateTowards(this.position); // Also set the current direction vector.
+
+    // TODO: How does lastPosition come into play now?
+
     this.path.push(this.state);
   }
 
@@ -1079,40 +1140,6 @@ class Spider {
     };
   }
 
-  // Set the color.
-  // Note: Why not invoke the full `ink` / `color` parser from `disk` here?
-  ink() {
-    this.color = arguments.length === 3 ? [...arguments, 255] : [...arguments];
-  }
-
-  // Move (or project) the spider forward by n steps.
-  crawl(stepSize, peeking = false) {
-    const {
-      num: { vec3 },
-    } = this.$;
-
-    const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
-    const pos = vec3.add(vec3.create(), this.position, scaledDir);
-
-    // const p = this.position.map(p => p.toFixed(2)),
-    //   a = this.angle.map(a => a.toFixed(2));
-    // console.log( "🕷️ Pos", "X:", p[0], "Y:", p[1], "Z:", p[2]);
-    // console.log( "🕷️ Rot", "X:", a[0], "Y:", a[1], "Z:", a[2]);
-
-    if (peeking) return pos; // Return early if we are just measuring.
-
-    this.lastPosition = this.position;
-    this.position = [...pos, 1];
-    const state = this.state;
-    this.path.push(state);
-    return state;
-  }
-
-  // Imagine a future forward position, turning an optional amount beforehand.
-  peek(steps, turn) {
-    return this.crawl(steps, true);
-  }
-
   // Turn the spider towards a target, with a given tightness 0-1.
   // This uses "parallel transport" of normals to maintain orientation.
   rotateTowards(targetPosition, tightness) {
@@ -1124,6 +1151,9 @@ class Spider {
       vec3.create(),
       vec3.sub(vec3.create(), this.position, this.lastPosition)
     );
+
+    //console.log(this.position, this.lastPosition);
+
     const nextTangent = vec3.normalize(
       vec3.create(),
       vec3.sub(vec3.create(), targetPosition, this.position)
@@ -1167,7 +1197,15 @@ class Spider {
       // newNormal = vec3.transformQuat(vec3.create(), firstNormal, rq)
     }
 
-    // diffPoints.push( // For debugging.
+    //console.log(newNormal, lastNormal, firstTangent);
+
+    bitangent = vec3.normalize(
+      vec3.create(),
+      vec3.cross(vec3.create(), newNormal, firstTangent)
+    );
+
+    // diffPoints.push(
+    //   // For debugging.
     //   this.position,
     //   vec3.add(
     //     vec3.create(),
@@ -1176,11 +1214,6 @@ class Spider {
     //   )
     // );
     // diffColors.push([0, 255, 0, 255], [0, 255, 0, 255]);
-
-    bitangent = vec3.normalize(
-      vec3.create(),
-      vec3.cross(vec3.create(), newNormal, firstTangent)
-    );
 
     // diffPoints.push( // For debugging.
     //   this.position,
@@ -1193,20 +1226,64 @@ class Spider {
     // diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
 
     // Build the full rotation quaternion.
+
     const rotMat = mat3.fromValues(...bitangent, ...newNormal, ...firstTangent);
     const qua = quat.normalize(
       quat.create(),
       quat.fromMat3(quat.create(), rotMat)
     );
+
     // Interpolate it / only apply a section via `tightness` from 0-1.
+    // TODO: ❤️‍🔥 Fix me!
     let fq = qua;
     if (this.rotQua) {
       fq = quat.slerp(quat.create(), this.rotQuat, qua, tightness);
     }
 
     this.rotation = fq; // Only update the quaternion if it makes sense with the bitangent result.
+
     this.direction = nextTangent;
+
     this.lastNormal = newNormal; // Keep track of last normal.
+  }
+
+  // Set the color.
+  // Note: Why not invoke the full `ink` / `color` parser from `disk` here?
+  ink() {
+    this.color = arguments.length === 3 ? [...arguments, 255] : [...arguments];
+  }
+
+  // Move (or project) the spider forward by n steps.
+  crawl(stepSize, peeking = false) {
+    const {
+      num: { vec3 },
+    } = this.$;
+
+    //this.rotation
+
+    // TODO: Use the quat rotation here to project forwards from the current
+    //       position.
+
+    const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
+    const pos = vec3.add(vec3.create(), this.position, scaledDir);
+
+    // const p = this.position.map(p => p.toFixed(2)),
+    //   a = this.angle.map(a => a.toFixed(2));
+    // console.log( "🕷️ Pos", "X:", p[0], "Y:", p[1], "Z:", p[2]);
+    // console.log( "🕷️ Rot", "X:", a[0], "Y:", a[1], "Z:", a[2]);
+
+    if (peeking) return pos; // Return early if we are just measuring.
+
+    this.lastPosition = this.position;
+    this.position = [...pos, 1];
+    const state = this.state;
+    this.path.push(state);
+    return state;
+  }
+
+  // Imagine a future forward position, turning an optional amount beforehand.
+  peek(steps, turn) {
+    return this.crawl(steps, true);
   }
 }
 // #endregion

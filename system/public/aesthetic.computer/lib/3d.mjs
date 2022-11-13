@@ -87,12 +87,12 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
       // Setup VR controllers.
       function onSelectStart() {
         this.userData.isSelecting = true;
-        penEvent("touch", this);
+        this.userData.touchOrLift = "touch";
       }
 
       function onSelectEnd() {
         this.userData.isSelecting = false;
-        penEvent("lift", this);
+        this.userData.touchOrLift = "lift";
       }
 
       function onSqueezeStart() {
@@ -112,6 +112,7 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
       controller1.addEventListener("squeezestart", onSqueezeStart);
       controller1.addEventListener("squeezeend", onSqueezeEnd);
       scene.add(controller1);
+      controller1.userData.lastPosition = { ...controller1.position };
 
       controller2 = renderer.xr.getController(1);
       controller2.name = "controller-2";
@@ -120,6 +121,7 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
       controller2.addEventListener("squeezestart", onSqueezeStart);
       controller2.addEventListener("squeezeend", onSqueezeEnd);
       scene.add(controller2);
+      controller2.userData.lastPosition = { ...controller2.position };
 
       // Create some geometry for each controller.
       // const wandLen = 0.2;
@@ -787,46 +789,41 @@ export function handleEvent(event) {
 function handleController(controller) {
   // console.log(renderer.xr.getFrame()) // In case I need more info.
   const userData = controller.userData;
-
   // TODO: Implement controller squeeze?
   //if (userData.isSqueezing === true) {
   //const delta = (controller.position.y - userData.positionAtSqueezeStart) * 5;
   //const scale = Math.max(0.1, userData.scaleAtSqueezeStart + delta);
   //pivot.scale.setScalar(scale);
   //painter.setSize(scale);
-  //}
+  const dir = new THREE.Vector3();
+  controller.getWorldDirection(dir);
+  const rot = new THREE.Quaternion();
+  controller.getWorldQuaternion(rot);
 
-  // Record pen events to send through to the piece.
-  if (userData.lastPosition) {
-    const delta = controller.position.distanceTo(userData.lastPosition);
-    // Add a small deadzone to controller movements.
-    if (delta > 0.00001) {
-      penEvent(userData.isSelecting ? "draw" : "move", controller);
-    }
+  // Handle touch, lift, draw, and move events... only one per frame.
+  if (userData.touchOrLift) {
+    penEvent(userData.touchOrLift, controller);
+    userData.touchOrLift = undefined;
+  } else {
+    penEvent(userData.isSelecting ? "draw" : "move", controller);
   }
 
-  const lastPos = userData.lastPosition;
-  userData.lastPosition = { ...controller.position };
-
-  const p = new THREE.Vector3();
-  controller.getWorldDirection(p);
-  const q = new THREE.Quaternion();
-  controller.getWorldQuaternion(q);
-
+  // For the sim pen3d object.
   return {
-    pos: controller.position,
-    rot: {
-      _x: controller.rotation._x,
-      _y: controller.rotation._y,
-      _z: controller.rotation._z,
-    },
-    lastPos,
-    worldDir: p,
-    quat: {
-      _x: q._x,
-      _y: q._y,
-      _z: q._z,
-      _w: q._w,
+    pos: { ...controller.position },
+    // TODO: Factor out rot?
+    // rot: {
+    //   _x: controller.rotation._x,
+    //   _y: controller.rotation._y,
+    //   _z: controller.rotation._z,
+    // },
+    lastPos: { ...userData.lastPosition },
+    direction: dir,
+    rotation: {
+      _x: rot._x,
+      _y: rot._y,
+      _z: rot._z,
+      _w: rot._w,
     },
   };
 }
@@ -842,18 +839,39 @@ export function pollControllers() {
 
 // Create a pen event.
 function penEvent(name, controller) {
-  // TODO: Could use worldDir and quat here too. 22.11.12.01.54
+  const userData = controller.userData;
+
+  const dir = new THREE.Vector3();
+  controller.getWorldDirection(dir);
+  const rot = new THREE.Quaternion();
+  controller.getWorldQuaternion(rot);
+
+  const delta = controller.position.distanceTo(userData.lastPosition);
+
+  // Skip any draw and move events that did not update the lastPosition
+  if (name === "draw" || (name === "move" && delta === 0)) return;
+
+  // For any 3d:`pen` events within act.
   penEvents.push({
     name,
     pointer: parseInt(controller.name.split("-")[1]),
     pos: { ...controller.position },
-    rot: {
-      _x: controller.rotation._x,
-      _y: controller.rotation._y,
-      _z: controller.rotation._z,
+    // rot: {
+    //   _x: controller.rotation._x,
+    //   _y: controller.rotation._y,
+    //   _z: controller.rotation._z,
+    // },
+    direction: dir,
+    rotation: {
+      _x: rot._x,
+      _y: rot._y,
+      _z: rot._z,
+      _w: rot._w,
     },
-    lastPosition: { ...controller.userData.lastPosition },
+    lastPosition: { ...userData.lastPosition },
   });
+
+  if (delta > 0.01) userData.lastPosition = { ...controller.position };
 }
 
 // Hooks into the requestAnimationFrame in the main system, and
