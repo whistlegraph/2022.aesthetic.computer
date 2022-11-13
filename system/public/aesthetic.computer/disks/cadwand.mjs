@@ -3,8 +3,7 @@
 
 /* #region 🏁 todo
 - [] Get all the kinks out of VR drawing / make it as nice as possible.
-  - [-] Start drawing from proper orientation.
-  - [] Better curve fitting.
+  - [-] Better curve fitting.
 - [] Decide on a basic look / pallette that I could make some good drawings with.
 - [] Make scale test drawings for Barry / UE export.
   - [] Enable saving of files to the network instead of the device...
@@ -37,6 +36,7 @@
       - [] Optional elsewhere.
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Start drawing from proper orientation.
 - [x] Put it on the end of a wand-like form / draw a ray?
 - [x] Add a "fake" end cap / cursor that represents an endcap, while drawing.
 - [x] Clean up this `cadwand` code.
@@ -61,7 +61,7 @@ let tube, // Circumscribe the spider's path with a form.
   sides = 8, // Number of tube sides. 1 or 2 means flat.
   radius = 0.035, // The width of the tube.
   rayDist = 1.2, // How far away to draw the tube on non-spatial devices.
-  step = 0.05; // The length of each tube segment.
+  step = 0.08; // The length of each tube segment.
 
 const racePoints = [], // Extra stuff for CAD-style drawing.
   diffPrevPoints = [],
@@ -135,23 +135,12 @@ function sim({
     //tube.preview({ position, rotation, color: [255, 0, 0, 255] }, spi.state);
 
     if (spi) {
-      //const alteredSpiState = { ...spi.state };
-      //alteredSpiState.rotation = rotation;
-
       const d = dist3d(spi.state.position, race.pos);
-
-      //spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-      //spi.crawlTowards(race.pos, d, 1); // <- last parm is a tightness fit
-
-      // TODO: Turn position and rotation into a preview of the next spider
-      //       state...
 
       {
         const lpos = spi.state.position; // Last
         const pos = position; // Current
         const tpos = race.pos; // Replace with the stepsize in current dir?
-
-        //console.log(race.pos);
 
         const firstTangent = vec3.normalize(
           vec3.create(),
@@ -163,45 +152,15 @@ function sim({
           vec3.sub(vec3.create(), tpos, lpos)
         );
 
-        // 🔥
-        console.log("dir", spi.state.direction);
-        console.log("rot", spi.state.rotation);
+        const newN = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], spi.rotation);
 
-        let lastNormal;
-
-        {
-          const rm = mat4.fromRotationTranslationScaleOrigin(
-            mat4.create(),
-            spi.state.rotation,
-            lpos,
-            [1, 1, 1],
-            [0, 0, 0]
-          );
-
-          quat.normalize(rm, rm);
-          const newN = vec4.transformMat4(vec4.create(), [0, 1, 0, 1], rm);
-
-          console.log("newN", newN);
-          lastNormal = newN;
-        }
-
-        //let lastNormal = [spi.state.direction[0], spi.state.direction[1], spi.state.direction[2]];
-        //let lastNormal = [0, 1, 0]; // The normal seems to need to be Y.
-
-        //let lastNormal;
-        // Get previous normal...
-
-        {
-          //let bitangent = vec3.cross(vec3.create(), firstTangent, nextTangent);
-          //const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
-          //const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
-          //newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
-        }
+        let lastNormal = newN;
 
         const helper = vec3.normalize(
           vec3.create(),
           vec3.cross(vec3.create(), lastNormal, firstTangent)
         );
+
         lastNormal = vec3.normalize(
           vec3.create(),
           vec3.cross(vec3.create(), firstTangent, helper)
@@ -234,20 +193,20 @@ function sim({
           newNormal = lastNormal;
         } else {
           // Get angle between first and next tangent.
-          bitangent = vec3.normalize(vec3.create(), bitangent);
+          //bitangent = vec3.normalize(vec3.create(), bitangent);
           // Rotate around bitangent by `theta` radians.
-          const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
-          const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
-          newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
+          //const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
+          //const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
+          //newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
 
           // Could also be using a quaternion here...
-          //let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
-          //newNormal = vec3.transformQuat(vec3.create(), firstNormal, rq)
+          let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
+          newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
         }
 
         bitangent = vec3.normalize(
           vec3.create(),
-          vec3.cross(vec3.create(), newNormal, firstTangent)
+          vec3.cross(vec3.create(), newNormal, nextTangent)
         );
 
         diffPrevPoints.push(
@@ -256,13 +215,13 @@ function sim({
           vec3.add(
             vec3.create(),
             pos,
-            vec3.scale(vec3.create(), newNormal, 0.25)
+            vec3.scale(vec3.create(), newNormal, 0.15)
           ),
           pos,
           vec3.add(
             vec3.create(),
             pos,
-            vec3.scale(vec3.create(), bitangent, 0.25)
+            vec3.scale(vec3.create(), bitangent, 0.15)
           )
         );
         diffPrevColors.push(
@@ -277,7 +236,7 @@ function sim({
         const rotMat = mat3.fromValues(
           ...bitangent,
           ...newNormal,
-          ...firstTangent
+          ...nextTangent
         );
         const qua = quat.normalize(
           quat.create(),
@@ -288,11 +247,12 @@ function sim({
 
         //this.direction = nextTangent;
 
-        // this.lastNormal = newNormal; // Keep track of last normal. 🔥
+        //spi.rotation = controllerRotation;
+
+        tube.preview(spi.state, { position, rotation, color: [255, 0, 0, 255] });
       }
 
       // TODO: Show a preview of the transport normals here, with sight lines.
-      tube.preview(spi.state, { position, rotation, color: [255, 0, 0, 255] });
     } else {
       tube.preview({ position, rotation, color: [255, 0, 0, 255] });
     }
@@ -324,10 +284,10 @@ function sim({
 
     if (d > step && (dot > 0.5 || dot === 0)) {
       // 1. Jumps N steps in the direction from this position to last position.
-      //spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+      spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
       // 2. Knots the tube.
       //spi.rotation = rotation;
-      //tube.goto(spi.state);
+      tube.goto(spi.state);
 
       //tube.goto(spi.state); // "Knot" the tube at the spider position and orientation.
 
@@ -1322,7 +1282,7 @@ class Spider {
     this.color = col;
 
     // TODO: Does this really matter?
-    this.lastNormal = [0, 1, 0];
+    //this.lastNormal = [0, 1, 0];
 
     this.direction = dir;
     this.rotation = rot;
@@ -1335,7 +1295,7 @@ class Spider {
     // TODO: Is slicing necessary? (Try a complex path with it off.)
     return {
       direction: this.direction.slice(),
-      rotation: this.rotation,
+      rotation: this.rotation.slice(),
       position: this.position.slice(),
       //angle: this.angle.slice(),
       color: this.color.slice(),
@@ -1346,34 +1306,41 @@ class Spider {
   // This uses "parallel transport" of normals to maintain orientation.
   crawlTowards(targetPosition, stepSize, tightness) {
     const {
-      num: { mat3, mat4, vec3, quat },
+      num: { mat3, mat4, vec3, vec4, quat },
     } = this.$;
 
     const firstTangent = vec3.normalize(
       vec3.create(),
-      vec3.sub(vec3.create(), this.position, this.lastPosition)
+      vec3.sub(vec3.create(), targetPosition, this.lastPosition)
     );
 
     const nextTangent = vec3.normalize(
       vec3.create(),
-      vec3.sub(vec3.create(), targetPosition, this.lastPosition)
+      vec3.sub(vec3.create(), targetPosition, this.position)
     );
 
     this.direction = nextTangent;
 
     const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
     const pos = vec3.add(vec3.create(), this.position, scaledDir);
-    this.lastPosition = this.position;
-    this.position = [...pos, 1];
 
     //return; // 🔥
 
-    let lastNormal = [0, 1, 0];
+    //let lastNormal = [0, 1, 0];
+    let lastNormal;
+    // TODO: WIll this only be the first normal?
+    if (this.lastNormal === undefined) {
+      const newN = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], this.rotation);
+      lastNormal = newN;
+    } else {
+      lastNormal = this.lastNormal;
+    }
 
     const helper = vec3.normalize(
       vec3.create(),
       vec3.cross(vec3.create(), lastNormal, firstTangent)
     );
+
     lastNormal = vec3.normalize(
       vec3.create(),
       vec3.cross(vec3.create(), firstTangent, helper)
@@ -1385,7 +1352,7 @@ class Spider {
       vec3.add(
         vec3.create(),
         this.position,
-        vec3.scale(vec3.create(), firstTangent, 0.25)
+        vec3.scale(vec3.create(), firstTangent, 0.15)
       )
     );
     diffColors.push([0, 255, 255, 255], [0, 255, 255, 255]);
@@ -1399,19 +1366,20 @@ class Spider {
       newNormal = lastNormal;
     } else {
       // Get angle between first and next tangent.
-      bitangent = vec3.normalize(vec3.create(), bitangent);
+      //bitangent = vec3.normalize(vec3.create(), bitangent);
       // Rotate around bitangent by `theta` radians.
-      const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
-      const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
-      newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
+      //const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
+      //const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
+      //newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
       // Could also be using a quaternion here...
-      // let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
-      // newNormal = vec3.transformQuat(vec3.create(), firstNormal, rq)
+      let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
+      newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq)
+      this.lastNormal = newNormal;
     }
 
     bitangent = vec3.normalize(
       vec3.create(),
-      vec3.cross(vec3.create(), newNormal, firstTangent)
+      vec3.cross(vec3.create(), newNormal, nextTangent)
     );
 
     diffPoints.push(
@@ -1420,7 +1388,7 @@ class Spider {
       vec3.add(
         vec3.create(),
         this.position,
-        vec3.scale(vec3.create(), newNormal, 0.25)
+        vec3.scale(vec3.create(), newNormal, 0.15)
       )
     );
     diffColors.push([0, 255, 0, 255], [0, 255, 0, 255]);
@@ -1431,14 +1399,14 @@ class Spider {
       vec3.add(
         vec3.create(),
         this.position,
-        vec3.scale(vec3.create(), bitangent, 0.25)
+        vec3.scale(vec3.create(), bitangent, 0.15)
       )
     );
     diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
 
     // Build the full rotation quaternion.
 
-    const rotMat = mat3.fromValues(...bitangent, ...newNormal, ...firstTangent);
+    const rotMat = mat3.fromValues(...bitangent, ...newNormal, ...nextTangent);
     const qua = quat.normalize(
       quat.create(),
       quat.fromMat3(quat.create(), rotMat)
@@ -1450,7 +1418,11 @@ class Spider {
 
     this.rotation = qua; // Only update the quaternion if it makes sense with the bitangent result.
     //this.direction = nextTangent;
-    this.lastNormal = newNormal; // Keep track of last normal.
+    //this.lastNormal = newNormal; // Keep track of last normal.
+
+    this.lastPosition = this.position;
+    this.position = [...pos, 1];
+
 
     const state = this.state;
     this.path.push(state);
