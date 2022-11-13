@@ -713,6 +713,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         form.geometry.attributes.position.needsUpdate = true;
         form.geometry.attributes.color.needsUpdate = true;
 
+        form.geometry.computeBoundingBox();
+        form.geometry.computeBoundingSphere();
+
         // form.geometry.computeBoundingBox();
         // form.geometry.computeBoundingSphere();
 
