@@ -443,7 +443,7 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
             scale: form.scale,
           });
           form.gpuTransformed = false;
-        } else if (form.vertices.length > form.gpuVerticesSent) {
+        } else if (form.vertices.length > form.gpuVerticesSent || form.gpuReset) {
           // Add vertices to buffered forms.
           formsToSend.push({
             update: "form:buffered:add-vertices",

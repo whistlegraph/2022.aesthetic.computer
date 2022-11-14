@@ -3,7 +3,7 @@
 
 /* #region 🏁 todo
 - [] Get all the kinks out of VR drawing / make it as nice as possible.
-  - [-] Better curve fitting / draw in any starting direction?
+  - [❤️‍🔥] Better curve fitting
 - [] Decide on a basic look / pallette that I could make some good drawings with.
 - [] Make scale test drawings for Barry / UE export.
   - [] Enable saving of files to the network instead of the device...
@@ -12,9 +12,8 @@
 - [] Add some keyboard and VR controller button options for complexity
       and color / radius.
 * Optimization
- - [] Profile tube creation performance.
  - [] Two sided triangle optimization.
-   - []  Be able to set whether to use DoubleSided or not on the Tube start / init level.
+   - [] Be able to set whether to use DoubleSided or not on the Tube start / init level.
    - [-] Flip any inverted triangles. Check to see if enabling two sided
           triangles flip anything.
      - [x] 5 sides or greater
@@ -36,6 +35,9 @@
       - [] Optional elsewhere.
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Remove preview cap from wand.
+- [x] Profile tube creation performance.
+- [x] Draw in any starting direction.
 - [x] Start drawing from proper orientation.
 - [x] Put it on the end of a wand-like form / draw a ray?
 - [x] Add a "fake" end cap / cursor that represents an endcap, while drawing.
@@ -50,7 +52,7 @@
 
 // #region 🗺️ global
 import { CamDoll } from "../lib/cam-doll.mjs";
-const { max, acos, cos, sin } = Math;
+const { abs, max, acos, cos, sin } = Math;
 
 let camdoll, stage; // Camera and floor.
 let waving = false; // Whether we are making tubes or not.
@@ -60,8 +62,9 @@ let spi; // Follow it in even increments.
 let tube, // Circumscribe the spider's path with a form.
   sides = 8, // Number of tube sides. 1 or 2 means flat.
   radius = 0.035, // The width of the tube.
-  rayDist = 1.2, // How far away to draw the tube on non-spatial devices.
+  rayDist = 1, // How far away to draw the tube on non-spatial devices.
   step = 0.08; // The length of each tube segment.
+let wandForm; //  A live cursor.
 
 const racePoints = [], // Extra stuff for CAD-style drawing.
   diffPrevPoints = [],
@@ -82,36 +85,26 @@ function boot({ Camera, Dolly, Form, QUAD, painting, wipe, num, wiggle, geo }) {
     { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
   );
   race = new geo.Race({ speed });
-  tube = new Tube({ Form, num }, radius, sides, "triangles"); // or "lines" for wireframes
+  tube = new Tube({ Form, num }, radius, sides, "lines"); // or "lines" for wireframes
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
-
-let wandForm;
 
 function sim({
   pen,
   pen3d,
   Form,
-  num: {
-    vec3,
-    randIntRange: rr,
-    dist3d,
-    quat,
-    degrees: deg,
-    radians,
-    vec4,
-    mat3,
-    mat4,
-  },
+  num: { vec3, randIntRange: rr, dist3d, quat, vec4, mat3 },
 }) {
   camdoll.sim(); // Update the camera + dolly.
   // racePoints.push(race.pos); // For debugging.
 
-  // Generate the preview cursor from a given orientation.
-  let position, rotation;
+  // 🐭️ Live Cursor: generated from the controller position and direction.
+  let position, lastPosition, rotation;
+  let alteredSpiState;
+
   if (pen3d) {
     position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
-
+    lastPosition = [pen3d.lastPos.x, pen3d.lastPos.y, pen3d.lastPos.z, 1];
     const dir = [pen3d.direction.x, pen3d.direction.y, pen3d.direction.z];
 
     wandForm = new Form({
@@ -131,41 +124,60 @@ function sim({
       pen3d.rotation._w
     );
 
-    // Preview current end cap backwards.
-    //tube.preview({ position, rotation, color: [255, 0, 0, 255] }, spi.state);
+    const controllerRotation = quat.fromValues(
+      pen3d.rotation._x,
+      pen3d.rotation._y,
+      pen3d.rotation._z,
+      pen3d.rotation._w
+    );
 
-    if (spi) {
-      const d = dist3d(spi.state.position, race.pos);
+    const controllerPosition = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
 
-      {
-        const lpos = spi.state.position; // Last
-        const pos = position; // Current
-        const tpos = race.pos; // Replace with the stepsize in current dir?
+    // Show a live preview of what will be drawn, with measurement lines
+    // as needed.
+    // TODO: Move this into aSpider.peekTowards method.
 
-        const firstTangent = vec3.normalize(
-          vec3.create(),
-          vec3.sub(vec3.create(), pos, lpos)
-        );
+    {
+      // This block is very similar to `crawlTowards` in `Spider`,
+      // Except customized to make a preview. The functionality could
+      // probably be merged, otherwise they have to be kept in sync.
 
-        const nextTangent = vec3.normalize(
-          vec3.create(),
-          vec3.sub(vec3.create(), tpos, lpos)
-        );
+      let lpos, pos, tpos, rot;
+      if (spi && race) {
+        lpos = spi.state.position;
+        pos = position; // Current
+        tpos = race.pos; // Replace with the stepsize in current dir?
+        rot = spi.rotation;
+      } else {
+        lpos = lastPosition; // TODO: Should I track one more position here?
+        pos = lastPosition; // Current
+        tpos = position;
+        rot = rotation;
+      }
 
-        const newN = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], spi.rotation);
+      const firstTangent = vec3.normalize(
+        vec3.create(),
+        vec3.sub(vec3.create(), pos, lpos)
+      );
 
-        let lastNormal = newN;
+      const nextTangent = vec3.normalize(
+        vec3.create(),
+        vec3.sub(vec3.create(), tpos, lpos)
+      );
 
-        const helper = vec3.normalize(
-          vec3.create(),
-          vec3.cross(vec3.create(), lastNormal, firstTangent)
-        );
+      let lastNormal = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], rot);
 
-        lastNormal = vec3.normalize(
-          vec3.create(),
-          vec3.cross(vec3.create(), firstTangent, helper)
-        );
+      const helper = vec3.normalize(
+        vec3.create(),
+        vec3.cross(vec3.create(), lastNormal, firstTangent)
+      );
 
+      lastNormal = vec3.normalize(
+        vec3.create(),
+        vec3.cross(vec3.create(), firstTangent, helper)
+      );
+
+      if (waving) {
         diffPrevPoints.push(
           // For debugging.
           pos,
@@ -183,32 +195,36 @@ function sim({
           [50, 255, 100, 255],
           [50, 255, 100, 255]
         );
+      }
 
-        ///////// Get measurement of normals for rotation.
+      // 🥢 Measurement of normals for rotation.
+      let bitangent = vec3.cross(vec3.create(), firstTangent, nextTangent);
 
-        let newNormal;
-        let bitangent = vec3.cross(vec3.create(), firstTangent, nextTangent);
+      let newNormal;
 
-        if (vec3.length(bitangent) === 0) {
-          newNormal = lastNormal;
-        } else {
-          // Get angle between first and next tangent.
-          //bitangent = vec3.normalize(vec3.create(), bitangent);
-          // Rotate around bitangent by `theta` radians.
-          //const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
-          //const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
-          //newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
+      if (vec3.length(bitangent) === 0) {
+        newNormal = lastNormal;
+      } else {
+        // Get angle between first and next tangent.
 
-          // Could also be using a quaternion here...
-          let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
-          newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
-        }
+        // 🅰️ With matrices...
+        // bitangent = vec3.normalize(vec3.create(), bitangent);
+        // Rotate around bitangent by `theta` radians.
+        // const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
+        // const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
+        // newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
 
-        bitangent = vec3.normalize(
-          vec3.create(),
-          vec3.cross(vec3.create(), newNormal, nextTangent)
-        );
+        // 🅱️ or a quaternion.
+        let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
+        newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
+      }
 
+      bitangent = vec3.normalize(
+        vec3.create(),
+        vec3.cross(vec3.create(), newNormal, nextTangent)
+      );
+
+      if (waving) {
         diffPrevPoints.push(
           // For debugging.
           pos,
@@ -230,71 +246,124 @@ function sim({
           [50, 0, 255, 255],
           [50, 0, 255, 255]
         );
-
-        ///////////// Build rotation.
-
-        const rotMat = mat3.fromValues(
-          ...bitangent,
-          ...newNormal,
-          ...nextTangent
-        );
-        const qua = quat.normalize(
-          quat.create(),
-          quat.fromMat3(quat.create(), rotMat)
-        );
-
-        rotation = qua; // Only update the quaternion if it makes sense with the bitangent result.
-
-        //this.direction = nextTangent;
-
-        //spi.rotation = controllerRotation;
-
-        tube.preview(spi.state, { position, rotation, color: [255, 0, 0, 255] });
       }
 
-      // TODO: Show a preview of the transport normals here, with sight lines.
-    } else {
-      tube.preview({ position, rotation, color: [255, 0, 0, 255] });
+      // Build a rotation transform.
+      const qua = quat.normalize(
+        quat.create(),
+        quat.fromMat3(
+          quat.create(),
+          mat3.fromValues(...bitangent, ...newNormal, ...nextTangent)
+        )
+      );
+
+      rotation = qua;
+
+      if (waving) {
+        alteredSpiState = { ...spi.state };
+        alteredSpiState.rotation = rotation;
+
+        if (tube.gesture.length === 0) {
+          tube.preview(alteredSpiState, {
+            position,
+            rotation,
+            color: [255, 0, 0, 255],
+          });
+        } else {
+          tube.preview(spi.state, {
+            position,
+            rotation,
+            color: [255, 0, 0, 255],
+          });
+        }
+      } else {
+        // TODO: Finish better tube preview later. 22.11.13.21.41
+        // tube.preview({
+        //   position: pos,
+        //   rotation,
+        //   color: [255, 0, 0, 255],
+        // });
+        tube.preview({
+          position: controllerPosition,
+          rotation: controllerRotation,
+          color: [255, 0, 0, 255],
+        });
+      }
     }
+    // Default / non-waving tube preview.
+    //tube.preview({ position, rotation, color: [255, 0, 0, 255] });
+    //}
   } else if (pen) {
-    position = camdoll.cam.ray(pen.x, pen.y, 0.1, true);
+    // TODO: Also generate a full live cursor here... using the above code
+    //       for spatial devices.
+    position = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
     rotation = quat.fromEuler(quat.create(), ...camdoll.cam.rot);
     tube.preview({ position, rotation, color: [255, 0, 0, 255] });
   }
 
+  // 🏁 Move the race finish line to the current cursor position.
   // Compute an in-progress gesture.
   if (pen3d && race) {
     race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]);
+  } else if (race && pen) {
+    race.to(camdoll.cam.ray(pen.x, pen.y, 0.1, true));
   }
-  if (waving) {
-    // Modify the race finish line to the current cursor position.
-    if (pen3d) {
-      race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]);
-    } else {
-      race.to(camdoll.cam.ray(pen.x, pen.y, 0.1, true));
-    }
 
-    // Project a line out into the direction we might be moving in to measure.
-    const diff = vec3.normalize(
+  if (waving) {
+    // Project a ray out into the direction we might be moving in to measure
+    // the possibility space.
+    const spiToRace = vec3.normalize(
       vec3.create(),
-      vec3.sub(vec3.create(), race.pos, spi.state.position)
+      //vec3.sub(vec3.create(), race.pos, spi.state.position)
+      vec3.sub(vec3.create(), position, spi.state.position)
     );
-    const dot = vec3.dot(diff, spi.state.direction);
+
+    let dot = vec3.dot(spiToRace, spi.state.direction);
     const d = dist3d(spi.state.position, race.pos);
 
-    if (d > step && (dot > 0.5 || dot === 0)) {
-      // 1. Jumps N steps in the direction from this position to last position.
-      spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
-      // 2. Knots the tube.
-      //spi.rotation = rotation;
-      tube.goto(spi.state);
+    // 🕷️ Spider Jump
+    if (d > step) {
+      if (pen3d && tube.gesture.length === 0) {
+        // Populate first tube start with the preview state.
 
-      //tube.goto(spi.state); // "Knot" the tube at the spider position and orientation.
+        // TODO...
+        // If the dot product is negative then invert / flip the rotation,
+        // and abs the dot product for below...
+        if (dot < 0) {
+          //vec3.sub(vec3.create(), race.pos, spi.state.position)
+          //quat.invert(alteredSpiState.rotation, alteredSpiState.rotation);
+          //spi.state.rotation = alteredSpiState.rotation;
+          //vec3.scale(spi.state.direction, spi.state.direction, [-1, 1, -1]);
+          //alteredSpiState.direction = spi.state.direction; // Set altered state.
+          //dot = abs(dot);
+          //console.log(dot);
+        }
 
-      // #. Randomizes the color.
-      spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+        //const dot = vec3.dot(spi.state.rotation, alteredSpiState.rotation);
+
+        tube.start(
+          alteredSpiState,
+          // /*
+          //{
+          //  position,
+          //  rotation,
+          //  color: [255, 0, 0, 255],
+          //},
+          // */
+          radius,
+          sides
+        );
+      }
+
+      if (tube.gesture.length > 0 /*&& (dot > 0.5 || dot === 0)*/) {
+        // 1. Jumps N steps in the direction from this position to last position.
+        spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
+
+        tube.goto(spi.state); // 2. Knots the tube.
+        // #. Randomizes the color.
+        spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+      }
     }
-
     // Add some debug data to show the future direction.
     // const scaledDiff = vec3.scale(vec3.create(), diff, 2);
     // trackerPoints = [
@@ -454,7 +523,6 @@ function paint({ form, Form }) {
     { scale: [1, 1, 1] }
   );
 
-  //form([stage, raceForm, spiderForm, diffForm, tube.form], cd.cam, { cpu: true });
   form(
     [
       stage,
@@ -467,25 +535,10 @@ function paint({ form, Form }) {
     ],
     camdoll.cam
   );
-  // form([stage, tube.capForm], camdoll.cam);
 }
 
-// Spider will 'rotateTowards' now using the last and current position
-// with a lastNormal of [0, 0, 1]...
-
-// `rotateTowards` will only update the spider's ROTATION which is then used
-// inside of #transformShape which gets called by both
-// tube.start (not a big real rn)
-// tube.preview already has the proper spider.rotation set because it doesn't
-//              read from the spider.
-// and tube.goto() <- which reads from the spider's state, and doesn't have ROTATION!
-//
-//         ^ the spider.rotation here at the moment will be set by
-//           the `rotateTowards` function using the lastNormal [0, 0, 1]
-//           the targetPosition, the currentPosition and the lastPosition.
-
 function act({ event: e, pen, gpu, debug, num }) {
-  const { vec3, quat, randIntRange: rr } = num;
+  const { quat, randIntRange: rr, vec3 } = num;
 
   // 🥽 Start a gesture. (Spatial)
   if (e.is("3d:touch:2")) {
@@ -499,42 +552,43 @@ function act({ event: e, pen, gpu, debug, num }) {
       e.rotation._w
     );
 
-    const dir = [e.direction.x, e.direction.y, e.direction.z];
+    const dir = [e.direction.x, e.direction.y, e.direction.z]; // ❓ Is this even used? 22.11.13.16.41
 
     spi = new Spider({ num, debug }, cur, last, dir, rot, color);
 
     race.start(spi.state.position);
     // racePoints.push(race.pos); // For debugging.
 
-    tube.start(spi.state, radius, sides); // Start a gesture, adding radius and
+    //tube.start(spi.state, radius, sides); // Start a gesture, adding radius and
     //                                       size for an optional update.
     waving = true;
   }
 
   // 🖱️ Start a gesture. (Screen)
   if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
-    /*
-    const ray = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
-    const rayb = camdoll.cam.ray(pen.x, pen.y, rayDist / 4, true);
+    const last = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
+    const cur = camdoll.cam.ray(pen.x, pen.y, rayDist / 2, true);
+    const color = [rr(100, 255), rr(100, 255), rr(100, 255), 255];
+    const dir = vec3.sub(vec3.create(), cur, last);
+    const rot = quat.fromEuler(quat.create(), ...camdoll.cam.rot);
 
-    spi = new Spider({ num, debug }, rayb, ray, [
-      rr(100, 255),
-      rr(100, 255),
-      rr(100, 255),
-      255,
-    ]);
+    spi = new Spider({ num, debug }, cur, last, dir, rot, color);
 
     race.start(spi.state.position);
     // racePoints.push(race.pos); // For debugging.
+
     tube.start(spi.state, radius, sides); // Start a gesture.
     waving = true;
-    */
   }
 
   // 🛑 Stop a gesture.
   if ((e.is("lift") && e.button === 0) || e.is("3d:lift:2")) {
     waving = false;
-    tube.stop();
+    if (e.is("3d:lift:2")) {
+      tube.stop();
+    } else if (spi) {
+      tube.stop();
+    }
   }
 
   if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
@@ -593,6 +647,7 @@ class Tube {
   form; // Represents the tube...
   capForm; // " a cursor that presents the cap of the tube.
   geometry = "triangles"; // or "lines"
+  previewRotation; // Keeps track of the last rotation sent to `preview()`.
   // TODO: ^ Some of these fields could still be privated. 22.11.11.15.50
 
   // ☁️
@@ -649,6 +704,8 @@ class Tube {
     // Transform the first shape and add an end cap to the form.
     this.#transformShape(start);
     if (this.sides > 1) this.#cap(start, this.form);
+
+    this.gesture.push(start);
   }
 
   // Produces the `capForm` cursor.
@@ -656,17 +713,32 @@ class Tube {
     // TODO: - [] Test all sides here. 22.11.11.16.23
     // Replace the current capForm shape values with transformed ones.
     // TODO: get color out of p here
+    this.previewRotation = p.rotation;
     this.capForm.clear();
 
     const pathP = this.#transformShape(this.#pathp({ ...p }));
-    this.#cap(pathP, this.capForm);
+
+    if (waving && this.gesture.length === 0) {
+      this.#cap(pathP, this.capForm);
+    }
+
+    if (nextPathP) {
+      this.#cap(
+        this.#transformShape(this.#pathp({ ...nextPathP })),
+        this.capForm
+      );
+    }
 
     // Also move towards the next possible position here...
     if (nextPathP) {
+      // Cache some state that goto writes to, load it back.
       const cachedLastPathP = this.lastPathP;
+      const cachedGesture = this.gesture;
       this.lastPathP = pathP;
+      this.gesture = [];
       this.goto(nextPathP, this.capForm); // Generate a preview only.
       this.lastPathP = cachedLastPathP;
+      this.gesture = cachedGesture;
     }
   }
 
@@ -678,6 +750,27 @@ class Tube {
   }
 
   stop() {
+    const { dist3d } = this.$.num;
+
+    this.capForm.clear();
+
+    // Push anything we haven't stepped into onto the path.
+    const d = dist3d(spi.state.position, race.pos);
+
+    if (d > 0.01) {
+      if (this.gesture.length === 0) {
+        const alteredState = { ...spi.state };
+        alteredState.rotation = this.previewRotation;
+        this.start(alteredState, radius, sides);
+      }
+
+      spi.crawlTowards(race.pos, d, 1);
+
+      const alteredState = { ...spi.state };
+      alteredState.rotation = this.previewRotation;
+      this.goto(alteredState);
+    }
+
     if (this.lastPathP) this.#cap(this.lastPathP, this.form, false);
     //                                                      `false` for no ring
     this.gesture.length = 0;
@@ -898,8 +991,6 @@ class Tube {
       }
     }
   }
-
-  // TODO: Get shape transforming here!
 
   // Transform the cookie-cutter by the pathP, returning the pathP back.
   #transformShape(pathP) {
@@ -1287,7 +1378,6 @@ class Spider {
     this.direction = dir;
     this.rotation = rot;
 
-    //this.rotateTowards(this.position); // Also set the current direction vector.
     this.path.push(this.state);
   }
 
@@ -1297,7 +1387,6 @@ class Spider {
       direction: this.direction.slice(),
       rotation: this.rotation.slice(),
       position: this.position.slice(),
-      //angle: this.angle.slice(),
       color: this.color.slice(),
     };
   }
@@ -1319,19 +1408,19 @@ class Spider {
       vec3.sub(vec3.create(), targetPosition, this.position)
     );
 
+    // This position stuff should come back together maybe...
     this.direction = nextTangent;
-
     const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
     const pos = vec3.add(vec3.create(), this.position, scaledDir);
 
-    //return; // 🔥
-
-    //let lastNormal = [0, 1, 0];
+    // TODO: Will this only be the first normal?
     let lastNormal;
-    // TODO: WIll this only be the first normal?
     if (this.lastNormal === undefined) {
-      const newN = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], this.rotation);
-      lastNormal = newN;
+      lastNormal = vec4.transformQuat(
+        vec4.create(),
+        [0, 1, 0, 1],
+        this.rotation
+      );
     } else {
       lastNormal = this.lastNormal;
     }
@@ -1357,8 +1446,6 @@ class Spider {
     );
     diffColors.push([0, 255, 255, 255], [0, 255, 255, 255]);
 
-    //return;
-
     let newNormal;
     let bitangent = vec3.cross(vec3.create(), firstTangent, nextTangent);
 
@@ -1366,14 +1453,18 @@ class Spider {
       newNormal = lastNormal;
     } else {
       // Get angle between first and next tangent.
-      //bitangent = vec3.normalize(vec3.create(), bitangent);
+
+      // 🅰️ With matrices...
+      // bitangent = vec3.normalize(vec3.create(), bitangent);
       // Rotate around bitangent by `theta` radians.
-      //const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
-      //const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
-      //newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
-      // Could also be using a quaternion here...
+      // const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
+      // const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
+      // newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
+
+      // 🅱️ or a quaternion.
       let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
-      newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq)
+      newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
+
       this.lastNormal = newNormal;
     }
 
@@ -1404,25 +1495,22 @@ class Spider {
     );
     diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
 
-    // Build the full rotation quaternion.
-
-    const rotMat = mat3.fromValues(...bitangent, ...newNormal, ...nextTangent);
+    // Build a rotation transform.
     const qua = quat.normalize(
       quat.create(),
-      quat.fromMat3(quat.create(), rotMat)
+      quat.fromMat3(
+        quat.create(),
+        mat3.fromValues(...bitangent, ...newNormal, ...nextTangent)
+      )
     );
 
-    // Interpolate it / only apply a section via `tightness` from 0-1.
-    // TODO: ❤️‍🔥 Fix me!
-    //let fq = quat.slerp(quat.create(), this.rotation, qua, tightness);
+    // Interpolate it... only apply a section via `tightness` from 0-1.
+    let slerpedRot = quat.slerp(quat.create(), this.rotation, qua, tightness);
 
-    this.rotation = qua; // Only update the quaternion if it makes sense with the bitangent result.
-    //this.direction = nextTangent;
-    //this.lastNormal = newNormal; // Keep track of last normal.
+    this.rotation = slerpedRot; // Only update the quaternion if it makes sense with the bitangent result.
 
     this.lastPosition = this.position;
     this.position = [...pos, 1];
-
 
     const state = this.state;
     this.path.push(state);

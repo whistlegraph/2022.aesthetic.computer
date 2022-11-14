@@ -1112,7 +1112,6 @@ class Camera {
     const invWorldPersProj = mat4.mul(mat4.create(), world, invertedProjection);
 
     // 2. Screen Point -> Inverted World Perspective Projection
-    const dist = 1;
 
     // Normalize from screen coordinates.
     X = 1 - X / width;
