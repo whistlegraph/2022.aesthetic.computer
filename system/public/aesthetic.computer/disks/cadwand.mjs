@@ -2,7 +2,7 @@
 // A laboratory & development piece for designing the geometry in `wand`.
 
 /* #region 🏁 todo
-- VR
+* VR
   - [] Add support for controller buttons to change background.
   - [] White wand / finish wandForm and preview. (Ignore PC for now.)
   - [] Add some keyboard and VR controller button options for complexity
@@ -14,6 +14,10 @@
   - [] Add a light to the scene.
   - [] Make scale test drawings for Barry / UE export.
     - [] Make two or three different samples with no options.
+* Final
+  - [] Change demo format to remove light-switch in favor of
+       background Tube color changes.
+  - [] Make Tube color changes stripe-able / dynamic during drawing.
 * Optimization
  - [] Two sided triangle optimization.
    - [] Be able to set whether to use DoubleSided or not on the Tube start.
@@ -32,6 +36,8 @@
    - [] Get things good enough to make 1 complete drawing.
 END OF DAY
 + Later
+ - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
+       keep an automated list somewhere... maybe look at the S3 shell scripts?
  - [] Create a "view wand timestamp" player that loads the model as a GLTF.
  - [] Try to re-enable workers again.
  - [] Integrate into `wand`.
@@ -210,7 +216,8 @@ function sim({
           lastWandPosition.z !== pen3d.pos.z ||
           lastWandRotation._x !== pen3d.rotation._x ||
           lastWandRotation._y !== pen3d.rotation._y ||
-          lastWandRotation._z !== pen3d.rotation._z)) ||
+          lastWandRotation._z !== pen3d.rotation._z ||
+          lastWandRotation._w !== pen3d.rotation._w)) ||
       (lastWandPosition === undefined && lastWandRotation === undefined)
     ) {
       demo?.rec("wand", [
@@ -220,6 +227,7 @@ function sim({
         pen3d.rotation._x,
         pen3d.rotation._y,
         pen3d.rotation._z,
+        pen3d.rotation._w,
       ]);
       lastWandPosition = pen3d.pos;
       lastWandRotation = pen3d.rotation;
@@ -404,7 +412,8 @@ function sim({
           lastWandPosition[2] !== position[2] ||
           lastWandRotation[0] !== rotation[0] ||
           lastWandRotation[1] !== rotation[1] ||
-          lastWandRotation[2] !== rotation[2])) ||
+          lastWandRotation[2] !== rotation[2] ||
+          lastWandRotation[3] !== rotation[3])) ||
       (lastWandPosition === undefined && lastWandRotation === undefined)
     ) {
       demo?.rec("wand", [...position.slice(0, 3), ...rotation]);
@@ -499,9 +508,11 @@ function sim({
   }
 
   demo?.sim(simCount); // 🔴 Update the demo frame count.
+
   player?.sim((frames, frameCount) => {
     // Parse demo frames and act on them in order.
 
+    // 🟢 Advance forward any player frames.
     frames.forEach((f) => {
       const type = f[1];
       const di = 2;
@@ -545,7 +556,7 @@ function sim({
       }
     });
     // console.log(frameCount, frames[0]);
-  }); // 🟢 Advance forward any player frames.
+  });
 }
 
 function paint({ form, Form }) {
@@ -752,7 +763,7 @@ function act({
   }
 
   // Toggle binary color switch of background and foreground.
-  if (e.is("keyboard:down:c")) {
+  if (e.is("keyboard:down:c") || e.is("3d:rhand-button-a")) {
     lightSwitch();
     demo?.rec("light:switch", background === 0xffffff);
   }
@@ -760,10 +771,19 @@ function act({
   // Save scene data.
   if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
 
-  // 🔴 Recording a new piece.
-  if (e.is("keyboard:down:r")) {
+  // Remove / cancel a stroke.
+  if (e.is("3d:rhand-trigger-secondary")) {
+    console.log("Delete / cancel a stroke!");
+    pong = true;
+  }
+
+  // 🔴 Recording a new piece / start over.
+  if (e.is("keyboard:down:r") || e.is("3d:rhand-button-b")) {
     demo?.dump(); // Start fresh / clear any existing demo cache.
-    // TODO: Destroy any existing tube and make a new one.
+
+    // Remove all vertices from the existing tube.
+    tube.form.clear();
+    tube.capForm.clear();
 
     demo?.rec("light:switch", background === 0xffffff); // Record the starting bg color in case the default ever changes.
     console.log("🪄 A new piece...");
@@ -773,7 +793,7 @@ function act({
   const saveMode = "server"; // The default for now. 22.11.15.05.32
 
   // 🛑 Finish a piece.
-  if (e.is("keyboard:down:f")) {
+  if (e.is("keyboard:down:f") || e.is("3d:rhand-button-thumb")) {
     // demo?.print(); // Print the last demo to the console.
     const ts = timestamp();
 
@@ -835,6 +855,8 @@ function act({
     }
 
     demo?.dump(); // Start fresh / clear any existing demo cache.
+    tube.form.clear(); // Clear out the tube.
+    tube.capForm.clear();
   }
 
   // 📥 Load a demo file and play it back.

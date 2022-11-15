@@ -210,7 +210,7 @@ const $commonApi = {
   gpuReady: false,
   gpu: {
     message: (content) => {
-      send({ type: "gpu-event", content }) ;
+      send({ type: "gpu-event", content });
       return new Promise((resolve, reject) => {
         gpuResponse = { resolve, reject };
       });
@@ -1694,7 +1694,7 @@ async function makeFrame({ data: { type, content } }) {
             if (
               prefix === "3d" &&
               event === data.name &&
-              parseInt(pointer) === data.pointer
+              (pointer === undefined || parseInt(pointer) === data.pointer)
             )
               return true;
           },

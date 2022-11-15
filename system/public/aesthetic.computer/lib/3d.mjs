@@ -821,7 +821,9 @@ export function handleEvent(event) {
     // Parse the input and generate the glTF output
 
     const sceneToExport = new THREE.Scene();
-    const sculpture = scene.getObjectByUserDataProperty("tag", "sculpture").clone();
+    const sculpture = scene
+      .getObjectByUserDataProperty("tag", "sculpture")
+      .clone();
     sceneToExport.add(sculpture);
     sculpture.translateY(-sculptureHeight); // Head / preview box height.
 
@@ -925,7 +927,73 @@ export function pollControllers() {
       pen = handleController(controller2);
     }
 
-    console.log("Gamepad:", dominantController.gamepad); // TODO: Test gamepad in VR.
+    // console.log("Gamepad:", dominantController.gamepad); // TODO: Test gamepad in VR.
+
+    const gamepad = dominantController.gamepad;
+
+    // Cache the button states in the userData of the controller object.
+    if (!dominantController.userData.buttons)
+      dominantController.userData.buttons = [];
+    const cachedButts = dominantController.userData.buttons;
+
+    if (gamepad) {
+      gamepad.buttons.forEach((button, n) => {
+        if (cachedButts[n] === undefined) cachedButts[n] = {};
+        if (cachedButts[n].held === undefined) cachedButts[n].held = false;
+
+        if (button.pressed) {
+          // Quest 2: Controller Button Mapping
+
+          //           Trigger = 0 (value is pressure)
+          //       Backtrigger = 1 (value is pressure)
+          //  (Oculus button?) = 2
+          // Thumbstick button = 3
+          //                 A = 4
+          //                 B = 5
+          const value = button.value;
+          // Note: Eventually parse these with a colon? 22.11.15.10.57 ❓
+          if (n === 0 && cachedButts[0].held === false) {
+            penEvents.push({ name: "rhand-trigger", value });
+            cachedButts[0].held = true;
+          }
+          if (n === 2 && cachedButts[2].held === false) {
+            penEvents.push({ name: "rhand-trigger-secondary", value });
+            cachedButts[2].held = true;
+          }
+          if (n === 3 && cachedButts[3].held === false) {
+            penEvents.push({ name: "rhand-button-thumb", value });
+            cachedButts[3].held = true;
+          }
+          if (n === 4 && cachedButts[4].held === false) {
+            penEvents.push({ name: "rhand-button-a", value });
+            cachedButts[4].held = true;
+          }
+          if (n === 5 && cachedButts[5].held === false) {
+            penEvents.push({ name: "rhand-button-b", value });
+            cachedButts[5].held = true;
+          }
+          console.log(`🥽 Button ${n} was pressed:`, value);
+        } else {
+          const value = button.value;
+          // Note: Eventually parse these with a colon? 22.11.15.10.57 ❓
+          if (n === 0) {
+            cachedButts[0].held = false;
+          }
+          if (n === 2) {
+            cachedButts[2].held = false;
+          }
+          if (n === 3) {
+            cachedButts[3].held = false;
+          }
+          if (n === 4) {
+            cachedButts[4].held = false;
+          }
+          if (n === 5) {
+            cachedButts[5].held = false;
+          }
+        }
+      });
+    }
 
     return { events: penEvents, pen };
   }
