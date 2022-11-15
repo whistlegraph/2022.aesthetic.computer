@@ -7,12 +7,7 @@
   - [] White wand / finish wandForm and preview. (Ignore PC for now.)
   - [] Add some keyboard and VR controller button options for complexity
         and color / radius.
-  - [] Represent vertex count in VR somehow.
-- [] Enable saving of files to the network instead of the device...
-      (But what happens if I try to download something on the device?)
-      - [] Skip certain objects like the measurement cube and the stage.
-      - [] Transform the drawing downward by the Y position of the center
-          of the cube.
+  - [] Show the limit of the vertex count in VR somehow.
   * Decorative
   - [] Solid offset generative colors on tubes with colored end-caps?.
     - [] Choose a palette.
@@ -30,10 +25,14 @@
   - [] Should each stroke be its own Tube in order to support different
         geometry types? Yes if I wanna easily select and delete.
         Do we need that for demo recording? No...
-        - Would it be nice for Barry's and my data? Yes!
-   - [] Finish all extraneous TODOS in this file.
+        - Would it be nice for the export data? Yes!
+        - Could it be added subsequently after the drawings are complete? Yes.
+        - (The files would load the same way.)
+   - [] Finish all extra-necessary TODOS in this file.
+   - [] Get things good enough to make 1 complete drawing.
 END OF DAY
 + Later
+ - [] Create a "view wand timestamp" player that loads the model as a GLTF.
  - [] Try to re-enable workers again.
  - [] Integrate into `wand`.
    - [] Read both pieces side by side.
@@ -49,6 +48,13 @@ END OF DAY
       - [] Optional elsewhere.
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Enable saving of files to the network instead of the device...
+  - [x] Save everything!!!
+    - [x] Set up a route to save through the server.
+  (But what happens if I try to download something on the device?)
+  - [x] Skip certain objects like the measurement cube and the stage.
+  - [x] Transform the drawing downward by the Y position of the center
+      of the cube.
 - [x] Demo file recording and playback.
   - [x] Playback file.
   - [x] Load file.
@@ -75,10 +81,11 @@ const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
+let cubeHeight = 1.8;
 let originOn = true;
 let background = 0x000000; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
-let geometry = "line"; // or "lines" for wireframes
+let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
   speed = 12; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
@@ -94,7 +101,11 @@ let tube, // Circumscribe the spider's path with a form.
   graphPreview = false; // Whether to render pieces of a tube smaller or greater
 //                       than `step` at the start of end of a stroke.
 let wandForm; // A live cursor.
+
 let demo, player; // For recording a session and rewatching it in realtime.
+let beep, bop; // For making sounds when pieces begin and end.
+let ping, pong; // For making sounds when pieces upload or fail to upload.
+let beatCount = 0n; // TODO: This should really go into the main API at this point... 22.11.15.05.22
 
 const racePoints = [], // Extra stuff for CAD-style drawing.
   diffPrevPoints = [],
@@ -122,7 +133,7 @@ function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
   measuringCube = new Form(
     CUBEL,
     { color: [255, 0, 0, 255] },
-    { pos: [0, 1.8, 0], rot: [0, 0, 0], scale: [1, 1, 1] }
+    { pos: [0, cubeHeight, 0], rot: [0, 0, 0], scale: [1, 1, 1] }
   );
 
   origin = new Form(ORIGIN, {
@@ -671,7 +682,16 @@ function paint({ form, Form }) {
   if (originOn) form(origin, camdoll.cam);
 }
 
-function act({ event: e, pen, gpu, debug, upload, download, num }) {
+function act({
+  event: e,
+  pen,
+  gpu,
+  debug,
+  upload,
+  download,
+  serverUpload,
+  num,
+}) {
   const { quat, randIntRange: rr, vec3, timestamp } = num;
 
   // 🥽 Start a gesture. (Spatial)
@@ -722,7 +742,7 @@ function act({ event: e, pen, gpu, debug, upload, download, num }) {
   }
 
   // Toggle cube and origin measurement lines.
-  if (e.is("keyboard:down:r")) {
+  if (e.is("keyboard:down:t")) {
     measuringCubeOn = !measuringCubeOn;
     originOn = !originOn;
     if (measuringCubeOn && originOn) {
@@ -740,15 +760,84 @@ function act({ event: e, pen, gpu, debug, upload, download, num }) {
   // Save scene data.
   if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
 
-  // 🔴 Start recording a demo / make a new piece.
-  if (e.is("keyboard:down:p")) {
-    demo?.print(); // Print the last demo.
-    download(`demo-${timestamp()}.json`, demo.frames); // Save to json.
-    demo?.dump(); // Start fresh.
+  // 🔴 Recording a new piece.
+  if (e.is("keyboard:down:r")) {
+    demo?.dump(); // Start fresh / clear any existing demo cache.
+    // TODO: Destroy any existing tube and make a new one.
+
     demo?.rec("light:switch", background === 0xffffff); // Record the starting bg color in case the default ever changes.
+    console.log("🪄 A new piece...");
+    beep = true;
   }
 
-  // Load a demo file and play it back.
+  const saveMode = "server"; // The default for now. 22.11.15.05.32
+
+  // 🛑 Finish a piece.
+  if (e.is("keyboard:down:f")) {
+    // demo?.print(); // Print the last demo to the console.
+    const ts = timestamp();
+
+    console.log("🪄 Piece completed:", ts);
+    bop = true;
+
+    // TODO: I probably shouldn't dump demos and instead wait until things
+    //       finish uploading in case they fail. 22.11.15.08.52
+    //       (In my studio for now they probably won't fail...)
+
+    // Attempt to upload the piece to the server...
+    const handle = "@digitpain"; // Hardcoded for now.
+
+    // Server saving.
+    if (saveMode === "server") {
+      // Save demo JSON.
+      serverUpload(`${ts}-recording-${handle}.json`, demo.frames, "wand")
+        .then((data) => {
+          // console.log("JSON Upload success:", data);
+          console.log(
+            "🪄 Demo uploaded:",
+            `https://wand.aesthetic.computer/${ts}-recording-${handle}.json`,
+            data
+          );
+          ping = true;
+        })
+        .catch((err) => {
+          console.error("🪄 Demo upload failed:", err);
+          pong = true;
+        });
+
+      // Save scene GLTF.
+      gpu
+        .message({
+          type: "export-scene",
+          content: {
+            timestamp: ts,
+            output: "server",
+            handle,
+            sculptureHeight: cubeHeight,
+          },
+        })
+        .then((data) => {
+          console.log(
+            "🪄 Sculpture uploaded:",
+            `https://wand.aesthetic.computer/${ts}-sculpture-${handle}.gltf`,
+            data
+          );
+          ping = true;
+        })
+        .catch((err) => {
+          console.error("🪄 Sculpture upload failed:", err);
+          pong = true;
+        });
+    } else {
+      // Local saving. (Assume "local")
+      download(`${ts}-recording-${handle}.json`, demo.frames); // Save demo to json.
+      gpu.message({ type: "export-scene", content: { timestamp: ts } }); // Save scene to json.
+    }
+
+    demo?.dump(); // Start fresh / clear any existing demo cache.
+  }
+
+  // 📥 Load a demo file and play it back.
   if (e.is("keyboard:down:l")) {
     upload(".json")
       .then((data) => {
@@ -812,7 +901,57 @@ function act({ event: e, pen, gpu, debug, upload, download, num }) {
   //#endregion
 }
 
-export { boot, paint, sim, act };
+// 💗 Beat
+function beat({ sound: { bpm, square } }) {
+  if (beatCount === 0n) bpm(1800); // Set bpm to 1800 ~ 30fps }
+  beatCount += 1n; // TODO: This should go into the main API. 22.11.01.17.43
+
+  if (beep) {
+    square({
+      tone: 300,
+      beats: 0.7,
+      attack: 0.01,
+      decay: 0.5,
+      volume: 0.15,
+    });
+    beep = false;
+  }
+
+  if (bop) {
+    square({
+      tone: 600,
+      beats: 0.7,
+      attack: 0.01,
+      decay: 0.5,
+      volume: 0.15,
+    });
+    bop = false;
+  }
+
+  if (ping) {
+    square({
+      tone: 1000,
+      beats: 1.0,
+      attack: 0.01,
+      decay: 0.9,
+      volume: 0.25,
+    });
+    ping = false;
+  }
+
+  if (pong) {
+    square({
+      tone: 100,
+      beats: 1.5,
+      attack: 0.01,
+      decay: 0.5,
+      volume: 0.35,
+    });
+    pong = false;
+  }
+}
+
+export { boot, paint, sim, act, beat };
 
 // #region 📑 library
 
@@ -900,6 +1039,8 @@ class Tube {
     ];
 
     this.form = new $.Form(...formType); // Main form.
+    this.form.tag = "sculpture"; // This tells the GPU what to export right now. 22.11.15.09.05
+
     this.capForm = new $.Form(...formType); // Cursor.
 
     const totalLength = 1;

@@ -38,7 +38,7 @@ let scene,
   renderedOnce = false,
   target;
 
-let send, download;
+let send, download, upload;
 
 let jiggleForm,
   needsSphere = false;
@@ -49,9 +49,16 @@ export const penEvents = []; // VR pointer events.
 export const bakeQueue = [];
 export const status = { alive: false };
 
-export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
+export function initialize(
+  wrapper,
+  loop,
+  receivedDownload,
+  receivedUpload,
+  sendToPiece
+) {
   send = sendToPiece;
   download = receivedDownload;
+  upload = receivedUpload;
 
   renderer = new THREE.WebGLRenderer({
     alpha: false,
@@ -117,6 +124,12 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
       scene.add(controller1);
       controller1.userData.lastPosition = { ...controller1.position };
 
+      controller1.addEventListener("connected", (e) => {
+        console.log("Connected", e);
+        controller1.handedness = e.data.handedness;
+        controller1.gamepad = e.data.gamepad;
+      });
+
       controller2 = renderer.xr.getController(1);
       controller2.name = "controller-2";
       controller2.addEventListener("selectstart", onSelectStart);
@@ -125,6 +138,12 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
       controller2.addEventListener("squeezeend", onSqueezeEnd);
       scene.add(controller2);
       controller2.userData.lastPosition = { ...controller2.position };
+
+      controller2.addEventListener("connected", (e) => {
+        console.log("Connected", e);
+        controller2.handedness = e.data.handedness;
+        controller2.gamepad = e.data.gamepad;
+      });
 
       // Create some geometry for each controller.
       // const wandLen = 0.2;
@@ -381,6 +400,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       tri.ac_MAX_POINTS = f.MAX_POINTS;
 
       tri.userData.aestheticID = f.uid;
+      if (f.tag) tri.userData.tag = f.tag;
 
       tri.translateX(f.position[0]);
       tri.translateY(f.position[1]);
@@ -602,6 +622,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       lineb.ac_MAX_POINTS = f.MAX_POINTS;
 
       lineb.userData.aestheticID = f.uid;
+      if (f.tag) lineb.userData.tag = f.tag;
 
       lineb.translateX(f.position[0]);
       lineb.translateY(f.position[1]);
@@ -783,25 +804,49 @@ export function checkForRemovedForms(formsBaked) {
 export function handleEvent(event) {
   if (event.type === "background-change") {
     scene.background = new THREE.Color(event.content);
-    if (!NO_FOG)scene.fog = new THREE.Fog(event.content, FOG_NEAR, FOG_FAR);
+    if (!NO_FOG) scene.fog = new THREE.Fog(event.content, FOG_NEAR, FOG_FAR);
     return;
   }
 
   if (event.type === "export-scene") {
     // Instantiate a exporter
     const exporter = new GLTFExporter();
+    const timestamp = event.content.timestamp;
+    const output = event.content.output;
+    const handle = event.content.handle;
+    const sculptureHeight = event.content.sculptureHeight || 0;
 
     const options = {}; // https://threejs.org/docs/#examples/en/exporters/GLTFExporter
 
     // Parse the input and generate the glTF output
+
+    const sceneToExport = new THREE.Scene();
+    const sculpture = scene.getObjectByUserDataProperty("tag", "sculpture").clone();
+    sceneToExport.add(sculpture);
+    sculpture.translateY(-sculptureHeight); // Head / preview box height.
+
     exporter.parse(
-      scene,
+      sceneToExport,
       // called when the gltf has been generated
       function (gltf) {
-        download({
-          filename: `${timestamp()}-sculpture-digitpain.gltf`,
-          data: JSON.stringify(gltf),
-        });
+        // TODO: Add a flag to use the server here.
+
+        if (output === "server") {
+          upload(
+            {
+              filename: `${timestamp}-sculpture-${handle}.gltf`,
+              data: JSON.stringify(gltf),
+              bucket: "wand",
+            },
+            "gpu-response"
+          );
+        } else {
+          // Assume "local".
+          download({
+            filename: `${timestamp}-sculpture-${handle}.gltf`,
+            data: JSON.stringify(gltf),
+          });
+        }
       },
       // called when there is an error in the generation
       function (error) {
@@ -821,14 +866,17 @@ export function handleEvent(event) {
 }
 
 function handleController(controller) {
-  // console.log(renderer.xr.getFrame()) // In case I need more info.
+  // console.log(renderer.xr.getFrame()) // Note: Use in case I need more info!
+
   const userData = controller.userData;
+
   // TODO: Implement controller squeeze?
   //if (userData.isSqueezing === true) {
   //const delta = (controller.position.y - userData.positionAtSqueezeStart) * 5;
   //const scale = Math.max(0.1, userData.scaleAtSqueezeStart + delta);
   //pivot.scale.setScalar(scale);
   //painter.setSize(scale);
+
   const dir = new THREE.Vector3();
   controller.getWorldDirection(dir);
   const rot = new THREE.Quaternion();
@@ -865,8 +913,20 @@ function handleController(controller) {
 // Get controller data to send to a piece.
 export function pollControllers() {
   if (vrSession) {
-    handleController(controller1);
-    const pen = handleController(controller2);
+    let pen, pen1, pen2; // ... lol 😉
+
+    let dominantController;
+
+    if (controller1.handedness === "right") {
+      dominantController = controller1;
+      pen = handleController(controller1);
+    } else {
+      dominantController = controller2;
+      pen = handleController(controller2);
+    }
+
+    console.log("Gamepad:", dominantController.gamepad); // TODO: Test gamepad in VR.
+
     return { events: penEvents, pen };
   }
 }

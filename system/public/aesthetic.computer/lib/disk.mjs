@@ -178,7 +178,12 @@ const store = {
   },
 };
 
-let upload;
+// Promises
+let fileImport;
+let serverUpload;
+let gpuResponse;
+
+// Other
 let activeVideo; // TODO: Eventually this can be a bank to store video textures.
 let bitmapPromises = {};
 let inFocus;
@@ -203,7 +208,14 @@ const $commonApi = {
   darkMode, // Toggle dark mode or set to `true` or `false`.
   // content: added programmatically: see Content class
   gpuReady: false,
-  gpu: { message: (content) => send({ type: "gpu-event", content }) },
+  gpu: {
+    message: (content) => {
+      send({ type: "gpu-event", content }) ;
+      return new Promise((resolve, reject) => {
+        gpuResponse = { resolve, reject };
+      });
+    },
+  },
   num: {
     even: num.even,
     odd: num.odd,
@@ -1361,18 +1373,41 @@ async function makeFrame({ data: { type, content } }) {
     return;
   }
 
-  // 1a. Upload // One send (returns afterwards)
+  // 1a. Import // One send (returns afterwards)
   // Here we are receiving file data from main thread that was requested
-  // by $api.upload. We check to see if the upload promise exists and then
+  // by $api.upload 😱. We check to see if the upload promise exists and then
   // use it and/or throw it away.
-  if (type === "upload" && upload) {
+  if (type === "import" && fileImport) {
     if (content.result === "success") {
-      upload?.resolve(content.data);
+      fileImport?.resolve(content.data);
     } else if (content.result === "error") {
       console.error("File failed to load:", content.data);
-      upload?.reject(content.data);
+      fileImport?.reject(content.data);
     }
-    upload = undefined;
+    fileImport = undefined;
+    return;
+  }
+
+  // Resolve a gpu message
+  if (type === "gpu-response" && gpuResponse) {
+    if (content.result === "success") {
+      gpuResponse?.resolve(content.data);
+    } else if (content.result === "error") {
+      gpuResponse?.reject(content.data);
+    }
+    gpuResponse = undefined;
+    return;
+  }
+
+  // Resolve a server uploaded file.
+  if (type === "upload" && serverUpload) {
+    if (content.result === "success") {
+      serverUpload?.resolve(content.data);
+    } else if (content.result === "error") {
+      console.error("File failed to load:", content.data);
+      serverUpload?.reject(content.data);
+    }
+    serverUpload = undefined;
     return;
   }
 
@@ -1538,9 +1573,17 @@ async function makeFrame({ data: { type, content } }) {
       // type: Accepts N mimetypes or file extensions as comma separated string.
       // Usage: upload(".jpg").then((data) => ( ... )).catch((err) => ( ... ));
       $api.upload = (type) => {
-        send({ type: "upload", content: type });
+        send({ type: "import", content: type });
         return new Promise((resolve, reject) => {
-          upload = { resolve, reject };
+          fileImport = { resolve, reject };
+        });
+      };
+
+      // ***Actually*** upload a file to the server.
+      $api.serverUpload = (filename, data, bucket) => {
+        send({ type: "upload", content: { filename, data, bucket } });
+        return new Promise((resolve, reject) => {
+          serverUpload = { resolve, reject };
         });
       };
 

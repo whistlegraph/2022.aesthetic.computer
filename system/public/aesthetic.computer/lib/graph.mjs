@@ -1226,7 +1226,9 @@ class Form {
 
   limiter = 0; // Only enabled on CPU rendered `line` at the moment. 22.11.06.18.19
 
-  uid = nanoid(); // An id to keep across threads.
+  uid = nanoid(); // An id to keep across threads. Takes ~4 milliseconds. 😢
+
+  tag; // Gets sent to the GPU as a named / marked tag.
 
   // Model
   vertices = [];

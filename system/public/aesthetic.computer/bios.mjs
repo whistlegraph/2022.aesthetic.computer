@@ -126,7 +126,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let ThreeDBakeQueue = [];
   async function loadThreeD() {
     ThreeD = await import(`./lib/3d.mjs`);
-    ThreeD.initialize(wrapper, Loop.mainLoop, receivedDownload, send);
+    ThreeD.initialize(
+      wrapper,
+      Loop.mainLoop,
+      receivedDownload,
+      receivedUpload,
+      send
+    );
   }
 
   // Used by `disk` to set the metatags by default when a piece loads. It can
@@ -1324,6 +1330,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     if (type === "upload") {
       receivedUpload(content);
+    }
+
+    if (type === "import") {
+      receivedImport(content);
       return;
     }
 
@@ -1460,10 +1470,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       let recordingStartTime = 0;
       let recordingDuration;
 
+      // 🗺️ mediaRecorder:Start
       mediaRecorder.onstart = function () {
         recordingStartTime = performance.now();
       };
 
+      // 🗺️ mediaRecorder:Stop
       mediaRecorder.onstop = async function (evt) {
         recordingDuration = (performance.now() - recordingStartTime) / 1000;
 
@@ -1575,12 +1587,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             .then(async (res) => {
               const presignedUrl = (await res.json()).uploadURL;
               if (debug) console.log("🔐 Presigned URL:", presignedUrl);
-
-              const requestOptions = {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: "Fetch PUT Request Example" }),
-              };
 
               const response = await fetch(presignedUrl, {
                 method: "PUT",
@@ -1913,13 +1919,70 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   let lastRender;
 
+  // Reads a file and uploads it to the server.
+  async function receivedUpload(
+    { filename, data, bucket },
+    callbackMessage = "upload"
+  ) {
+    console.log("📤 Uploading globally: ", filename, typeof data);
+    const ext = extension(filename);
+    let MIME = "application/octet-stream"; // Default content type.
+
+    if (ext === "json" || ext === "gltf") {
+      // JSON
+      MIME = "application/json";
+
+      // Parse JSON strings if they haven't been already, including support for `bigints`.
+      if (typeof data !== "string") {
+        data = JSON.stringify(
+          data,
+          (k, v) => (typeof v === "bigint" ? v.toString() : v)
+          // 2 // Also make sure we indent by 2 spaces so it's nicely formatted.
+        );
+      }
+
+      let prefetchURL = "/presigned-upload-url/" + ext;
+
+      if (bucket === "wand") prefetchURL += "/" + filename + "/" + bucket; // Add filename info.
+
+      // Now send a request to the server...
+      fetch(prefetchURL)
+        .then(async (res) => {
+          const presignedUrl = (await res.json()).uploadURL;
+          if (debug) console.log("🔐 Presigned URL:", presignedUrl);
+
+          const response = await fetch(presignedUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": MIME,
+              "x-amz-acl": "public-read",
+            },
+            body: new Blob([data], { type: MIME }),
+          });
+
+          if (debug) console.log("✔️ File uploaded:", response);
+          send({
+            type: callbackMessage,
+            content: { result: "success", data: response },
+          });
+        })
+        .catch((err) => {
+          if (debug) console.log("⚠️ Failed to get presigned URL:", err);
+          send({
+            type: callbackMessage,
+            content: { result: "error", data: err },
+          });
+        });
+    }
+  }
+
   // Reads the extension off of filename to determine the mimetype and then
   // handles the data accordingly and downloads the file in the browser.
   async function receivedDownload({ filename, data }) {
     console.log("💾 Downloading locally:", filename, typeof data);
 
     let object;
-    let MIME = "application/octet-stream"; // TODO: Default content type?
+    let MIME = "application/octet-stream"; // Default content type.
 
     if (extension(filename) === "json" || extension(filename) === "gltf") {
       // JSON
@@ -1973,7 +2036,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   // Opens a file chooser that is filtered by a given extension / mimetype list.
   // And sends the text contents of an individual file back to the disk.
-  function receivedUpload(type) {
+  function receivedImport(type) {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = type;
@@ -1990,7 +2053,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Relay error if chosen file does not match the `input.accept` list.
       if (noMatch) {
         send({
-          type: "upload",
+          type: "import",
           content: {
             result: "error",
             data: `Chosen file was not of type "${type}"`,
@@ -2006,7 +2069,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Send the content back to the disk once the file loads.
       reader.onload = (e) => {
         send({
-          type: "upload",
+          type: "import",
           content: { result: "success", data: e.target.result },
         });
       };
@@ -2014,7 +2077,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       // Relay an error if the file fails to load for any reason.
       reader.onerror = () => {
         send({
-          type: "upload",
+          type: "import",
           content: { result: "error", data: reader.error },
         });
       };

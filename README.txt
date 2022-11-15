@@ -30,6 +30,8 @@ Welcome to...
   - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Annoying Bugs & Regressions (Some dev only.)
+  + API
+  - [] Rename $api.upload to $api.open? or $api.importFile? 
   + In Production
   - [🍽️] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
     - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
@@ -63,6 +65,11 @@ Welcome to...
 - [] Invert Y position in original constructor.
 - [] vec3.dist from glMatrix yields innacurate numbers. Factor it out of the project. 
 - [] The quaternions also don't seem to work?
+
+*** Furthering VR Support ***
+- [] Add grip of controller in addition to hand support.
+  - [] Grip: https://threejs.org/docs/#api/en/renderers/webxr/WebXRManager.getControllerGrip
+  - [] "hand" event
 
 *** GIF Support ***
 - [] Add keyboard shortcut to download a still frame of whatever you're 
