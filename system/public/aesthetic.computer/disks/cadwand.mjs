@@ -3,42 +3,36 @@
 
 /* #region 🏁 todo
 * VR
-  - [] Add support for controller buttons to change background.
+
+ - [] Two sided triangle optimization.
+   - [] Be able to set whether to use DoubleSided or not on the Tube start.
+   - [-] Flip any inverted triangles. Check to see if disabling two sided
+          triangles flip anything.
+   - [] Invert tube so backside is frontside.
+     - [x] 5 sides or greater
+     - ...
+   - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
+
+   - [] Re-enable THREE.FrontSide / BackSide?
   - [] White wand / finish wandForm and preview. (Ignore PC for now.)
   - [] Add some keyboard and VR controller button options for complexity
         and color / radius.
   - [] Show the limit of the vertex count in VR somehow.
-  * Decorative
-  - [] Solid offset generative colors on tubes with colored end-caps?.
-    - [] Choose a palette.
-  - [] Add a light to the scene.
-  - [] Make scale test drawings for Barry / UE export.
-    - [] Make two or three different samples with no options.
+  - [] Add visual flicker to saving.
+  - [] Add ability to enable or disable the box.
 * Final
   - [] Change demo format to remove light-switch in favor of
        background Tube color changes.
   - [] Make Tube color changes stripe-able / dynamic during drawing.
 * Optimization
- - [] Two sided triangle optimization.
-   - [] Be able to set whether to use DoubleSided or not on the Tube start.
-   - [-] Flip any inverted triangles. Check to see if enabling two sided
-          triangles flip anything.
-     - [x] 5 sides or greater
-   - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
-   - [] Re-enable THREE.FrontSide / BackSide?
-  - [] Should each stroke be its own Tube in order to support different
-        geometry types? Yes if I wanna easily select and delete.
-        Do we need that for demo recording? No...
-        - Would it be nice for the export data? Yes!
-        - Could it be added subsequently after the drawings are complete? Yes.
-        - (The files would load the same way.)
    - [] Finish all extra-necessary TODOS in this file.
    - [] Get things good enough to make 1 complete drawing.
-END OF DAY
-+ Later
  - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
        keep an automated list somewhere... maybe look at the S3 shell scripts?
+END OF DAY
++ Later
  - [] Create a "view wand timestamp" player that loads the model as a GLTF.
+  - [] Add a light to the scene.
  - [] Try to re-enable workers again.
  - [] Integrate into `wand`.
    - [] Read both pieces side by side.
@@ -52,8 +46,15 @@ END OF DAY
 - [] There should be an "inner" and "outer" triangulation option.
       - [] Inner ONLY for complexity 1 and 2.
       - [] Optional elsewhere.
+  - [] Should each stroke be its own Tube in order to support different
+        geometry types? Yes if I wanna easily select and delete.
+        Do we need that for demo recording? No...
+        - Would it be nice for the export data? Yes!
+        - Could it be added subsequently after the drawings are complete? Yes.
+        - (The files would load the same way.)
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Add support for controller buttons to change background.
 - [x] Enable saving of files to the network instead of the device...
   - [x] Save everything!!!
     - [x] Set up a route to save through the server.
@@ -98,7 +99,7 @@ let spi, // Follow it in even increments.
   color = [255, 255, 255, 255]; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
   sides = 16, // Number of tube sides. 1 or 2 means flat.
-  radius = 0.035, // The width of the tube.
+  radius = 0.08, // The width of the tube.
   step = 0.05, // The length of each tube segment.
   capColor = [255, 255, 255, 255], // [255, 255, 255, 255] The currently selected tube end cap color.
   capVary = 0, // 2; How much to drift the colors for the cap.
@@ -1063,6 +1064,9 @@ class Tube {
     this.form = new $.Form(...formType); // Main form.
     this.form.tag = "sculpture"; // This tells the GPU what to export right now. 22.11.15.09.05
 
+    //this.geometry = "line:buffered";
+    //formType[0].type = this.geometry;
+
     this.capForm = new $.Form(...formType); // Cursor.
 
     const totalLength = 1;
@@ -1297,8 +1301,18 @@ class Tube {
         // between this and the next point, skipping the last.
         for (let i = 1; i < pathP.shape.length - 1; i += 1) {
           if (!ring) {
+
+            // ⚠️ Check the rotation / difference betwen this pathP and the next pathP.
+            console.log(pathP.rotation, pathP.direction);
+
+
             form.addPoints({
-              positions: [center, pathP.shape[i], pathP.shape[i + 1]],
+
+              // Check the rotation here...
+              positions: [pathP.shape[i], pathP.shape[i + 1], center],
+
+              // positions: [center, pathP.shape[i], pathP.shape[i + 1]],
+
               colors: [
                 this.varyCap(shade), // Inner color for a gradient.
                 this.varyCap(shade),
