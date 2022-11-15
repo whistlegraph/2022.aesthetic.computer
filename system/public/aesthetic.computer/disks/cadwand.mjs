@@ -2,9 +2,19 @@
 // A laboratory & development piece for designing the geometry in `wand`.
 
 /* #region 🏁 todo
-- [] Get all the kinks out of VR drawing / make it as nice as possible.
-  - [❤️‍🔥] Better curve fitting
-- [] Decide on a basic look / pallette that I could make some good drawings with.
+- [] Decide on a basic look / palette that I could make some good drawings with.
+  - [] Black and white room toggle?
+    - [] Add support for controller buttons.
+  - [] How can textures be used?
+    - [] Make a small "plinth", the color of which toggles along with the
+         background.
+  - [] White wand.
+  - [] Neutral background with fog.
+  - [] Grey floor.
+  - [] Light
+  * Decorative
+  - [] Solid offset generative colors on tubes with colored end-caps?.
+    - [] Choose a palette.
 - [] Make scale test drawings for Barry / UE export.
   - [] Enable saving of files to the network instead of the device...
        (But what happens if I try to download something on the device?)
@@ -35,6 +45,9 @@
       - [] Optional elsewhere.
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Toggle on and off debug drawing.
+- [x] Get all the kinks out of VR drawing / make it as nice as possible.
+  - [x] Better curve fitting
 - [x] Remove preview cap from wand.
 - [x] Profile tube creation performance.
 - [x] Draw in any starting direction.
@@ -52,9 +65,10 @@
 
 // #region 🗺️ global
 import { CamDoll } from "../lib/cam-doll.mjs";
-const { abs, max, acos, cos, sin } = Math;
+const { max, cos, sin } = Math;
 
 let camdoll, stage; // Camera and floor.
+const rulers = true; // Whether to render arch. guidelines for development.
 let waving = false; // Whether we are making tubes or not.
 let race,
   speed = 12; // Race after the cursor quickly.
@@ -109,10 +123,17 @@ function sim({
 
     wandForm = new Form({
       type: "line",
-      positions: [position, vec3.add(vec3.create(), position, dir)],
+      positions: [
+        position,
+        vec3.add(
+          vec3.create(),
+          position,
+          vec3.scale(vec3.create(), dir, 0.2)
+        ),
+      ],
       colors: [
-        [255, 0, 255, 255],
-        [255, 0, 255, 255],
+        [255, 255, 255, 255],
+        [255, 255, 255, 255],
       ],
       keep: false,
     });
@@ -184,10 +205,10 @@ function sim({
           vec3.add(
             vec3.create(),
             pos,
-            vec3.scale(vec3.create(), lastNormal, 0.05)
+            vec3.scale(vec3.create(), lastNormal, 0.15)
           ),
           pos,
-          vec3.add(vec3.create(), pos, vec3.scale(vec3.create(), helper, 0.05))
+          vec3.add(vec3.create(), pos, vec3.scale(vec3.create(), helper, 0.15))
         );
         diffPrevColors.push(
           [255, 255, 100, 255],
@@ -231,13 +252,13 @@ function sim({
           vec3.add(
             vec3.create(),
             pos,
-            vec3.scale(vec3.create(), newNormal, 0.05)
+            vec3.scale(vec3.create(), newNormal, 0.15)
           ),
           pos,
           vec3.add(
             vec3.create(),
             pos,
-            vec3.scale(vec3.create(), bitangent, 0.05)
+            vec3.scale(vec3.create(), bitangent, 0.15)
           )
         );
         diffPrevColors.push(
@@ -259,10 +280,12 @@ function sim({
 
       rotation = qua;
 
-      if (waving) {
+      if (spi) {
         alteredSpiState = { ...spi.state };
         alteredSpiState.rotation = rotation;
+      }
 
+      if (waving) {
         if (tube.gesture.length === 0) {
           tube.preview(alteredSpiState, {
             position,
@@ -325,37 +348,14 @@ function sim({
     if (d > step) {
       if (pen3d && tube.gesture.length === 0) {
         // Populate first tube start with the preview state.
-
-        // TODO...
-        // If the dot product is negative then invert / flip the rotation,
-        // and abs the dot product for below...
-        if (dot < 0) {
-          //vec3.sub(vec3.create(), race.pos, spi.state.position)
-          //quat.invert(alteredSpiState.rotation, alteredSpiState.rotation);
-          //spi.state.rotation = alteredSpiState.rotation;
-          //vec3.scale(spi.state.direction, spi.state.direction, [-1, 1, -1]);
-          //alteredSpiState.direction = spi.state.direction; // Set altered state.
-          //dot = abs(dot);
-          //console.log(dot);
-        }
-
-        //const dot = vec3.dot(spi.state.rotation, alteredSpiState.rotation);
-
-        tube.start(
-          alteredSpiState,
-          // /*
-          //{
-          //  position,
-          //  rotation,
-          //  color: [255, 0, 0, 255],
-          //},
-          // */
-          radius,
-          sides
-        );
+        tube.start(alteredSpiState, radius, sides);
+        spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
+        tube.goto(spi.state); // 2. Knots the tube.
+        spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+        return;
       }
 
-      if (tube.gesture.length > 0 /*&& (dot > 0.5 || dot === 0)*/) {
+      if (tube.gesture.length > 0 && dot > 0.5) {
         // 1. Jumps N steps in the direction from this position to last position.
         spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
 
@@ -449,51 +449,52 @@ function paint({ form, Form }) {
   */
 
   // Other measurement lines.
-  const diffPrevPositions = [];
-  const diffPrevCol = [];
+  if (rulers) {
+    const diffPrevPositions = [];
+    const diffPrevCol = [];
 
-  for (let d = 0; d < diffPrevPoints.length - 1; d += 2) {
-    diffPrevPositions.push(
-      [...diffPrevPoints[d], 1],
-      [...diffPrevPoints[d + 1], 1]
+    for (let d = 0; d < diffPrevPoints.length - 1; d += 2) {
+      diffPrevPositions.push(
+        [...diffPrevPoints[d], 1],
+        [...diffPrevPoints[d + 1], 1]
+      );
+      diffPrevCol.push(diffPrevColors[d], diffPrevColors[d + 1]);
+    }
+
+    diffPrevPoints.length = 0;
+
+    const diffPrevForm = new Form(
+      {
+        type: "line",
+        positions: diffPrevPositions,
+        colors: diffPrevColors,
+        gradients: false,
+        keep: false,
+      },
+      { color: [255, 0, 0, 255] },
+      { scale: [1, 1, 1] }
     );
-    diffPrevCol.push(diffPrevColors[d], diffPrevColors[d + 1]);
-  }
 
-  diffPrevPoints.length = 0;
+    const diffPositions = [];
+    const diffCol = [];
 
-  const diffPrevForm = new Form(
-    {
-      type: "line",
-      positions: diffPrevPositions,
-      colors: diffPrevColors,
-      gradients: false,
-      keep: false,
-    },
-    { color: [255, 0, 0, 255] },
-    { scale: [1, 1, 1] }
-  );
+    for (let d = 0; d < diffPoints.length - 1; d += 2) {
+      diffPositions.push([...diffPoints[d], 1], [...diffPoints[d + 1], 1]);
+      diffCol.push(diffColors[d], diffColors[d + 1]);
+    }
 
-  const diffPositions = [];
-  const diffCol = [];
-
-  for (let d = 0; d < diffPoints.length - 1; d += 2) {
-    diffPositions.push([...diffPoints[d], 1], [...diffPoints[d + 1], 1]);
-    diffCol.push(diffColors[d], diffColors[d + 1]);
-  }
-
-  const diffForm = new Form(
-    {
-      type: "line",
-      positions: diffPositions,
-      colors: diffColors,
-      gradients: false,
-      keep: false,
-    },
-    { color: [255, 0, 0, 255] },
-    { scale: [1, 1, 1] }
-  );
-  /*
+    const diffForm = new Form(
+      {
+        type: "line",
+        positions: diffPositions,
+        colors: diffColors,
+        gradients: false,
+        keep: false,
+      },
+      { color: [255, 0, 0, 255] },
+      { scale: [1, 1, 1] }
+    );
+    /*
 
   // Draw some cursor measurement lines.
   trackerForm = new Form(
@@ -508,33 +509,22 @@ function paint({ form, Form }) {
     { scale: [1, 1, 1] }
   );
   */
+    // Draw some cursor measurement lines.
+    trackerForm = new Form(
+      {
+        type: "line",
+        positions: trackerPoints,
+        colors: trackerColors,
+        gradients: true,
+        keep: false,
+      },
+      { color: [255, 255, 255, 255] },
+      { scale: [1, 1, 1] }
+    );
+    form([trackerForm, diffPrevForm, diffForm], camdoll.cam);
+  }
   //#endregion
-
-  // Draw some cursor measurement lines.
-  trackerForm = new Form(
-    {
-      type: "line",
-      positions: trackerPoints,
-      colors: trackerColors,
-      gradients: true,
-      keep: false,
-    },
-    { color: [255, 255, 255, 255] },
-    { scale: [1, 1, 1] }
-  );
-
-  form(
-    [
-      stage,
-      tube.capForm,
-      tube.form,
-      wandForm,
-      trackerForm,
-      diffPrevForm,
-      diffForm,
-    ],
-    camdoll.cam
-  );
+  form([stage, tube.capForm, tube.form, wandForm], camdoll.cam);
 }
 
 function act({ event: e, pen, gpu, debug, num }) {
@@ -767,7 +757,9 @@ class Tube {
       spi.crawlTowards(race.pos, d, 1);
 
       const alteredState = { ...spi.state };
-      alteredState.rotation = this.previewRotation;
+      if (this.gesture.length === 0) {
+        alteredState.rotation = this.previewRotation;
+      }
       this.goto(alteredState);
     }
 
