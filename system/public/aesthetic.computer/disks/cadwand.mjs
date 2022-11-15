@@ -135,11 +135,7 @@ function sim({
       type: "line",
       positions: [
         position,
-        vec3.add(
-          vec3.create(),
-          position,
-          vec3.scale(vec3.create(), dir, 0.2)
-        ),
+        vec3.add(vec3.create(), position, vec3.scale(vec3.create(), dir, 0.2)),
       ],
       colors: [
         [255, 255, 255, 255],
@@ -354,6 +350,7 @@ function sim({
     let dot = vec3.dot(spiToRace, spi.state.direction);
     const d = dist3d(spi.state.position, race.pos);
 
+
     // 🕷️ Spider Jump
     if (d > step) {
       if (pen3d && tube.gesture.length === 0) {
@@ -365,9 +362,14 @@ function sim({
         return;
       }
 
+      // console.log(dot);
+      // console.log(tube.gesture.length > 0 && dot > 0.5);
+
       if (tube.gesture.length > 0 && dot > 0.5) {
         // 1. Jumps N steps in the direction from this position to last position.
         spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
+
+        console.log("hi");
 
         tube.goto(spi.state); // 2. Knots the tube.
         // #. Randomizes the color for every section.
@@ -519,34 +521,35 @@ function paint({ form, Form }) {
     { scale: [1, 1, 1] }
   );
   */
-  //#endregion
+    //#endregion
 
-  // Draw some cursor measurement lines.
-  trackerForm = new Form(
-    {
-      type: "line",
-      positions: trackerPoints,
-      colors: trackerColors,
-      gradients: true,
-      keep: false,
-    },
-    { color: [255, 255, 255, 255] },
-    { scale: [1, 1, 1] }
-  );
+    // Draw some cursor measurement lines.
+    trackerForm = new Form(
+      {
+        type: "line",
+        positions: trackerPoints,
+        colors: trackerColors,
+        gradients: true,
+        keep: false,
+      },
+      { color: [255, 255, 255, 255] },
+      { scale: [1, 1, 1] }
+    );
 
-  form(
-    [
-      stage,
-      tube.capForm,
-      tube.form,
-      wandForm,
-      trackerForm,
-      diffPrevForm,
-      diffForm,
-    ],
-    camdoll.cam,
-    { background }
-  );
+    form(
+      [
+        stage,
+        tube.capForm,
+        tube.form,
+        wandForm,
+        trackerForm,
+        diffPrevForm,
+        diffForm,
+      ],
+      camdoll.cam,
+      { background }
+    );
+  }
 }
 
 function act({ event: e, pen, gpu, debug, num }) {
@@ -1054,7 +1057,7 @@ class Tube {
         // Recurse if the average of all three color channels is still
         // inside the vary range.
         if (averageDifference < tubeVary / 5) {
-          console.log("recurse");
+          // console.log("recurse");
           return this.vary(color);
         }
 
