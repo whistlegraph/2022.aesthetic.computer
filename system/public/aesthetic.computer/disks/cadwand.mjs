@@ -1,6 +1,9 @@
 // ️🪄 Cadwand, 22.11.05.00.30 ⚙️
 // A laboratory & development piece for designing the geometry in `wand`.
 
+// - [-]  Flip current color with background color.
+// - [x] Color support.
+
 /* #region 🏁 todo
 - [] Get all the kinks out of VR drawing / make it as nice as possible.
   - [❤️‍🔥] Better curve fitting
@@ -52,19 +55,26 @@
 
 // #region 🗺️ global
 import { CamDoll } from "../lib/cam-doll.mjs";
-const { abs, max, acos, cos, sin } = Math;
+const { abs, max, cos, sin } = Math;
 
 let camdoll, stage; // Camera and floor.
+let background = 0x000000; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let race,
   speed = 12; // Race after the cursor quickly.
-let spi; // Follow it in even increments.
+let spi, // Follow it in even increments.
+  color = [0, 0, 0, 255]; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
   sides = 8, // Number of tube sides. 1 or 2 means flat.
   radius = 0.035, // The width of the tube.
+  step = 0.05, // The length of each tube segment.
+  capColor = [255, 255, 255, 255], // The currently selected tube end cap color.
+  capVary = 100, // How much to drift the colors for the cap.
+  tubeVary = 4, // How much to drift the colors for the tube.
   rayDist = 1, // How far away to draw the tube on non-spatial devices.
-  step = 0.08; // The length of each tube segment.
-let wandForm; //  A live cursor.
+  graphPreview = false; // Whether to render pieces of a tube smaller or greater
+//                       than `step` at the start of end of a stroke.
+let wandForm; // A live cursor.
 
 const racePoints = [], // Extra stuff for CAD-style drawing.
   diffPrevPoints = [],
@@ -85,7 +95,7 @@ function boot({ Camera, Dolly, Form, QUAD, painting, wipe, num, wiggle, geo }) {
     { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
   );
   race = new geo.Race({ speed });
-  tube = new Tube({ Form, num }, radius, sides, "lines"); // or "lines" for wireframes
+  tube = new Tube({ Form, num }, radius, sides, "triangles"); // or "lines" for wireframes
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
 
@@ -267,13 +277,13 @@ function sim({
           tube.preview(alteredSpiState, {
             position,
             rotation,
-            color: [255, 0, 0, 255],
+            color,
           });
         } else {
           tube.preview(spi.state, {
             position,
             rotation,
-            color: [255, 0, 0, 255],
+            color,
           });
         }
       } else {
@@ -286,7 +296,7 @@ function sim({
         tube.preview({
           position: controllerPosition,
           rotation: controllerRotation,
-          color: [255, 0, 0, 255],
+          color: color,
         });
       }
     }
@@ -360,8 +370,8 @@ function sim({
         spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
 
         tube.goto(spi.state); // 2. Knots the tube.
-        // #. Randomizes the color.
-        spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+        // #. Randomizes the color for every section.
+        //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
       }
     }
     // Add some debug data to show the future direction.
@@ -533,7 +543,8 @@ function paint({ form, Form }) {
       diffPrevForm,
       diffForm,
     ],
-    camdoll.cam
+    camdoll.cam,
+    { background }
   );
 }
 
@@ -544,7 +555,7 @@ function act({ event: e, pen, gpu, debug, num }) {
   if (e.is("3d:touch:2")) {
     const last = [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z];
     const cur = [e.pos.x, e.pos.y, e.pos.z];
-    const color = [rr(100, 255), rr(100, 255), rr(100, 255), 255];
+    //const color = [rr(100, 255), rr(100, 255), rr(100, 255), 255];
     const rot = quat.fromValues(
       e.rotation._x,
       e.rotation._y,
@@ -568,7 +579,7 @@ function act({ event: e, pen, gpu, debug, num }) {
   if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
     const last = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
     const cur = camdoll.cam.ray(pen.x, pen.y, rayDist / 2, true);
-    const color = [rr(100, 255), rr(100, 255), rr(100, 255), 255];
+    //const color = [rr(100, 255), rr(100, 255), rr(100, 255), 255];
     const dir = vec3.sub(vec3.create(), cur, last);
     const rot = quat.fromEuler(quat.create(), ...camdoll.cam.rot);
 
@@ -591,6 +602,18 @@ function act({ event: e, pen, gpu, debug, num }) {
     }
   }
 
+  // Toggle binary color switch of background and foreground.
+  if (e.is("keyboard:down:i")) {
+    if (background === 0x000000) {
+      background = 0xffffff;
+    } else {
+      background = 0x000000;
+    }
+
+    // TODO: Switch pen color type based on background.
+  }
+
+  // Save scene data.
   if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
 
   camdoll.act(e); // Wire up FPS style navigation events.
@@ -648,6 +671,10 @@ class Tube {
   capForm; // " a cursor that presents the cap of the tube.
   geometry = "triangles"; // or "lines"
   previewRotation; // Keeps track of the last rotation sent to `preview()`.
+  triColor; // Stores the current triangle color.
+  varyTriCount = 0; // Counts by 3 to color triangle vertices.
+  lineColor; // Stores the current triangle color.
+  varyLineCount = 0; // Counts by 2 to color line segment vertices.
   // TODO: ^ Some of these fields could still be privated. 22.11.11.15.50
 
   // ☁️
@@ -807,6 +834,7 @@ class Tube {
   // Has a form input that is either `form` or `capForm`.
   #cap(pathP, form, ring = true) {
     const tris = this.geometry === "triangles";
+    const shade = capColor;
 
     // 📐 Triangles
 
@@ -816,8 +844,7 @@ class Tube {
         if (ring) {
           form.addPoints({
             positions: [pathP.shape[1], pathP.shape[pathP.shape.length - 1]],
-            colors: [pathP.color, pathP.color],
-            // [255, 100, 0, 255], [255, 100, 0, 255],
+            colors: [this.varyCap(shade), this.varyCap(shade)],
           });
         }
       }
@@ -830,8 +857,7 @@ class Tube {
             if (i > 1) {
               form.addPoints({
                 positions: [pathP.shape[i]],
-                colors: [pathP.color],
-                // [0, 100, 0, 255], [0, 100, 0, 255],
+                colors: [this.varyCap(shade)],
               });
             }
           }
@@ -839,18 +865,17 @@ class Tube {
           form.addPoints({
             positions: [pathP.shape[1]],
             //colors: [pathP.color],
-            colors: [
-              [0, 50, 255, 255],
-              [0, 50, 255, 255],
-            ],
-            // [255, 100, 0, 255], [255, 100, 0, 255],
+            colors: [this.varyCap(shade), this.varyCap(shade)],
           });
         } else {
           // End cap.
           form.addPoints({
             positions: [pathP.shape[1], pathP.shape[2], pathP.shape[3]],
-            colors: [pathP.color, pathP.color, pathP.color],
-            // [255, 100, 0, 255], [255, 100, 0, 255],
+            colors: [
+              this.varyCap(shade),
+              this.varyCap(shade),
+              this.varyCap(shade),
+            ],
           });
         }
       }
@@ -867,12 +892,12 @@ class Tube {
             pathP.shape[1],
           ],
           colors: [
-            pathP.color,
-            pathP.color,
-            pathP.color,
-            pathP.color,
-            pathP.color,
-            pathP.color,
+            this.varyCap(shade),
+            this.varyCap(shade),
+            this.varyCap(shade),
+            this.varyCap(shade),
+            this.varyCap(shade),
+            this.varyCap(shade),
           ],
           // [255, 100, 0, 255], [255, 100, 0, 255],
         });
@@ -889,18 +914,18 @@ class Tube {
             form.addPoints({
               positions: [center, pathP.shape[i], pathP.shape[i + 1]],
               colors: [
-                [255, 0, 0, 255],
-                [0, 255, 0, 255],
-                [0, 255, 0, 255],
+                this.varyCap(shade), // Inner color for a gradient.
+                this.varyCap(shade),
+                this.varyCap(shade),
               ],
             });
           } else {
             form.addPoints({
               positions: [center, pathP.shape[i + 1], pathP.shape[i]],
               colors: [
-                [255, 0, 0, 255],
-                [0, 255, 0, 255],
-                [0, 255, 0, 255],
+                this.varyCap(shade), // Inner color for a gradient.
+                this.varyCap(shade),
+                this.varyCap(shade),
               ],
             });
           }
@@ -915,9 +940,9 @@ class Tube {
               pathP.shape[1],
             ],
             colors: [
-              [255, 0, 0, 255],
-              [0, 255, 0, 255],
-              [0, 255, 0, 255],
+              this.varyCap(shade), // Inner color for a gradient.
+              this.varyCap(shade),
+              this.varyCap(shade),
             ],
           });
         } else {
@@ -928,9 +953,9 @@ class Tube {
               pathP.shape[pathP.shape.length - 1],
             ],
             colors: [
-              [255, 0, 0, 255],
-              [0, 255, 0, 255],
-              [0, 255, 0, 255],
+              this.varyCap(shade), // Inner color for a gradient.
+              this.varyCap(shade),
+              this.varyCap(shade),
             ],
           });
         }
@@ -944,11 +969,7 @@ class Tube {
           if (i > 0 && this.sides > 4) {
             form.addPoints({
               positions: [pathP.shape[0], pathP.shape[i]],
-              // colors: [pathP.color, pathP.color],
-              colors: [
-                [255, 0, 0, 255],
-                [255, 0, 0, 255],
-              ],
+              colors: [this.varyCapLine(shade), this.varyCapLine(shade)],
             });
           }
 
@@ -956,11 +977,7 @@ class Tube {
           if (i === 0 && this.sides === 4) {
             form.addPoints({
               positions: [pathP.shape[1], pathP.shape[3]],
-              // colors: [pathP.color, pathP.color],
-              colors: [
-                [255, 0, 0, 255],
-                [255, 0, 0, 255],
-              ],
+              colors: [this.varyCapLine(shade), this.varyCapLine(shade)],
             });
           }
 
@@ -968,11 +985,7 @@ class Tube {
           if (i > 1 && ring) {
             form.addPoints({
               positions: [pathP.shape[i - 1], pathP.shape[i]],
-              // colors: [pathP.color, pathP.color],
-              colors: [
-                [0, 100, 0, 255],
-                [0, 100, 0, 255],
-              ],
+              colors: [this.varyCapLine(shade), this.varyCapLine(shade)],
             });
           }
         }
@@ -982,11 +995,7 @@ class Tube {
       if (ring) {
         form.addPoints({
           positions: [pathP.shape[1], pathP.shape[pathP.shape.length - 1]],
-          // colors: [pathP.color, pathP.color],
-          colors: [
-            [255, 100, 0, 255],
-            [255, 100, 0, 255],
-          ],
+          colors: [this.varyCapLine(shade), this.varyCapLine(shade)],
         });
       }
     }
@@ -1015,6 +1024,72 @@ class Tube {
     return pathP;
   }
 
+  #driftValue(n, amt) {
+    return this.$.num.clamp(n + this.$.num.randIntRange(-amt, amt), 0, 255);
+  }
+
+  // Shade input colors in `consumePath` and `#cap` for triangles and lines.
+
+  // This method is for triangles and keeps a counter to only
+  // change after every 3 vertices.
+  vary(color) {
+    if (this.varyTriCount === 0) {
+      const newValues = [
+        this.#driftValue(color[0], tubeVary),
+        this.#driftValue(color[1], tubeVary),
+        this.#driftValue(color[2], tubeVary),
+      ];
+
+      if (this.triColor) {
+        const differences = [
+          this.triColor[0] - newValues[0],
+          this.triColor[1] - newValues[1],
+          this.triColor[2] - newValues[2],
+        ];
+
+        const averageDifference = abs(differences.reduce((p, c) => p + c) / 3);
+        // Recurse if the average of all three color channels is still
+        // inside the vary range.
+        if (averageDifference < tubeVary / 5) {
+          console.log("recurse");
+          return this.vary(color);
+        }
+
+        this.triColor[0] = this.#driftValue(color[0], tubeVary);
+        this.triColor[1] = this.#driftValue(color[1], tubeVary);
+        this.triColor[2] = this.#driftValue(color[2], tubeVary);
+      } else {
+        this.triColor = newValues;
+      }
+      // Don't do anything with the alpha.
+    }
+    this.varyTriCount = (this.varyTriCount + 1) % 3;
+    color = this.triColor.slice();
+    return color;
+  }
+  // and also the input colors in `#cap`.
+  varyCap(color) {
+    if (this.varyTriCount === 0) {
+      if (!this.triColor) this.triColor = [];
+      this.triColor[0] = this.#driftValue(color[0], capVary);
+      this.triColor[1] = this.#driftValue(color[1], capVary);
+      this.triColor[2] = this.#driftValue(color[2], capVary);
+      // Don't do anything with the alpha.
+    }
+    this.varyTriCount = (this.varyTriCount + 1) % 3;
+    color = this.triColor.slice();
+    return color;
+  }
+
+  // And these are for lines, and keep a counter for every 2 vertices.
+  varyLine(color) {
+    return color;
+  }
+
+  varyCapLine(color) {
+    return color;
+  }
+
   // Copy each point in the shape, transforming it by the added path positions
   // and angles to `positions` and `colors` which can get added to the `form`.
   #consumePath(pathPoints, form) {
@@ -1026,8 +1101,9 @@ class Tube {
 
     for (let pi = 0; pi < args.length; pi += 1) {
       const pathP = args[pi];
-
+      const shade = pathP.color;
       this.gesture.push(pathP);
+
       // console.log("Number of sections so far:", this.gesture.length);
 
       // ⚠️
@@ -1036,9 +1112,9 @@ class Tube {
       // parallel tube section.
       for (let si = 0; si < pathP.shape.length; si += 1) {
         if (!tris && si === 0) {
-          // 1. 📉 Core / center line.
+          // 1. 📉 Line: Core / center path.
           positions.push(this.lastPathP.shape[si], pathP.shape[si]);
-          colors.push(pathP.color, pathP.color);
+          colors.push(this.varyLine(shade), this.varyLine(shade));
         }
 
         if (this.sides === 1) return;
@@ -1052,15 +1128,17 @@ class Tube {
               // This may *not* only be a sides 2 thing...
               if (this.gesture.length > 1) {
                 positions.push(this.lastPathP.shape[si]); // First tri complete for side length of 2.
-                colors.push(pathP.color);
+                colors.push(this.vary(shade));
               }
               if (si > 1) {
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si - 1]);
                 positions.push(pathP.shape[si]);
-                colors.push([255, 0, 0, 200]);
-                colors.push([0, 255, 0, 200]);
-                colors.push([0, 0, 255, 200]);
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
               }
             }
             // Three Sides
@@ -1068,9 +1146,9 @@ class Tube {
               positions.push(pathP.shape[si]);
 
               if (si === 3) {
-                colors.push([0, 255, 0, 100]);
+                colors.push(this.vary(shade));
               } else {
-                colors.push([255, 0, 0, 255]);
+                colors.push(this.vary(shade));
               }
             }
             // Four Sides
@@ -1078,29 +1156,25 @@ class Tube {
               if (si === 1) {
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si]);
-                colors.push([255, 0, 0, 200]);
-                colors.push([0, 255, 0, 200]);
+                colors.push(this.vary(shade), this.vary(shade));
               }
 
               if (si === 2) {
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si]);
-                colors.push([0, 0, 255, 200]);
-                colors.push([0, 0, 255, 200]);
+                colors.push(this.vary(shade), this.vary(shade));
               }
 
               if (si === 3) {
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si]);
-                colors.push([255, 0, 0, 200]);
-                colors.push([255, 0, 0, 200]);
+                colors.push(v(shade, this.vary(shade)));
               }
 
               if (si === 4) {
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si]);
-                colors.push([255, 255, 0, 200]);
-                colors.push([255, 255, 0, 200]);
+                colors.push(this.vary(shade), this.vary(shade));
               }
             }
             if (this.sides >= 5) {
@@ -1108,20 +1182,21 @@ class Tube {
                 positions.push(pathP.shape[si]);
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(this.lastPathP.shape[si + 1]);
-                colors.push([255, 255, 255, 255]);
-                colors.push([255 / si, 0, 0, 200]);
-                colors.push([0, 0, 255 / si, 200]);
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
               } else {
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si]);
-                colors.push([255 / si, 0, 0, 200]);
-                colors.push([0, 0, 255 / si, 200]);
+                colors.push(this.vary(shade), this.vary(shade));
               }
             }
           } else {
             // 📈 Lines
             positions.push(this.lastPathP.shape[si], pathP.shape[si]);
-            colors.push(pathP.color, pathP.color);
+            colors.push(this.varyLine(shade), this.varyLine(shade));
           }
         }
 
@@ -1131,34 +1206,34 @@ class Tube {
           if (tris) {
             if (this.sides === 3) {
               positions.push(pathP.shape[si - 1], this.lastPathP.shape[si]);
-              colors.push(pathP.color, pathP.color);
+              colors.push(this.vary(shade), this.vary(shade));
             }
 
             if (this.sides === 4) {
               if (si === 2) {
                 positions.push(pathP.shape[si - 1]);
-                colors.push([0, 0, 255, 255]);
+                colors.push(this.vary(shade));
               }
               if (si === 3) {
                 positions.push(pathP.shape[si - 1]);
-                colors.push([255, 0, 0, 255]);
+                colors.push(this.vary(shade));
               }
               if (si === 4) {
                 positions.push(pathP.shape[si - 1]);
-                colors.push([255, 255, 0, 255]);
+                colors.push(this.vary(shade));
               }
             }
 
             if (this.sides >= 5) {
               positions.push(pathP.shape[si - 1]);
-              colors.push([255, 255, 0, 255]);
+              colors.push(this.vary(shade));
             }
           } else {
             // 📈 Lines
             if (!form) {
               // Only add across lines if we are not previewing. (Hacky)
               positions.push(pathP.shape[si], pathP.shape[si - 1]);
-              colors.push(pathP.color, pathP.color);
+              colors.push(this.varyLine(shade), this.varyLine(shade));
             }
           }
         }
@@ -1170,7 +1245,7 @@ class Tube {
             // Two sided
             if (sides === 2 && si === 1) {
               positions.push(pathP.shape[si]);
-              colors.push([0, 255, 0, 255]);
+              colors.push(this.vary(shade));
             }
 
             // 3️⃣
@@ -1181,7 +1256,7 @@ class Tube {
                   this.lastPathP.shape[si + 1],
                   this.lastPathP.shape[si]
                 );
-                colors.push([255, 255, 255, 255], [255, 0, 255, 100]);
+                colors.push(this.vary(shade), this.vary(shade));
               } else if (si === 2) {
                 positions.push(
                   this.lastPathP.shape[si],
@@ -1189,9 +1264,9 @@ class Tube {
                   pathP.shape[si]
                 );
                 colors.push(
-                  [255, 0, 0, 255],
-                  [0, 255, 0, 255],
-                  [0, 0, 255, 255]
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
                 );
               }
             }
@@ -1201,7 +1276,7 @@ class Tube {
             if (this.sides === 4) {
               if (si === 1) {
                 positions.push(this.lastPathP.shape[si + 1]);
-                colors.push([255, 255, 255, 255]);
+                colors.push(this.vary(shade));
               }
               if (si === 2) {
                 positions.push(
@@ -1209,9 +1284,11 @@ class Tube {
                   this.lastPathP.shape[si + 1],
                   pathP.shape[si]
                 );
-                colors.push([0, 255, 0, 255]);
-                colors.push([0, 255, 0, 255]);
-                colors.push([0, 255, 0, 255]);
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
               }
               if (si === 3) {
                 positions.push(
@@ -1219,9 +1296,11 @@ class Tube {
                   this.lastPathP.shape[si + 1],
                   pathP.shape[si]
                 );
-                colors.push([0, 255, 255, 255]);
-                colors.push([0, 255, 255, 255]);
-                colors.push([0, 255, 255, 255]);
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
               }
             }
 
@@ -1232,15 +1311,17 @@ class Tube {
                   this.lastPathP.shape[si + 1],
                   pathP.shape[si]
                 );
-                colors.push([0, 255, 255, 255]);
-                colors.push([0, 255, 255, 255]);
-                colors.push([0, 255, 255, 255]);
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
               }
             }
           } else {
             // 📈 Lines
             positions.push(this.lastPathP.shape[si + 1], pathP.shape[si]);
-            colors.push([255, 0, 0, 255], [255, 0, 0, 255]);
+            colors.push(this.varyLine(shade), this.varyLine(shade));
           }
         }
       }
@@ -1256,11 +1337,7 @@ class Tube {
             this.lastPathP.shape[pathP.shape.length - 1]
           );
 
-          colors.push(
-            [255, 255, 255, 255],
-            [255, 255, 255, 255],
-            [255, 255, 255, 255]
-          );
+          colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
 
           positions.push(
             pathP.shape[pathP.shape.length - 1],
@@ -1268,7 +1345,7 @@ class Tube {
             pathP.shape[1]
           );
 
-          colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
+          colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
         }
 
         if (this.sides === 4) {
@@ -1279,11 +1356,7 @@ class Tube {
             this.lastPathP.shape[pathP.shape.length - 1]
           );
 
-          colors.push(
-            [255, 255, 255, 255],
-            [255, 255, 255, 255],
-            [255, 255, 255, 255]
-          );
+          colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
 
           positions.push(
             pathP.shape[pathP.shape.length - 1],
@@ -1291,7 +1364,7 @@ class Tube {
             pathP.shape[1]
           );
 
-          colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
+          colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
         }
 
         if (this.sides >= 5) {
@@ -1301,11 +1374,7 @@ class Tube {
             this.lastPathP.shape[1]
           );
 
-          colors.push(
-            [255, 255, 255, 255],
-            [255, 255, 255, 255],
-            [255, 255, 255, 255]
-          );
+          colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
 
           positions.push(
             pathP.shape[pathP.shape.length - 1],
@@ -1313,7 +1382,7 @@ class Tube {
             pathP.shape[1]
           );
 
-          colors.push([255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]);
+          colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
         }
       } else {
         // 📈 Lines
@@ -1322,13 +1391,13 @@ class Tube {
             this.lastPathP.shape[1],
             pathP.shape[pathP.shape.length - 1]
           );
-          colors.push([0, 0, 255, 255], [0, 0, 255, 255]);
+          colors.push(this.varyLine(shade), this.varyLine(shade));
         }
 
         if (this.sides > 2) {
           // 6. Final across
           positions.push(pathP.shape[1], pathP.shape[pathP.shape.length - 1]);
-          colors.push([255, 180, 180, 255], [255, 180, 180, 255]);
+          colors.push(this.varyLine(shade), this.varyLine(shade));
         }
       }
 
