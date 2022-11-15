@@ -397,9 +397,18 @@ const $paintApi = {
 // Rendering of 3D forms.
 
 const formsToClear = [];
+let backgroundColor3D = 0x000000;
 
 // `cpu: true` enabled software rendering
-function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
+function form(
+  forms,
+  cam,
+  { cpu, background } = {
+    cpu: false,
+    keep: true,
+    background: backgroundColor3D,
+  }
+) {
   // Exit silently if no forms are present.
   if (forms === undefined || forms?.length === 0) return;
 
@@ -443,7 +452,10 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
             scale: form.scale,
           });
           form.gpuTransformed = false;
-        } else if (form.vertices.length > form.gpuVerticesSent || form.gpuReset) {
+        } else if (
+          form.vertices.length > form.gpuVerticesSent ||
+          form.gpuReset
+        ) {
           // Add vertices to buffered forms.
           formsToSend.push({
             update: "form:buffered:add-vertices",
@@ -473,6 +485,18 @@ function form(forms, cam, { cpu } = { cpu: false, keep: true }) {
     if (formsToSend.length === 0) return;
 
     // console.log("Sending form...", performance.now())
+
+    // Only send a background update if the value changed.
+    if (background !== backgroundColor3D) {
+      send({
+        type: "gpu-event",
+        content: {
+          type: "background-change",
+          content: background,
+        },
+      });
+      backgroundColor3D = background;
+    }
 
     send({
       type: "forms",

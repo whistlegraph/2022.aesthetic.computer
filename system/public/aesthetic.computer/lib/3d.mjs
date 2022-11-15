@@ -756,6 +756,12 @@ export function checkForRemovedForms(formsBaked) {
 
 // Receives events from aesthetic.computer.
 export function handleEvent(event) {
+
+  if (event.type === "background-change") {
+    scene.background = new THREE.Color(event.content);
+    return;
+  }
+
   if (event.type === "export-scene") {
     // Instantiate a exporter
     const exporter = new GLTFExporter();
