@@ -581,7 +581,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   const workersEnabled = false;
 
   if (workersEnabled) {
-  // if (!MetaBrowser && workersEnabled) {
+    // if (!MetaBrowser && workersEnabled) {
     const worker = new Worker(new URL(fullPath, window.location.href), {
       type: "module",
     });
@@ -674,7 +674,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // console.log("Sending frame...", frameCount, performance.now())
 
-    // 
+    //
     send(
       {
         type: "frame",
@@ -1924,6 +1924,16 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (extension(filename) === "json" || extension(filename) === "gltf") {
       // JSON
       MIME = "application/json";
+
+      // Parse JSON strings if they haven't been already, including support for `bigints`.
+      if (typeof data !== "string") {
+        data = JSON.stringify(
+          data,
+          (k, v) => (typeof v === "bigint" ? v.toString() : v)
+          // 2 // Also make sure we indent by 2 spaces so it's nicely formatted.
+        );
+      }
+
       object = URL.createObjectURL(new Blob([data], { type: MIME }));
     } else if (extension(filename) === "png") {
       // PNG

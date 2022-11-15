@@ -2,36 +2,17 @@
 // A laboratory & development piece for designing the geometry in `wand`.
 
 /* #region 🏁 todo
-
-  - [] Demo file recording and playback.
-
-    - [] Record full controller position and rotation as JSON.
-      - (Each simulation tick)
-
-    - [] Record stroke as JSON.
-      - (Each Tube start, stop, and goto.)
-
-    - [] Should each stroke be its own Tube in order to support different
-         geometry types? Yes if I wanna easily select and delete.
-         Do we need that for demo recording? No...
-          - Would it be nice for Barry's and my data? Yes!
-
-    - [] Load and playback.
-    - [] TODO: Could this data be added on a vertex level and imported as a mesh?
-               Or should it be user input formed?
-
-  - VR
-    - [] Add support for controller buttons to change background.
-    - [] White wand / finish wandForm and preview. (Ignore PC for now.)
-    - [] Add some keyboard and VR controller button options for complexity
-          and color / radius.
-    - [] Represent vertex count in VR somehow.
-
-  - [] Enable saving of files to the network instead of the device...
-       (But what happens if I try to download something on the device?)
-       - [] Skip certain objects like the measurement cube and the stage.
-       - [] Transform the drawing downward by the Y position of the center
-            of the cube.
+- VR
+  - [] Add support for controller buttons to change background.
+  - [] White wand / finish wandForm and preview. (Ignore PC for now.)
+  - [] Add some keyboard and VR controller button options for complexity
+        and color / radius.
+  - [] Represent vertex count in VR somehow.
+- [] Enable saving of files to the network instead of the device...
+      (But what happens if I try to download something on the device?)
+      - [] Skip certain objects like the measurement cube and the stage.
+      - [] Transform the drawing downward by the Y position of the center
+          of the cube.
   * Decorative
   - [] Solid offset generative colors on tubes with colored end-caps?.
     - [] Choose a palette.
@@ -40,12 +21,16 @@
     - [] Make two or three different samples with no options.
 * Optimization
  - [] Two sided triangle optimization.
-   - [] Be able to set whether to use DoubleSided or not on the Tube start / init level.
+   - [] Be able to set whether to use DoubleSided or not on the Tube start.
    - [-] Flip any inverted triangles. Check to see if enabling two sided
           triangles flip anything.
      - [x] 5 sides or greater
    - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
    - [] Re-enable THREE.FrontSide / BackSide?
+  - [] Should each stroke be its own Tube in order to support different
+        geometry types? Yes if I wanna easily select and delete.
+        Do we need that for demo recording? No...
+        - Would it be nice for Barry's and my data? Yes!
    - [] Finish all extraneous TODOS in this file.
 END OF DAY
 + Later
@@ -64,6 +49,21 @@ END OF DAY
       - [] Optional elsewhere.
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Demo file recording and playback.
+  - [x] Playback file.
+  - [x] Load file.
+  - [x️] Save file.
+  - [x] Recording
+    tick, light:switch (true / false based on starting light or dark value)
+    tick, wand,       PX, PY, PZ, QX, QY, QZ
+    tick, tube:start, PX, PY, PZ, QX, QY, QZ, R, G, B, A, RADIUS, SIDES   
+    tick, tube:goto,  PX, PY, PZ, QX, QY, QZ, R, G, B, A
+    tick, tube:stop,  (no other data needed) 
+    tick, light:switch true / false (subsequent light changes)
+  - [x️‍] Record full controller position and rotation as JSON.
+    - (Each simulation tick)
+  - [x] Record stroke as JSON.
+    - (Each Tube start, stop, and goto.)
 #endregion */
 
 // #region 🗺️ global
@@ -94,6 +94,7 @@ let tube, // Circumscribe the spider's path with a form.
   graphPreview = false; // Whether to render pieces of a tube smaller or greater
 //                       than `step` at the start of end of a stroke.
 let wandForm; // A live cursor.
+let demo, player; // For recording a session and rewatching it in realtime.
 
 const racePoints = [], // Extra stuff for CAD-style drawing.
   diffPrevPoints = [],
@@ -107,6 +108,9 @@ let limiter = 0;
 // #endregion
 
 function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
+  demo = new Demo(); // Start logging user interaction on demo frame 0.
+  demo?.rec("light:switch", background === 0xffffff); // Record the starting bg color in case the default ever changes.
+
   camdoll = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // Camera controls.
   stage = new Form(
     QUAD,
@@ -121,20 +125,26 @@ function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
     { pos: [0, 1.8, 0], rot: [0, 0, 0], scale: [1, 1, 1] }
   );
 
-  origin = new Form(
-    ORIGIN,
-    { pos: [0, 1.8, 0], rot: [0, 0, 0], scale: [10, 10, 10] }
-  );
+  origin = new Form(ORIGIN, {
+    pos: [0, 1.8, 0],
+    rot: [0, 0, 0],
+    scale: [10, 10, 10],
+  });
 
   race = new geo.Race({ speed });
-  tube = new Tube({ Form, num }, radius, sides, geometry);
+  tube = new Tube({ Form, num }, radius, sides, geometry, demo);
+
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
+
+let lastWandPosition;
+let lastWandRotation;
 
 function sim({
   pen,
   pen3d,
   Form,
+  simCount,
   num: { vec3, randIntRange: rr, dist3d, quat, vec4, mat3 },
 }) {
   camdoll.sim(); // Update the camera + dolly.
@@ -177,6 +187,32 @@ function sim({
     );
 
     const controllerPosition = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
+
+    // Record current wand position into the active demo if it has changed.
+    // Format: wand, PX, PY, PZ, QX, QY, QZ
+    // TODO: Generalize this with the below. 22.11.14.22.47
+    if (
+      (lastWandPosition !== undefined &&
+        lastWandRotation !== undefined &&
+        (lastWandPosition.x !== pen3d.pos.x ||
+          lastWandPosition.y !== pen3d.pos.y ||
+          lastWandPosition.z !== pen3d.pos.z ||
+          lastWandRotation._x !== pen3d.rotation._x ||
+          lastWandRotation._y !== pen3d.rotation._y ||
+          lastWandRotation._z !== pen3d.rotation._z)) ||
+      (lastWandPosition === undefined && lastWandRotation === undefined)
+    ) {
+      demo?.rec("wand", [
+        pen3d.pos.x,
+        pen3d.pos.y,
+        pen3d.pos.z,
+        pen3d.rotation._x,
+        pen3d.rotation._y,
+        pen3d.rotation._z,
+      ]);
+      lastWandPosition = pen3d.pos;
+      lastWandRotation = pen3d.rotation;
+    }
 
     // Show a live preview of what will be drawn, with measurement lines
     // as needed.
@@ -345,8 +381,29 @@ function sim({
     //       for spatial devices.
     position = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
     rotation = quat.fromEuler(quat.create(), ...camdoll.cam.rot);
+
+    // 🔴 Record current wand position into the active demo if it has changed.
+    // Format: wand, PX, PY, PZ, QX, QY, QZ
+    // TODO: Generalize this with the above. 22.11.14.22.46
+    if (
+      (lastWandPosition !== undefined &&
+        lastWandRotation !== undefined &&
+        (lastWandPosition[0] !== position[0] ||
+          lastWandPosition[1] !== position[1] ||
+          lastWandPosition[2] !== position[2] ||
+          lastWandRotation[0] !== rotation[0] ||
+          lastWandRotation[1] !== rotation[1] ||
+          lastWandRotation[2] !== rotation[2])) ||
+      (lastWandPosition === undefined && lastWandRotation === undefined)
+    ) {
+      demo?.rec("wand", [...position.slice(0, 3), ...rotation]);
+      lastWandPosition = position;
+      lastWandRotation = rotation;
+    }
+
     tube.preview({ position, rotation, color: [255, 0, 0, 255] });
   }
+  lastWandPosition = position;
 
   // 🏁 Move the race finish line to the current cursor position.
   // Compute an in-progress gesture.
@@ -429,6 +486,55 @@ function sim({
     //   ];
     // }
   }
+
+  demo?.sim(simCount); // 🔴 Update the demo frame count.
+  player?.sim((frames, frameCount) => {
+    // Parse demo frames and act on them in order.
+
+    frames.forEach((f) => {
+      const type = f[1];
+      const di = 2;
+
+      if (type === "light:switch") {
+        // ❔ tick, light:switch (true / false based on starting light or dark value)
+        lightSwitch(f[di]);
+        // Skip `true` and `false` values for now.
+      } else if (type === "wand") {
+        // ❔ tick, wand, PX, PY, PZ, QX, QY, QZ
+        // Skip wand data for now.
+      } else if (type === "tube:start") {
+        // Format: tick, tube:start, PX, PY, PZ, QX, QY, QZ, R, G, B, A, RADIUS, SIDES
+        tube.start(
+          {
+            position: [f[di], f[di + 1], f[di + 2]],
+            rotation: [f[di + 3], f[di + 4], f[di + 5], f[di + 6]],
+            color: [f[di + 7], f[di + 8], f[di + 9], f[di + 10]],
+          },
+          f[di + 11],
+          f[di + 12],
+          false
+        );
+      } else if (type === "tube:goto") {
+        // ❔ tick, tube:goto, PX, PY, PZ, QX, QY, QZ, R, G, B, A
+        tube.goto(
+          {
+            position: [f[di], f[di + 1], f[di + 2]],
+            rotation: [f[di + 3], f[di + 4], f[di + 5], f[di + 6]],
+            color: [f[di + 7], f[di + 8], f[di + 9], f[di + 10]],
+          },
+          undefined,
+          false
+        );
+      } else if (type === "tube:stop") {
+        // ❔ tick, tube:stop, (no other data needed)
+        tube.stop(true);
+      } else if (type === "demo:complete") {
+        // An invented frame with no other information to destroy our player.
+        player = null;
+      }
+    });
+    // console.log(frameCount, frames[0]);
+  }); // 🟢 Advance forward any player frames.
 }
 
 function paint({ form, Form }) {
@@ -563,11 +669,10 @@ function paint({ form, Form }) {
   form([stage, tube.capForm, tube.form, wandForm], camdoll.cam, { background });
   if (measuringCubeOn) form(measuringCube, camdoll.cam);
   if (originOn) form(origin, camdoll.cam);
-
 }
 
-function act({ event: e, pen, gpu, debug, num }) {
-  const { quat, randIntRange: rr, vec3 } = num;
+function act({ event: e, pen, gpu, debug, upload, download, num }) {
+  const { quat, randIntRange: rr, vec3, timestamp } = num;
 
   // 🥽 Start a gesture. (Spatial)
   if (e.is("3d:touch:2")) {
@@ -628,33 +733,49 @@ function act({ event: e, pen, gpu, debug, num }) {
 
   // Toggle binary color switch of background and foreground.
   if (e.is("keyboard:down:c")) {
-    if (background === 0x000000) {
-      background = 0xffffff;
-    } else {
-      background = 0x000000;
-    }
-
-    if (background === 0x000000) {
-      color = [255, 255, 255, 255];
-      //capColor = [0, 0, 0, 255];
-      capColor = [255, 255, 255, 255];
-      // stage.color = [255, 255, 255, 255];
-
-      tubeVary = 0; // 20;
-      capVary = 0; // 4;
-    } else {
-      color = [0, 0, 0, 255];
-      //capColor = [255, 255, 255, 255];
-      capColor = [0, 0, 0, 255];
-      // stage.color = [0, 0, 0, 255];
-
-      tubeVary = 0; // 4;
-      capVary = 0; //20;
-    }
+    lightSwitch();
+    demo?.rec("light:switch", background === 0xffffff);
   }
 
   // Save scene data.
   if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
+
+  // 🔴 Start recording a demo / make a new piece.
+  if (e.is("keyboard:down:p")) {
+    demo?.print(); // Print the last demo.
+    download(`demo-${timestamp()}.json`, demo.frames); // Save to json.
+    demo?.dump(); // Start fresh.
+    demo?.rec("light:switch", background === 0xffffff); // Record the starting bg color in case the default ever changes.
+  }
+
+  // Load a demo file and play it back.
+  if (e.is("keyboard:down:l")) {
+    upload(".json")
+      .then((data) => {
+        const frames = JSON.parse(data).map((f) => {
+          // TODO: This may not cover embedded array types.
+          f.forEach((v, i) => {
+            if (i === 0) {
+              f[i] = BigInt(f[i]);
+            } else if (f[i] === true) {
+              f[i] = true;
+            } else if (f[i] === false) {
+              f[i] = false;
+            } else if (typeof f[i] === "string" && !isNaN(f[i])) {
+              f[i] = parseFloat(f[i]);
+            }
+          });
+          return f;
+        });
+        console.log("🎞️ Loaded a demo file:", frames);
+
+        // Play back the demo file.
+        player = new Player(frames);
+      })
+      .catch((err) => {
+        console.error("JSON load error:", err);
+      });
+  }
 
   camdoll.act(e); // Wire up FPS style navigation events.
 
@@ -695,6 +816,36 @@ export { boot, paint, sim, act };
 
 // #region 📑 library
 
+let lit = false;
+
+function lightSwitch(light) {
+  lit = light === undefined ? (lit = !lit) : light;
+
+  if (lit) {
+    background = 0xffffff;
+  } else {
+    background = 0x000000;
+  }
+
+  if (background === 0x000000) {
+    color = [255, 255, 255, 255];
+    //capColor = [0, 0, 0, 255];
+    capColor = [255, 255, 255, 255];
+    // stage.color = [255, 255, 255, 255];
+
+    tubeVary = 0; // 20;
+    capVary = 0; // 4;
+  } else {
+    color = [0, 0, 0, 255];
+    //capColor = [255, 255, 255, 255];
+    capColor = [0, 0, 0, 255];
+    // stage.color = [0, 0, 0, 255];
+
+    tubeVary = 0; // 4;
+    capVary = 0; //20;
+  }
+}
+
 // Here we build a path out of points, which draws
 // tubular segments by adding them to a geometric form.
 // It does this by producing a cookie cutter shape that gets
@@ -716,17 +867,19 @@ class Tube {
   lineColor; // Stores the current triangle color.
   varyLineCount = 0; // Counts by 2 to color line segment vertices.
   // TODO: ^ Some of these fields could still be privated. 22.11.11.15.50
+  demo; // Points to a demo that is being recorded to in start, goto, and stop.
 
   // ☁️
   // Note: I could eventually add behavioral data into these vertices that
   //       animate things / turn on or off certain low level effects etc.
 
-  constructor($, radius, sides, geometry) {
+  constructor($, radius, sides, geometry, demo) {
     this.$ = $; // Hold onto the API.
     this.geometry = geometry; // Set the geometry type.
     this.radius = radius;
     this.sides = sides;
     this.shape = this.#segmentShape(radius, sides); // Set shape to start.
+    this.demo = demo;
 
     // Make the buffered geometry form, given the geometry type.,
     // and another to represent a dynamic cursor.
@@ -757,7 +910,7 @@ class Tube {
   }
 
   // Creates an initial position, orientation and end cap geometry.
-  start(p, radius = this.radius, sides = this.sides) {
+  start(p, radius = this.radius, sides = this.sides, fromDemo = false) {
     this.sides = sides;
     this.radius = radius;
 
@@ -773,6 +926,18 @@ class Tube {
     if (this.sides > 1) this.#cap(start, this.form);
 
     this.gesture.push(start);
+
+    // 🗒️ Note: Eventually this should be on the level of abstraction of a Wand, not a tool like Tube. 22.11.14.23.20
+    if (start.color.length === 3) start.color.push(255); // Use RGBA for demo.
+
+    if (!fromDemo)
+      this.demo?.rec("tube:start", [
+        ...start.pos.slice(0, 3),
+        ...start.rotation,
+        ...start.color,
+        radius,
+        sides,
+      ]);
   }
 
   // Produces the `capForm` cursor.
@@ -810,22 +975,31 @@ class Tube {
   }
 
   // Adds additonal points as args in [position, rotation, color] format.
-  goto(pathPoint, form) {
+  goto(pathPoint, form, fromDemo = false) {
     // Add new points to the path.
     // Extrude shape points from and in the direction of each path vertex.
-    this.#consumePath([this.#transformShape(this.#pathp(pathPoint))], form);
+    const pathp = this.#pathp(pathPoint);
+    this.#consumePath([this.#transformShape(pathp)], form);
+
+    if (pathp.color.length === 3) pathp.color.push(255); // Use RGBA for demo.
+    if (!fromDemo)
+      this.demo?.rec("tube:goto", [
+        ...pathp.pos.slice(0, 3),
+        ...pathp.rotation,
+        ...pathp.color,
+      ]);
   }
 
-  stop() {
+  stop(fromDemo = false) {
     const { dist3d } = this.$.num;
 
     this.capForm.clear();
 
     // Push anything we haven't stepped into onto the path.
-    const d = dist3d(spi.state.position, race.pos);
 
     // Optionally add start or end bits, drawn over or under our step size.
-    if (graphPreview) {
+    if (!fromDemo && graphPreview) {
+      const d = dist3d(spi.state.position, race.pos);
       if (d > 0.01) {
         if (this.gesture.length === 0) {
           const alteredState = { ...spi.state };
@@ -845,7 +1019,10 @@ class Tube {
 
     if (this.lastPathP) this.#cap(this.lastPathP, this.form, false);
     //                                                      `false` for no ring
+
     this.gesture.length = 0;
+
+    if (!fromDemo) this.demo?.rec("tube:stop");
   }
 
   // Takes a starting position, direction and length.
@@ -872,6 +1049,7 @@ class Tube {
   // A spatial snapshot of state used around as `spider.state`.
   // 😱 (This method is dumb, it only adds a shape array. 22.11.12.01.28)
   #pathp({ position, direction, rotation, color, shape = [] }) {
+    if (position.length === 3) position = [...position, 1];
     return { pos: position, direction, rotation, color, shape };
   }
 
@@ -1644,6 +1822,122 @@ class Spider {
   // Imagine a future forward position, turning an optional amount beforehand.
   peek(steps, turn) {
     return this.crawl(steps, true);
+  }
+}
+
+// 🔴 Record and playback session data.
+class Demo {
+  startTick;
+  currentTick;
+  startDelay = 0n;
+  frames = [];
+  progress = 0n;
+
+  constructor() {
+    console.log("🔴 Recording a demo!");
+  }
+
+  // Update the demo tick. Should be tied to the end of each data update.
+  sim(simCount) {
+    if (this.startTick === undefined) {
+      this.startTick = simCount;
+      this.currentTick = simCount;
+      this.progress = 0n;
+    } else {
+      this.currentTick = simCount;
+      this.progress = this.currentTick - this.startTick - this.startDelay;
+      // Offset any dead time before first interaction.
+    }
+  }
+
+  // Save timestamped data to a demo frame.
+  rec(label, data) {
+    let frame;
+
+    if (this.frames.length === 0) {
+      this.startDelay = this.progress;
+      this.progress = 0n;
+    }
+
+    if (Array.isArray(data)) {
+      // Add data to a frame array, cutting any decimals to 6 places.
+      frame = [
+        this.progress,
+        label,
+        ...data.map((v) => {
+          if (typeof v === "number") return parseFloat(v.toFixed(6));
+          return v;
+        }),
+      ];
+      this.frames.push(frame);
+    } else {
+      // Add data directly unless it's `undefined`.
+      if (data === undefined) {
+        frame = [this.progress, label]; // Don't send anything if data is empty.
+      } else {
+        frame = [this.progress, label, data]; // Make sure to keep Booleans though.
+      }
+      this.frames.push(frame);
+    }
+
+    if (label !== "wand")
+      console.log("🔴 Recording:", frame, this.frames.length);
+  }
+
+  // Log the current results.
+  print() {
+    console.log("🔴 Demo frames:", this.frames);
+  }
+
+  // Clear any existing demo state / start a new demo.
+  dump() {
+    this.startTick = undefined;
+    this.currentTick = undefined;
+    this.frames = [];
+    this.progress = 0n;
+  }
+}
+
+class Player {
+  frames;
+  frameCount = 0n;
+  frameIndex = 0;
+
+  constructor(frames) {
+    this.frames = frames;
+  }
+
+  sim(handler) {
+    const collectedFrames = [];
+
+    // TODO: Also cover skips here...
+
+    let thisFrame = this.frames[this.frameIndex];
+
+    if (!thisFrame) {
+      console.log("🟡 Demo playback completed:", this.frameIndex);
+      // Push a completed message with a negative frameCount to mark an ending.
+      handler([[-1, "demo:complete"]]);
+      return;
+    }
+
+    // Skip frames.
+    if (thisFrame[0] < this.frameCount) {
+      this.frameCount += 1n;
+      return;
+    }
+
+    // Add any repeats / multiple actions that occur in the same frame.
+    // While we have a next frame available, and the most recent
+    // collected frame is the same as our current frameCount...
+    while (thisFrame && thisFrame[0] === this.frameCount) {
+      collectedFrames.push(thisFrame);
+      this.frameIndex += 1;
+      thisFrame = this.frames[this.frameIndex];
+    }
+
+    handler(collectedFrames, this.frameCount); // Run our action handler.
+    this.frameCount += 1n; // Increase the frame count.
   }
 }
 // #endregion
