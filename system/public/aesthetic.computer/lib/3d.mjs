@@ -24,8 +24,11 @@ import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from "../dep/three/GLTFExporter.js";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
-
 const debug = window.acDEBUG;
+
+const NO_FOG = true;
+const FOG_NEAR = 0.1;
+const FOG_FAR = 10;
 
 let scene,
   renderer,
@@ -68,9 +71,9 @@ export function initialize(wrapper, loop, receivedDownload, sendToPiece) {
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  //  scene.fog = new THREE.Fog(0x111111, 0.2, 2); // More basic fog.
-  scene.fog = new THREE.FogExp2(0x030303, 0.1);
-  //  scene.fog = new THREE.FogExp2(0x030303, 0.5);
+  if (!NO_FOG) scene.fog = new THREE.Fog(0x000000, FOG_NEAR, FOG_FAR); // More basic fog.
+  //scene.fog = new THREE.FogExp2(0x000000, FOG);
+  //scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
   //  const ambientLight = new THREE.AmbientLight();
   //  const pointLight = new THREE.PointLight();
@@ -404,21 +407,34 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
     // *** 🟥 Quad ***
     if (f.type === "quad") {
-      // Add texture.
-      const tex = new THREE.DataTexture(
-        f.texture.pixels,
-        f.texture.width,
-        f.texture.height,
-        THREE.RGBAFormat
-      );
-      tex.needsUpdate = true;
+      let material;
+      let tex;
 
-      const material = new THREE.MeshBasicMaterial({ map: tex });
+      if (f.texture) {
+        // Add texture if one exists.
+        tex = new THREE.DataTexture(
+          f.texture.pixels,
+          f.texture.width,
+          f.texture.height,
+          THREE.RGBAFormat
+        );
+        tex.needsUpdate = true;
+        material = new THREE.MeshBasicMaterial({ map: tex });
+      } else {
+        if (f.color === undefined && f.vertices[0].color) {
+          material = new THREE.MeshBasicMaterial();
+        } else {
+          material = new THREE.MeshBasicMaterial({
+            color: rgbToHex(...(f.color || color)),
+          });
+        }
+      }
+
       material.side = THREE.DoubleSide;
       //material.transparent = true;
       material.opacity = f.alpha;
       material.alphaTest = 0.5;
-      material.depthWrite = false;
+      material.depthWrite = true;
       material.depthTest = true;
 
       const geometry = new THREE.PlaneGeometry(2, 2);
@@ -445,9 +461,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
     // *** ✏️ Line ***
     if (f.type === "line") {
+      // TODO: I'm not sure why these don't appear on live reload... 22.11.14.21.24
+
       let material;
 
-      if (f.vertices[0].color) {
+      if (f.color === undefined && f.vertices[0].color) {
         // Only use a gloabl color if vertices don't have color.
         material = new THREE.LineBasicMaterial();
       } else {
@@ -611,15 +629,22 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     }
 
     if (f.update === "form:touch") {
-      //const form = scene.getObjectByProperty("aestheticID", f.uid);
+      //const form = scene.getObjectByUserDataProperty("aestheticID", f.uid);
       //if (!form) return;
       //form.geometry.computeLineDistances?.();
+    }
+
+    if (f.update === "form:color") {
+      const fu = f;
+      const form = scene.getObjectByUserDataProperty("aestheticID", fu.uid);
+      if (!form) return;
+      form.material.color = new THREE.Color(...[...fu.color]);
     }
 
     if (f.update === "form:transform") {
       const fu = f; // formUpdate
 
-      const form = scene.getObjectByProperty("aestheticID", fu.uid);
+      const form = scene.getObjectByUserDataProperty("aestheticID", fu.uid);
 
       if (!form) return;
 
@@ -756,9 +781,9 @@ export function checkForRemovedForms(formsBaked) {
 
 // Receives events from aesthetic.computer.
 export function handleEvent(event) {
-
   if (event.type === "background-change") {
     scene.background = new THREE.Color(event.content);
+    if (!NO_FOG)scene.fog = new THREE.Fog(event.content, FOG_NEAR, FOG_FAR);
     return;
   }
 
@@ -923,6 +948,7 @@ export function render(now) {
 
     // Garbage is collected in `bios` under `BIOS:RENDER`
     renderer.render(scene, camera);
+    // console.log(scene.children)
 
     if (renderedOnce === false) {
       renderer.domElement.classList.add("visible");

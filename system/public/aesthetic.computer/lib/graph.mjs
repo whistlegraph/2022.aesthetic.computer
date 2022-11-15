@@ -1242,6 +1242,7 @@ class Form {
   gpuReset = false; // Assumes this object is being recreated on the GPU.
   gpuKeep = true;
   gpuTransformed = false;
+  gpuRecolored = false;
   MAX_POINTS = 100000; // Some buffered geometry gpu calls may use this hint.
   uvs = [];
 

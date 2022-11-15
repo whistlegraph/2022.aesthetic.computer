@@ -290,6 +290,69 @@ const QUAD = {
   ],
 };
 
+// A cube of lines.
+const CUBEL = {
+  type: "line",
+  positions: [
+    // Back
+    [-0.5, -0.5, 0.5, 1], // Down
+    [-0.5, 0.5, 0.5, 1],
+
+    [-0.5, 0.5, 0.5, 1], // Across
+    [0.5, 0.5, 0.5, 1],
+
+    [0.5, 0.5, 0.5, 1], // Up
+    [0.5, -0.5, 0.5, 1],
+
+    [0.5, -0.5, 0.5, 1], // Back
+    [-0.5, -0.5, 0.5, 1],
+    // Front
+    [-0.5, -0.5, -0.5, 1], // Down
+    [-0.5, 0.5, -0.5, 1],
+
+    [-0.5, 0.5, -0.5, 1], // Across
+    [0.5, 0.5, -0.5, 1],
+
+    [0.5, 0.5, -0.5, 1], // Up
+    [0.5, -0.5, -0.5, 1],
+
+    [0.5, -0.5, -0.5, 1], // Back
+    [-0.5, -0.5, -0.5, 1],
+    // Bars (back to front)
+    [-0.5, -0.5, 0.5, 1], // Top Left
+    [-0.5, -0.5, -0.5, 1],
+
+    [-0.5, 0.5, 0.5, 1], // Bottom Left
+    [-0.5, 0.5, -0.5, 1],
+
+    [0.5, 0.5, 0.5, 1], // Up
+    [0.5, 0.5, -0.5, 1],
+
+    [0.5, -0.5, 0.5, 1], // Back
+    [0.5, -0.5, -0.5, 1],
+  ],
+};
+
+const ORIGIN = {
+  type: "line",
+  positions: [
+    [-0.5, 0, 0, 1], // Horizontal X
+    [0.5, 0, 0, 1],
+    [0, 0, -0.5, 1], // Horizontal Z
+    [0, 0, 0.5, 1],
+    [0, -0.5, 0, 1], // Vertical
+    [0, 0.5, 0, 1],
+  ],
+  colors: [
+    [255, 0, 0, 255],
+    [255, 0, 0, 255],
+    [0, 255, 0, 255],
+    [0, 255, 0, 255],
+    [0, 0, 255, 255],
+    [0, 0, 255, 255],
+  ],
+};
+
 const TRI = {
   type: "triangle",
   positions: [
@@ -389,6 +452,8 @@ const $paintApi = {
   TRI,
   QUAD,
   LINE,
+  CUBEL,
+  ORIGIN,
 };
 
 // This is where I map the API functions that anyone can use, to the internal
@@ -440,7 +505,18 @@ function form(
         form.gpuReset = false;
       } else {
         // B. If the form has been sent, but the form has changed and
-        //    needs a partial update or is simply being redrawn.
+        //    needs a partial state update or is simply being redrawn.
+        let msgCount = 0;
+
+        if (form.gpuRecolored === true) {
+          formsToSend.push({
+            update: "form:color",
+            uid: form.uid,
+            color: form.color,
+          });
+          msgCount += 1;
+          form.gpuRecolored = false;
+        }
 
         // Transform the geometry.
         if (form.gpuTransformed === true) {
@@ -452,10 +528,10 @@ function form(
             scale: form.scale,
           });
           form.gpuTransformed = false;
-        } else if (
-          form.vertices.length > form.gpuVerticesSent ||
-          form.gpuReset
-        ) {
+          msgCount += 1;
+        }
+
+        if (form.vertices.length > form.gpuVerticesSent || form.gpuReset) {
           // Add vertices to buffered forms.
           formsToSend.push({
             update: "form:buffered:add-vertices",
@@ -471,7 +547,10 @@ function form(
           //console.log(form.gpuReset);
           form.gpuReset = false;
           form.gpuVerticesSent = form.vertices.length;
-        } else {
+          msgCount += 1;
+        }
+
+        if (msgCount === 0) {
           // Simply tell the system we are still drawing the form... otherwise
           // it will get cleared.
           formsToSend.push({

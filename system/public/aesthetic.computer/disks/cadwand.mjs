@@ -1,29 +1,43 @@
 // ️🪄 Cadwand, 22.11.05.00.30 ⚙️
 // A laboratory & development piece for designing the geometry in `wand`.
 
-// - [-]  Flip current color with background color.
-// - [x] Color support.
-
 /* #region 🏁 todo
-- [] Decide on a basic look / palette that I could make some good drawings with.
-  - [] Black and white room toggle?
-    - [] Add support for controller buttons.
-  - [] How can textures be used?
-    - [] Make a small "plinth", the color of which toggles along with the
-         background.
-  - [] White wand.
-  - [] Neutral background with fog.
-  - [] Grey floor.
-  - [] Light
+
+  - [] Demo file recording and playback.
+
+    - [] Record full controller position and rotation as JSON.
+      - (Each simulation tick)
+
+    - [] Record stroke as JSON.
+      - (Each Tube start, stop, and goto.)
+
+    - [] Should each stroke be its own Tube in order to support different
+         geometry types? Yes if I wanna easily select and delete.
+         Do we need that for demo recording? No...
+          - Would it be nice for Barry's and my data? Yes!
+
+    - [] Load and playback.
+    - [] TODO: Could this data be added on a vertex level and imported as a mesh?
+               Or should it be user input formed?
+
+  - VR
+    - [] Add support for controller buttons to change background.
+    - [] White wand / finish wandForm and preview. (Ignore PC for now.)
+    - [] Add some keyboard and VR controller button options for complexity
+          and color / radius.
+    - [] Represent vertex count in VR somehow.
+
+  - [] Enable saving of files to the network instead of the device...
+       (But what happens if I try to download something on the device?)
+       - [] Skip certain objects like the measurement cube and the stage.
+       - [] Transform the drawing downward by the Y position of the center
+            of the cube.
   * Decorative
   - [] Solid offset generative colors on tubes with colored end-caps?.
     - [] Choose a palette.
-- [] Make scale test drawings for Barry / UE export.
-  - [] Enable saving of files to the network instead of the device...
-       (But what happens if I try to download something on the device?)
-  - [] Make two or three different samples with no options.
-- [] Add some keyboard and VR controller button options for complexity
-      and color / radius.
+  - [] Add a light to the scene.
+  - [] Make scale test drawings for Barry / UE export.
+    - [] Make two or three different samples with no options.
 * Optimization
  - [] Two sided triangle optimization.
    - [] Be able to set whether to use DoubleSided or not on the Tube start / init level.
@@ -32,15 +46,17 @@
      - [x] 5 sides or greater
    - [] Double up the vertices in the exception (Ribbon / 2 sided Tube)
    - [] Re-enable THREE.FrontSide / BackSide?
-   - [] Try to re-enable workers again.
-   - [] Finish all extranerous TODOS in this file.
+   - [] Finish all extraneous TODOS in this file.
+END OF DAY
 + Later
+ - [] Try to re-enable workers again.
  - [] Integrate into `wand`.
    - [] Read both pieces side by side.
    - [] Model each wand as a single skinny tube (with colored stripes).
        (Bring Tube geometry into Wand)
    - [] Remove strips from the tube as needed.
    - [] Allow
+- [] Add transparent triangle rendered vertices to measurement cube. 
 - [] Reload last camera position on refresh.
 - [] Record some GIFs.
 - [] There should be an "inner" and "outer" triangulation option.
@@ -48,44 +64,33 @@
       - [] Optional elsewhere.
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
-- [x] Toggle on and off debug drawing.
-- [x] Get all the kinks out of VR drawing / make it as nice as possible.
-  - [x] Better curve fitting
-- [x] Remove preview cap from wand.
-- [x] Profile tube creation performance.
-- [x] Draw in any starting direction.
-- [x] Start drawing from proper orientation.
-- [x] Put it on the end of a wand-like form / draw a ray?
-- [x] Add a "fake" end cap / cursor that represents an endcap, while drawing.
-- [x] Clean up this `cadwand` code.
-- [x] Get Chrome debugging working on Windows w/ WSL.
-- [x] Get kinks out of middle section? https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
-- [x] Remove starting kink.
-- [x] Prevent the tube's circle from twisting on its Y axis.
-  - [x] Implement this algorithm:
-    - [x] https://vimeo.com/251091418
 #endregion */
 
 // #region 🗺️ global
 import { CamDoll } from "../lib/cam-doll.mjs";
 const { abs, max, cos, sin } = Math;
 
-let camdoll, stage; // Camera and floor.
-const rulers = true; // Whether to render arch. guidelines for development.
+let camdoll, stage; // Camera and stage.
+const rulers = false; // Whether to render arch. guidelines for development.
+let measuringCube; // A toggled cube for conforming a sculpture to a scale.
+let origin; // Some crossing lines to check the center of a sculpture.
+let measuringCubeOn = true;
+let originOn = true;
 let background = 0x000000; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
+let geometry = "line"; // or "lines" for wireframes
 let race,
   speed = 12; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
-  color = [0, 0, 0, 255]; // The current spider color read by the tube..
+  color = [255, 255, 255, 255]; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
-  sides = 8, // Number of tube sides. 1 or 2 means flat.
+  sides = 16, // Number of tube sides. 1 or 2 means flat.
   radius = 0.035, // The width of the tube.
   step = 0.05, // The length of each tube segment.
-  capColor = [255, 255, 255, 255], // The currently selected tube end cap color.
-  capVary = 100, // How much to drift the colors for the cap.
-  tubeVary = 4, // How much to drift the colors for the tube.
-  rayDist = 1, // How far away to draw the tube on non-spatial devices.
+  capColor = [255, 255, 255, 255], // [255, 255, 255, 255] The currently selected tube end cap color.
+  capVary = 0, // 2; How much to drift the colors for the cap.
+  tubeVary = 0, // 50; How much to drift the colors for the tube.
+  rayDist = 0.1, // How far away to draw the tube on non-spatial devices.
   graphPreview = false; // Whether to render pieces of a tube smaller or greater
 //                       than `step` at the start of end of a stroke.
 let wandForm; // A live cursor.
@@ -101,15 +106,28 @@ let spiderForm, trackerForm;
 let limiter = 0;
 // #endregion
 
-function boot({ Camera, Dolly, Form, QUAD, painting, wipe, num, wiggle, geo }) {
+function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
   camdoll = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // Camera controls.
   stage = new Form(
     QUAD,
-    { tex: painting(16, 16, (g) => g.noise16DIGITPAIN()) },
+    { color: [64, 64, 64, 255] },
+    /* { tex: painting(16, 16, (g) => g.noise16DIGITPAIN()) }, */
     { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
   );
+
+  measuringCube = new Form(
+    CUBEL,
+    { color: [255, 0, 0, 255] },
+    { pos: [0, 1.8, 0], rot: [0, 0, 0], scale: [1, 1, 1] }
+  );
+
+  origin = new Form(
+    ORIGIN,
+    { pos: [0, 1.8, 0], rot: [0, 0, 0], scale: [10, 10, 10] }
+  );
+
   race = new geo.Race({ speed });
-  tube = new Tube({ Form, num }, radius, sides, "triangles"); // or "lines" for wireframes
+  tube = new Tube({ Form, num }, radius, sides, geometry);
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
 
@@ -335,7 +353,7 @@ function sim({
   if (pen3d && race) {
     race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]);
   } else if (race && pen) {
-    race.to(camdoll.cam.ray(pen.x, pen.y, 0.1, true));
+    race.to(camdoll.cam.ray(pen.x, pen.y, rayDist / 4, true));
   }
 
   if (waving) {
@@ -349,31 +367,35 @@ function sim({
 
     let dot = vec3.dot(spiToRace, spi.state.direction);
     const d = dist3d(spi.state.position, race.pos);
-
+    let dotSign;
 
     // 🕷️ Spider Jump
     if (d > step) {
-      if (pen3d && tube.gesture.length === 0) {
+      if (tube.gesture.length === 0) {
         // Populate first tube start with the preview state.
-        tube.start(alteredSpiState, radius, sides);
-        spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
-        tube.goto(spi.state); // 2. Knots the tube.
-        spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+        if (pen3d) {
+          tube.start(alteredSpiState, radius, sides);
+          spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
+          tube.goto(spi.state); // 2. Knots the tube.
+        } else {
+          tube.start(spi.state, radius, sides);
+          spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
+          tube.goto(spi.state); // 2. Knots the tube.
+        }
         return;
       }
 
-      // console.log(dot);
-      // console.log(tube.gesture.length > 0 && dot > 0.5);
-
-      if (tube.gesture.length > 0 && dot > 0.5) {
-        // 1. Jumps N steps in the direction from this position to last position.
-        spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
-
-        console.log("hi");
-
-        tube.goto(spi.state); // 2. Knots the tube.
-        // #. Randomizes the color for every section.
-        //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+      if (tube.gesture.length > 0) {
+        if (pen3d && dot > 0.5) {
+          // 1. Jumps N steps in the direction from this position to last position.
+          spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
+          tube.goto(spi.state); // 2. Knots the tube.
+          // #. Randomizes the color for every section.
+          //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+        } else if (!pen3d) {
+          spi.crawlTowards(race.pos, step / 2, 1); // <- last parm is a tightness fit
+          tube.goto(spi.state); // 2. Knots the tube.
+        }
       }
     }
     // Add some debug data to show the future direction.
@@ -521,8 +543,6 @@ function paint({ form, Form }) {
     { scale: [1, 1, 1] }
   );
   */
-    //#endregion
-
     // Draw some cursor measurement lines.
     trackerForm = new Form(
       {
@@ -536,20 +556,14 @@ function paint({ form, Form }) {
       { scale: [1, 1, 1] }
     );
 
-    form(
-      [
-        stage,
-        tube.capForm,
-        tube.form,
-        wandForm,
-        trackerForm,
-        diffPrevForm,
-        diffForm,
-      ],
-      camdoll.cam,
-      { background }
-    );
+    form([trackerForm, diffPrevForm, diffForm], camdoll.cam);
+    //#endregion
   }
+
+  form([stage, tube.capForm, tube.form, wandForm], camdoll.cam, { background });
+  if (measuringCubeOn) form(measuringCube, camdoll.cam);
+  if (originOn) form(origin, camdoll.cam);
+
 }
 
 function act({ event: e, pen, gpu, debug, num }) {
@@ -559,7 +573,6 @@ function act({ event: e, pen, gpu, debug, num }) {
   if (e.is("3d:touch:2")) {
     const last = [e.lastPosition.x, e.lastPosition.y, e.lastPosition.z];
     const cur = [e.pos.x, e.pos.y, e.pos.z];
-    //const color = [rr(100, 255), rr(100, 255), rr(100, 255), 255];
     const rot = quat.fromValues(
       e.rotation._x,
       e.rotation._y,
@@ -581,18 +594,15 @@ function act({ event: e, pen, gpu, debug, num }) {
 
   // 🖱️ Start a gesture. (Screen)
   if (e.is("touch") && e.button === 0 && pen && pen.x && pen.y) {
-    const last = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
-    const cur = camdoll.cam.ray(pen.x, pen.y, rayDist / 2, true);
-    //const color = [rr(100, 255), rr(100, 255), rr(100, 255), 255];
-    const dir = vec3.sub(vec3.create(), cur, last);
+    const far = camdoll.cam.ray(pen.x, pen.y, rayDist, true);
+    const near = camdoll.cam.ray(pen.x, pen.y, rayDist / 2, true);
+    const dir = vec3.sub(vec3.create(), near, far);
     const rot = quat.fromEuler(quat.create(), ...camdoll.cam.rot);
-
-    spi = new Spider({ num, debug }, cur, last, dir, rot, color);
-
+    spi = new Spider({ num, debug }, near, far, dir, rot, color);
     race.start(spi.state.position);
     // racePoints.push(race.pos); // For debugging.
 
-    tube.start(spi.state, radius, sides); // Start a gesture.
+    // tube.start(spi.state, radius, sides); // Start a gesture.
     waving = true;
   }
 
@@ -606,15 +616,41 @@ function act({ event: e, pen, gpu, debug, num }) {
     }
   }
 
+  // Toggle cube and origin measurement lines.
+  if (e.is("keyboard:down:r")) {
+    measuringCubeOn = !measuringCubeOn;
+    originOn = !originOn;
+    if (measuringCubeOn && originOn) {
+      measuringCube.resetUID();
+      origin.resetUID();
+    }
+  }
+
   // Toggle binary color switch of background and foreground.
-  if (e.is("keyboard:down:i")) {
+  if (e.is("keyboard:down:c")) {
     if (background === 0x000000) {
       background = 0xffffff;
     } else {
       background = 0x000000;
     }
 
-    // TODO: Switch pen color type based on background.
+    if (background === 0x000000) {
+      color = [255, 255, 255, 255];
+      //capColor = [0, 0, 0, 255];
+      capColor = [255, 255, 255, 255];
+      // stage.color = [255, 255, 255, 255];
+
+      tubeVary = 0; // 20;
+      capVary = 0; // 4;
+    } else {
+      color = [0, 0, 0, 255];
+      //capColor = [255, 255, 255, 255];
+      capColor = [0, 0, 0, 255];
+      // stage.color = [0, 0, 0, 255];
+
+      tubeVary = 0; // 4;
+      capVary = 0; //20;
+    }
   }
 
   // Save scene data.
@@ -788,20 +824,23 @@ class Tube {
     // Push anything we haven't stepped into onto the path.
     const d = dist3d(spi.state.position, race.pos);
 
-    if (d > 0.01) {
-      if (this.gesture.length === 0) {
+    // Optionally add start or end bits, drawn over or under our step size.
+    if (graphPreview) {
+      if (d > 0.01) {
+        if (this.gesture.length === 0) {
+          const alteredState = { ...spi.state };
+          alteredState.rotation = this.previewRotation;
+          this.start(alteredState, radius, sides);
+        }
+
+        spi.crawlTowards(race.pos, d, 1);
+
         const alteredState = { ...spi.state };
-        alteredState.rotation = this.previewRotation;
-        this.start(alteredState, radius, sides);
+        if (this.gesture.length === 0) {
+          alteredState.rotation = this.previewRotation;
+        }
+        this.goto(alteredState);
       }
-
-      spi.crawlTowards(race.pos, d, 1);
-
-      const alteredState = { ...spi.state };
-      if (this.gesture.length === 0) {
-        alteredState.rotation = this.previewRotation;
-      }
-      this.goto(alteredState);
     }
 
     if (this.lastPathP) this.#cap(this.lastPathP, this.form, false);
@@ -1046,7 +1085,7 @@ class Tube {
         this.#driftValue(color[2], tubeVary),
       ];
 
-      if (this.triColor) {
+      if (this.triColor && tubeVary > 0) {
         const differences = [
           this.triColor[0] - newValues[0],
           this.triColor[1] - newValues[1],
@@ -1065,7 +1104,7 @@ class Tube {
         this.triColor[1] = this.#driftValue(color[1], tubeVary);
         this.triColor[2] = this.#driftValue(color[2], tubeVary);
       } else {
-        this.triColor = newValues;
+        this.triColor = color.slice();
       }
       // Don't do anything with the alpha.
     }
@@ -1077,9 +1116,13 @@ class Tube {
   varyCap(color) {
     if (this.varyTriCount === 0) {
       if (!this.triColor) this.triColor = [];
-      this.triColor[0] = this.#driftValue(color[0], capVary);
-      this.triColor[1] = this.#driftValue(color[1], capVary);
-      this.triColor[2] = this.#driftValue(color[2], capVary);
+      if (capVary > 0) {
+        this.triColor[0] = this.#driftValue(color[0], capVary);
+        this.triColor[1] = this.#driftValue(color[1], capVary);
+        this.triColor[2] = this.#driftValue(color[2], capVary);
+      } else {
+        this.triColor = color.slice();
+      }
       // Don't do anything with the alpha.
     }
     this.varyTriCount = (this.varyTriCount + 1) % 3;
