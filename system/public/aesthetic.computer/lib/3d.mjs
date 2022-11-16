@@ -125,7 +125,7 @@ export function initialize(
       controller1.userData.lastPosition = { ...controller1.position };
 
       controller1.addEventListener("connected", (e) => {
-        console.log("Connected", e);
+        // console.log("Connected", e);
         controller1.handedness = e.data.handedness;
         controller1.gamepad = e.data.gamepad;
       });
@@ -915,28 +915,18 @@ function handleController(controller) {
 // Get controller data to send to a piece.
 export function pollControllers() {
   if (vrSession) {
-    let pen, pen1, pen2; // ... lol 😉
-
-    let dominantController;
-
-    if (controller1.handedness === "right") {
-      dominantController = controller1;
-      pen = handleController(controller1);
-    } else {
-      dominantController = controller2;
-      pen = handleController(controller2);
-    }
-
-    // console.log("Gamepad:", dominantController.gamepad); // TODO: Test gamepad in VR.
-
-    const gamepad = dominantController.gamepad;
+    const c1 = handleController(controller1);
+    const c2 = handleController(controller2);
+    const pen = controller1.handedness === "right" ? c1 : c2;
 
     // Cache the button states in the userData of the controller object.
-    if (!dominantController.userData.buttons)
-      dominantController.userData.buttons = [];
-    const cachedButts = dominantController.userData.buttons;
+    [controller1, controller2].forEach((controller) => {
+      const gamepad = controller.gamepad;
+      if (!controller.userData.buttons) controller.userData.buttons = [];
+      const h = controller.handedness === "right" ? "r" : "l";
+      const cachedButts = controller.userData.buttons;
+      if (!gamepad) return;
 
-    if (gamepad) {
       gamepad.buttons.forEach((button, n) => {
         if (cachedButts[n] === undefined) cachedButts[n] = {};
         if (cachedButts[n].held === undefined) cachedButts[n].held = false;
@@ -948,28 +938,34 @@ export function pollControllers() {
           //       Backtrigger = 1 (value is pressure)
           //  (Oculus button?) = 2
           // Thumbstick button = 3
-          //                 A = 4
-          //                 B = 5
+          //                 A/X = 4
+          //                 B/Y = 5
           const value = button.value;
           // Note: Eventually parse these with a colon? 22.11.15.10.57 ❓
           if (n === 0 && cachedButts[0].held === false) {
-            penEvents.push({ name: "rhand-trigger", value });
+            penEvents.push({ name: h + "hand-trigger", value });
             cachedButts[0].held = true;
           }
-          if (n === 2 && cachedButts[2].held === false) {
-            penEvents.push({ name: "rhand-trigger-secondary", value });
-            cachedButts[2].held = true;
+          if (n === 1 && cachedButts[1].held === false) {
+            penEvents.push({ name: h + "hand-trigger-secondary", value });
+            cachedButts[1].held = true;
           }
           if (n === 3 && cachedButts[3].held === false) {
-            penEvents.push({ name: "rhand-button-thumb", value });
+            penEvents.push({ name: h + "hand-button-thumb", value });
             cachedButts[3].held = true;
           }
           if (n === 4 && cachedButts[4].held === false) {
-            penEvents.push({ name: "rhand-button-a", value });
+              penEvents.push({
+                name: h + "hand-button-" + (h === "r" ? "a" : "x"),
+                value,
+              });
             cachedButts[4].held = true;
           }
           if (n === 5 && cachedButts[5].held === false) {
-            penEvents.push({ name: "rhand-button-b", value });
+              penEvents.push({
+                name: h + "hand-button-" + (h === "r" ? "b" : "y"),
+                value,
+              });
             cachedButts[5].held = true;
           }
           console.log(`🥽 Button ${n} was pressed:`, value);
@@ -979,8 +975,8 @@ export function pollControllers() {
           if (n === 0) {
             cachedButts[0].held = false;
           }
-          if (n === 2) {
-            cachedButts[2].held = false;
+          if (n === 1) {
+            cachedButts[1].held = false;
           }
           if (n === 3) {
             cachedButts[3].held = false;
@@ -993,7 +989,7 @@ export function pollControllers() {
           }
         }
       });
-    }
+    });
 
     return { events: penEvents, pen };
   }

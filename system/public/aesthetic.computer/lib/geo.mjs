@@ -335,6 +335,7 @@ export function pointFrom(x, y, angle, dist) {
 export class Race {
   pos;
   step;
+  goal;
 
   last;
   speed;
@@ -349,6 +350,7 @@ export class Race {
   }
 
   to(point) {
+    this.goal = point;
     if (!this.pos) return false;
     let out;
 

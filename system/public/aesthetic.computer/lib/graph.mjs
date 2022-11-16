@@ -1354,6 +1354,12 @@ class Form {
     this.gpuVerticesSent = 0;
   }
 
+  // How close we are to being beyond the max points allotted by the GPU for
+  // buffer geometries.
+  maxProgress() {
+    return (this.vertices.length / (this.MAX_POINTS + 1));
+  }
+
   addPoints(attributes, indices) {
     const incomingLength = attributes.positions.length;
     const verticesLength = this.vertices.length;
