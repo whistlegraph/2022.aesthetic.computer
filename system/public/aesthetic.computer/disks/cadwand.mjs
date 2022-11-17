@@ -4,7 +4,6 @@
 /* #region 🏁 todo
 * VR
 
-  - [] Auto-rotate ribbons... or allow a certain level of rotation?
   - [] How to (and should I) add individual lines / line length of 1 back...
     - [] Make a separate form object to switch to when adding lines.
     - [] Export the lines as a separate geometry object.
@@ -49,6 +48,7 @@ END OF DAY
         - (The files would load the same way.)
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Auto-rotate ribbons... or allow a certain level of rotation?
 - [x] Better freehand drawing.
   - [x] Better angles / auto-step size on radius change? (Since user can't change step...)
   - [x] First first block rotation issue for good! 
@@ -279,7 +279,6 @@ function sim({
       pen3d.rotation._w
     );
 
-
     // TODO: Eventually add nicer preview here. 22.11.16.09.48
     if (spi === undefined) {
       spi = new Spider(
@@ -334,7 +333,7 @@ function sim({
 
       let lpos, pos, tpos, rot;
 
-      //      if (tube.gesture.length === 0) {
+      // if (tube.gesture.length === 0) {
       // lpos = race.last; // TODO: Should I track one more position here?
       // pos = race.pos; // Current
       // tpos = race.goal;
@@ -463,26 +462,19 @@ function sim({
 
       if (waving) {
         if (tube.gesture.length === 0) {
-//          alteredSpiState = { ...spi.state };
- //         alteredSpiState.rotation = rotation;
-
-         spi.rotation = rotation;
-          //spi.lastNormal = undefined;
-
-         // console.log(controllerRotation, rotation);
-
+          spi.rotation = rotation;
           tube.preview(spi.state, {
             position,
             rotation,
             color,
           });
         } else {
-
-          tube.preview(spi.state, {
-            position,
-            rotation,
-            color,
-          });
+          if (tube.sides === 2) {
+            // Use original rotation for ribbons.  🎀
+            tube.preview(spi.state, { position, rotation: controllerRotation, color });
+          } else {
+            tube.preview(spi.state, { position, rotation, color });
+          }
         }
       } else {
         tube.preview({
@@ -543,116 +535,63 @@ function sim({
   }
 
   if (waving) {
-    // Project a ray out into the direction we might be moving in to measure
-    // the possibility space.
-    const spiToRace = vec3.normalize(
-      vec3.create(),
-      //vec3.sub(vec3.create(), race.pos, spi.state.position)
-      vec3.sub(vec3.create(), position, spi.state.position)
-    );
-
     let d = dist3d(spi.state.position, race.pos);
 
-    // 🕷️ Spider Jump
+    // 🕷️ Spider Jump 🕷️
 
     const step = tube.step;
 
     if (tube.gesture.length === 0 && d > step) {
       // Populate first tube start with the preview state.
       if (pen3d) {
-
-
-
         tube.start(spi.state, radius, sides, step);
-
-        // Move manually:
-
-        //const dir = vec3.sub(vec3.create())
-
+        // Move manually.
         const direction = vec4.transformQuat(
           vec4.create(),
           [0, 0, step, 1],
           rotation
         );
-
         spi.position = vec3.add(vec3.create(), spi.position, direction);
         spi.direction = direction;
-
-        //spi.crawlTowards(position, step, 1); // <- last parm is a tightness fit
-
+        //spi.crawlTowards(position, step, 1);
         tube.goto(spi.state);
-
-        //race.start(spi.state.position);
-
-        //spi.lastNormal = undefined;
-        //spi.lastPosition = race.last;
-        //spi.position = race.pos;
-        //spi.rotation = rotation;
-
-        // Option 1.
-        // tube.start(alteredSpiState, radius, sides, step);
-        // spi.rotation = rotation;
-        // spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-        // const newAlteredSpiState = {...spi.state};
-        // newAlteredSpiState.rotation = rotation;
-        // tube.goto(newAlteredSpiState); // 2. Knots the tube.
       } else {
         tube.start(spi.state, radius, sides, step);
-        spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+        spi.crawlTowards(race.pos, step, 1); // <- last param is a tightness fit
         tube.goto(spi.state); // 2. Knots the tube.
       }
     } else if (tube.gesture.length > 0) {
       if (pen3d) {
-        // Curvy / cut corner loops.
+        // 🥽 VR
 
-        if (d > step) {
-          const increments = step / 5;
-          const repeats = floor(d / increments);
-          for (let i = 0; i < repeats; i += 1) {
-            spi.crawlTowards(race.pos, increments, 0.2); // <- last parm is a tightness fit
+        // TODO: Translate manually if we are using ribbons!
+        if (tube.sides === 2) {
+          // 🎀 Ribbons
+
+          if (d > step * 2) {
+            spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+            spi.rotation = controllerRotation; // What would crawlTowards actually be doing here? 22.11.17.11.43
+            tube.goto(spi.state); // Knot the tube just once.
           }
-          tube.goto(spi.state); // Knot the tube just once.
+        } else {
+          // ♾️ Curvy / cut corner loops.
+          if (d > step) {
+            const increments = step / 5;
+            const repeats = floor(d / increments);
+            for (let i = 0; i < repeats; i += 1) {
+              spi.crawlTowards(race.pos, increments, 0.2); // <- last parm is a tightness fit
+            }
+            tube.goto(spi.state); // Knot the tube just once.
+          }
         }
-
-        // #. Randomizes the color for every section.
-        //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
       } else if (!pen3d) {
-        console.log(spi.state);
-        spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-        tube.goto(spi.state); // 2. Knots the tube.
+        // 🖱️ Planar
+        // TODO: Disable pc for now... 22.11.17.10.34
+        //console.log(spi.state);
+        //spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+        //tube.goto(spi.state); // 2. Knots the tube.
       }
     }
-
-    // d = dist3d(spi.state.position, race.pos);
-
-    // if (d > step) {
-    //   if (tube.gesture.length === 0) {
-    //     // Populate first tube start with the preview state.
-    //     if (pen3d) {
-    //       tube.start(alteredSpiState, radius, sides, step);
-    //       spi.state.rotation = alteredSpiState.rotation;
-    //       spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-    //       tube.goto(spi.state); // 2. Knots the tube.
-    //     } else {
-    //       tube.start(spi.state, radius, sides, step);
-    //       spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-    //       tube.goto(spi.state); // 2. Knots the tube.
-    //     }
-    //   } else if (tube.gesture.length > 0) {
-    //     if (pen3d) {
-    //       // /*&& (dot > 0.5 || tube.sides === 2)*/) {
-    //       // 1. Jumps N steps in the direction from this position to last position.
-    //       spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-    //       tube.goto(spi.state); // 2. Knots the tube.
-    //       // #. Randomizes the color for every section.
-    //       //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
-    //     } else if (!pen3d) {
-    //       spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-    //       tube.goto(spi.state); // 2. Knots the tube.
-    //     }
-    //   }
-    //   // d = dist3d(spi.state.position, race.pos);
-    // }
 
     // Add some debug data to show the future direction.
     // const scaledDiff = vec3.scale(vec3.create(), diff, 2);
