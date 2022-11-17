@@ -237,7 +237,7 @@ const $commonApi = {
     vec4: num.vec4,
     mat3: num.mat3,
     mat4: num.mat4,
-    quat: num.quat,
+    quat: num.quat
   },
   geo: {
     Box: geo.Box,
@@ -474,7 +474,7 @@ const $paintApi = {
 // Rendering of 3D forms.
 
 const formsToClear = [];
-let backgroundColor3D = 0x000000;
+let backgroundColor3D = [0, 0, 0, 255];
 
 // `cpu: true` enabled software rendering
 function form(

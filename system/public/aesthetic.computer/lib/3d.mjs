@@ -803,8 +803,9 @@ export function checkForRemovedForms(formsBaked) {
 // Receives events from aesthetic.computer.
 export function handleEvent(event) {
   if (event.type === "background-change") {
-    scene.background = new THREE.Color(event.content);
-    if (!NO_FOG) scene.fog = new THREE.Fog(event.content, FOG_NEAR, FOG_FAR);
+    console.log(event.content);
+    scene.background = new THREE.Color(...event.content.map((ch) => ch / 255));
+    if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
     return;
   }
 
@@ -943,29 +944,29 @@ export function pollControllers() {
           const value = button.value;
           // Note: Eventually parse these with a colon? 22.11.15.10.57 ❓
           if (n === 0 && cachedButts[0].held === false) {
-            penEvents.push({ name: h + "hand-trigger", value });
+            penEvents.push({ name: h + "hand-trigger-down", value });
             cachedButts[0].held = true;
           }
           if (n === 1 && cachedButts[1].held === false) {
-            penEvents.push({ name: h + "hand-trigger-secondary", value });
+            penEvents.push({ name: h + "hand-trigger-secondary-down", value });
             cachedButts[1].held = true;
           }
           if (n === 3 && cachedButts[3].held === false) {
-            penEvents.push({ name: h + "hand-button-thumb", value });
+            penEvents.push({ name: h + "hand-button-thumb-down", value });
             cachedButts[3].held = true;
           }
           if (n === 4 && cachedButts[4].held === false) {
-              penEvents.push({
-                name: h + "hand-button-" + (h === "r" ? "a" : "x"),
-                value,
-              });
+            penEvents.push({
+              name: h + "hand-button-" + (h === "r" ? "a" : "x") + "-down",
+              value,
+            });
             cachedButts[4].held = true;
           }
           if (n === 5 && cachedButts[5].held === false) {
-              penEvents.push({
-                name: h + "hand-button-" + (h === "r" ? "b" : "y"),
-                value,
-              });
+            penEvents.push({
+              name: h + "hand-button-" + (h === "r" ? "b" : "y") + "-down",
+              value,
+            });
             cachedButts[5].held = true;
           }
           console.log(`🥽 Button ${n} was pressed:`, value);
@@ -973,18 +974,29 @@ export function pollControllers() {
           const value = button.value;
           // Note: Eventually parse these with a colon? 22.11.15.10.57 ❓
           if (n === 0) {
+            penEvents.push({ name: h + "hand-trigger-up", value });
             cachedButts[0].held = false;
           }
           if (n === 1) {
+            penEvents.push({ name: h + "hand-trigger-secondary-up", value });
             cachedButts[1].held = false;
           }
           if (n === 3) {
+            penEvents.push({ name: h + "hand-button-thumb-up", value });
             cachedButts[3].held = false;
           }
           if (n === 4) {
+            penEvents.push({
+              name: h + "hand-button-" + (h === "r" ? "a" : "x") + "-up",
+              value,
+            });
             cachedButts[4].held = false;
           }
           if (n === 5) {
+            penEvents.push({
+              name: h + "hand-button-" + (h === "r" ? "b" : "y") + "-up",
+              value,
+            });
             cachedButts[5].held = false;
           }
         }

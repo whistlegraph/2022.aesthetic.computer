@@ -4,39 +4,27 @@
 /* #region 🏁 todo
 * VR
 
-
-  DEMO FORMAT
-
-  - [] Be sure to include radius, sides, and step! in the demo format,
-
-       even if step is a default right now. 
-  - [] Make sure the demo format can support string colors or any number > 255
-       in the first color chanel could refer to some special color arrangements
-       that have strings here.
-  - [] Change demo format to remove light-switch in favor of
-       background Tube color changes.
-
-  - [] Add visual flicker to saving.
-
+  - [] Add control sticks for size.
+  - [] Better freehand drawing.
+  - [] How to add individual lines back...
+    - [] Make a separate form object to switch to when adding lines.
+    - [] Export the lines as a separate geometry object.
+    - [] Keep the light and dark idea.
+  - [] Use basic materials and lights in the scene.
   - [] Performance profiling.
-
-  - [] Make Tube color changes stripe-able / dynamic during drawing.
-
-  - [] Add a "randomized color / randomized background color" button.
-
- - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
-
+  - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
+   - keep an automated list somewhere... maybe look at the S3 shell scripts?
  - Lots more testing.
+  - Demo playback: Max. cutoff in GPU form! 512 (capForm is not cleared?) 
+ - [] Get things good enough to make a set of 128 complete drawings. 
 
-  - [] Full vertex scale.
-
-       keep an automated list somewhere... maybe look at the S3 shell scripts?
- - [] Get things good enough to make a set of complete black and white drawings.
 
 
 END OF DAY
 + Later
-  - [] How to add individual lines back...
+  - [-] Maybe the color could slowly change?
+  - [] Upgrade demo format to support overloaded color parameters for
+       special / animated type colors.
   - [] Finish all extra-necessary TODOS in this file.
  - [] Create a "view wand timestamp" player that loads the model as a GLTF.
   - [] Add a light to the scene.
@@ -61,6 +49,15 @@ END OF DAY
         - (The files would load the same way.)
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Add a "randomized color / sound randomized background color" wildcard.
+- [x] Add rainbow wand.
+- [x] Make Tube color changes stripe-able / dynamic during drawing.
+- [x] Add visual confirmation to saving.
+- [x] Change demo format to remove light-switch in favor of
+    background Tube color changes.
+- [x] Be sure to include radius, sides, and step! in the demo format,
+      even if step is a default right now. 
+- [x] Full vertex scale.
 - [x] Opaque preview cap.
 - [x] Add controller shortcut to enable or disable the box.
 - [x] Add some keyboard and VR controller button options for complexity
@@ -89,10 +86,11 @@ END OF DAY
   - [x] Load file.
   - [x️] Save file.
   - [x] Recording
-    tick, light:switch (true / false based on starting light or dark value)
-    tick, wand,       PX, PY, PZ, QX, QY, QZ
-    tick, tube:start, PX, PY, PZ, QX, QY, QZ, R, G, B, A, RADIUS, SIDES   
-    tick, tube:goto,  PX, PY, PZ, QX, QY, QZ, R, G, B, A
+    tick, room:color  R, G, B, A 
+    tick, wand:color  R, G, B, A 
+    tick, wand        PX, PY, PZ, QX, QY, QZ QW
+    tick, tube:start, PX, PY, PZ, QX, QY, QZ, QW R, G, B, A, RADIUS, SIDES, STEP   
+    tick, tube:goto,  PX, PY, PZ, QX, QY, QZ, QW R, G, B, A
     tick, tube:stop,  (no other data needed) 
     tick, light:switch true / false (subsequent light changes)
   - [x️‍] Record full controller position and rotation as JSON.
@@ -113,7 +111,7 @@ let measuringCubeOn = true;
 let cubeHeight = 1.8;
 const segmentTotal = 512; // A minimum given cap vertices and arbitrary segments.
 let originOn = true;
-let background = 0x000000; // Background color for the 3D environment.
+let background = [0, 0, 0, 255]; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
@@ -135,11 +133,22 @@ let tube, // Circumscribe the spider's path with a form.
   graphPreview = false; // Whether to render pieces of a tube smaller or greater
 //                       than `step` at the start of end of a stroke.
 let wandForm; // A live cursor.
+let demoWandForm; // A ghost cursor for playback.
 
 let demo, player; // For recording a session and rewatching it in realtime.
 let beep, bop; // For making sounds when pieces begin and end.
 let ping, pong; // For making sounds when pieces upload or fail to upload.
+let bap; // For rainbowColors. 🌈
 let beatCount = 0n; // TODO: This should really go into the main API at this point... 22.11.15.05.22
+
+let flashColor; // Color flashes used for export confirmations.
+let flash = false;
+let flashDuration = 5;
+let flashCount = 0;
+
+let rainbowColors = false;
+let rainbowColorCount = 0;
+const rainbowColorCountMax = 12;
 
 const racePoints = [], // Extra stuff for CAD-style drawing.
   diffPrevPoints = [],
@@ -154,7 +163,9 @@ let limiter = 0;
 
 function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
   demo = new Demo(); // Start logging user interaction on demo frame 0.
-  demo?.rec("light:switch", background === 0xffffff); // Record the starting bg color in case the default ever changes.
+
+  demo?.rec("room:color", [0, 0, 0, 255]); // Record the starting bg color in case the default ever changes.
+  demo?.rec("wand:color", [255, 255, 255, 255]);
 
   camdoll = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // Camera controls.
   stage = new Form(
@@ -177,7 +188,7 @@ function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
   });
 
   race = new geo.Race({ speed });
-  tube = new Tube({ Form, num }, radius, sides, geometry, demo);
+  tube = new Tube({ Form, num }, radius, sides, step, geometry, demo);
 
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
@@ -196,6 +207,24 @@ function sim({
 }) {
   camdoll.sim(); // Update the camera + dolly.
   // racePoints.push(race.pos); // For debugging.
+
+  // 🌈 Rainbow Colors
+  if (rainbowColors) {
+    if (rainbowColorCount === rainbowColorCountMax) {
+    const randomColor = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
+    color = randomColor;
+    capColor = randomColor;
+    if (spi) spi.color = color;
+    if (!player) demo?.rec("wand:color", ...color);
+    const randomBackground = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
+    background = randomBackground;
+    if (!player) demo?.rec("room:color", randomBackground);
+    bap = true;
+      rainbowColorCount = 0;
+    } else {
+      rainbowColorCount += 1;
+    }
+  }
 
   // 🐭️ Live Cursor: generated from the controller position and direction.
   let position, lastPosition, rotation;
@@ -521,12 +550,12 @@ function sim({
       if (tube.gesture.length === 0) {
         // Populate first tube start with the preview state.
         if (pen3d) {
-          tube.start(alteredSpiState, radius, sides);
+          tube.start(alteredSpiState, radius, sides, step);
           spi.state.rotation = alteredSpiState.rotation;
           spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
           tube.goto(spi.state); // 2. Knots the tube.
         } else {
-          tube.start(spi.state, radius, sides);
+          tube.start(spi.state, radius, sides, step);
           spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
           tube.goto(spi.state); // 2. Knots the tube.
         }
@@ -586,15 +615,35 @@ function sim({
       const type = f[1];
       const di = 2;
 
-      if (type === "light:switch") {
-        // ❔ tick, light:switch (true / false based on starting light or dark value)
-        lightSwitch(f[di]);
+      if (type === "room:color") {
+        // ❔ tick, room:color, R, G, B, A
+        background = [f[di], f[di + 1], f[di + 2]];
+      } else if (type === "wand:color") {
+        // ❔ tick, wand:color (true / false based on starting light or dark value)
+        color = [f[di], f[di + 1], f[di + 2], f[di + 3]];
+        capColor = [f[di], f[di + 1], f[di + 2], f[di + 3]];
         // Skip `true` and `false` values for now.
       } else if (type === "wand") {
-        // ❔ tick, wand, PX, PY, PZ, QX, QY, QZ
+        // ❔ tick, wand, PX, PY, PZ, QX, QY, QZ, QW
+        const pos = [f[di], f[di + 1], f[di + 2], 1];
+        const rot = [f[di + 3], f[di + 4], f[di + 5], f[di + 6]];
+
+        const pos2 = vec3.transformQuat(vec3.create(), [0, 0, 0.1], rot);
+
+        const np = [...vec3.add(vec3.create(), pos, pos2), 1];
+
+        demoWandForm = new Form(
+          {
+            type: "line",
+            positions: [pos, np],
+            colors: [color, color],
+          },
+          { pos: [0, 0, 0] }
+        );
+
         // Skip wand data for now.
       } else if (type === "tube:start") {
-        // Format: tick, tube:start, PX, PY, PZ, QX, QY, QZ, R, G, B, A, RADIUS, SIDES
+        // Format: tick, tube:start, PX, PY, PZ, QX, QY, QZ, QW, R, G, B, A, RADIUS, SIDES, STEP
         tube.start(
           {
             position: [f[di], f[di + 1], f[di + 2]],
@@ -603,6 +652,7 @@ function sim({
           },
           f[di + 11],
           f[di + 12],
+          f[di + 13],
           true
         );
       } else if (type === "tube:goto") {
@@ -621,6 +671,7 @@ function sim({
         tube.stop(true);
       } else if (type === "demo:complete") {
         // An invented frame with no other information to destroy our player.
+        demoWandForm = null;
         player = null;
       }
     });
@@ -628,7 +679,19 @@ function sim({
   });
 }
 
+let cachedBackground;
+
 function paint({ form, Form }) {
+  if (flash) {
+    background = flashColor;
+    flashCount += 1;
+    if (flashCount === flashDuration) {
+      flashCount = 0;
+      flash = false;
+      background = cachedBackground;
+    }
+  }
+
   //#region 🐛 Debugging drawing.
   // Draw the path of the race.
   /*
@@ -758,7 +821,7 @@ function paint({ form, Form }) {
   }
 
   form(
-    [stage, tube.capForm, tube.triCapForm, tube.form, wandForm],
+    [stage, tube.capForm, tube.triCapForm, tube.form, wandForm, demoWandForm],
     camdoll.cam,
     { background }
   );
@@ -795,8 +858,6 @@ function act({
     race.start(spi.state.position);
     // racePoints.push(race.pos); // For debugging.
 
-    //tube.start(spi.state, radius, sides); // Start a gesture, adding radius and
-    //                                       size for an optional update.
     waving = true;
   }
 
@@ -810,7 +871,6 @@ function act({
     race.start(spi.state.position);
     // racePoints.push(race.pos); // For debugging.
 
-    // tube.start(spi.state, radius, sides); // Start a gesture.
     waving = true;
   }
 
@@ -825,7 +885,8 @@ function act({
   }
 
   // Toggle cube and origin measurement lines.
-  if (e.is("keyboard:down:t")) {
+  if (e.is("keyboard:down:t") || e.is("3d:lhand-button-thumb")) {
+    pong = true;
     measuringCubeOn = !measuringCubeOn;
     originOn = !originOn;
     if (measuringCubeOn && originOn) {
@@ -836,33 +897,32 @@ function act({
 
   // Left hand controller.
 
-  if (e.is("3d:lhand-trigger")) {
+  if (e.is("3d:lhand-trigger-down")) {
     beep = true;
     radius = min(1, radius + radiusStep);
     tube.update({ radius });
   }
 
-  if (e.is("3d:lhand-trigger-secondary")) {
+  if (e.is("3d:lhand-trigger-secondary-down")) {
     bop = true;
     radius = max(minRadius, radius - radiusStep);
     tube.update({ radius });
   }
 
-  if (e.is("3d:lhand-button-thumb")) {
-    pong = true;
+  if (e.is("3d:lhand-button-thumb-down")) {
     measuringCubeOn = !measuringCubeOn;
     originOn = !originOn;
   }
 
   // Increase / side count.
-  if (e.is("3d:lhand-button-x")) {
+  if (e.is("3d:lhand-button-y-down")) {
     pong = true;
     sides = min(maxSides, sides + 1);
     console.log("New sides:", sides);
     tube.update({ sides });
   }
 
-  if (e.is("3d:lhand-button-y")) {
+  if (e.is("3d:lhand-button-x-down")) {
     ping = true;
     sides = max(2, sides - 1);
     console.log("New sides:", sides);
@@ -870,27 +930,31 @@ function act({
   }
 
   // Right hand controller
-  if (e.is("3d:rhand-trigger-secondary")) {
+  if (e.is("3d:rhand-trigger-secondary-down")) {
     bop = true;
   }
 
   // Toggle binary color switch of background and foreground.
-  if (e.is("keyboard:down:c") || e.is("3d:rhand-button-a")) {
-    lightSwitch();
-    demo?.rec("light:switch", background === 0xffffff);
+  if (e.is("keyboard:down:c") || e.is("3d:rhand-button-a-down")) {
+    //lightSwitch();
+    rainbowColors = true;
+  }
+
+  if (e.is("keyboard:up:c") || e.is("3d:rhand-button-a-up")) {
+    rainbowColors = false;
   }
 
   // Save scene data.
   if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
 
   // Remove / cancel a stroke.
-  if (e.is("3d:rhand-trigger-secondary")) {
+  if (e.is("3d:rhand-trigger-secondary-down")) {
     console.log("Delete / cancel a stroke!");
     pong = true;
   }
 
   // 🔴 Recording a new piece / start over.
-  if (e.is("keyboard:down:r") || e.is("3d:rhand-button-b")) {
+  if (e.is("keyboard:down:r") || e.is("3d:rhand-button-b-down")) {
     demo?.dump(); // Start fresh / clear any existing demo cache.
 
     // Remove all vertices from the existing tube and reset tube state.
@@ -900,7 +964,9 @@ function act({
     tube.lastPathP = undefined;
     tube.gesture = [];
 
-    demo?.rec("light:switch", background === 0xffffff); // Record the starting bg color in case the default ever changes.
+    demo?.rec("room:color", [0, 0, 0, 255]); // Record the starting bg color in case the default ever changes.
+    demo?.rec("wand:color", [255, 255, 255, 255]);
+
     console.log("🪄 A new piece...");
     beep = true;
   }
@@ -908,7 +974,7 @@ function act({
   const saveMode = "server"; // The default for now. 22.11.15.05.32
 
   // 🛑 Finish a piece.
-  if (e.is("keyboard:down:f") || e.is("3d:rhand-button-thumb")) {
+  if (e.is("keyboard:down:f") || e.is("3d:rhand-button-thumb-down")) {
     // demo?.print(); // Print the last demo to the console.
     const ts = timestamp();
 
@@ -933,11 +999,19 @@ function act({
             `https://wand.aesthetic.computer/${ts}-recording-${handle}.json`,
             data
           );
+
           ping = true;
+          cachedBackground = background;
+          flash = true;
+          flashColor = [255, 255, 0, 255];
         })
         .catch((err) => {
           console.error("🪄 Demo upload failed:", err);
+
           pong = true;
+          cachedBackground = background;
+          flash = true;
+          flashColor = [255, 0, 0, 255];
         });
 
       // Save scene GLTF.
@@ -957,11 +1031,19 @@ function act({
             `https://wand.aesthetic.computer/${ts}-sculpture-${handle}.gltf`,
             data
           );
+
           ping = true;
+          cachedBackground = background;
+          flash = true;
+          flashColor = [0, 255, 0, 255];
         })
         .catch((err) => {
           console.error("🪄 Sculpture upload failed:", err);
+
           pong = true;
+          cachedBackground = background;
+          flash = true;
+          flashColor = [255, 0, 0, 255];
         });
     } else {
       // Local saving. (Assume "local")
@@ -1039,9 +1121,20 @@ function act({
 }
 
 // 💗 Beat
-function beat({ sound: { bpm, square } }) {
+function beat({ num, sound: { bpm, square } }) {
   if (beatCount === 0n) bpm(1800); // Set bpm to 1800 ~ 30fps }
   beatCount += 1n; // TODO: This should go into the main API. 22.11.01.17.43
+
+  if (bap) {
+    square({
+      tone: num.randIntRange(100, 800),
+      beats: 1.5,
+      attack: 0.02,
+      decay: 0.97,
+      volume: 0.35,
+    });
+    bap = false;
+  }
 
   if (beep) {
     square({
@@ -1098,16 +1191,18 @@ function lightSwitch(light) {
   lit = light === undefined ? (lit = !lit) : light;
 
   if (lit) {
-    background = 0xffffff;
+    background = [255, 255, 255, 255];
   } else {
-    background = 0x000000;
+    background = [0, 0, 0, 255];
   }
 
-  if (background === 0x000000) {
+  if (!lit) {
     color = [255, 255, 255, 255];
     //capColor = [0, 0, 0, 255];
     capColor = [255, 255, 255, 255];
     // stage.color = [255, 255, 255, 255];
+
+    spi.color = color;
 
     tubeVary = 0; // 20;
     capVary = 0; // 4;
@@ -1116,9 +1211,18 @@ function lightSwitch(light) {
     //capColor = [255, 255, 255, 255];
     capColor = [0, 0, 0, 255];
     // stage.color = [0, 0, 0, 255];
+    spi.color = color;
 
     tubeVary = 0; // 4;
     capVary = 0; //20;
+  }
+
+  demo?.rec("wand:color", ...color);
+
+  if (lit) {
+    demo?.rec("room:color", [255, 255, 255, 255]);
+  } else {
+    demo?.rec("room:color", [0, 0, 0, 255]);
   }
 }
 
@@ -1133,6 +1237,7 @@ class Tube {
   //               Used for triangulation logic.
   lastPathP; // Keep track of the most recent "path point".
   sides; // Number of sides the tube has. (See the top of this file.)
+  step; // Number of steps / segment length.
   radius; // Thickness of the tube.
   form; // Represents the tube form that gets sent to the GPU or rasterizer.
   capForm; // " a cursor that presents the cap of the tube.
@@ -1163,13 +1268,18 @@ class Tube {
     );
   }
 
-  update({ sides = this.sides, radius = this.radius }) {
-    if (this.gesture.length > 0) this.stop();
-    this.sides = sides;
-    this.radius = radius;
-    this.#setVertexLimits();
-    this.shape = this.#segmentShape(this.radius, this.sides); // Set shape to start.
-    waving = false;
+  update({ sides, radius }) {
+    if (sides == undefined) {
+      this.radius = radius || this.radius;
+      this.shape = this.#segmentShape(this.radius, this.sides); // Set shape to start.
+    } else {
+      if (this.gesture.length > 0) this.stop();
+      this.sides = sides || this.sides;
+      this.radius = radius || this.radius;
+      this.#setVertexLimits();
+      this.shape = this.#segmentShape(this.radius, this.sides); // Set shape to start.
+      waving = false;
+    }
   }
 
   #setVertexLimits() {
@@ -1194,11 +1304,12 @@ class Tube {
     }
   }
 
-  constructor($, radius, sides, geometry, demo) {
+  constructor($, radius, sides, step, geometry, demo) {
     this.$ = $; // Hold onto the API.
     this.geometry = geometry; // Set the geometry type.
     this.radius = radius;
     this.sides = sides;
+    this.step = step;
     this.shape = this.#segmentShape(radius, sides); // Set shape to start.
     this.demo = demo;
 
@@ -1270,9 +1381,16 @@ class Tube {
   }
 
   // Creates an initial position, orientation and end cap geometry.
-  start(p, radius = this.radius, sides = this.sides, fromDemo = false) {
+  start(
+    p,
+    radius = this.radius,
+    sides = this.sides,
+    step = this.step,
+    fromDemo = false
+  ) {
     this.sides = sides;
     this.radius = radius;
+    this.step = step;
 
     if (this.sides === 1) this.sides = 0;
 
@@ -1295,15 +1413,15 @@ class Tube {
         ...start.pos.slice(0, 3),
         ...start.rotation,
         ...start.color,
-        radius,
-        sides,
+        this.radius,
+        this.sides,
+        this.step,
       ]);
     }
   }
 
   // Produces the `capForm` cursor.
   preview(p, nextPathP) {
-
     // Don't show anything during demo playback.
     if (player) return;
 
@@ -2187,8 +2305,6 @@ class Tube {
         this.form.addPoints({ positions, colors });
       }
     }
-
-    console.log(positions.length, positions, sides, tris);
   }
 }
 
