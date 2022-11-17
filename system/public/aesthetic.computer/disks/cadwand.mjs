@@ -4,18 +4,11 @@
 /* #region 🏁 todo
 * VR
 
-
-  - [] Better freehand drawing.
-  - [] How to add individual lines back...
+  - [] Auto-rotate ribbons... or allow a certain level of rotation?
+  - [] How to (and should I) add individual lines / line length of 1 back...
     - [] Make a separate form object to switch to when adding lines.
     - [] Export the lines as a separate geometry object.
     - [] Keep the light and dark idea.
-
-    - [] Preview triCapForm should always be set to the size of the last drawn
-         segment.
-
-  - [] Add tube:radius, and tube:step commands to the demo file.
-  - [] Change the demo file output from JSON to txt.
 
   - [] Use basic materials and lights in the scene.
   - [] Performance profiling.
@@ -25,10 +18,11 @@
   - Demo playback: Max. cutoff in GPU form! 512 (capForm is not cleared?) 
  - [] Get things good enough to make a set of 128 complete drawings. 
 
-
 END OF DAY
 + Later
+  - [] Change the demo file output from JSON to txt.
   - [-] Maybe the color could slowly change?
+  - [] Fix geometry lines again on tubes.
   - [] Upgrade demo format to support overloaded color parameters for
        special / animated type colors.
   - [] Finish all extra-necessary TODOS in this file.
@@ -55,6 +49,12 @@ END OF DAY
         - (The files would load the same way.)
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Better freehand drawing.
+  - [x] Better angles / auto-step size on radius change? (Since user can't change step...)
+  - [x] First first block rotation issue for good! 
+- [x] Add tube:radius, tube:step, and tube:size commands to the demo file.
+- [x] Preview triCapForm should always be set to the size of the last drawn
+      segment.
 - [x] Add control stick support for size selection.
 - [x] Add a "randomized color / sound randomized background color" wildcard.
 - [x] Add rainbow wand.
@@ -108,7 +108,7 @@ END OF DAY
 
 // #region 🗺️ global
 import { CamDoll } from "../lib/cam-doll.mjs";
-const { min, abs, max, cos, sin } = Math;
+const { min, abs, max, cos, sin, floor } = Math;
 
 let camdoll, stage; // Camera and stage.
 const rulers = false; // Whether to render arch. guidelines for development.
@@ -120,19 +120,20 @@ const segmentTotal = 512; // A minimum given cap vertices and arbitrary segments
 let originOn = true;
 let background = [0, 0, 0, 255]; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
-let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
+let geometry = "lines"; // "triangles" for surfaces or "lines" for wireframes
 let race,
   speed = 9; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color = [255, 255, 255, 255]; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
-  sides = 3, // Number of tube sides. 1 or 2 means flat.
+  sides = 2, // Number of tube sides. 1 or 2 means flat.
   //radius = 0.002, // The width of the tube.
-  radius = 0.02, // The width of the tube.
+  radius = 0.002, // The width of the tube.
   minRadius = 0.002,
   radiusStep = 0.002,
   maxSides = 8,
-  step = radius, // The length of each tube segment.
+  stepRel = () => radius / 2,
+  step = stepRel(), // The length of each tube segment.
   capColor = [255, 255, 255, 255], // [255, 255, 255, 255] The currently selected tube end cap color.
   capVary = 0, // 2; How much to drift the colors for the cap.
   tubeVary = 0, // 50; How much to drift the colors for the tube.
@@ -213,7 +214,6 @@ function sim({
   num: { vec3, randIntRange: rr, dist3d, quat, vec4, mat3 },
 }) {
   camdoll.sim(); // Update the camera + dolly.
-  // racePoints.push(race.pos); // For debugging.
 
   // 🌈 Rainbow Colors
   if (rainbowColors) {
@@ -222,7 +222,7 @@ function sim({
       color = randomColor;
       capColor = randomColor;
       if (spi) spi.color = color;
-      if (!player) demo?.rec("wand:color", ...color);
+      if (!player) demo?.rec("wand:color", color);
       const randomBackground = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
       background = randomBackground;
       if (!player) demo?.rec("room:color", randomBackground);
@@ -234,7 +234,7 @@ function sim({
   }
 
   // 🐭️ Live Cursor: generated from the controller position and direction.
-  let position, lastPosition, rotation;
+  let position, lastPosition, rotation, controllerRotation;
   let alteredSpiState;
 
   if (pen3d) {
@@ -245,7 +245,7 @@ function sim({
     // Measure number of vertices left.
     const length = (1 - tube.progress()) * 0.3;
 
-    const offset = vec3.scale(vec3.create(), dir, radius);
+    const offset = vec3.scale(vec3.create(), dir, radius * 1.25);
     const offsetPos = vec3.add(vec3.create(), position, offset);
 
     wandForm = new Form(
@@ -272,6 +272,14 @@ function sim({
       pen3d.rotation._w
     );
 
+    controllerRotation = quat.fromValues(
+      pen3d.rotation._x,
+      pen3d.rotation._y,
+      pen3d.rotation._z,
+      pen3d.rotation._w
+    );
+
+
     // TODO: Eventually add nicer preview here. 22.11.16.09.48
     if (spi === undefined) {
       spi = new Spider(
@@ -284,13 +292,6 @@ function sim({
       );
       race.start(spi.state.position);
     }
-
-    const controllerRotation = quat.fromValues(
-      pen3d.rotation._x,
-      pen3d.rotation._y,
-      pen3d.rotation._z,
-      pen3d.rotation._w
-    );
 
     const controllerPosition = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
 
@@ -332,16 +333,26 @@ function sim({
       // probably be merged, otherwise they have to be kept in sync.
 
       let lpos, pos, tpos, rot;
-      if (spi) {
-        lpos = spi.state.position;
-        pos = race.pos; // Current
-        tpos = position; // Replace with the stepsize in current dir?
-        rot = spi.state.rotation;
-      } else {
-        lpos = lastPosition; // TODO: Should I track one more position here?
-        pos = lastPosition; // Current
-        tpos = position;
+
+      //      if (tube.gesture.length === 0) {
+      // lpos = race.last; // TODO: Should I track one more position here?
+      // pos = race.pos; // Current
+      // tpos = race.goal;
+      // rot = rotation;
+      // } else {
+      // }
+
+      //if (spi) {
+      //} else {
+      //}
+      lpos = spi.state.position;
+      pos = race.pos;
+      tpos = position;
+
+      if (tube.gesture.length === 0) {
         rot = rotation;
+      } else {
+        rot = spi.state.rotation;
       }
 
       const firstTangent = vec3.normalize(
@@ -406,6 +417,8 @@ function sim({
         // 🅱️ or a quaternion.
         let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
         newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
+
+        spi.lastNormal = lastNormal; // hmm
       }
 
       bitangent = vec3.normalize(
@@ -448,19 +461,23 @@ function sim({
 
       rotation = qua;
 
-      if (spi) {
-        alteredSpiState = { ...spi.state };
-        alteredSpiState.rotation = rotation;
-      }
-
       if (waving) {
         if (tube.gesture.length === 0) {
-          tube.preview(alteredSpiState, {
+//          alteredSpiState = { ...spi.state };
+ //         alteredSpiState.rotation = rotation;
+
+         spi.rotation = rotation;
+          //spi.lastNormal = undefined;
+
+         // console.log(controllerRotation, rotation);
+
+          tube.preview(spi.state, {
             position,
             rotation,
             color,
           });
         } else {
+
           tube.preview(spi.state, {
             position,
             rotation,
@@ -470,27 +487,9 @@ function sim({
       } else {
         tube.preview({
           position: position,
-          rotation: rotation,
-          color: color,
-        });
-        //tube.preview(spi.state, {
-        //controllerPosition,
-        // rotation,
-        // color,
-        //});
-        // TODO: Finish better tube preview later. 22.11.13.21.41
-        //  tube.preview({
-        //  position: pos,
-        //  rotation,
-        //  color: [255, 0, 0, 255],
-        //  });
-        /*
-        tube.preview({
-          position: controllerPosition,
           rotation: controllerRotation,
           color: color,
         });
-        */
       }
       // tube.preview({ position, rotation, color: [255, 0, 0, 255] });
     }
@@ -529,10 +528,18 @@ function sim({
   // 🏁 Move the race finish line to the current cursor position.
   // Compute an in-progress gesture.
 
-  if (pen3d && race) {
-    race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z]);
-  } else if (race && pen) {
+  if (
+    pen3d &&
+    race.pos &&
+    pen3d.pos.x !== 0 &&
+    pen3d.pos.y !== 0 &&
+    pen3d.pos.z !== 0
+  ) {
+    race.to([pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1]);
+    //racePoints.push(race.pos); // For debugging.
+  } else if (race.pos && pen && pen.x && pen.y) {
     race.to(camdoll.cam.ray(pen.x, pen.y, rayDist / 4, true));
+    //racePoints.push(race.pos); // For debugging.
   }
 
   if (waving) {
@@ -544,42 +551,109 @@ function sim({
       vec3.sub(vec3.create(), position, spi.state.position)
     );
 
-    let dot = vec3.dot(spiToRace, spi.state.direction);
     let d = dist3d(spi.state.position, race.pos);
-
-    // console.log(d, step, tube.gesture.length);
 
     // 🕷️ Spider Jump
 
-    // TODO: Make this a while loop?
+    const step = tube.step;
 
-    if (d > step) {
-      if (tube.gesture.length === 0) {
-        // Populate first tube start with the preview state.
-        if (pen3d) {
-          tube.start(alteredSpiState, radius, sides, step);
-          spi.state.rotation = alteredSpiState.rotation;
-          spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-          tube.goto(spi.state); // 2. Knots the tube.
-        } else {
-          tube.start(spi.state, radius, sides, step);
-          spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-          tube.goto(spi.state); // 2. Knots the tube.
-        }
-      } else if (tube.gesture.length > 0) {
-        if (pen3d && (dot > 0.5 || tube.sides === 2)) {
-          // 1. Jumps N steps in the direction from this position to last position.
-          spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-          tube.goto(spi.state); // 2. Knots the tube.
-          // #. Randomizes the color for every section.
-          //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
-        } else if (!pen3d) {
-          spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-          tube.goto(spi.state); // 2. Knots the tube.
-        }
+    if (tube.gesture.length === 0 && d > step) {
+      // Populate first tube start with the preview state.
+      if (pen3d) {
+
+
+
+        tube.start(spi.state, radius, sides, step);
+
+        // Move manually:
+
+        //const dir = vec3.sub(vec3.create())
+
+        const direction = vec4.transformQuat(
+          vec4.create(),
+          [0, 0, step, 1],
+          rotation
+        );
+
+        spi.position = vec3.add(vec3.create(), spi.position, direction);
+        spi.direction = direction;
+
+        //spi.crawlTowards(position, step, 1); // <- last parm is a tightness fit
+
+        tube.goto(spi.state);
+
+        //race.start(spi.state.position);
+
+        //spi.lastNormal = undefined;
+        //spi.lastPosition = race.last;
+        //spi.position = race.pos;
+        //spi.rotation = rotation;
+
+        // Option 1.
+        // tube.start(alteredSpiState, radius, sides, step);
+        // spi.rotation = rotation;
+        // spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+        // const newAlteredSpiState = {...spi.state};
+        // newAlteredSpiState.rotation = rotation;
+        // tube.goto(newAlteredSpiState); // 2. Knots the tube.
+      } else {
+        tube.start(spi.state, radius, sides, step);
+        spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+        tube.goto(spi.state); // 2. Knots the tube.
       }
-      // d = dist3d(spi.state.position, race.pos);
+    } else if (tube.gesture.length > 0) {
+      if (pen3d) {
+        // Curvy / cut corner loops.
+
+        if (d > step) {
+          const increments = step / 5;
+          const repeats = floor(d / increments);
+          for (let i = 0; i < repeats; i += 1) {
+            spi.crawlTowards(race.pos, increments, 0.2); // <- last parm is a tightness fit
+          }
+          tube.goto(spi.state); // Knot the tube just once.
+        }
+
+        // #. Randomizes the color for every section.
+        //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+      } else if (!pen3d) {
+        console.log(spi.state);
+        spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+        tube.goto(spi.state); // 2. Knots the tube.
+      }
     }
+
+    // d = dist3d(spi.state.position, race.pos);
+
+    // if (d > step) {
+    //   if (tube.gesture.length === 0) {
+    //     // Populate first tube start with the preview state.
+    //     if (pen3d) {
+    //       tube.start(alteredSpiState, radius, sides, step);
+    //       spi.state.rotation = alteredSpiState.rotation;
+    //       spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+    //       tube.goto(spi.state); // 2. Knots the tube.
+    //     } else {
+    //       tube.start(spi.state, radius, sides, step);
+    //       spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+    //       tube.goto(spi.state); // 2. Knots the tube.
+    //     }
+    //   } else if (tube.gesture.length > 0) {
+    //     if (pen3d) {
+    //       // /*&& (dot > 0.5 || tube.sides === 2)*/) {
+    //       // 1. Jumps N steps in the direction from this position to last position.
+    //       spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+    //       tube.goto(spi.state); // 2. Knots the tube.
+    //       // #. Randomizes the color for every section.
+    //       //spi.ink(rr(100, 255), rr(100, 255), rr(100, 255), 255); // Set the color.
+    //     } else if (!pen3d) {
+    //       spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
+    //       tube.goto(spi.state); // 2. Knots the tube.
+    //     }
+    //   }
+    //   // d = dist3d(spi.state.position, race.pos);
+    // }
+
     // Add some debug data to show the future direction.
     // const scaledDiff = vec3.scale(vec3.create(), diff, 2);
     // trackerPoints = [
@@ -650,29 +724,34 @@ function sim({
 
         // Skip wand data for now.
       } else if (type === "tube:start") {
-        // Format: tick, tube:start, PX, PY, PZ, QX, QY, QZ, QW, R, G, B, A, RADIUS, SIDES, STEP
         tube.start(
           {
             position: [f[di], f[di + 1], f[di + 2]],
             rotation: [f[di + 3], f[di + 4], f[di + 5], f[di + 6]],
-            color: [f[di + 7], f[di + 8], f[di + 9], f[di + 10]],
+            color,
           },
-          f[di + 11],
-          f[di + 12],
-          f[di + 13],
           true
         );
       } else if (type === "tube:goto") {
-        // ❔ tick, tube:goto, PX, PY, PZ, QX, QY, QZ, R, G, B, A
+        // ❔ tick, tube:goto, PX, PY, PZ, QX, QY, QZ
         tube.goto(
           {
             position: [f[di], f[di + 1], f[di + 2]],
             rotation: [f[di + 3], f[di + 4], f[di + 5], f[di + 6]],
-            color: [f[di + 7], f[di + 8], f[di + 9], f[di + 10]],
+            color,
           },
           undefined,
           true
         );
+      } else if (type === "tube:radius") {
+        // ❔ tick, tube:radius N
+        tube.update({ radius: f[di] });
+      } else if (type === "tube:sides") {
+        // ❔ tick, tube:sides N
+        tube.update({ sides: f[di] });
+      } else if (type === "tube:step") {
+        // ❔ tick, tube:step N
+        tube.update({ step: f[di] });
       } else if (type === "tube:stop") {
         // ❔ tick, tube:stop, (no other data needed)
         tube.stop(true);
@@ -710,6 +789,8 @@ function paint({ form, Form }) {
     raceColors.push([127, 0, 127, 255], [127, 0, 127, 255]);
   }
 
+  //console.log(racePositions);
+
   const raceForm = new Form(
     {
       type: "line",
@@ -721,10 +802,8 @@ function paint({ form, Form }) {
     { color: [255, 255, 255, 255] },
     { scale: [1, 1, 1] }
   );
-  */
 
   // The spider's path so far.
-  /*
   if (spi) {
     const spiderPositions = [];
     const spiderColors = [];
@@ -811,24 +890,36 @@ function paint({ form, Form }) {
   );
   */
     // Draw some cursor measurement lines.
-    trackerForm = new Form(
-      {
-        type: "line",
-        positions: trackerPoints,
-        colors: trackerColors,
-        gradients: true,
-        keep: false,
-      },
-      { color: [255, 255, 255, 255] },
-      { scale: [1, 1, 1] }
-    );
+    // trackerForm = new Form(
+    //   {
+    //     type: "line",
+    //     positions: trackerPoints,
+    //     colors: trackerColors,
+    //     gradients: true,
+    //     keep: false,
+    //   },
+    //   { color: [255, 255, 255, 255] },
+    //   { scale: [1, 1, 1] }
+    // );
 
-    form([trackerForm, diffPrevForm, diffForm], camdoll.cam);
+    // form(
+    //   [trackerForm, diffPrevForm, diffForm, raceForm],
+    //   camdoll.cam
+    // );
     //#endregion
   }
 
   form(
-    [stage, tube.capForm, tube.triCapForm, tube.form, wandForm, demoWandForm],
+    [
+      stage,
+      //raceForm,
+      //spiderForm,
+      tube.form,
+      tube.capForm,
+      tube.triCapForm,
+      wandForm,
+      demoWandForm,
+    ],
     camdoll.cam,
     { background }
   );
@@ -863,7 +954,6 @@ function act({
 
     spi = new Spider({ num, debug }, cur, last, dir, rot, color);
     race.start(spi.state.position);
-    // racePoints.push(race.pos); // For debugging.
 
     waving = true;
   }
@@ -876,7 +966,6 @@ function act({
     const rot = quat.fromEuler(quat.create(), ...camdoll.cam.rot);
     spi = new Spider({ num, debug }, near, far, dir, rot, color);
     race.start(spi.state.position);
-    // racePoints.push(race.pos); // For debugging.
 
     waving = true;
   }
@@ -892,7 +981,7 @@ function act({
   }
 
   // Toggle cube and origin measurement lines.
-  if (e.is("keyboard:down:t") || e.is("3d:lhand-button-thumb")) {
+  if (e.is("keyboard:down:t") || e.is("3d:lhand-button-thumb-down")) {
     pong = true;
     measuringCubeOn = !measuringCubeOn;
     originOn = !originOn;
@@ -904,45 +993,64 @@ function act({
 
   // Left hand controller.
 
+  // Update both radius, and step.
+
   if (e.is("3d:lhand-trigger-down")) {
     beep = true;
-    radius = min(1, radius + radiusStep);
-    tube.update({ radius });
+    // radius = min(1, radius + radiusStep);
+    // step = stepRel();
+    // tube.update({ radius, step });
+    // demo?.rec("tube:radius", radius);
+    // demo?.rec("tube:step", step);
   }
 
   if (e.is("3d:lhand-trigger-secondary-down")) {
     bop = true;
-    radius = max(minRadius, radius - radiusStep);
-    tube.update({ radius });
+    // radius = max(minRadius, radius - radiusStep);
+    // step = stepRel();
+    // tube.update({ radius, step });
+    // demo?.rec("tube:radius", radius);
+    // demo?.rec("tube:step", step);
   }
 
-  if (e.is("3d:lhand-button-thumb-down")) {
-    measuringCubeOn = !measuringCubeOn;
-    originOn = !originOn;
+  if (e.is("3d:rhand-trigger-secondary-down")) {
+    bop = true;
+  }
+
+  // Update radius.
+  if (e.is("3d:rhand-axis-y")) {
+    if (abs(e.value) > 0.01) {
+      radius = num.clamp(radius + e.value * -0.001, minRadius, 2);
+      step = stepRel();
+      tube.update({ radius, step });
+      demo?.rec("tube:radius", radius);
+      demo?.rec("tube:step", step);
+    }
   }
 
   // Increase / side count.
-  if (e.is("3d:lhand-button-y-down") || e.is("3d:rhand-axis-x-right")) {
+  if (
+    e.is("3d:lhand-button-y-down") ||
+    e.is("3d:rhand-trigger-secondary-down")
+  ) {
     pong = true;
     sides = min(maxSides, sides + 1);
     console.log("New sides:", sides);
     tube.update({ sides });
+    demo?.rec("tube:sides", sides);
   }
 
-  if (e.is("3d:lhand-button-x-down") || e.is("3d:rhand-axis-x-left")) {
+  // e.is("3d:rhand-axis-x-left")
+
+  if (
+    e.is("3d:lhand-button-x-down") ||
+    e.is("3d:lhand-trigger-secondary-down")
+  ) {
     ping = true;
     sides = max(2, sides - 1);
     console.log("New sides:", sides);
     tube.update({ sides });
-  }
-
-  if (e.is("3d:rhand-axis-y")) {
-    if (e.value > 0) {
-      radius = min(1, radius + abs(e.value * 0.001));
-    } else {
-      radius = max(minRadius, radius - abs(e.value * 0.001));
-    }
-    tube.update({ radius });
+    demo?.rec("tube:sides", sides);
   }
 
   // if (e.is("3d:rhand-axis-x-left")) {
@@ -950,11 +1058,6 @@ function act({
 
   // if (e.is("3d:rhand-axis-x-right")) {
   // }
-
-  // Right hand controller
-  if (e.is("3d:rhand-trigger-secondary-down")) {
-    bop = true;
-  }
 
   // Toggle binary color switch of background and foreground.
   if (e.is("keyboard:down:c") || e.is("3d:rhand-button-a-down")) {
@@ -1239,7 +1342,7 @@ function lightSwitch(light) {
     capVary = 0; //20;
   }
 
-  demo?.rec("wand:color", ...color);
+  demo?.rec("wand:color", color);
 
   if (lit) {
     demo?.rec("room:color", [255, 255, 255, 255]);
@@ -1255,6 +1358,7 @@ function lightSwitch(light) {
 class Tube {
   $; // api
   shape; // This hold the vertices in our cookie cutter shape.
+  lastSegmentShape; // Keep track of this for rendering a nice preview.
   gesture = []; // Set up points on a path / gesture. (Resets on each gesture.)
   //               Used for triangulation logic.
   lastPathP; // Keep track of the most recent "path point".
@@ -1290,7 +1394,8 @@ class Tube {
     );
   }
 
-  update({ sides, radius }) {
+  update({ sides, radius, step }) {
+    this.step = step || this.step;
     if (sides == undefined) {
       this.radius = radius || this.radius;
       this.shape = this.#segmentShape(this.radius, this.sides); // Set shape to start.
@@ -1305,24 +1410,32 @@ class Tube {
   }
 
   #setVertexLimits() {
-    if (this.sides === 2 && this.form.primitive === "triangle") {
-      this.verticesPerSide = 12; // Double sided.
-      this.verticesPerCap = 0; // No caps here.
-    }
-
-    if (this.sides === 3 && this.form.primitive === "triangle") {
+    if (this.form.primitive === "line") {
+      // TODO: This should be good enough? 22.11.17.05.23
       this.verticesPerSide = 6;
-      this.verticesPerCap = 3; // No caps here.
+      this.verticesPerCap = this.sides * 3;
     }
 
-    if (this.sides === 4 && this.form.primitive === "triangle") {
-      this.verticesPerSide = 12;
-      this.verticesPerCap = 3; // No caps here.
-    }
+    if (this.form.primitive === "triangle") {
+      if (this.sides === 2) {
+        this.verticesPerSide = 12; // Double sided.
+        this.verticesPerCap = 0; // No caps here.
+      }
 
-    if (this.sides > 4 && this.form.primitive === "triangle") {
-      this.verticesPerSide = 6 * this.sides;
-      this.verticesPerCap = 3 * this.sides; // No caps here.
+      if (this.sides === 3) {
+        this.verticesPerSide = 6;
+        this.verticesPerCap = 3; // No caps here.
+      }
+
+      if (this.sides === 4) {
+        this.verticesPerSide = 12;
+        this.verticesPerCap = 3; // No caps here.
+      }
+
+      if (this.sides > 4) {
+        this.verticesPerSide = 6 * this.sides;
+        this.verticesPerCap = 3 * this.sides; // No caps here.
+      }
     }
   }
 
@@ -1333,7 +1446,12 @@ class Tube {
     this.sides = sides;
     this.step = step;
     this.shape = this.#segmentShape(radius, sides); // Set shape to start.
+    this.lastSegmentShape = this.shape;
     this.demo = demo;
+
+    demo?.rec("tube:radius", this.radius);
+    demo?.rec("tube:sides", this.sides);
+    demo?.rec("tube:step", this.step);
 
     // Make the buffered geometry form, given the geometry type.,
     // and another to represent a dynamic cursor.
@@ -1425,8 +1543,6 @@ class Tube {
     this.#transformShape(start);
     if (this.sides > 1) this.#cap(start, this.form);
 
-    this.gesture.push(start);
-
     // 🗒️ Note: Eventually this should be on the level of abstraction of a Wand, not a tool like Tube. 22.11.14.23.20
     if (start.color.length === 3) start.color.push(255); // Use RGBA for demo.
 
@@ -1434,10 +1550,6 @@ class Tube {
       this.demo?.rec("tube:start", [
         ...start.pos.slice(0, 3),
         ...start.rotation,
-        ...start.color,
-        this.radius,
-        this.sides,
-        this.step,
       ]);
     }
   }
@@ -1453,27 +1565,36 @@ class Tube {
       if (d < 0.0005) return; // TODO: Eventually make this preview transition smoother.
     }
 
-    // TODO: - [] Test all sides here. 22.11.11.16.23
     // Replace the current capForm shape values with transformed ones.
-    // TODO: get color out of p here
     this.previewRotation = p.rotation;
     this.capForm.clear();
     this.triCapForm.clear();
 
     const pathP = this.#transformShape(this.#pathp({ ...p }));
 
-    if (waving && this.gesture.length === 0) {
-      this.#cap(pathP, this.capForm);
-    }
-
-    if (!waving) {
-      this.#cap(pathP, this.capForm);
-    }
+    if (waving && this.gesture.length === 0) this.#cap(pathP, this.capForm);
+    if (!waving) this.#cap(pathP, this.capForm);
 
     if (nextPathP) {
-      const npp = this.#transformShape(this.#pathp({ ...nextPathP }));
-      this.#cap(npp, this.capForm, false);
-      this.#cap(pathP, this.triCapForm, false);
+      // Use the former segment's properties to transition to this one
+      // if we've already drawn a segment.
+      if (this.gesture.length > 0) {
+        const npp = this.#transformShape(this.#pathp({ ...nextPathP }));
+        this.#cap(npp, this.capForm, false);
+
+        const cachedSegmentShape = this.shape;
+        this.shape = this.lastSegmentShape;
+
+        const tPathP = this.#transformShape(this.#pathp({ ...p }));
+        this.#cap(tPathP, this.triCapForm, false);
+
+        this.shape = cachedSegmentShape;
+      } else {
+        //console.log(nextPathP);
+        const npp = this.#transformShape(this.#pathp({ ...nextPathP }));
+
+        this.#cap(npp, this.capForm, false);
+      }
     }
 
     // Also move towards the next possible position here...
@@ -1481,23 +1602,40 @@ class Tube {
       // Cache some state that goto writes to, load it back.
       const cachedLastPathP = this.lastPathP;
       const cachedGesture = this.gesture;
+
+      // Alter the lastPathP shape. (This kind of shows this class structure is a little less flexible than I hoped.) 😱
+      const cachedSegmentShape = this.shape;
+      if (this.gesture.length > 0) {
+        this.shape = this.lastSegmentShape;
+      }
+      this.#transformShape(pathP);
+      this.shape = cachedSegmentShape;
+
       this.lastPathP = pathP;
       this.gesture = [];
-      this.goto(nextPathP, this.capForm, true); // Generate a preview only and don't add to the demo.
+
+      this.goto(nextPathP, this.capForm, false, false); // No preview, no demo.
+
       this.lastPathP = cachedLastPathP;
       this.gesture = cachedGesture;
     }
   }
 
   // Adds additonal points as args in [position, rotation, color] format.
-  goto(pathPoint, form, fromDemo = false) {
+  goto(pathPoint, form, fromDemo = false, showCapForm = false) {
     // Add new points to the path.
     // Extrude shape points from and in the direction of each path vertex.
     const pathp = this.#pathp(pathPoint);
+
     this.#consumePath([this.#transformShape(pathp)], form);
 
-    if (fromDemo) {
+    if (fromDemo || showCapForm) {
       this.#cap(pathp, this.triCapForm, false);
+    }
+
+    if (form !== this.capForm) {
+      // Don't update the last segment shape if we are only previewing.
+      this.lastSegmentShape = this.shape;
     }
 
     if (pathp.color.length === 3) pathp.color.push(255); // Use RGBA for demo.
@@ -1506,7 +1644,6 @@ class Tube {
       this.demo?.rec("tube:goto", [
         ...pathp.pos.slice(0, 3),
         ...pathp.rotation,
-        ...pathp.color,
       ]);
 
     if (this.progress() >= 1) {
@@ -1519,6 +1656,7 @@ class Tube {
     const { dist3d } = this.$.num;
 
     this.capForm.clear();
+    this.triCapForm.clear();
 
     // Push anything we haven't stepped into onto the path.
 
@@ -1582,9 +1720,17 @@ class Tube {
   // Generate a start or end (where ring === false) cap to the tube.
   // Has a form input that is either `form` or `capForm`.
   #cap(pathP, form, ring = true) {
-    const tris =
-      form?.primitive !== "line" ||
-      (form === undefined && this.geometry === "triangles"); // This is a hack for wireframe capForms.
+    // const tris =
+    //   form?.primitive !== "line" ||
+    //   (form === undefined && this.geometry === "triangles"); // This is a hack for wireframe capForms.
+
+    let tris;
+    if (form === undefined) {
+      tris = this.geometry === "triangles";
+    } else {
+      tris = form.primitive !== "line";
+    }
+
     const shade = capColor;
 
     // 📐 Triangles
@@ -1846,6 +1992,7 @@ class Tube {
     );
     quat.normalize(rm, rm);
 
+    pathP.shape.length = 0;
     this.shape.forEach((shapePos, i) => {
       const newShapePos = vec4.transformMat4(
         vec4.create(),
@@ -1932,9 +2079,16 @@ class Tube {
   #consumePath(pathPoints, form) {
     const positions = [];
     const colors = [];
-    const tris =
-      form?.primitive !== "line" ||
-      (form === undefined && this.geometry === "triangles"); // This is a hack for wireframe capForms.
+    //const tris =
+    //  form?.primitive !== "line" ||
+    //  (form === undefined && this.geometry === "triangles"); // This is a hack for wireframe capForms.
+
+    let tris;
+    if (form === undefined) {
+      tris = this.geometry === "triangles";
+    } else {
+      tris = form.primitive !== "line";
+    }
 
     const args = pathPoints;
 
@@ -2303,6 +2457,9 @@ class Tube {
             pathP.shape[pathP.shape.length - 1]
           );
           colors.push(this.varyLine(shade), this.varyLine(shade));
+
+          positions.push(pathP.shape[pathP.shape.length - 1], pathP.shape[1]);
+          colors.push(this.varyLine(shade), this.varyLine(shade));
         }
 
         if (this.sides > 3) {
@@ -2385,18 +2542,14 @@ class Spider {
 
     const firstTangent = vec3.normalize(
       vec3.create(),
-      vec3.sub(vec3.create(), targetPosition, this.lastPosition)
+      //vec3.sub(vec3.create(), targetPosition, this.lastPosition)
+      vec3.sub(vec3.create(), this.position, this.lastPosition)
     );
 
     const nextTangent = vec3.normalize(
       vec3.create(),
       vec3.sub(vec3.create(), targetPosition, this.position)
     );
-
-    // This position stuff should come back together maybe...
-    this.direction = nextTangent;
-    const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
-    const pos = vec3.add(vec3.create(), this.position, scaledDir);
 
     // TODO: Will this only be the first normal?
     let lastNormal;
@@ -2492,7 +2645,23 @@ class Spider {
     // Interpolate it... only apply a section via `tightness` from 0-1.
     let slerpedRot = quat.slerp(quat.create(), this.rotation, qua, tightness);
 
+    // console.log(slerpedRot.slice(), this.rotation.slice())
+
     this.rotation = slerpedRot; // Only update the quaternion if it makes sense with the bitangent result.
+
+    // This position stuff should come back together maybe...
+
+    // Get the direction between this position and the target position, then
+
+    // Original direction.
+    this.direction = vec4.transformQuat(
+      vec4.create(),
+      [0, 0, 1, 1],
+      slerpedRot
+    );
+
+    const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
+    const pos = vec3.add(vec3.create(), this.position, scaledDir);
 
     this.lastPosition = this.position;
     this.position = [...pos, 1];
@@ -2569,8 +2738,7 @@ class Demo {
       this.frames.push(frame);
     }
 
-    if (label !== "wand")
-      console.log("🔴 Recording:", frame, this.frames.length);
+    // if (label !== "wand") console.log("🔴 Recording:", frame, this.frames.length);
   }
 
   // Log the current results.

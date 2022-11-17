@@ -951,8 +951,6 @@ export function pollControllers() {
         const key = `held:${xy}`;
         const held = controller.userData.axes[axisIndex][key];
 
-        console.log(key, held, value)
-
         if (!held && abs(value) > 0.5) {
 
           if (value < 0) {
@@ -1127,7 +1125,6 @@ export function render(now) {
 
     // Garbage is collected in `bios` under `BIOS:RENDER`
     renderer.render(scene, camera);
-    // console.log(scene.children)
 
     if (renderedOnce === false) {
       renderer.domElement.classList.add("visible");
