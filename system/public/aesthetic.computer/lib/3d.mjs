@@ -25,6 +25,7 @@ import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from "../dep/three/GLTFExporter.js";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
 const debug = window.acDEBUG;
+const { abs } = Math;
 
 const NO_FOG = true;
 const FOG_NEAR = 0.1;
@@ -803,7 +804,6 @@ export function checkForRemovedForms(formsBaked) {
 // Receives events from aesthetic.computer.
 export function handleEvent(event) {
   if (event.type === "background-change") {
-    console.log(event.content);
     scene.background = new THREE.Color(...event.content.map((ch) => ch / 255));
     if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
     return;
@@ -924,16 +924,58 @@ export function pollControllers() {
     [controller1, controller2].forEach((controller) => {
       const gamepad = controller.gamepad;
       if (!controller.userData.buttons) controller.userData.buttons = [];
+      if (!controller.userData.axes)
+        controller.userData.axes = [{}, {}, {}, {}]; // There are only 4 axis right now. 22.11.17.00.21
       const h = controller.handedness === "right" ? "r" : "l";
       const cachedButts = controller.userData.buttons;
       if (!gamepad) return;
 
+      // console.log(gamepad.hapticActuators); // TODO: Add rumble support.
+      // using `playEfect` or `pulse`.
+
+      // Meta Quest 2: Gamepad Axes Mapping
+
+      // console.log(gamepad.axes)
+      // [blank, blank, x, y] -1 -> 1
+      //      0      1  2  3
+      // r-hand-axis-x, r-hand-axis-y, r-hand-axis-x-left / right / up / down
+      // l-hand-axis-x, l-hand-axis-y
+      [2, 3].forEach((axisIndex) => {
+        const xy = axisIndex === 2 ? "x" : "y";
+        const value = gamepad.axes[axisIndex];
+
+        // Regular axis event.
+        penEvents.push({ name: `${h}hand-axis-${xy}`, value });
+
+        // Simplified Selection events.
+        const key = `held:${xy}`;
+        const held = controller.userData.axes[axisIndex][key];
+
+        console.log(key, held, value)
+
+        if (!held && abs(value) > 0.5) {
+
+          if (value < 0) {
+            const dir = xy === "x" ? "left" : "down";
+            penEvents.push({ name: `${h}hand-axis-${xy}-${dir}` });
+          } else if (value > 0) {
+            const dir = xy === "x" ? "right" : "up";
+            penEvents.push({ name: `${h}hand-axis-${xy}-${dir}` });
+          }
+
+          controller.userData.axes[axisIndex][key] = true;
+        } else if (held && abs(value) < 0.1) {
+          controller.userData.axes[axisIndex][key] = false;
+        }
+      });
+
+      // ...
       gamepad.buttons.forEach((button, n) => {
         if (cachedButts[n] === undefined) cachedButts[n] = {};
         if (cachedButts[n].held === undefined) cachedButts[n].held = false;
 
         if (button.pressed) {
-          // Quest 2: Controller Button Mapping
+          // Meta Quest 2: Controller Button Mapping
 
           //           Trigger = 0 (value is pressure)
           //       Backtrigger = 1 (value is pressure)
@@ -969,7 +1011,7 @@ export function pollControllers() {
             });
             cachedButts[5].held = true;
           }
-          console.log(`🥽 Button ${n} was pressed:`, value);
+          // console.log(`🥽 Button ${n} was pressed:`, value);
         } else {
           const value = button.value;
           // Note: Eventually parse these with a colon? 22.11.15.10.57 ❓
@@ -999,6 +1041,7 @@ export function pollControllers() {
             });
             cachedButts[5].held = false;
           }
+          // console.log(`🥽 Button ${n} was released:`, value);
         }
       });
     });

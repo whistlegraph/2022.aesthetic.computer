@@ -4,12 +4,19 @@
 /* #region 🏁 todo
 * VR
 
-  - [] Add control sticks for size.
+
   - [] Better freehand drawing.
   - [] How to add individual lines back...
     - [] Make a separate form object to switch to when adding lines.
     - [] Export the lines as a separate geometry object.
     - [] Keep the light and dark idea.
+
+    - [] Preview triCapForm should always be set to the size of the last drawn
+         segment.
+
+  - [] Add tube:radius, and tube:step commands to the demo file.
+  - [] Change the demo file output from JSON to txt.
+
   - [] Use basic materials and lights in the scene.
   - [] Performance profiling.
   - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
@@ -17,7 +24,6 @@
  - Lots more testing.
   - Demo playback: Max. cutoff in GPU form! 512 (capForm is not cleared?) 
  - [] Get things good enough to make a set of 128 complete drawings. 
-
 
 
 END OF DAY
@@ -49,6 +55,7 @@ END OF DAY
         - (The files would load the same way.)
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Add control stick support for size selection.
 - [x] Add a "randomized color / sound randomized background color" wildcard.
 - [x] Add rainbow wand.
 - [x] Make Tube color changes stripe-able / dynamic during drawing.
@@ -211,15 +218,15 @@ function sim({
   // 🌈 Rainbow Colors
   if (rainbowColors) {
     if (rainbowColorCount === rainbowColorCountMax) {
-    const randomColor = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
-    color = randomColor;
-    capColor = randomColor;
-    if (spi) spi.color = color;
-    if (!player) demo?.rec("wand:color", ...color);
-    const randomBackground = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
-    background = randomBackground;
-    if (!player) demo?.rec("room:color", randomBackground);
-    bap = true;
+      const randomColor = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
+      color = randomColor;
+      capColor = randomColor;
+      if (spi) spi.color = color;
+      if (!player) demo?.rec("wand:color", ...color);
+      const randomBackground = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
+      background = randomBackground;
+      if (!player) demo?.rec("room:color", randomBackground);
+      bap = true;
       rainbowColorCount = 0;
     } else {
       rainbowColorCount += 1;
@@ -915,19 +922,34 @@ function act({
   }
 
   // Increase / side count.
-  if (e.is("3d:lhand-button-y-down")) {
+  if (e.is("3d:lhand-button-y-down") || e.is("3d:rhand-axis-x-right")) {
     pong = true;
     sides = min(maxSides, sides + 1);
     console.log("New sides:", sides);
     tube.update({ sides });
   }
 
-  if (e.is("3d:lhand-button-x-down")) {
+  if (e.is("3d:lhand-button-x-down") || e.is("3d:rhand-axis-x-left")) {
     ping = true;
     sides = max(2, sides - 1);
     console.log("New sides:", sides);
     tube.update({ sides });
   }
+
+  if (e.is("3d:rhand-axis-y")) {
+    if (e.value > 0) {
+      radius = min(1, radius + abs(e.value * 0.001));
+    } else {
+      radius = max(minRadius, radius - abs(e.value * 0.001));
+    }
+    tube.update({ radius });
+  }
+
+  // if (e.is("3d:rhand-axis-x-left")) {
+  // }
+
+  // if (e.is("3d:rhand-axis-x-right")) {
+  // }
 
   // Right hand controller
   if (e.is("3d:rhand-trigger-secondary-down")) {
