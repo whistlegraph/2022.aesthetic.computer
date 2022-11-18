@@ -23,6 +23,7 @@
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from "../dep/three/GLTFExporter.js";
+import { OBJExporter } from "../dep/three/OBJExporter.js";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
 const debug = window.acDEBUG;
 const { abs } = Math;
@@ -825,8 +826,19 @@ export function handleEvent(event) {
     const sculpture = scene
       .getObjectByUserDataProperty("tag", "sculpture")
       .clone();
+    const sculptureLine = scene
+      .getObjectByUserDataProperty("tag", "sculpture-line")
+      .clone();
     sceneToExport.add(sculpture);
+    sceneToExport.add(sculptureLine);
     sculpture.translateY(-sculptureHeight); // Head / preview box height.
+    sculptureLine.translateY(-sculptureHeight); // Head / preview box height.
+
+    // Instantiate an OBJ exporter
+    //const exporter = new OBJExporter();
+    // Parse the input and generate the OBJ output
+    //const data = exporter.parse(scene);
+    //downloadFile(data);
 
     exporter.parse(
       sceneToExport,
