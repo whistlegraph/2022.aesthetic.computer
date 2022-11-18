@@ -29,8 +29,8 @@ const debug = window.acDEBUG;
 const { abs } = Math;
 
 const NO_FOG = true;
-const FOG_NEAR = 0.1;
-const FOG_FAR = 10;
+const FOG_NEAR = 0.2;
+const FOG_FAR = 2;
 
 let scene,
   renderer,
@@ -64,7 +64,7 @@ export function initialize(
 
   renderer = new THREE.WebGLRenderer({
     alpha: false,
-    antialias: false,
+    antialias: true,
     preserveDrawingBuffer: true,
   });
 
@@ -75,6 +75,7 @@ export function initialize(
   renderer.xr.setFramebufferScaleFactor(1);
   renderer.xr.setFoveation(0);
   renderer.preserveDrawingBuffer = true;
+  renderer.outputEncoding = THREE.sRGBEncoding;
 
   renderer.domElement.dataset.type = "3d";
 
@@ -84,11 +85,12 @@ export function initialize(
   //scene.fog = new THREE.FogExp2(0x000000, FOG);
   //scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
-  //  const ambientLight = new THREE.AmbientLight();
-  //  const pointLight = new THREE.PointLight();
+  scene.add( new THREE.HemisphereLight( 0xff9900, 0xff0000 ) );
+//   const ambientLight = new THREE.AmbientLight();
+ //   const pointLight = new THREE.PointLight();
   //  pointLight.position.set(10, 10, 10);
   //  scene.add(ambientLight);
-  //  scene.add(pointLight);
+   // scene.add(pointLight);
 
   // Set up VR.
   button = VRButton.createButton(
@@ -574,7 +576,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       material.vertexColors = true;
       material.vertexAlphas = true;
 
-
       let points = [];
       let pointColors = [];
 
@@ -823,39 +824,63 @@ export function handleEvent(event) {
     const handle = event.content.handle;
     const sculptureHeight = event.content.sculptureHeight || 0;
 
-    const options = {}; // https://threejs.org/docs/#examples/en/exporters/GLTFExporter
-
-    // Parse the input and generate the glTF output
-
     const sceneToExport = new THREE.Scene();
     const sculpture = scene
       .getObjectByUserDataProperty("tag", "sculpture")
-      .clone();
+      ?.clone();
+
     const sculptureLine = scene
       .getObjectByUserDataProperty("tag", "sculpture-line")
-      .clone();
-    sceneToExport.add(sculpture);
-    sceneToExport.add(sculptureLine);
-    sculpture.translateY(-sculptureHeight); // Head / preview box height.
-    sculptureLine.translateY(-sculptureHeight); // Head / preview box height.
+      ?.clone();
+
+    if (sculptureLine) {
+
+
+      sceneToExport.add(sculptureLine);
+      sculptureLine.translateY(-sculptureHeight); // Head / preview box height.
+    }
+
+    if (sculpture) {
+
+      sculpture.geometry = new THREE.BufferGeometry();
+
+
+      sceneToExport.add(sculpture);
+      sculpture.translateY(-sculptureHeight); // Head / preview box height.
+    }
 
     // Instantiate an OBJ exporter
-    //const exporter = new OBJExporter();
     // Parse the input and generate the OBJ output
-    //const data = exporter.parse(scene);
+    // const exporterOBJ = new OBJExporter();
+    // const data = exporterOBJ.parse(
+    //   sceneToExport,
+    //   function (done) {
+    //     console.log(done);
+    //   },
+    //   function (err) {
+    //     console.log(err);
+    //   }
+    // );
     //downloadFile(data);
+
+    const options = {
+      binary: true
+    }; // https://threejs.org/docs/#examples/en/exporters/GLTFExporter
+
+    // Parse the input and generate the glTF output
+
 
     exporter.parse(
       sceneToExport,
       // called when the gltf has been generated
-      function (gltf) {
+      function (glb) {
         // TODO: Add a flag to use the server here.
 
         if (output === "server") {
           upload(
             {
-              filename: `${timestamp}-sculpture-${handle}.gltf`,
-              data: JSON.stringify(gltf),
+              filename: `${timestamp}-sculpture-${handle}.glb`,
+              data: glb,//JSON.stringify(gltf),
               bucket: "wand",
             },
             "gpu-response"
@@ -863,8 +888,8 @@ export function handleEvent(event) {
         } else {
           // Assume "local".
           download({
-            filename: `${timestamp}-sculpture-${handle}.gltf`,
-            data: JSON.stringify(gltf),
+            filename: `${timestamp}-sculpture-${handle}.glb`,
+            data: glb,
           });
         }
       },
@@ -969,7 +994,6 @@ export function pollControllers() {
         const held = controller.userData.axes[axisIndex][key];
 
         if (!held && abs(value) > 0.5) {
-
           if (value < 0) {
             const dir = xy === "x" ? "left" : "down";
             penEvents.push({ name: `${h}hand-axis-${xy}-${dir}` });

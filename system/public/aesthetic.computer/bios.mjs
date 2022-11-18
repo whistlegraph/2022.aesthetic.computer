@@ -1928,7 +1928,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     const ext = extension(filename);
     let MIME = "application/octet-stream"; // Default content type.
 
-    if (ext === "json" || ext === "gltf") {
+    if (ext === "json") {
       // JSON
       MIME = "application/json";
 
@@ -1940,40 +1940,43 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           // 2 // Also make sure we indent by 2 spaces so it's nicely formatted.
         );
       }
-
-      let prefetchURL = "/presigned-upload-url/" + ext;
-
-      if (bucket === "wand") prefetchURL += "/" + filename + "/" + bucket; // Add filename info.
-
-      // Now send a request to the server...
-      fetch(prefetchURL)
-        .then(async (res) => {
-          const presignedUrl = (await res.json()).uploadURL;
-          if (debug) console.log("🔐 Presigned URL:", presignedUrl);
-
-          const response = await fetch(presignedUrl, {
-            method: "PUT",
-            headers: {
-              "Content-Type": MIME,
-              "x-amz-acl": "public-read",
-            },
-            body: new Blob([data], { type: MIME }),
-          });
-
-          if (debug) console.log("✔️ File uploaded:", response);
-          send({
-            type: callbackMessage,
-            content: { result: "success", data: response },
-          });
-        })
-        .catch((err) => {
-          if (debug) console.log("⚠️ Failed to get presigned URL:", err);
-          send({
-            type: callbackMessage,
-            content: { result: "error", data: err },
-          });
-        });
     }
+
+    if (ext === "obj") MIME = "application/object";
+    if (ext === "glb") MIME = "model/gltf-binary";
+
+    let prefetchURL = "/presigned-upload-url/" + ext;
+
+    if (bucket === "wand") prefetchURL += "/" + filename + "/" + bucket; // Add filename info.
+
+    // Now send a request to the server...
+    fetch(prefetchURL)
+      .then(async (res) => {
+        const presignedUrl = (await res.json()).uploadURL;
+        if (debug) console.log("🔐 Presigned URL:", presignedUrl);
+
+        const response = await fetch(presignedUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": MIME,
+            "x-amz-acl": "public-read",
+          },
+          body: new Blob([data], { type: MIME }),
+        });
+
+        if (debug) console.log("✔️ File uploaded:", response);
+        send({
+          type: callbackMessage,
+          content: { result: "success", data: response },
+        });
+      })
+      .catch((err) => {
+        if (debug) console.log("⚠️ Failed to get presigned URL:", err);
+        send({
+          type: callbackMessage,
+          content: { result: "error", data: err },
+        });
+      });
   }
 
   // Reads the extension off of filename to determine the mimetype and then

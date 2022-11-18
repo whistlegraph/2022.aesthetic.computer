@@ -2,26 +2,22 @@
 // A laboratory & development piece for designing the geometry in `wand`.
 
 /* #region 🏁 todo
-* VR
 
-
-- [-] Performance profiling.
-  - Strips slow
-
+- Randomized pallette arrays...
   - [] Use basic materials and lights in the scene.
     - [] Decide on colors, / sets, etc.
     - [] Keep the light and dark idea?
  - Lots more testing.
 
-- [] 📧 Send 
-- [] 1) Send spec for Jens
-- [] 2) Send examples of drawings and file formats for barry.
-
 + Tomorrow
  - [] 64 pictures? 
+ - [] Get demos working.
+ - [] Send spec for Jens
+ - [] Send examples of drawings and file formats for barry.
 
 + Later
- - [] Try out different export formats.
+- [] Never show user cursor when demo'ing.. (does it happen when sides change?).
+- [] But show an actual preview while demo'ing?
  - [] Change the demo file output from JSON to txt.
  - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
   - keep an automated list somewhere... maybe look at the S3 shell scripts?
@@ -53,68 +49,8 @@
         - Could it be added subsequently after the drawings are complete? Yes.
         - (The files would load the same way.)
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
+ - [x] Try out different export formats. (Using glb)
 + Done
-- [x] Fix wand length.
-- [x] Make sure demos play.
-- [x] How to (and should I) add individual lines / line length of 1 back...
- - [x] Make a separate form object to switch to when adding lines. / alter the length.
- - [x] Export the lines as a separate geometry object.
- - [x] Auto-rotate ribbons... or allow a certain level of rotation?
-- [x] Better freehand drawing.
-  - [x] Better angles / auto-step size on radius change? (Since user can't change step...)
-  - [x] First first block rotation issue for good! 
-- [x] Add tube:radius, tube:step, and tube:size commands to the demo file.
-- [x] Preview triCapForm should always be set to the size of the last drawn
-      segment.
-- [x] Add control stick support for size selection.
-- [x] Add a "randomized color / sound randomized background color" wildcard.
-- [x] Add rainbow wand.
-- [x] Make Tube color changes stripe-able / dynamic during drawing.
-- [x] Add visual confirmation to saving.
-- [x] Change demo format to remove light-switch in favor of
-    background Tube color changes.
-- [x] Be sure to include radius, sides, and step! in the demo format,
-      even if step is a default right now. 
-- [x] Full vertex scale.
-- [x] Opaque preview cap.
-- [x] Add controller shortcut to enable or disable the box.
-- [x] Add some keyboard and VR controller button options for complexity
-      and color / radius.
-- [x] White wand / finish wandForm and preview. (Ignore PC for now.)
-- [x] Show the limit of the vertex count using the wandlength.
-- [x] Wand color should update to current color.
-- [x] Two sided triangle optimization.
-  - [x] Flip any inverted triangles. Check to see if disabling two sided
-         triangles flip anything.
-  - [x] Invert tube so backside is frontside.
-    - [x] 5 sides or greater
-    - [x] all other sides 
-  - [x] Double up the vertices in the exception (Ribbon / 2 sided Tube)
-  - [x] Re-enable THREE.FrontSide / BackSide?
-- [x] Add support for controller buttons to change background.
-- [x] Enable saving of files to the network instead of the device...
-  - [x] Save everything!!!
-    - [x] Set up a route to save through the server.
-  (But what happens if I try to download something on the device?)
-  - [x] Skip certain objects like the measurement cube and the stage.
-  - [x] Transform the drawing downward by the Y position of the center
-      of the cube.
-- [x] Demo file recording and playback.
-  - [x] Playback file.
-  - [x] Load file.
-  - [x️] Save file.
-  - [x] Recording
-    tick, room:color  R, G, B, A 
-    tick, wand:color  R, G, B, A 
-    tick, wand        PX, PY, PZ, QX, QY, QZ QW
-    tick, tube:start, PX, PY, PZ, QX, QY, QZ, QW R, G, B, A, RADIUS, SIDES, STEP   
-    tick, tube:goto,  PX, PY, PZ, QX, QY, QZ, QW R, G, B, A
-    tick, tube:stop,  (no other data needed) 
-    tick, light:switch true / false (subsequent light changes)
-  - [x️‍] Record full controller position and rotation as JSON.
-    - (Each simulation tick)
-  - [x] Record stroke as JSON.
-    - (Each Tube start, stop, and goto.)
 #endregion */
 
 // #region 🗺️ global
@@ -127,23 +63,20 @@ let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
 let cubeHeight = 0.7;
-const segmentTotal = 512; // A minimum given cap vertices and arbitrary segments.
 let originOn = true;
 let background = [0, 0, 0, 255]; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
-  speed = 40; //9; // Race after the cursor quickly.
-//speed = 9; //9; // Race after the cursor quickly.
+  speed = 18; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color = [255, 255, 255, 255]; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
-  sides = 1, // Number of tube sides. 1 or 2 means flat.
-  //radius = 0.002, // The width of the tube.
+  sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.004, // The width of the tube.
-  minRadius = 0.004,
-  radiusStep = 0.002,
+  minRadius = 0.002,
   maxSides = 8,
+  minSides = 2, // Don't use 1 side for now.
   stepRel = () => radius / 2,
   step = stepRel(), // The length of each tube segment.
   capColor = [255, 255, 255, 255], // [255, 255, 255, 255] The currently selected tube end cap color.
@@ -151,9 +84,10 @@ let tube, // Circumscribe the spider's path with a form.
   tubeVary = 0, // 50; How much to drift the colors for the tube.
   rayDist = 0.1, // How far away to draw the tube on non-spatial devices.
   graphPreview = false; // Whether to render pieces of a tube smaller or greater
-//                       than `step` at the start of end of a stroke.
+//                         than `step` at the start of end of a stroke.
 let wandForm; // A live cursor.
 let demoWandForm; // A ghost cursor for playback.
+let demoWandFormOptions;
 
 let demo, player; // For recording a session and rewatching it in realtime.
 let beep, bop; // For making sounds when pieces begin and end.
@@ -248,7 +182,6 @@ function sim({
 
   // 🐭️ Live Cursor: generated from the controller position and direction.
   let position, lastPosition, rotation, controllerRotation;
-  let alteredSpiState;
 
   if (pen3d) {
     position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
@@ -265,7 +198,7 @@ function sim({
     }
 
     const offset = vec3.scale(vec3.create(), dir, offsetAmount);
-    const offsetPos = vec3.add(vec3.create(), position, offset);
+    // const offsetPos = vec3.add(vec3.create(), position, offset);
 
     wandForm = new Form(
       {
@@ -310,8 +243,6 @@ function sim({
       );
       race.start(spi.state.position);
     }
-
-    const controllerPosition = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
 
     // Record current wand position into the active demo if it has changed.
     // Format: wand, PX, PY, PZ, QX, QY, QZ
@@ -413,19 +344,9 @@ function sim({
         newNormal = lastNormal;
       } else {
         // Get angle between first and next tangent.
-
-        // 🅰️ With matrices...
-        // bitangent = vec3.normalize(vec3.create(), bitangent);
-        // Rotate around bitangent by `theta` radians.
-        // const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
-        // const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
-        // newNormal = vec3.transformMat4(vec3.create(), lastNormal, mat);
-
-        // 🅱️ or a quaternion.
         let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
         newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
-
-        spi.lastNormal = lastNormal; // hmm
+        spi.lastNormal = lastNormal; // hmm... 22.11.18.03.57
       }
 
       bitangent = vec3.normalize(
@@ -468,6 +389,7 @@ function sim({
 
       rotation = qua;
 
+      // Create separate preview segments for different edge cases.
       if (waving) {
         if (tube.gesture.length === 0) {
           spi.rotation = rotation;
@@ -548,9 +470,7 @@ function sim({
 
   if (waving) {
     let d = dist3d(spi.state.position, race.pos);
-
     // 🕷️ Spider Jump 🕷️
-
     const step = tube.step;
 
     if (tube.gesture.length === 0 && d > step) {
@@ -568,6 +488,7 @@ function sim({
         //spi.crawlTowards(position, step, 1);
         tube.goto(spi.state, undefined, false, false);
       } else {
+        // 🖱️ Planar
         //tube.start(spi.state, radius, sides, step);
         //spi.crawlTowards(race.pos, step, 1); // <- last param is a tightness fit
         //tube.goto(spi.state); // 2. Knots the tube.
@@ -576,28 +497,17 @@ function sim({
       if (pen3d) {
         // 🥽 VR
         if (tube.sides === 1) {
-          // What to do here...
           // ♾️ Curvy / cut corner loops.
           if (d > step) {
             const repeats = floor(d / step);
-            //const increments = step / repeats;
             for (let i = 0; i < repeats; i += 1) {
-              //spi.crawlTowards(race.pos, increments, (1 / repeats) * 2); // <- last parm is a tightness fit
-              //spi.crawlTowards(position, increments, 1 / repeats); // <- last parm is a tightness fit
               spi.crawlTowards(race.pos, step, (i + 1) / repeats); // <- last parm is a tightness fit
             }
-
             tube.goto(spi.state, undefined, false, false); // Knot the tube just once.
-
-            //spi.crawlTowards(race.pos, step, 0.5); // <- last parm is a tightness fit
           }
-          //spi.crawlTowards(race.pos, step, 0.5); // <- last parm is a tightness fit
-
-          //tube.goto(spi.state); // Knot the tube just once.
         } else if (tube.sides === 2) {
-          // 🎀 Ribbons (manual translation)
-
-          if (d > step * 2) {
+          // 🎀 Ribbons (Manual Translation)
+          if (d > step) {
             const repeats = floor(d / step);
             for (let i = 0; i < repeats; i += 1) {
               spi.crawlTowards(race.pos, step, 1); // <- last param is a tightness fit
@@ -609,7 +519,6 @@ function sim({
           // ♾️ Curvy / cut corner loops.
           if (d > step) {
             const repeats = floor(d / step);
-            //const increments = step / repeats;
             for (let i = 0; i < repeats; i += 1) {
               spi.crawlTowards(race.pos, step, (i + 1) / repeats); // <- last parm is a tightness fit
             }
@@ -679,22 +588,14 @@ function sim({
         // ❔ tick, wand, PX, PY, PZ, QX, QY, QZ, QW
         const pos = [f[di], f[di + 1], f[di + 2], 1];
         const rot = [f[di + 3], f[di + 4], f[di + 5], f[di + 6]];
-
         const pos2 = vec3.transformQuat(vec3.create(), [0, 0, 0.1], rot);
-
         const np = [...vec3.add(vec3.create(), pos, pos2), 1];
-
-        demoWandForm = new Form(
-          {
-            type: "line",
-            positions: [pos, np],
-            colors: [color, color],
-            keep: false
-          },
-          { pos: [0, 0, 0] }
-        );
-
-        // Skip wand data for now.
+        demoWandFormOptions = {
+          type: "line",
+          positions: [pos, np],
+          colors: [color, color],
+          keep: false,
+        };
       } else if (type === "tube:start") {
         tube.start(
           {
@@ -735,18 +636,19 @@ function sim({
         // ❔ tick, tube:stop, (no other data needed)
         tube.stop(true);
       } else if (type === "demo:complete") {
-        // An invented frame with no other information to destroy our player.
+        // A "synthesized frame" with no other information to destroy our player.
         demoWandForm = null;
+        demoWandFormOptions = null;
         player = null;
       }
     });
-    // console.log(frameCount, frames[0]);
   });
 }
 
 let cachedBackground;
 
 function paint({ form, Form }) {
+  // Flash the screen sometimes.
   if (flash) {
     background = flashColor;
     flashCount += 1;
@@ -888,26 +790,8 @@ function paint({ form, Form }) {
     //#endregion
   }
 
-  if (measuringCubeOn && originOn) {
-  form(
-    [
-      stage,
-      //raceForm,
-      //spiderForm,
-      measuringCube,
-      origin,
-      tube.form,
-      tube.lineForm,
-      tube.capForm,
-      tube.triCapForm,
-      wandForm,
-      demoWandForm,
-    ],
-    camdoll.cam,
-    { background }
-  );
+  if (demoWandFormOptions) demoWandForm = new Form(demoWandFormOptions);
 
-  } else {
   form(
     [
       stage,
@@ -924,12 +808,8 @@ function paint({ form, Form }) {
     { background }
   );
 
-  }
-
-
-
-  //if (measuringCubeOn) form(measuringCube, camdoll.cam);
-  //if (originOn) form(origin, camdoll.cam);
+  if (measuringCubeOn) form(measuringCube, camdoll.cam);
+  if (originOn) form(origin, camdoll.cam);
 }
 
 function act({
@@ -942,7 +822,7 @@ function act({
   serverUpload,
   num,
 }) {
-  const { quat, randIntRange: rr, vec3, timestamp } = num;
+  const { quat, vec3, timestamp } = num;
 
   // 🥽 Start a gesture. (Spatial)
   if (e.is("3d:touch:2")) {
@@ -1002,35 +882,18 @@ function act({
   }
 
   // Left hand controller.
-
-  // Update both radius, and step.
-
   if (e.is("3d:lhand-trigger-down")) {
-    beep = true;
-    // radius = min(1, radius + radiusStep);
-    // step = stepRel();
-    // tube.update({ radius, step });
-    // demo?.rec("tube:radius", radius);
-    // demo?.rec("tube:step", step);
+    // beep = true;
   }
 
   if (e.is("3d:lhand-trigger-secondary-down")) {
-    bop = true;
-    // radius = max(minRadius, radius - radiusStep);
-    // step = stepRel();
-    // tube.update({ radius, step });
-    // demo?.rec("tube:radius", radius);
-    // demo?.rec("tube:step", step);
+    // bop = true;
   }
 
-  // if (e.is("3d:rhand-trigger-secondary-down")) {
-  //   bop = true;
-  // }
-
-  // Update radius.
+  // Radius 
   if (e.is("3d:rhand-axis-y")) {
     if (abs(e.value) > 0.01) {
-      radius = num.clamp(radius + e.value * -0.001, minRadius, 2);
+      radius = num.clamp(radius + e.value * -0.0005, minRadius, 2);
       step = stepRel();
       tube.update({ radius, step });
       demo?.rec("tube:radius", radius);
@@ -1038,11 +901,8 @@ function act({
     }
   }
 
-  // Increase / side count.
-  if (
-    //e.is("3d:lhand-button-y-down") ||
-    e.is("3d:rhand-trigger-secondary-down")
-  ) {
+  // Side Count 
+  if (e.is("3d:rhand-trigger-secondary-down")) {
     ping = true;
     sides = min(maxSides, sides + 1);
     console.log("New sides:", sides);
@@ -1050,14 +910,9 @@ function act({
     demo?.rec("tube:sides", sides);
   }
 
-  // e.is("3d:rhand-axis-x-left")
-
-  if (
-    //    e.is("3d:lhand-button-x-down") ||
-    e.is("3d:lhand-trigger-secondary-down")
-  ) {
+  if (e.is("3d:lhand-trigger-secondary-down")) {
     bop = true;
-    sides = max(1, sides - 1);
+    sides = max(minSides, sides - 1);
     console.log("New sides:", sides);
     tube.update({ sides });
     demo?.rec("tube:sides", sides);
@@ -1566,7 +1421,7 @@ class Tube {
     }
     */
 
-    this.triCapForm.MAX_POINTS = 512;
+    this.triCapForm.MAX_POINTS = 512; // TODO: Sometimes this maxes out on demo playback?
     this.capForm.MAX_POINTS = 8192; //extra + verticesPerSide + verticesPerCap * 2; // sides * 6 + 3 * 2; // This should be enough to cover our bases. The 4 is for 2 caps and a shaft.
   }
 
@@ -1680,6 +1535,7 @@ class Tube {
     this.#consumePath([this.#transformShape(pathp)], form);
 
     if (showCapForm) {
+      this.triCapForm.clear();
       this.#cap(pathp, this.triCapForm, false);
     }
 
@@ -2867,7 +2723,7 @@ class Player {
       return;
     }
 
-    if (this.frameCount - thisFrame[0]) {
+    if (this.frameCount < thisFrame[0]) {
       this.frameCount += 1n;
       return;
     }

@@ -11,6 +11,7 @@
 // allowed methods GET, PUT and HEAD.
 
 // TODO
+
 // - [] Show the media file experation date to the user.
 // - [] Visiting aesthetic.computer/art~code will show the
 //      file in a viewer.
@@ -74,7 +75,15 @@ export async function handler(event, context) {
   }
 
   if (extension === "gltf") {
-    mimeType = "application/json";
+    mimeType = "model/gltf+json";
+  }
+
+  if (extension === "glb") {
+    mimeType = "model/gltf-binary";
+  }
+
+  if (extension === "obj") {
+    mimeType = "application/object";
   }
 
   if (!mimeType) {
