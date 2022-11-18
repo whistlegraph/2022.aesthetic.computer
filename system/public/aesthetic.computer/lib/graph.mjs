@@ -1217,7 +1217,7 @@ class Dolly {
   }
 }
 
-//let formId = 0;
+let formId = 0;
 
 // Mesh
 class Form {
@@ -1226,7 +1226,7 @@ class Form {
 
   limiter = 0; // Only enabled on CPU rendered `line` at the moment. 22.11.06.18.19
 
-  uid = nanoid(); // An id to keep across threads. Takes ~4 milliseconds. 😢
+  uid = nanoid(4); // An id to keep across threads. Takes ~4 milliseconds. 😢
 
   tag; // Gets sent to the GPU as a named / marked tag.
 
@@ -1342,7 +1342,9 @@ class Form {
   // TODO: This needs to support color (and eventually N vertex attributes).
 
   resetUID() {
-    this.uid = nanoid();
+    this.uid = nanoid(4);
+    //this.uid = formId;
+    //formId += 1;
   }
 
   // Clears vertex and index attributes to prepare for replacement geometry. 

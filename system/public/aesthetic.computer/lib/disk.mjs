@@ -499,6 +499,7 @@ function form(
 
     // Clear out any forms that need deleting.
     formsToClear.forEach((id) => delete formsSent[id]);
+    formsToClear.length = 0;
 
     // Build a list of forms to send, ignoring already sent ones by UID.
     const formsToSend = [];

@@ -540,6 +540,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       line.rotateZ(radians(f.rotation[2]));
       line.scale.set(...f.scale);
 
+      line.frustumCulled = false;
+
       scene.add(line);
       line.userData.aestheticID = f.uid;
 
@@ -571,6 +573,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       material.linewidth = 1;
       material.vertexColors = true;
       material.vertexAlphas = true;
+
 
       let points = [];
       let pointColors = [];
@@ -617,6 +620,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const lineb = new THREE.LineSegments(geometry, material);
       //const lineb = new Line2(geometry, material);
 
+      lineb.frustumCulled = false;
+
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
       lineb.ac_length = points.length;
@@ -641,8 +646,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       geometry.setDrawRange(0, points.length);
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
-      geometry.computeBoundingBox();
-      geometry.computeBoundingSphere();
+      // geometry.computeBoundingBox();
+      // geometry.computeBoundingSphere();
 
       disposal.push({
         keep: f.gpuKeep,
@@ -761,8 +766,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         form.geometry.attributes.position.needsUpdate = true;
         form.geometry.attributes.color.needsUpdate = true;
 
-        form.geometry.computeBoundingBox();
-        form.geometry.computeBoundingSphere();
+        //form.geometry.computeBoundingBox();
+        //form.geometry.computeBoundingSphere();
 
         // form.geometry.computeBoundingBox();
         // form.geometry.computeBoundingSphere();
@@ -1171,6 +1176,7 @@ export function collectGarbage() {
   const removedFormIDs = [];
 
   disposal.forEach((d, i) => {
+    //console.log(d);
     if (d.keep === false) {
       d.resources.filter(Boolean).forEach((r) => r.dispose());
       removedFormIDs.push(d.form.userData.aestheticID);

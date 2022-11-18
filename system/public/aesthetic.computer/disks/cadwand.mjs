@@ -4,12 +4,10 @@
 /* #region 🏁 todo
 * VR
 
-  - [] Fix wand length.
 
-  - [] Try out different export formats.
-  - [] Wrap thin lines as a mesh while exporting...
+- [-] Performance profiling.
+  - Strips slow
 
-  - [] Performance profiling.
   - [] Use basic materials and lights in the scene.
     - [] Decide on colors, / sets, etc.
     - [] Keep the light and dark idea?
@@ -19,10 +17,11 @@
 - [] 1) Send spec for Jens
 - [] 2) Send examples of drawings and file formats for barry.
 
- - [] Get things good enough to make a set of 128 complete drawings. 
++ Tomorrow
+ - [] 64 pictures? 
 
-END OF DAY
 + Later
+ - [] Try out different export formats.
  - [] Change the demo file output from JSON to txt.
  - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
   - keep an automated list somewhere... maybe look at the S3 shell scripts?
@@ -55,6 +54,7 @@ END OF DAY
         - (The files would load the same way.)
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 + Done
+- [x] Fix wand length.
 - [x] Make sure demos play.
 - [x] How to (and should I) add individual lines / line length of 1 back...
  - [x] Make a separate form object to switch to when adding lines. / alter the length.
@@ -126,14 +126,14 @@ const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
-let cubeHeight = 1.6;
+let cubeHeight = 0.7;
 const segmentTotal = 512; // A minimum given cap vertices and arbitrary segments.
 let originOn = true;
 let background = [0, 0, 0, 255]; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
-  speed = 18; //9; // Race after the cursor quickly.
+  speed = 40; //9; // Race after the cursor quickly.
 //speed = 9; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color = [255, 255, 255, 255]; // The current spider color read by the tube..
@@ -163,7 +163,7 @@ let beatCount = 0n; // TODO: This should really go into the main API at this poi
 
 let flashColor; // Color flashes used for export confirmations.
 let flash = false;
-let flashDuration = 5;
+let flashDuration = 10;
 let flashCount = 0;
 
 let rainbowColors = false;
@@ -190,21 +190,21 @@ function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
   camdoll = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // Camera controls.
   stage = new Form(
     QUAD,
-    { color: [64, 64, 64, 255] },
+    { color: [2, 2, 2, 255] },
     /* { tex: painting(16, 16, (g) => g.noise16DIGITPAIN()) }, */
-    { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [8, 8, 8] }
+    { pos: [0, 0, 0], rot: [-90, 0, 0], scale: [1, 1, 1] }
   );
 
   measuringCube = new Form(
     CUBEL,
     { color: [255, 0, 0, 255] },
-    { pos: [0, cubeHeight, 0], rot: [0, 0, 0], scale: [0.25, 0.25, 0.25] }
+    { pos: [0, cubeHeight, 0], rot: [0, 0, 0], scale: [0.5, 0.5, 0.5] }
   );
 
   origin = new Form(ORIGIN, {
     pos: [0, cubeHeight, 0],
     rot: [0, 0, 0],
-    scale: [10, 10, 10],
+    scale: [0.01, 0.01, 0.01],
   });
 
   race = new geo.Race({ speed });
@@ -274,7 +274,7 @@ function sim({
           position,
           vec3.add(
             vec3.create(),
-            offsetPos,
+            position,
             vec3.scale(vec3.create(), dir, length)
           ),
         ],
@@ -352,17 +352,6 @@ function sim({
 
       let lpos, pos, tpos, rot;
 
-      // if (tube.gesture.length === 0) {
-      // lpos = race.last; // TODO: Should I track one more position here?
-      // pos = race.pos; // Current
-      // tpos = race.goal;
-      // rot = rotation;
-      // } else {
-      // }
-
-      //if (spi) {
-      //} else {
-      //}
       lpos = spi.state.position;
       pos = race.pos;
       tpos = position;
@@ -577,7 +566,7 @@ function sim({
         spi.position = vec3.add(vec3.create(), spi.position, direction);
         spi.direction = direction;
         //spi.crawlTowards(position, step, 1);
-        tube.goto(spi.state);
+        tube.goto(spi.state, undefined, false, false);
       } else {
         //tube.start(spi.state, radius, sides, step);
         //spi.crawlTowards(race.pos, step, 1); // <- last param is a tightness fit
@@ -591,14 +580,14 @@ function sim({
           // ♾️ Curvy / cut corner loops.
           if (d > step) {
             const repeats = floor(d / step);
-            const increments = step / repeats;
+            //const increments = step / repeats;
             for (let i = 0; i < repeats; i += 1) {
               //spi.crawlTowards(race.pos, increments, (1 / repeats) * 2); // <- last parm is a tightness fit
               //spi.crawlTowards(position, increments, 1 / repeats); // <- last parm is a tightness fit
-              spi.crawlTowards(race.pos, increments, 0.75); // <- last parm is a tightness fit
+              spi.crawlTowards(race.pos, step, (i + 1) / repeats); // <- last parm is a tightness fit
             }
 
-            tube.goto(spi.state); // Knot the tube just once.
+            tube.goto(spi.state, undefined, false, false); // Knot the tube just once.
 
             //spi.crawlTowards(race.pos, step, 0.5); // <- last parm is a tightness fit
           }
@@ -609,21 +598,22 @@ function sim({
           // 🎀 Ribbons (manual translation)
 
           if (d > step * 2) {
-            spi.crawlTowards(race.pos, step, 1); // <- last parm is a tightness fit
-            spi.rotation = controllerRotation; // What would crawlTowards actually be doing here? 22.11.17.11.43
-            tube.goto(spi.state); // Knot the tube just once.
+            const repeats = floor(d / step);
+            for (let i = 0; i < repeats; i += 1) {
+              spi.crawlTowards(race.pos, step, 1); // <- last param is a tightness fit
+              spi.rotation = controllerRotation; // What would crawlTowards actually be doing here? 22.11.17.11.43
+              tube.goto(spi.state, undefined, false, false); // Knot the tube just once.
+            }
           }
         } else if (tube.sides > 2) {
           // ♾️ Curvy / cut corner loops.
           if (d > step) {
-            //const increments = step / 5;
-            //const repeats = floor(d / increments);
             const repeats = floor(d / step);
-            const increments = step / repeats;
+            //const increments = step / repeats;
             for (let i = 0; i < repeats; i += 1) {
-              spi.crawlTowards(race.pos, increments, 1 / repeats); // <- last parm is a tightness fit
+              spi.crawlTowards(race.pos, step, (i + 1) / repeats); // <- last parm is a tightness fit
             }
-            tube.goto(spi.state); // Knot the tube just once.
+            tube.goto(spi.state, undefined, false, false); // Knot the tube just once.
           }
         }
       } else if (!pen3d) {
@@ -699,6 +689,7 @@ function sim({
             type: "line",
             positions: [pos, np],
             colors: [color, color],
+            keep: false
           },
           { pos: [0, 0, 0] }
         );
@@ -897,6 +888,26 @@ function paint({ form, Form }) {
     //#endregion
   }
 
+  if (measuringCubeOn && originOn) {
+  form(
+    [
+      stage,
+      //raceForm,
+      //spiderForm,
+      measuringCube,
+      origin,
+      tube.form,
+      tube.lineForm,
+      tube.capForm,
+      tube.triCapForm,
+      wandForm,
+      demoWandForm,
+    ],
+    camdoll.cam,
+    { background }
+  );
+
+  } else {
   form(
     [
       stage,
@@ -912,8 +923,13 @@ function paint({ form, Form }) {
     camdoll.cam,
     { background }
   );
-  if (measuringCubeOn) form(measuringCube, camdoll.cam);
-  if (originOn) form(origin, camdoll.cam);
+
+  }
+
+
+
+  //if (measuringCubeOn) form(measuringCube, camdoll.cam);
+  //if (originOn) form(origin, camdoll.cam);
 }
 
 function act({
@@ -944,7 +960,11 @@ function act({
     spi = new Spider({ num, debug }, cur, last, dir, rot, color);
     race.start(spi.state.position);
 
-    waving = true;
+    if (tube.progress() < 1) {
+      waving = true;
+    } else {
+      pong = true;
+    }
   }
 
   // 🖱️ Start a gesture. (Screen)
@@ -971,7 +991,7 @@ function act({
   }
 
   // Toggle cube and origin measurement lines.
-  if (e.is("keyboard:down:t") || e.is("3d:lhand-button-thumb-down")) {
+  if (e.is("keyboard:down:t") || e.is("3d:lhand-button-y-down")) {
     pong = true;
     measuringCubeOn = !measuringCubeOn;
     originOn = !originOn;
@@ -1003,9 +1023,9 @@ function act({
     // demo?.rec("tube:step", step);
   }
 
-  if (e.is("3d:rhand-trigger-secondary-down")) {
-    bop = true;
-  }
+  // if (e.is("3d:rhand-trigger-secondary-down")) {
+  //   bop = true;
+  // }
 
   // Update radius.
   if (e.is("3d:rhand-axis-y")) {
@@ -1020,10 +1040,10 @@ function act({
 
   // Increase / side count.
   if (
-    e.is("3d:lhand-button-y-down") ||
+    //e.is("3d:lhand-button-y-down") ||
     e.is("3d:rhand-trigger-secondary-down")
   ) {
-    pong = true;
+    ping = true;
     sides = min(maxSides, sides + 1);
     console.log("New sides:", sides);
     tube.update({ sides });
@@ -1036,7 +1056,7 @@ function act({
     //    e.is("3d:lhand-button-x-down") ||
     e.is("3d:lhand-trigger-secondary-down")
   ) {
-    ping = true;
+    bop = true;
     sides = max(1, sides - 1);
     console.log("New sides:", sides);
     tube.update({ sides });
@@ -1086,6 +1106,15 @@ function act({
 
     demo?.rec("room:color", [0, 0, 0, 255]); // Record the starting bg color in case the default ever changes.
     demo?.rec("wand:color", [255, 255, 255, 255]);
+
+    demo?.rec("tube:sides", tube.sides);
+    demo?.rec("tube:radius", tube.radius); // Grab the state of the current tube.
+    demo?.rec("tube:step", tube.step);
+
+    ping = true;
+    cachedBackground = background;
+    flash = true;
+    flashColor = [255, 0, 0, 255];
 
     console.log("🪄 A new piece...");
     beep = true;
@@ -1171,9 +1200,14 @@ function act({
       gpu.message({ type: "export-scene", content: { timestamp: ts } }); // Save scene to json.
     }
 
-    demo?.dump(); // Start fresh / clear any existing demo cache.
     tube.form.clear(); // Clear out the tube.
     tube.capForm.clear();
+    tube.triCapForm.clear();
+    tube.lineForm.clear();
+    tube.lastPathP = undefined;
+    tube.gesture = [];
+
+    demo?.dump(); // Start fresh / clear any existing demo cache.
   }
 
   // 📥 Load a demo file and play it back.
@@ -1382,11 +1416,16 @@ class Tube {
 
   // TODO: Fix this for sides...
   progress() {
-    // Return the number of "safe" full strokes (segments and caps) leftover.
+    // Return the number of "safe" full strokes (segments and caps) leftover,
+    // depending on the number of sides.
+    this.#setVertexLimits();
+
+    let form = this.sides !== 1 ? this.form : this.lineForm;
+
     return min(
       1,
-      this.form.vertices.length /
-        (this.form.MAX_POINTS -
+      form.vertices.length /
+        (form.MAX_POINTS -
           (this.verticesPerSide * this.sides + this.verticesPerCap * 2))
     );
   }
@@ -1421,7 +1460,7 @@ class Tube {
       }
 
       if (this.sides === 2) {
-        this.verticesPerSide = 12; // Double sided.
+        this.verticesPerSide = 6; // Double sided.
         this.verticesPerCap = 0; // No caps here.
       }
 
@@ -1452,8 +1491,8 @@ class Tube {
     this.lastSegmentShape = this.shape;
     this.demo = demo;
 
-    demo?.rec("tube:radius", this.radius);
     demo?.rec("tube:sides", this.sides);
+    demo?.rec("tube:radius", this.radius);
     demo?.rec("tube:step", this.step);
 
     // Make the buffered geometry form, given the geometry type.,
@@ -1478,7 +1517,6 @@ class Tube {
     this.form.tag = "sculpture"; // This tells the GPU what to export right now. 22.11.15.09.05
 
     formType[0].type = "line:buffered";
-
     this.lineForm = new $.Form(...formType); // Single line form. (Sides of 1)
     this.lineForm.tag = "sculpture-line"; // This tells the GPU what to export right now. 22.11.15.09.05
 
@@ -1487,7 +1525,7 @@ class Tube {
     formType[0].type = "triangle:buffered";
     this.triCapForm = new $.Form(...formType); // Tri cursor.
 
-    console.log(this.lineForm, this.capForm, this.triCapForm, this.form);
+    // console.log(this.lineForm, this.capForm, this.triCapForm, this.form);
 
     // Enough for 5000 segments.
 
@@ -1502,12 +1540,13 @@ class Tube {
 
     this.#setVertexLimits();
 
-    this.form.MAX_POINTS = 100000;
+    this.form.MAX_POINTS = 200000;
+    this.lineForm.MAX_POINTS = 50000;
+
+    // this.form.MAX_POINTS = 4096;
     // (this.verticesPerSide + this.verticesPerCap * 2) *
     // this.sides *
     // segmentTotal; // Must be a multiple of two for "line".
-
-    this.lineForm.MAX_POINTS = 100000;
 
     console.log("Maximum vertices set to: ", this.form.MAX_POINTS);
 
@@ -1584,6 +1623,7 @@ class Tube {
     const pathP = this.#transformShape(this.#pathp({ ...p }));
 
     if (waving && this.gesture.length === 0) this.#cap(pathP, this.capForm);
+
     if (!waving) this.#cap(pathP, this.capForm);
 
     if (nextPathP) {
@@ -1603,7 +1643,6 @@ class Tube {
       } else {
         //console.log(nextPathP);
         const npp = this.#transformShape(this.#pathp({ ...nextPathP }));
-
         this.#cap(npp, this.capForm, false);
       }
     }
@@ -1638,11 +1677,9 @@ class Tube {
     // Extrude shape points from and in the direction of each path vertex.
     const pathp = this.#pathp(pathPoint);
 
-    // console.log(pathp);
-
     this.#consumePath([this.#transformShape(pathp)], form);
 
-    if (fromDemo || showCapForm) {
+    if (showCapForm) {
       this.#cap(pathp, this.triCapForm, false);
     }
 
@@ -2756,7 +2793,7 @@ class Demo {
       if (data === undefined) {
         frame = [this.progress, label]; // Don't send anything if data is empty.
       } else {
-        if (typeof data === "number") return parseFloat(data.toFixed(6));
+        if (typeof data === "number") data = parseFloat(data.toFixed(6));
         frame = [this.progress, label, data]; // Make sure to keep Booleans though.
       }
       this.frames.push(frame);
@@ -2789,7 +2826,7 @@ class Player {
 
   // loop;
 
-  constructor(frames, goUntilFirst = "tube:start", endAtLast = "tube:stop") {
+  constructor(frames, goUntilFirst = "tube:start", endAtLast = "room:color") {
     this.frames = frames;
 
     // Find index of first item if we can.
@@ -2808,7 +2845,7 @@ class Player {
       }
     }
 
-    console.log(this.startAtFirstIndex, this.endAtLastIndex);
+    // console.log(this.startAtFirstIndex, this.endAtLastIndex);
 
     let thisFrame = this.frames[this.frameIndex];
 
@@ -2818,11 +2855,9 @@ class Player {
       this.frameIndex += 1;
       thisFrame = frames[this.frameIndex];
     }
-
   }
 
   sim(handler) {
-
     let thisFrame = this.frames[this.frameIndex];
 
     if (!thisFrame) {
@@ -2840,7 +2875,7 @@ class Player {
     while (thisFrame && thisFrame[0] === this.frameCount) {
       this.collectedFrames.push(thisFrame);
 
-      if(thisFrame === this.frames[this.endAtLastIndex]) {
+      if (thisFrame === this.frames[this.endAtLastIndex]) {
         this.frameIndex = -1; // Hit last frame.
         break;
       }
