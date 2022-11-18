@@ -4,6 +4,7 @@
 /* #region 🏁 todo
 
 - Randomized pallette arrays...
+  - [] // What controller buttons should I be using?
   - [] Use basic materials and lights in the scene.
     - [] Decide on colors, / sets, etc.
     - [] Keep the light and dark idea?
@@ -16,8 +17,9 @@
  - [] Send examples of drawings and file formats for barry.
 
 + Later
-- [] Never show user cursor when demo'ing.. (does it happen when sides change?).
-- [] But show an actual preview while demo'ing?
+- [] Organize these after the sculptures are done.
+- [] Show an actual preview while demo'ing?
+- [x] Never show user cursor when demo'ing.. (does it happen when sides change?).
  - [] Change the demo file output from JSON to txt.
  - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
   - keep an automated list somewhere... maybe look at the S3 shell scripts?
@@ -447,7 +449,7 @@ function sim({
       lastWandRotation = rotation;
     }
 
-    tube.preview({ position, rotation, color: [255, 0, 0, 255] });
+    //tube.preview({ position, rotation, color: [255, 0, 0, 255] });
   }
   lastWandPosition = position;
 
@@ -1032,7 +1034,7 @@ function act({
         .then((data) => {
           console.log(
             "🪄 Sculpture uploaded:",
-            `https://wand.aesthetic.computer/${ts}-sculpture-${handle}.gltf`,
+            `https://wand.aesthetic.computer/${ts}-sculpture-${handle}.glb`,
             data
           );
 

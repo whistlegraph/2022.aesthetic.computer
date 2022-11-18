@@ -85,12 +85,12 @@ export function initialize(
   //scene.fog = new THREE.FogExp2(0x000000, FOG);
   //scene.fog = new THREE.FogExp2(0x030303, 0.5);
 
-  scene.add( new THREE.HemisphereLight( 0xff9900, 0xff0000 ) );
-//   const ambientLight = new THREE.AmbientLight();
- //   const pointLight = new THREE.PointLight();
+  scene.add(new THREE.HemisphereLight(0xff9900, 0xff0000));
+  //   const ambientLight = new THREE.AmbientLight();
+  //   const pointLight = new THREE.PointLight();
   //  pointLight.position.set(10, 10, 10);
   //  scene.add(ambientLight);
-   // scene.add(pointLight);
+  // scene.add(pointLight);
 
   // Set up VR.
   button = VRButton.createButton(
@@ -399,9 +399,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
-      tri.ac_length = points.length;
-      tri.ac_lastLength = tri.ac_length;
-      tri.ac_MAX_POINTS = f.MAX_POINTS;
+      tri.userData.ac_length = points.length;
+      tri.userData.ac_lastLength = tri.userData.ac_length;
+      tri.userData.ac_MAX_POINTS = f.MAX_POINTS;
 
       tri.userData.aestheticID = f.uid;
       if (f.tag) tri.userData.tag = f.tag;
@@ -625,9 +625,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
-      lineb.ac_length = points.length;
-      lineb.ac_lastLength = lineb.ac_length;
-      lineb.ac_MAX_POINTS = f.MAX_POINTS;
+      lineb.userData.ac_length = points.length;
+      lineb.userData.ac_lastLength = lineb.userData.ac_length;
+      lineb.userData.ac_MAX_POINTS = f.MAX_POINTS;
 
       lineb.userData.aestheticID = f.uid;
       if (f.tag) lineb.userData.tag = f.tag;
@@ -717,8 +717,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       if (form) {
         // Reset / flush vertex data if necessary.
         if (formUpdate.reset) {
-          form.ac_length = 0;
-          form.ac_lastLength = 0;
+          form.userData.ac_length = 0;
+          form.userData.ac_lastLength = 0;
         }
 
         // Add points.
@@ -732,14 +732,14 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
         // Set custom properties on the form to keep track of where we are
         // in the previously allocated vertex buffer.
-        form.ac_lastLength = form.ac_length;
-        form.ac_length += points.length;
+        form.userData.ac_lastLength = form.userData.ac_length;
+        form.userData.ac_length += points.length;
 
         // ⚠️ Reset the buffer if we were go over the max, by default.
-        if (form.ac_length > form.ac_MAX_POINTS) {
+        if (form.userData.ac_length > form.userData.ac_MAX_POINTS) {
           if (debug) console.warn("Max. cutoff in GPU form!", form);
-          form.ac_lastLength = 0;
-          form.ac_length = points.length;
+          form.userData.ac_lastLength = 0;
+          form.userData.ac_length = points.length;
         }
 
         // TODO: How to make the buffer circular?
@@ -749,21 +749,21 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         const colors = form.geometry.attributes.color.array;
 
         for (let i = 0; i < points.length; i += 1) {
-          const posStart = (form.ac_lastLength + i) * 3;
+          const posStart = (form.userData.ac_lastLength + i) * 3;
           positions[posStart] = points[i].x;
           positions[posStart + 1] = points[i].y;
           positions[posStart + 2] = points[i].z;
         }
 
         for (let i = 0; i < pointColors.length; i += 1) {
-          const colStart = (form.ac_lastLength + i) * 4;
+          const colStart = (form.userData.ac_lastLength + i) * 4;
           colors[colStart] = pointColors[i].x / 255;
           colors[colStart + 1] = pointColors[i].y / 255;
           colors[colStart + 2] = pointColors[i].z / 255;
           colors[colStart + 3] = pointColors[i].w / 255;
         }
 
-        form.geometry.setDrawRange(0, form.ac_length);
+        form.geometry.setDrawRange(0, form.userData.ac_length);
         form.geometry.attributes.position.needsUpdate = true;
         form.geometry.attributes.color.needsUpdate = true;
 
@@ -834,16 +834,38 @@ export function handleEvent(event) {
       ?.clone();
 
     if (sculptureLine) {
-
+      const geo = new THREE.BufferGeometry();
+      const maxPoints = sculptureLine.userData.ac_length;
+      const positions = new Float32Array(maxPoints * 2);
+      const colors = new Float32Array(maxPoints * 4);
+      const points = sculptureLine.geometry.attributes.position.array;
+      const pointColors = sculptureLine.geometry.attributes.color.array;
+      for (let i = 0; i < positions.length; i += 1) positions[i] = points[i];
+      for (let i = 0; i < colors.length; i += 1) colors[i] = pointColors[i];
+      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
+      sculptureLine.geometry = geo;
+      sculptureLine.geometry.attributes.position.needsUpdate = true;
+      sculptureLine.geometry.attributes.color.needsUpdate = true;
 
       sceneToExport.add(sculptureLine);
       sculptureLine.translateY(-sculptureHeight); // Head / preview box height.
     }
 
     if (sculpture) {
-
-      sculpture.geometry = new THREE.BufferGeometry();
-
+      const geo = new THREE.BufferGeometry();
+      const maxPoints = sculpture.userData.ac_length;
+      const positions = new Float32Array(maxPoints * 3);
+      const colors = new Float32Array(maxPoints * 4);
+      const points = sculpture.geometry.attributes.position.array;
+      const pointColors = sculpture.geometry.attributes.color.array;
+      for (let i = 0; i < positions.length; i += 1) positions[i] = points[i];
+      for (let i = 0; i < colors.length; i += 1) colors[i] = pointColors[i];
+      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
+      sculpture.geometry = geo;
+      sculpture.geometry.attributes.position.needsUpdate = true;
+      sculpture.geometry.attributes.color.needsUpdate = true;
 
       sceneToExport.add(sculpture);
       sculpture.translateY(-sculptureHeight); // Head / preview box height.
@@ -864,11 +886,10 @@ export function handleEvent(event) {
     //downloadFile(data);
 
     const options = {
-      binary: true
+      binary: true,
     }; // https://threejs.org/docs/#examples/en/exporters/GLTFExporter
 
     // Parse the input and generate the glTF output
-
 
     exporter.parse(
       sceneToExport,
@@ -880,7 +901,7 @@ export function handleEvent(event) {
           upload(
             {
               filename: `${timestamp}-sculpture-${handle}.glb`,
-              data: glb,//JSON.stringify(gltf),
+              data: glb, //JSON.stringify(gltf),
               bucket: "wand",
             },
             "gpu-response"
@@ -900,6 +921,7 @@ export function handleEvent(event) {
       options
     );
 
+    removeObjectsWithChildren(sceneToExport);
     return;
   }
 
