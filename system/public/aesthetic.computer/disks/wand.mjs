@@ -106,6 +106,7 @@ let tube, // Circumscribe the spider's path with a form.
 let wandForm; // A live cursor.
 let demoWandForm; // A ghost cursor for playback.
 let demoWandFormOptions;
+let playedOneDemo = false; // Toggled on after a demo plays, so that saving does not do a cubeHeight translation.
 
 let demo, player; // For recording a session and rewatching it in realtime.
 let beep, bop; // For making sounds when pieces begin and end.
@@ -389,7 +390,7 @@ function sim({
     ) {
       demo?.rec("wand", [
         pen3d.pos.x,
-        pen3d.pos.y,
+        pen3d.pos.y - cubeHeight,
         pen3d.pos.z,
         pen3d.rotation._x,
         pen3d.rotation._y,
@@ -570,7 +571,9 @@ function sim({
           lastWandRotation[3] !== rotation[3])) ||
       (lastWandPosition === undefined && lastWandRotation === undefined)
     ) {
-      demo?.rec("wand", [...position.slice(0, 3), ...rotation]);
+      const demoPos = position.slice(0, 3); 
+      demoPos[1] -= cubeHeight;
+      demo?.rec("wand", [...demoPos, ...rotation]);
       lastWandPosition = position;
       lastWandRotation = rotation;
     }
@@ -731,7 +734,7 @@ function sim({
       } else if (type === "tube:start") {
         tube.start(
           {
-            position: [f[di], f[di + 1], f[di + 2]],
+            position: [f[di], f[di + 1] + cubeHeight, f[di + 2]],
             rotation: [f[di + 3], f[di + 4], f[di + 5], f[di + 6]],
             color,
           },
@@ -744,7 +747,7 @@ function sim({
         // ❔ tick, tube:goto, PX, PY, PZ, QX, QY, QZ
         tube.goto(
           {
-            position: [f[di], f[di + 1], f[di + 2]],
+            position: [f[di], f[di + 1] + cubeHeight, f[di + 2]],
             rotation: [f[di + 3], f[di + 4], f[di + 5], f[di + 6]],
             color,
           },
@@ -1133,7 +1136,7 @@ function act({
         content: {
           slug: sculptureSlug,
           output: "local",
-          sculptureHeight: cubeHeight,
+          sculptureHeight: playedOneDemo ? 0 : cubeHeight,
         },
       })
       .then((data) => {
@@ -1755,8 +1758,10 @@ class Tube {
     if (start.color.length === 3) start.color.push(255); // Use RGBA for demo.
 
     if (fromDemo === false) {
+      const demoPos = start.pos.slice(0, 3); 
+      demoPos[1] -= cubeHeight;
       this.demo?.rec("tube:start", [
-        ...start.pos.slice(0, 3),
+        ...demoPos,
         ...start.rotation,
       ]);
     }
@@ -1850,8 +1855,10 @@ class Tube {
     if (pathp.color.length === 3) pathp.color.push(255); // Use RGBA for demo.
 
     if (!fromDemo)
+      const demoPos = pathp.pos.slice(0, 3); 
+      demoPos[1] -= cubeHeight;
       this.demo?.rec("tube:goto", [
-        ...pathp.pos.slice(0, 3),
+        ...demoPos,
         ...pathp.rotation,
       ]);
 
@@ -3029,6 +3036,7 @@ class Player {
     // Finish a demo if there are no frames left.
     if (!thisFrame) {
       console.log("🟡 Demo playback completed:", this.frameIndex);
+      playedOneDemo = true;
       ping = true;
       // Push a completed message with a negative frameCount to mark an ending.
       handler([[-1, "demo:complete"]]);
