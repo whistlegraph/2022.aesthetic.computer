@@ -8,6 +8,8 @@ import * as vec4 from "../dep/gl-matrix/vec4.mjs";
 
 export { vec2, vec3, vec4, mat3, mat4, quat };
 
+const { round, min, max, sqrt } = Math;
+
 // Returns true if the number is even, and false otherwise.
 export function even(n) {
   return n % 2 === 0;
@@ -69,7 +71,7 @@ export function dist() {
 
   const dx = x2 - x1;
   const dy = y2 - y1;
-  return Math.sqrt(dx * dx + dy * dy);
+  return sqrt(dx * dx + dy * dy);
 }
 
 // TODO: Would 6 decimal places work? (Do some research) 22.11.08.00.21
@@ -158,6 +160,19 @@ export function isHexString(h) {
   return a.toString(16) === h.toLowerCase();
 }
 
+// 🌈 Colors
+
+// Lerp two RGBA arrays, skipping alpha and rounding the output.
+// (Assumes 0-255)
+export function lerpRGB(a, b, step) {
+  return [
+    round(lerp(a[0], b[0], step)),
+    round(lerp(a[1], b[1], step)),
+    round(lerp(a[2], b[2], step)),
+    255,
+  ];
+}
+
 // Convert separate rgb values to a single integer.
 export function rgbToHex(r, g, b) {
   return (1 << 24) + (r << 16) + (g << 8) + b;
@@ -168,4 +183,92 @@ export function rgbToHex(r, g, b) {
 export function hexToRgb(h) {
   const int = typeof h === "string" ? parseInt(cleanHexString(h), 16) : h;
   return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+}
+
+// The below was adapted from: https://codepen.io/Elliotclyde/pen/MWyRezZ
+
+// TODO: See how well this functions for wand background encoding. 🪄
+export function toHexStr(n) {
+  n = parseInt(n, 10);
+  if (isNaN(n)) return "00";
+  n = Math.max(0, Math.min(n, 255));
+  return (
+    "0123456789ABCDEF".charAt((n - (n % 16)) / 16) +
+    "0123456789ABCDEF".charAt(n % 16)
+  );
+}
+
+// TODO: The two functions below could be refactored and combined pretty easily. 22.11.19.00.30
+export function saturate(rgb, amount = 1) {
+  const hadAlpha = rgb.length === 4;
+  const alpha = rgb[3];
+  rgb = rgb.slice(0, 3);
+
+  const grey = lightness(rgb) * 255;
+
+  const [low, mid, high] = getLowestMiddleHighest(rgb);
+
+  if (low.val === high.val) return rgb; // Return grey if we are there already.
+
+  const saturationRange = round(min(255 - grey, grey));
+  const maxChange = min(255 - high.val, low.val);
+  const changeAmount = min(saturationRange * amount, maxChange);
+  const middleValueRatio = (grey - mid.val) / (grey - high.val);
+
+  const out = [];
+  out[high.index] = round(high.val + changeAmount);
+  out[low.index] = round(low.val - changeAmount);
+  out[mid.index] = round(grey + (out[high.index] - grey) * middleValueRatio);
+  if (hadAlpha) out[3] = alpha; // Add alpha channel back if it exists.
+  return out;
+}
+
+export function desaturate(rgb, amount = 1) {
+  const hadAlpha = rgb.length === 4;
+  const alpha = rgb[3];
+  rgb = rgb.slice(0, 3);
+
+  const [low, mid, high] = getLowestMiddleHighest(rgb);
+  const grey = lightness(rgb) * 255;
+
+  if (low.val === high.val) return rgb; // Return grey if we are there already.
+
+  const saturationRange = round(min(255 - grey, grey));
+  const maxChange = grey - low.val;
+  const changeAmount = min(saturationRange * amount, maxChange);
+  const middleValueRatio = (grey - mid.val) / (grey - high.val);
+
+  const out = [];
+  out[high.index] = round(high.val - changeAmount);
+  out[low.index] = round(low.val + changeAmount);
+  out[mid.index] = round(grey + (out[high.index] - grey) * middleValueRatio);
+  if (hadAlpha) out[3] = alpha; // Add alpha channel back if it exists.
+  return out;
+}
+
+// These support `saturate` and `desaturate` above.
+
+function lightness(rgb) {
+  // Get the highest and lowest out of red green and blue
+  const highest = max(...rgb);
+  const lowest = min(...rgb);
+  return (highest + lowest) / 2 / 255; // Return the average divided by 255
+}
+
+function getLowestMiddleHighest(rgb) {
+  let high = { val: 0, index: -1 };
+  let low = { val: Infinity, index: -1 };
+
+  rgb.map((val, index) => {
+    if (val > high.val) {
+      high = { val: val, index: index };
+    }
+    if (val < low.val) {
+      low = { val: val, index: index };
+    }
+  });
+
+  const mid = { index: 3 - high.index - low.index };
+  mid.val = rgb[mid.index];
+  return [low, mid, high];
 }

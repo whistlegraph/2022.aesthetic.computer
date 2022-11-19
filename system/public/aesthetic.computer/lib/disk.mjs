@@ -237,7 +237,10 @@ const $commonApi = {
     vec4: num.vec4,
     mat3: num.mat3,
     mat4: num.mat4,
-    quat: num.quat
+    quat: num.quat,
+    saturate: num.saturate,
+    desaturate: num.desaturate,
+    lerpRGB: num.lerpRGB
   },
   geo: {
     Box: geo.Box,

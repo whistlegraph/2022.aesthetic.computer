@@ -4,11 +4,11 @@
 /* #region 🏁 todo
 
 - Randomized pallette arrays...
-  - [] // What controller buttons should I be using?
-  - [] Use basic materials and lights in the scene.
-    - [] Decide on colors, / sets, etc.
-    - [] Keep the light and dark idea?
- - Lots more testing.
+
+ - [] Write final background color into the filename.
+ - [] Remove "@" from user.
+ - [] Final GLB color and loading and saving demo test.
+ - [] Make multiple, properly oriented sculptures without refreshing!
 
 + Tomorrow
  - [] 64 pictures? 
@@ -17,6 +17,9 @@
  - [] Send examples of drawings and file formats for barry.
 
 + Later
+- [] Master the main materials and lights in the scene.
+  - [] Decide on colors / sets, etc.
+  - [] Keep the light and dark idea?
 - [] Organize these after the sculptures are done.
 - [] Show an actual preview while demo'ing?
 - [x] Never show user cursor when demo'ing.. (does it happen when sides change?).
@@ -53,11 +56,12 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+- [x] Add color palettes.
 #endregion */
 
 // #region 🗺️ global
 import { CamDoll } from "../lib/cam-doll.mjs";
-const { min, abs, max, cos, sin, floor } = Math;
+const { min, abs, max, cos, sin, floor, round } = Math;
 
 let camdoll, stage; // Camera and stage.
 const rulers = false; // Whether to render arch. guidelines for development.
@@ -94,7 +98,7 @@ let demoWandFormOptions;
 let demo, player; // For recording a session and rewatching it in realtime.
 let beep, bop; // For making sounds when pieces begin and end.
 let ping, pong; // For making sounds when pieces upload or fail to upload.
-let bap; // For rainbowColors. 🌈
+let bap; // For randomPalette. 🌈
 let beatCount = 0n; // TODO: This should really go into the main API at this point... 22.11.15.05.22
 
 let flashColor; // Color flashes used for export confirmations.
@@ -102,9 +106,16 @@ let flash = false;
 let flashDuration = 10;
 let flashCount = 0;
 
-let rainbowColors = false;
-let rainbowColorCount = 0;
-const rainbowColorCountMax = 12;
+// 🏳️‍🌈Colors
+let palettes; // Assigned at boot, for dynamics.
+let saturationStep = 0.1;
+let brightnessStep = 0.1;
+
+// A special feature to generate random colors and
+// backgrounds outside of the set palette system.
+let randomPalette = false;
+let randomPaletteCount = 0;
+const randomPaletteCountMax = 18;
 
 const racePoints = [], // Extra stuff for CAD-style drawing.
   diffPrevPoints = [],
@@ -115,13 +126,51 @@ let trackerPoints = [],
   trackerColors = [];
 let spiderForm, trackerForm;
 let limiter = 0;
+
+// Numeric API hooks for helpers, assigned at `boot` and used in `library`.
+let clamp, rr;
+
 // #endregion
 
 function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
-  demo = new Demo(); // Start logging user interaction on demo frame 0.
+  // Assign available color palettes.
+  clamp = num.clamp;
+  rr = num.randIntRange;
 
-  demo?.rec("room:color", [0, 0, 0, 255]); // Record the starting bg color in case the default ever changes.
-  demo?.rec("wand:color", [255, 255, 255, 255]);
+  palettes = {
+    rgbwcmyk: [
+      { fg: barely([255, 0, 0, 255]), bg: barely([64, 32, 32, 255]) }, // Barely-red on barely dim red.
+      { fg: barely([0, 255, 0, 255]), bg: barely([32, 64, 32, 255]) }, // Barely-green on barely dim green.
+      { fg: barely([0, 0, 255, 255]), bg: barely([32, 32, 64, 255]) }, // Barely-blue on barely dim blue.
+      {
+        fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
+        bg: barely([127, 127, 127, 255]),
+      }, // Not-quite-white on barely-grey.
+      { fg: barely([0, 255, 255, 255]), bg: barely([32, 64, 64, 255]) }, // Barely-cyan on barely dim cyan.
+      { fg: barely([255, 0, 255, 255]), bg: barely([64, 32, 64, 255]) }, // Barely-magenta on barely dim magenta.
+      { fg: barely([255, 255, 0, 255]), bg: barely([64, 64, 32, 255]) }, // Barely-yellow on barely dim yellow
+      { fg: almostBlack, bg: [127, 127, 127, 255] }, // Not-quite-black on barely grey.
+    ],
+    binary: [
+      { fg: almostWhite, bg: almostBlack }, // Almost-white on almost-black.
+      { fg: almostBlack, bg: almostWhite }, // Almost-black on almost-white.
+    ],
+    roygbiv: [
+      { fg: barely([255, 0, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-red on barely mid-grey
+      { fg: barely([255, 127, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-orange on barely mid-grey.
+      { fg: barely([255, 255, 255, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-yelloww on barely mid-grey.
+      { fg: barely([0, 0, 255, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-blue on barely mid-grey.
+      { fg: barely([0, 255, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-green on barely mid-grey.
+      { fg: barely([75, 0, 30, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-indigo on barely mid-grey.
+      { fg: barely([148, 0, 211, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-violet on barely mid-grey.
+    ],
+    // Keep track of which palette color we are on for the picker.
+    indices: {
+      rgbwcmyk: 0,
+      binary: 0,
+      roygbiv: 0,
+    },
+  };
 
   camdoll = new CamDoll(Camera, Dolly, { z: 1.4, y: 0.5 }); // Camera controls.
   stage = new Form(
@@ -148,6 +197,10 @@ function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
   tube = new Tube({ Form, num }, radius, sides, step, geometry, demo);
 
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
+
+  demo = new Demo(); // Start logging user interaction on demo frame 0.
+  demo?.rec("room:color", [0, 0, 0, 255]); // Record the starting bg color in case the default ever changes.
+  demo?.rec("wand:color", [255, 255, 255, 255]);
 }
 
 let lastWandPosition;
@@ -165,20 +218,23 @@ function sim({
   camdoll.sim(); // Update the camera + dolly.
 
   // 🌈 Rainbow Colors
-  if (rainbowColors) {
-    if (rainbowColorCount === rainbowColorCountMax) {
-      const randomColor = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
-      color = randomColor;
-      capColor = randomColor;
-      if (spi) spi.color = color;
-      if (!player) demo?.rec("wand:color", color);
-      const randomBackground = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
-      background = randomBackground;
-      if (!player) demo?.rec("room:color", randomBackground);
+  if (randomPalette) {
+    if (randomPaletteCount === randomPaletteCountMax) {
+      const fg = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
+      const average = (fg[0] + fg[1] + fg[2]) / 3;
+      // Generate a background either way above or way below the average.
+      // (A light <-> dark / fg <-> bg relationship.
+      let bg;
+      if (average >= 128) {
+        bg = [rr(0, 96), rr(0, 96), rr(0, 96), 255];
+      } else {
+        bg = [rr(160, 255), rr(160, 255), rr(160, 255), 255];
+      }
+      processNewColor(fg, bg);
       bap = true;
-      rainbowColorCount = 0;
+      randomPaletteCount = 0;
     } else {
-      rainbowColorCount += 1;
+      randomPaletteCount += 1;
     }
   }
 
@@ -824,7 +880,7 @@ function act({
   serverUpload,
   num,
 }) {
-  const { quat, vec3, timestamp } = num;
+  const { quat, timestamp, clamp, saturate, desaturate, lerpRGB } = num;
 
   // 🥽 Start a gesture. (Spatial)
   if (e.is("3d:touch:2")) {
@@ -873,7 +929,7 @@ function act({
   }
 
   // Toggle cube and origin measurement lines.
-  if (e.is("keyboard:down:t") || e.is("3d:lhand-button-y-down")) {
+  if (e.is("keyboard:down:t") || e.is("3d:rhand-button-a-down")) {
     pong = true;
     measuringCubeOn = !measuringCubeOn;
     originOn = !originOn;
@@ -884,18 +940,11 @@ function act({
   }
 
   // Left hand controller.
-  if (e.is("3d:lhand-trigger-down")) {
-    // beep = true;
-  }
 
-  if (e.is("3d:lhand-trigger-secondary-down")) {
-    // bop = true;
-  }
-
-  // Radius 
+  // Radius
   if (e.is("3d:rhand-axis-y")) {
     if (abs(e.value) > 0.01) {
-      radius = num.clamp(radius + e.value * -0.0005, minRadius, 2);
+      radius = clamp(radius + e.value * -0.0005, minRadius, 2);
       step = stepRel();
       tube.update({ radius, step });
       demo?.rec("tube:radius", radius);
@@ -903,7 +952,7 @@ function act({
     }
   }
 
-  // Side Count 
+  // Side Count
   if (e.is("3d:rhand-trigger-secondary-down")) {
     ping = true;
     sides = min(maxSides, sides + 1);
@@ -920,29 +969,69 @@ function act({
     demo?.rec("tube:sides", sides);
   }
 
-  if (e.is("3d:lhand-button-x-down")) {
-    lightSwitch();
+  // 🗺️ COLOR:CONTROLS (all on left hand) 🎨
+
+  if (e.is("3d:lhand-button-thumb-down")) {
+    // Switch between a black and white foreground and background relationship.
+    advancePalette("binary");
     beep = true;
   }
 
-  // if (e.is("3d:rhand-axis-x-left")) {
-  // }
-
-  // if (e.is("3d:rhand-axis-x-right")) {
-  // }
-
-  // Toggle binary color switch of background and foreground.
-  if (e.is("keyboard:down:c") || e.is("3d:rhand-button-a-down")) {
-    //lightSwitch();
-    rainbowColors = true;
+  if (e.is("3d:lhand-button-y-down")) {
+    advancePalette("rgbwcmyk");
+    beep = true;
+    // breep = true; // Note: typo... but lol, breep should be a default sound... 😄
   }
 
-  if (e.is("keyboard:up:c") || e.is("3d:rhand-button-a-up")) {
-    rainbowColors = false;
+  if (e.is("3d:lhand-button-x-down")) {
+    advancePalette("roygbiv");
+    beep = true;
   }
+
+  // Brightness: increase +
+  if (e.is("3d:lhand-axis-y-up") || e.is("keyboard:down:y")) {
+    // Lerp to an almost-white color.
+    processNewColor(lerpRGB(color, almostWhite(), brightnessStep));
+    beep = true;
+  }
+
+  // Brightness: decrease -
+  if (e.is("3d:lhand-axis-y-down") || e.is("keyboard:down:h")) {
+    // Lerp to an almost-black color.
+    processNewColor(lerpRGB(color, almostBlack(), brightnessStep));
+    beep = true;
+  }
+
+  // Saturation: increase +
+  if (e.is("3d:lhand-axis-y-up") || e.is("keyboard:down:u")) {
+    // Lerp to the most saturated version of the current color.
+    processNewColor(lerpRGB(color, saturate(color, 1), saturationStep));
+    beep = true;
+  }
+
+  // Saturation: decrease -
+  if (e.is("3d:lhand-axis-y-down") || e.is("keyboard:down:j")) {
+    // Lerp to the most desaturated of the current color.
+    const noSat = desaturate(color, 1);
+    processNewColor(lerpRGB(color, desaturate(color, 1), saturationStep));
+    beep = true;
+  }
+
+  if (e.is("keyboard:down:i")) {
+    randomPaletteCount = randomPaletteCountMax;
+    randomPalette = true;
+  }
+  if (e.is("keyboard:up:i")) {
+    randomPaletteCount = randomPaletteCountMax;
+    randomPalette = false;
+  }
+
+  // Toggle random color cycling.
+  if (e.is("3d:lhand-trigger-down")) randomPalette = true;
+  if (e.is("3d:lhand-trigger-up")) randomPalette = false;
 
   // Save scene data.
-  if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
+  // if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
 
   // Remove / cancel a stroke.
   if (e.is("3d:rhand-trigger-secondary-down")) {
@@ -1067,8 +1156,8 @@ function act({
     demo?.dump(); // Start fresh / clear any existing demo cache.
   }
 
-  // 📥 Load a demo file and play it back.
-  if (e.is("keyboard:down:l")) {
+  // 📥 Load the wand demo file and play it back.
+  if (e.is("keyboard:down:p") || e.is("keyboard:down:l")) {
     upload(".json")
       .then((data) => {
         const frames = JSON.parse(data).map((f) => {
@@ -1086,10 +1175,15 @@ function act({
           });
           return f;
         });
-        console.log("🎞️ Loaded a demo file:", frames);
+        console.log("🎞️ Loaded a wand file:", frames);
 
-        // Play back the demo file.
-        player = new Player(frames);
+        // (L)oad or (P)lay back the demo file.
+        player = new Player(
+          frames,
+          undefined,
+          undefined,
+          e.is("keyboard:down:l") // If the "l" key is pressed then load all the demo frames instantly.
+        );
       })
       .catch((err) => {
         console.error("JSON load error:", err);
@@ -1133,7 +1227,10 @@ function act({
 
 // 💗 Beat
 function beat({ num, sound: { bpm, square } }) {
-  if (beatCount === 0n) bpm(1800); // Set bpm to 1800 ~ 30fps }
+  if (beatCount === 0n) {
+    bap = beep = bop = ping = pong = false; // Clear any existing signals.
+    bpm(1800); // Set bpm to 1800 ~ 30fps }
+  }
   beatCount += 1n; // TODO: This should go into the main API. 22.11.01.17.43
 
   if (bap) {
@@ -1196,45 +1293,94 @@ export { boot, paint, sim, act, beat };
 
 // #region 📑 library
 
-let lit = false;
+// Color helpers.
+const almostBlack = () => [rr(5, 15), rr(5, 15), rr(5, 15), 255];
+const almostWhite = () => [rr(245, 255), rr(245, 255), rr(245, 255), 255];
 
-function lightSwitch(light) {
-  lit = light === undefined ? (lit = !lit) : light;
+// Adds or subtracts up to 10 from any color, clamping from 0->255.
+const barely = (color) => {
+  return [
+    clamp(color[0] + rr(-5, 5), 0, 255),
+    clamp(color[1] + rr(-5, 5), 0, 255),
+    clamp(color[2] + rr(-5, 5), 0, 255),
+    255,
+  ];
+};
 
-  if (lit) {
-    background = [255, 255, 255, 255];
-  } else {
-    background = [0, 0, 0, 255];
+// Process both foreground and background, ensuring that they have changed.
+function processNewColor(fg, bg) {
+  if (
+    fg[0] !== color[0] ||
+    fg[1] !== color[1] ||
+    fg[2] !== color[2] ||
+    fg[3] !== color[3]
+  ) {
+    // Process foreground.
+    color = fg;
+    capColor = fg;
+    if (spi) spi.color = fg;
+
+    tubeVary = 0; // These could eventually be used for more procedural coloring.
+    capVary = 0;
+
+    if (!player) demo?.rec("wand:color", color);
   }
 
-  if (!lit) {
-    color = [255, 255, 255, 255];
-    //capColor = [0, 0, 0, 255];
-    capColor = [255, 255, 255, 255];
-    // stage.color = [255, 255, 255, 255];
+  if (bg === undefined) bg = background;
 
-    spi.color = color;
-
-    tubeVary = 0; // 20;
-    capVary = 0; // 4;
-  } else {
-    color = [0, 0, 0, 255];
-    //capColor = [255, 255, 255, 255];
-    capColor = [0, 0, 0, 255];
-    // stage.color = [0, 0, 0, 255];
-    spi.color = color;
-
-    tubeVary = 0; // 4;
-    capVary = 0; //20;
+  if (
+    bg[0] !== background[0] ||
+    bg[1] !== background[1] ||
+    bg[2] !== background[2] ||
+    bg[3] !== background[3]
+  ) {
+    background = bg;
+    if (!player) demo?.rec("room:color", bg);
   }
 
-  demo?.rec("wand:color", color);
+  console.log(
+    `%cForeground`,
+    `background-color: black;
+     color: rgb(${fg[0]}, ${fg[1]}, ${fg[2]});
+     padding: 0 0.25em;
+     border-left: 0.75px solid rgb(60, 60, 60);
+     border-right: 0.75px solid rgb(60, 60, 60);`,
+    fg
+  );
+  console.log(
+    `%cBackground`,
+    `background-color: black;
+     color: rgb(${bg[0]}, ${bg[1]}, ${bg[2]});
+     padding: 0 0.25em;
+     border-left: 0.75px solid rgb(60, 60, 60);
+     border-right: 0.75px solid rgb(60, 60, 60);`,
+    bg
+  );
+}
 
-  if (lit) {
-    demo?.rec("room:color", [255, 255, 255, 255]);
-  } else {
-    demo?.rec("room:color", [0, 0, 0, 255]);
-  }
+function advancePalette(pal) {
+  // Get palette and index.
+  let index = palettes.indices[pal];
+  const palette = palettes[pal];
+
+  // Advance palette index forward, wrapping around.
+  index = (index + 1) % palette.length;
+  palettes.indices[pal] = index; // Update the global index.
+
+  // Reset any palette index that isn't this one...
+  // 🧠 This way I can memorize counts / taps to get to mapped colors. 22.11.18.22.28
+  Object.keys(palettes.indices).forEach((key) => {
+    if (key !== pal) palettes.indices[key] = 0;
+  });
+
+  // Grab our colors as constants or as dynamically generated values.
+  let fg, bg;
+  fg = palette[index].fg; // Foreground
+  bg = palette[index].bg; // Background: could be empty.
+  if (typeof fg === "function") fg = fg(); // Compute fg` if it's a function...
+  if (typeof bg === "function") bg = bg(); // and same with `bg`.
+
+  processNewColor(fg, bg);
 }
 
 // Here we build a path out of points, which draws
@@ -2657,7 +2803,8 @@ class Demo {
       this.frames.push(frame);
     }
 
-    // if (label !== "wand") console.log("🔴 Recording:", frame, this.frames.length);
+    if (label !== "wand")
+      console.log("🔴 Recording:", frame, this.frames.length);
   }
 
   // Log the current results.
@@ -2681,11 +2828,18 @@ class Player {
   endAtLastIndex;
   startAtFirstIndex;
   collectedFrames = [];
+  instant; // Play all frames back instantly after one sim call.
 
   // loop;
 
-  constructor(frames, goUntilFirst = "tube:start", endAtLast = "room:color") {
+  constructor(
+    frames,
+    goUntilFirst = "tube:start",
+    endAtLast = "room:color",
+    instant = false
+  ) {
     this.frames = frames;
+    this.instant = instant;
 
     // Find index of first item if we can.
     for (let f = 0; f < frames.length - 1; f += 1) {
@@ -2703,8 +2857,6 @@ class Player {
       }
     }
 
-    // console.log(this.startAtFirstIndex, this.endAtLastIndex);
-
     let thisFrame = this.frames[this.frameIndex];
 
     while (this.frameIndex < this.startAtFirstIndex) {
@@ -2718,6 +2870,7 @@ class Player {
   sim(handler) {
     let thisFrame = this.frames[this.frameIndex];
 
+    // Finish a demo if there are no frames left.
     if (!thisFrame) {
       console.log("🟡 Demo playback completed:", this.frameIndex);
       // Push a completed message with a negative frameCount to mark an ending.
@@ -2725,11 +2878,24 @@ class Player {
       return;
     }
 
+    // Run through all the frames instantly then finish on next tick.
+    if (this.instant) {
+      for (let f = this.frameIndex; f <= this.endAtLastIndex; f += 1) {
+        this.collectedFrames.push(this.frames[f]);
+      }
+      handler(this.collectedFrames, this.frameCount); // Run our action handler.
+      this.collectedFrames = [];
+      this.frameIndex = -1;
+      return;
+    }
+
+    // Or wait on a frame if needed... for realtime.
     if (this.frameCount < thisFrame[0]) {
       this.frameCount += 1n;
       return;
     }
 
+    // And push current frame plus others following it on the same tick.
     while (thisFrame && thisFrame[0] === this.frameCount) {
       this.collectedFrames.push(thisFrame);
 
@@ -2744,18 +2910,6 @@ class Player {
 
     handler(this.collectedFrames, this.frameCount); // Run our action handler.
     this.collectedFrames = [];
-
-    //this.frameCount = collectedFrames[collectedFrames.length - 1][0]; // Set our framecount to the last frame collected.
-
-    /*
-    // Skip until first instance of an event.
-    if (thisFrame[1] !== this.runUntilFirst) {
-      this.sim(handler);
-      this.frameIndex += 1;
-    } else {
-      this.runUntilFirst = null;
-    }
-    */
   }
 }
 // #endregion

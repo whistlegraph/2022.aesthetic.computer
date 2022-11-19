@@ -75,7 +75,6 @@ export function initialize(
   renderer.xr.setFramebufferScaleFactor(1);
   renderer.xr.setFoveation(0);
   renderer.preserveDrawingBuffer = true;
-  renderer.outputEncoding = THREE.sRGBEncoding;
 
   renderer.domElement.dataset.type = "3d";
 
@@ -1005,7 +1004,14 @@ export function pollControllers() {
       // r-hand-axis-x, r-hand-axis-y, r-hand-axis-x-left / right / up / down
       // l-hand-axis-x, l-hand-axis-y
       [2, 3].forEach((axisIndex) => {
-        const xy = axisIndex === 2 ? "x" : "y";
+        // Assign proper left and right hand controller button labels.
+        if (h === "r") {
+          let xy;
+          xy = axisIndex === 2 ? "a" : "b";
+        } else {
+          xy = axisIndex === 2 ? "x" : "y";
+        }
+
         const value = gamepad.axes[axisIndex];
 
         // Regular axis event.
