@@ -6,7 +6,9 @@
 
 /* #region 🏁 todo
 + Tomorrow
- - [] 64 pictures?
+
+ - [] 64 pictures...
+
  - [] Get demos working.
  - [] Send spec for Jens
  - [] Send examples of drawings and file formats for barry.
@@ -236,7 +238,7 @@ function boot({
   // Load and play a demo file instantly from parameter 0... if it exists.
   if (params[0]) {
     let speed = parseInt(params[1]);
-    if (speed < 0 || isNaN(speed)) speed = 10; // Make it instant if speed is <= 0.
+    if (speed < 0 || isNaN(speed)) speed = true; // Make it instant if speed is <= 0 or undefined.
     if (speed === 0) speed = true;
     const handle = "digitpain";
     const recordingSlug = `${params[0]}-recording-${handle}`;
