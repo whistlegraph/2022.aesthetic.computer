@@ -55,7 +55,7 @@ async function fun(event, context) {
     filepath[filepath.length - 1].startsWith("wand") &&
     filepath[filepath.length - 1].match(/~/g).length === 1
   ) {
-    filepath[filepath.length - 1] + "~0"; // Make wand thumbnails show up instantly if a wand is run with just 1 parameter (loading a demo).
+    filepath[filepath.length - 1] += "~0"; // Make wand thumbnails show up instantly if a wand is run with just 1 parameter (loading a demo).
   }
 
   try {
