@@ -239,7 +239,7 @@ function boot({
   // Load and play a demo file instantly from parameter 0... if it exists.
   if (params[0]) {
     let speed = parseInt(params[1]);
-    if (speed < 0 || isNaN(speed)) speed = true; // Make it instant if speed is <= 0 or undefined.
+    if (speed < 0 || isNaN(speed)) speed = 5; // Make it instant if speed is <= 0 or undefined.
     if (speed === 0) speed = true;
     const handle = "digitpain";
     const recordingSlug = `${params[0]}-recording-${handle}`;
@@ -1366,7 +1366,7 @@ function act({
 // 💗 Beat
 function beat({ num, sound: { bpm, square } }) {
   if (beatCount === 0n) {
-    bap = beep = bop = ping = pong = false; // Clear any existing signals.
+    bap = bip = beep = bop = ping = pong = false; // Clear any existing signals.
     bpm(1800); // Set bpm to 1800 ~ 30fps }
   }
   beatCount += 1n; // TODO: This should go into the main API. 22.11.01.17.43

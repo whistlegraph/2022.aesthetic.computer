@@ -16,7 +16,10 @@ async function fun(event, context) {
     .split("/"); // yields nxn and the command, if it exists
 
   // Ditch if we don't hit the accepted resolution whitelist.
-  if (acceptedResolutions.indexOf(resolution) === -1 || !filepath[filepath.length - 1].endsWith(".jpg")) {
+  if (
+    acceptedResolutions.indexOf(resolution) === -1 ||
+    !filepath[filepath.length - 1].endsWith(".jpg")
+  ) {
     return { statusCode: 500 };
   }
 
@@ -47,10 +50,14 @@ async function fun(event, context) {
     url = "https://aesthetic.computer";
   }
 
+  if (filepath[filepath.length - 1].startsWith("wand")) {
+    filepath[filepath.length - 1] + "~0"; // Make wand thumbnails show up instantly.
+  }
+
   try {
     await page.goto(`${url}/${filepath.join("/").replace(".jpg", "") || ""}`, {
       waitUntil: "networkidle2",
-      timeout: 3000
+      timeout: 3000,
     });
   } catch {
     console.log("🔴 Failed to stop networking.");
@@ -68,7 +75,7 @@ async function fun(event, context) {
 
   const buffer = await page.screenshot({
     type: "jpeg",
-    quality: 80
+    quality: 80,
   });
 
   await browser.close();
@@ -85,4 +92,4 @@ async function fun(event, context) {
   };
 }
 
-export const handler = builder(fun)
+export const handler = builder(fun);
