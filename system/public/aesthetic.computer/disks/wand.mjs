@@ -5,9 +5,6 @@
 // v1: (Cadwand) A laboratory & development piece for designing the geometry in `wand`.
 
 /* #region 🏁 todo
-  - [] Disable any lame "test" keyboard controls.
-  - [] Push the viewer to the server.
-
 + Tomorrow
  - [] 64 pictures? 
  - [] Get demos working.
@@ -54,6 +51,8 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+ - [x] Disable any lame "test" keyboard controls.
+ - [x] Push the viewer to the server.
  - [x] Add parameter support with a copy+paste timestamp shortcut to the prompt
       for viewing the work.
  - [x] Add loading of JSON files via parameters in cadwand.
