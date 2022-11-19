@@ -45,13 +45,16 @@ async function fun(event, context) {
 
   if (process.env.CONTEXT === "dev") {
     console.log("🟡 Development");
-    url = "http://localhost:8000"; // This is used for testing pages locally.
+    url = "http://localhost:8888"; // This is used for testing pages locally.
   } else {
     url = "https://aesthetic.computer";
   }
 
-  if (filepath[filepath.length - 1].startsWith("wand")) {
-    filepath[filepath.length - 1] + "~0"; // Make wand thumbnails show up instantly.
+  if (
+    filepath[filepath.length - 1].startsWith("wand") &&
+    filepath[filepath.length - 1].match(/~/g).length === 1
+  ) {
+    filepath[filepath.length - 1] + "~0"; // Make wand thumbnails show up instantly if a wand is run with just 1 parameter (loading a demo).
   }
 
   try {
