@@ -1086,6 +1086,73 @@ async function load(
     $commonApi.content.add(`<script>${processed}</script>`);
   };
 
+  // * Preload *
+  // Add preload to the boot api.
+  // Accepts paths local to the original disk server, full urls, and demos.
+  // Usage:   preload("demo:drawings/2021.12.12.17.28.16.json") // pre-included
+  //          preload("https://myserver.com/test.json") // remote
+  //          preload("drawings/default.json") // hosted with disk
+  // Results: preload().then((r) => ...).catch((e) => ...) // via promise
+
+  // TODO: Add support for files other than .json and .png / .jpeg 2022.04.06.21.42
+
+  // TODO: How to know when every preload finishes? 2021.12.16.18.55
+
+  // TODO: Preload multiple files and load them into an assets folder with
+  //       a complete handler. 2021.12.12.22.24
+  $commonApi.net.preload = function (path, parseJSON = true) {
+    // console.log("Preload path:", path);
+
+    const extension = path.split(".").pop();
+
+    //if (extension === "json") {
+    // This is a hack for now. The only thing that should be encoded is the file slug.
+    if (!path.startsWith("https://")) {
+      path = encodeURIComponent(path);
+    }
+    //}
+
+    try {
+      const url = new URL(path);
+
+      console.log(url);
+
+      if (url.protocol === "demo:") {
+        // Load from aesthetic.computer host.
+        path = `/demo/${url.pathname}`;
+      } else if (url.protocol === "https:") {
+        // No need to change path because an original URL was specified.
+      }
+    } catch {
+      // Not a valid URL so assume local file on disk server.
+      path = `${location.protocol}//${$commonApi.net.host}/${path}`;
+    }
+
+    // If we are loading a .json file then we can parse or not parse it here.
+    if (extension === "json") {
+      return new Promise((resolve, reject) => {
+        fetch(path)
+          .then(async (response) => {
+            if (!response.ok) {
+              reject(response.status);
+            } else return parseJSON ? response.json() : response.text();
+          })
+          .then((response) => resolve(response))
+          .catch(reject);
+      });
+    } else if (
+      extension === "webp" ||
+      extension === "jpg" ||
+      extension === "png"
+    ) {
+      // Other-wise we should drop into the other thread and wait...
+      return new Promise((resolve, reject) => {
+        send({ type: "load-bitmap", content: path });
+        bitmapPromises[path] = { resolve, reject };
+      });
+    }
+  };
+
   cursorCode = "precise";
 
   send({
@@ -1484,6 +1551,7 @@ async function makeFrame({ data: { type, content } }) {
       Object.keys(painting.api).forEach(
         (key) => ($api[key] = painting.api[key])
       );
+
       //Object.assign($api, $commonApi);
       //Object.assign($api, $updateApi);
       //Object.assign($api, painting.api);
@@ -1881,67 +1949,6 @@ async function makeFrame({ data: { type, content } }) {
 
       graph.setBuffer(screen);
 
-      // * Preload *
-      // Add preload to the boot api.
-      // Accepts paths local to the original disk server, full urls, and demos.
-      // Usage:   preload("demo:drawings/2021.12.12.17.28.16.json") // pre-included
-      //          preload("https://myserver.com/test.json") // remote
-      //          preload("drawings/default.json") // hosted with disk
-      // Results: preload().then((r) => ...).catch((e) => ...) // via promise
-
-      // TODO: Add support for files other than .json and .png / .jpeg 2022.04.06.21.42
-
-      // TODO: How to know when every preload finishes? 2021.12.16.18.55
-
-      // TODO: Preload multiple files and load them into an assets folder with
-      //       a complete handler. 2021.12.12.22.24
-      $api.net.preload = function (path) {
-        // console.log("Preload path:", path);
-
-        const extension = path.split(".").pop();
-
-        //if (extension === "json") {
-        path = encodeURIComponent(path);
-        //}
-
-        try {
-          const url = new URL(path);
-          if (url.protocol === "demo:") {
-            // Load from aesthetic.computer host.
-            path = `/demo/${url.pathname}`;
-          } else if (url.protocol === "https:") {
-            // No need to change path because an original URL was specified.
-          }
-        } catch {
-          // Not a valid URL so assume local file on disk server.
-          path = `${location.protocol}//${$api.net.host}/${path}`;
-        }
-
-        // If we are loading a .json file then we can do it here.
-        if (extension === "json") {
-          return new Promise((resolve, reject) => {
-            fetch(path)
-              .then(async (response) => {
-                if (!response.ok) {
-                  reject(response.status);
-                } else return response.json();
-              })
-              .then((json) => resolve(json))
-              .catch(reject);
-          });
-        } else if (
-          extension === "webp" ||
-          extension === "jpg" ||
-          extension === "png"
-        ) {
-          // Other-wise we should drop into the other thread and wait...
-          return new Promise((resolve, reject) => {
-            send({ type: "load-bitmap", content: path });
-            bitmapPromises[path] = { resolve, reject };
-          });
-        }
-      };
-
       // TODO: Set bpm from boot.
       /*
       $api.sound = {
@@ -1993,9 +2000,6 @@ async function makeFrame({ data: { type, content } }) {
       }
 
       //console.log(paintCount, "booted:", booted, "loading:", loading);
-
-      // We no longer need the preload api for painting.
-      $api.net.preload = null;
 
       // Paint a frame, which can return false to enable caching via noPaint and by
       // default returns undefined (assume a repaint).

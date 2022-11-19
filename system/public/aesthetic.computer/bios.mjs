@@ -1070,8 +1070,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (
         content.text === "wand" ||
         content.text.indexOf("wand") === 0 ||
-        content.text === "cadwand" ||
-        content.text.indexOf("cadwand") === 0
+        content.text === "oldwand" ||
+        content.text.indexOf("oldwand") === 0
       ) {
         loadThreeD();
       }

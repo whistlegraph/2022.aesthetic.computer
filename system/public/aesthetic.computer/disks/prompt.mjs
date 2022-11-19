@@ -262,6 +262,8 @@ async function act({
           flashPresent = true;
           showFlash = true;
           input = "";
+        } else if (input.startsWith("2022")) {
+          load(parse("wand~" + input)); // Execute the current command.
         } else {
           // 🟠 Local and remote pieces...
           load(parse(input.replaceAll(" ", "~"))); // Execute the current command.

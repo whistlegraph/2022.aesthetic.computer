@@ -236,7 +236,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         tex.needsUpdate = true;
         material = new THREE.MeshBasicMaterial({ map: tex });
       } else {
-        if (f.vertices[0].color) {
+        if (f.vertices[0]?.color) {
           material = new THREE.MeshBasicMaterial();
         } else {
           material = new THREE.MeshBasicMaterial({
@@ -322,7 +322,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         tex.needsUpdate = true;
         material = new THREE.MeshBasicMaterial({ map: tex });
       } else {
-        if (f.vertices[0].color) {
+        if (f.vertices[0]?.color) {
           material = new THREE.MeshBasicMaterial();
         } else {
           material = new THREE.MeshBasicMaterial({
@@ -821,6 +821,7 @@ export function handleEvent(event) {
     const slug = event.content.slug;
     const output = event.content.output;
     const handle = event.content.handle;
+    const bucket = event.content.bucket;
     const sculptureHeight = event.content.sculptureHeight || 0;
 
     const sceneToExport = new THREE.Scene();
@@ -901,7 +902,7 @@ export function handleEvent(event) {
             {
               filename: `${slug}.glb`,
               data: glb, //JSON.stringify(gltf),
-              bucket: "wand",
+              bucket, // This is hardcoded for now.
             },
             "gpu-response"
           );
