@@ -14,6 +14,7 @@
  - [] Send examples of drawings and file formats for barry.
 
 + Later / Post-production.
+- [] Parse thumbnail parameters better.
 - [] Master the main materials and lights in the scene.
   - [] Decide on colors / sets, etc.
   - [] Keep the light and dark idea?

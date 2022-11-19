@@ -50,6 +50,7 @@ async function fun(event, context) {
     url = "https://aesthetic.computer";
   }
 
+  // TODO: Parse this better.
   if (
     filepath[filepath.length - 1].startsWith("wand") &&
     filepath[filepath.length - 1].match(/~/g).length === 1
