@@ -240,7 +240,7 @@ const $commonApi = {
     quat: num.quat,
     saturate: num.saturate,
     desaturate: num.desaturate,
-    lerpRGB: num.lerpRGB,
+    shiftRGB: num.shiftRGB,
     rgbToHexStr: num.rgbToHexStr,
   },
   geo: {

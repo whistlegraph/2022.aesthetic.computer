@@ -143,7 +143,6 @@ export function initialize(
       controller2.userData.lastPosition = { ...controller2.position };
 
       controller2.addEventListener("connected", (e) => {
-        console.log("Connected", e);
         controller2.handedness = e.data.handedness;
         controller2.gamepad = e.data.gamepad;
       });
@@ -197,6 +196,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     target = new THREE.WebGLRenderTarget(width, height);
     renderer.setSize(size.width, size.height);
     //renderer.setPixelRatio(1 / 2.2);
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputEncoding = THREE.sRGBEncoding;
     // renderer.setRenderTarget(target); // For rendering offsceen.
     // pixels = new Uint8Array(width * height * 4);
@@ -809,7 +809,7 @@ export function checkForRemovedForms(formsBaked) {
 
 // Receives events from aesthetic.computer.
 export function handleEvent(event) {
-  if (event.type === "background-change") {
+  if (event.type === "background-change" && scene) {
     scene.background = new THREE.Color(...event.content.map((ch) => ch / 255));
     if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
     return;
@@ -1045,12 +1045,7 @@ export function pollControllers() {
       // l-hand-axis-x, l-hand-axis-y
       [2, 3].forEach((axisIndex) => {
         // Assign proper left and right hand controller button labels.
-        if (h === "r") {
-          let xy;
-          xy = axisIndex === 2 ? "a" : "b";
-        } else {
-          xy = axisIndex === 2 ? "x" : "y";
-        }
+        let xy = axisIndex === 2 ? "x" : "y";
 
         const value = gamepad.axes[axisIndex];
 
@@ -1063,10 +1058,10 @@ export function pollControllers() {
 
         if (!held && abs(value) > 0.5) {
           if (value < 0) {
-            const dir = xy === "x" ? "left" : "down";
+            const dir = xy === "x" ? "left" : "up";
             penEvents.push({ name: `${h}hand-axis-${xy}-${dir}` });
           } else if (value > 0) {
-            const dir = xy === "x" ? "right" : "up";
+            const dir = xy === "x" ? "right" : "down";
             penEvents.push({ name: `${h}hand-axis-${xy}-${dir}` });
           }
 

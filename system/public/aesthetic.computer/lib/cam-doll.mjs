@@ -89,11 +89,11 @@ export class CamDoll {
     }
     // 🖖 Touch
     // Two fingers for move forward.
-    if (e.is("touch:2")) W = true;
-    if (e.is("lift:2")) W = false;
+    if (e.is("touch:2")) this.#W = true;
+    if (e.is("lift:2")) this.#W = false;
 
     // Three fingers for moving backward.
-    if (e.is("touch:3")) S = true;
-    if (e.is("lift:3")) S = false;
+    if (e.is("touch:3")) this.#S = true;
+    if (e.is("lift:3")) this.#S = false;
   }
 }

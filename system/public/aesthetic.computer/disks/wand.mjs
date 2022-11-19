@@ -5,17 +5,6 @@
 // v1: (Cadwand) A laboratory & development piece for designing the geometry in `wand`.
 
 /* #region 🏁 todo
-
- - [] Final GLB color and loading and saving demo test.
-
- - [] Make 3 multiple properly oriented test sculptures without refreshing,
-
-      and testing various features.
-
-      - [] Playback
-      - [] Check JSON
-      - [] Filesize
-
   - [] Disable any lame "test" keyboard controls.
   - [] Push the viewer to the server.
 
@@ -25,12 +14,7 @@
  - [] Send spec for Jens
  - [] Send examples of drawings and file formats for barry.
 
-+ Later
- - [x] Add parameter support with a copy+paste timestamp shortcut to the prompt
-      for viewing the work.
- - [x] Add loading of JSON files via parameters in cadwand.
- - [x] Add a special line to the top of each demo file.
- - [x] Write final background color into the filename.
++ Later / Post-production.
 - [] Master the main materials and lights in the scene.
   - [] Decide on colors / sets, etc.
   - [] Keep the light and dark idea?
@@ -70,6 +54,16 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+ - [x] Add parameter support with a copy+paste timestamp shortcut to the prompt
+      for viewing the work.
+ - [x] Add loading of JSON files via parameters in cadwand.
+ - [x] Add a special line to the top of each demo file.
+ - [x] Write final background color into the filename.
+ - [x] Make 3 multiple properly oriented test sculptures without refreshing,
+  - [x] Then check everything!
+      - [x] Playback
+      - [x] Check JSON
+      - [x] Filesize
  - [x] Orientation
  - [x] Color
  - [x] Add color palettes.
@@ -80,12 +74,12 @@ import { CamDoll } from "../lib/cam-doll.mjs";
 const { min, abs, max, cos, sin, floor, round } = Math;
 
 let camdoll, stage; // Camera and stage.
-let stageOn = true;
+let stageOn = false;
 const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
-let cubeHeight = 0.8;
+let cubeHeight = 1.3;
 let originOn = true;
 let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
@@ -123,8 +117,8 @@ let flashCount = 0;
 
 // 🏳️‍🌈Colors
 let palettes; // Assigned at boot, for dynamics.
-let saturationStep = 0.1;
-let brightnessStep = 0.1;
+let saturationStep = 0.2;
+let brightnessStep = 0.2;
 
 // A special feature to generate random colors and
 // backgrounds outside of the set palette system.
@@ -204,7 +198,7 @@ function boot({
     roygbiv: [
       { fg: barely([255, 0, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-red on barely mid-grey
       { fg: barely([255, 127, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-orange on barely mid-grey.
-      { fg: barely([255, 255, 255, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-yelloww on barely mid-grey.
+      { fg: barely([255, 255, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-yelloww on barely mid-grey.
       { fg: barely([0, 0, 255, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-blue on barely mid-grey.
       { fg: barely([0, 255, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-green on barely mid-grey.
       { fg: barely([75, 0, 30, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-indigo on barely mid-grey.
@@ -240,28 +234,27 @@ function boot({
 
   race = new geo.Race({ speed });
 
-  tube = new Tube({ Form, num }, radius, sides, step, geometry, demo);
-
-  wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
-
   // Load and play a demo file instantly from parameter 0... if it exists.
   if (params[0]) {
     let speed = parseInt(params[1]);
-    console.log(speed);
-    if (speed <= 0 || isNaN(speed)) speed = true; // Make it instant if speed is <= 0.
-    const handle = "@digitpain";
+    if (speed < 0 || isNaN(speed)) speed = 10; // Make it instant if speed is <= 0.
+    if (speed === 0) speed = true;
+    const handle = "digitpain";
     const recordingSlug = `${params[0]}-recording-${handle}`;
     //wipe(0, 0, 0, 255); // Write a black background while loading.
     loadDemo = { slug: `${baseURL}/${recordingSlug}.json`, speed };
     stageOn = false;
     measuringCubeOn = false;
     originOn = false;
-  } else {
-    // Otherwise start our own demo file...
-    demo = new Demo(); // Start logging user interaction on demo frame 0.
-    demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
-    demo?.rec("wand:color", color);
   }
+
+  // Start a demo recording.
+  demo = new Demo(); // Start logging user interaction on demo frame 0.
+  demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
+  demo?.rec("wand:color", color);
+
+  tube = new Tube({ Form, num }, radius, sides, step, geometry, demo);
+  wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
 
 let lastWandPosition;
@@ -967,8 +960,15 @@ function act({
   serverUpload,
   num,
 }) {
-  const { quat, timestamp, clamp, saturate, desaturate, lerpRGB, rgbToHexStr } =
-    num;
+  const {
+    quat,
+    timestamp,
+    clamp,
+    saturate,
+    desaturate,
+    shiftRGB,
+    rgbToHexStr,
+  } = num;
 
   // 🥽 Start a gesture. (Spatial)
   if (e.is("3d:touch:2")) {
@@ -1044,7 +1044,6 @@ function act({
   if (e.is("3d:rhand-trigger-secondary-down")) {
     ping = true;
     sides = min(maxSides, sides + 1);
-    console.log("New sides:", sides);
     tube.update({ sides });
     demo?.rec("tube:sides", sides);
   }
@@ -1052,7 +1051,6 @@ function act({
   if (e.is("3d:lhand-trigger-secondary-down")) {
     bop = true;
     sides = max(minSides, sides - 1);
-    console.log("New sides:", sides);
     tube.update({ sides });
     demo?.rec("tube:sides", sides);
   }
@@ -1077,34 +1075,34 @@ function act({
   }
 
   // Brightness: increase +
-  if (e.is("3d:lhand-axis-y-up") || e.is("keyboard:down:y")) {
+  if (e.is("3d:lhand-axis-y-up")) {
     // Lerp to an almost-white color.
-    processNewColor(lerpRGB(color, almostWhite(), brightnessStep));
+    processNewColor(shiftRGB(color, almostWhite(), brightnessStep, "add"));
     beep = true;
   }
 
   // Brightness: decrease -
-  if (e.is("3d:lhand-axis-y-down") || e.is("keyboard:down:h")) {
+  if (e.is("3d:lhand-axis-y-down")) {
     // Lerp to an almost-black color.
-    processNewColor(lerpRGB(color, almostBlack(), brightnessStep));
+    processNewColor(shiftRGB(color, almostBlack(), brightnessStep, "subtract"));
     beep = true;
   }
 
   // Saturation: increase +
-  if (e.is("3d:lhand-axis-y-up") || e.is("keyboard:down:u")) {
+  if (e.is("3d:lhand-axis-x-right")) {
     // Lerp to the most saturated version of the current color.
-    processNewColor(lerpRGB(color, saturate(color, 1), saturationStep));
+    processNewColor(shiftRGB(color, saturate(color, 1), saturationStep));
     beep = true;
   }
 
   // Saturation: decrease -
-  if (e.is("3d:lhand-axis-y-down") || e.is("keyboard:down:j")) {
+  if (e.is("3d:lhand-axis-x-left")) {
     // Lerp to the most desaturated of the current color.
-    const noSat = desaturate(color, 1);
-    processNewColor(lerpRGB(color, desaturate(color, 1), saturationStep));
+    processNewColor(shiftRGB(color, desaturate(color, 1), saturationStep));
     beep = true;
   }
 
+  /*
   if (e.is("keyboard:down:i")) {
     randomPaletteCount = randomPaletteCountMax;
     randomPalette = true;
@@ -1113,14 +1111,14 @@ function act({
     randomPaletteCount = randomPaletteCountMax;
     randomPalette = false;
   }
+  */
 
   // Toggle random color cycling.
   if (e.is("3d:lhand-trigger-down")) randomPalette = true;
   if (e.is("3d:lhand-trigger-up")) randomPalette = false;
 
-  // Save scene data.
+  // Save scene data as a GLB.
   if (e.is("keyboard:down:enter")) {
-
     const ts = params[0] || timestamp();
     const handle = "digitpain"; // Hardcoded for now.
     const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
@@ -1154,12 +1152,10 @@ function act({
   }
 
   // Remove / cancel a stroke.
-  if (e.is("3d:rhand-trigger-secondary-down")) {
-    pong = true;
-  }
+  // TODO...
 
   // 🔴 Recording a new piece / start over.
-  if (e.is("keyboard:down:r") || e.is("3d:rhand-button-b-down")) {
+  if (e.is("3d:rhand-button-b-down")) {
     demo?.dump(); // Start fresh / clear any existing demo cache.
 
     // Remove all vertices from the existing tube and reset tube state.
@@ -1186,18 +1182,28 @@ function act({
   const saveMode = "server"; // The default for now. 22.11.15.05.32
 
   // 🛑 Finish a piece.
-  if (e.is("keyboard:down:f") || e.is("3d:rhand-button-thumb-down")) {
+  if (e.is("3d:rhand-button-thumb-down")) {
     // demo?.print(); // Print the last demo to the console.
-    if (tube.gesture.length === 0) {
+    if (!demo) {
       pong = true;
       addFlash([50, 0, 0, 255]);
       console.log("🪄 No piece to save!");
       return;
     }
 
+    demo?.rec("room:color", background); // Always write a final room color!
+
     const ts = timestamp();
 
-    console.log("🪄 Piece completed:", ts);
+    console.log(
+      `%c🪄 Piece completed: ${ts}`,
+      `background-color: rgb(32, 32, 32);
+     color: rgb(255, 255, 0);
+     padding: 0 0.25em;
+     border-left: 0.75px solid rgb(255, 255, 0);
+     border-right: 0.75px solid rgb(255, 255, 0);`
+    );
+
     bop = true;
 
     // TODO: I probably shouldn't dump demos and instead wait until things
@@ -1207,15 +1213,19 @@ function act({
     // Attempt to upload the piece to the server...
     const handle = "digitpain"; // Hardcoded for now.
 
+    const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
+    const recordingSlug = `${ts}-recording-${handle}`; // Backgrounds are already encoded in the file.
+    const sculptureSlug = `${ts}-sculpture-${bg}-${handle}`;
+
+    demo?.rec("room:color", background); // Always write a final room color,
+    //                                      so we know where to cut off a demo
+    //                                      in case the artist sets it.
+
+    // Prefix a metadata frame to the demo.
+    demo.frames.unshift([0, "piece:info", ts, handle]);
+
     // Server saving.
     if (saveMode === "server") {
-      const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
-      const recordingSlug = `${ts}-recording-${handle}`; // Backgrounds are already encoded in the file.
-      const sculptureSlug = `${ts}-sculpture-${bg}-${handle}`;
-
-      // Prefix a metadata frame to the demo.
-      demo.frames.unshift([0, "piece:info", ts, handle]);
-
       // Save demo JSON.
       serverUpload(`${recordingSlug}.json`, demo.frames, bucket)
         .then((data) => {
@@ -1226,6 +1236,7 @@ function act({
             data
           );
 
+          ping = true;
           addFlash([255, 255, 0, 255]);
         })
         .catch((err) => {
@@ -1250,7 +1261,7 @@ function act({
         .then((data) => {
           console.log(
             "🪄 Sculpture uploaded:",
-            `https://${baseURL}/${sculptureSlug}.glb`,
+            `${baseURL}/${sculptureSlug}.glb`,
             data
           );
 
@@ -1269,17 +1280,29 @@ function act({
       // gpu.message({ type: "export-scene", content: { timestamp: ts } }); // Save scene to json.
     }
 
-    tube.form.clear(); // Clear out the tube.
+    demo?.dump(); // Start fresh / clear any existing demo cache.
+
+    // Remove all vertices from the existing tube and reset tube state.
+    tube.form.clear();
     tube.capForm.clear();
     tube.triCapForm.clear();
     tube.lineForm.clear();
     tube.lastPathP = undefined;
     tube.gesture = [];
 
-    demo?.dump(); // Start fresh / clear any existing demo cache.
+    demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
+    demo?.rec("wand:color", color);
+
+    demo?.rec("tube:sides", tube.sides);
+    demo?.rec("tube:radius", tube.radius); // Grab the state of the current tube.
+    demo?.rec("tube:step", tube.step);
+
+    addFlash([255, 0, 0, 255]);
+
+    console.log("🪄 A new piece...");
   }
 
-  // 📥 Load the wand demo file and play it back.
+  // 📥 Load a local wand demo file instantly with `l` or in realtime with `p`.
   if (e.is("keyboard:down:p") || e.is("keyboard:down:l")) {
     upload(".json")
       .then((data) => {
@@ -1421,7 +1444,7 @@ function parseDemoFrames(data) {
 }
 
 // Color helpers.
-const almostBlack = () => [rr(5, 15), rr(5, 15), rr(5, 15), 255];
+const almostBlack = () => [rr(1, 10), rr(1, 10), rr(1, 10), 255];
 const almostWhite = () => [rr(245, 255), rr(245, 255), rr(245, 255), 255];
 
 // Adds or subtracts up to 10 from any color, clamping from 0->255.
@@ -1465,6 +1488,7 @@ function processNewColor(fg, bg) {
     if (!player) demo?.rec("room:color", bg);
   }
 
+  /*
   console.log(
     `%cForeground`,
     `background-color: black;
@@ -1483,16 +1507,13 @@ function processNewColor(fg, bg) {
      border-right: 0.75px solid rgb(60, 60, 60);`,
     bg
   );
+  */
 }
 
 function advancePalette(pal) {
   // Get palette and index.
   let index = palettes.indices[pal];
   const palette = palettes[pal];
-
-  // Advance palette index forward, wrapping around.
-  index = (index + 1) % palette.length;
-  palettes.indices[pal] = index; // Update the global index.
 
   // Reset any palette index that isn't this one...
   // 🧠 This way I can memorize counts / taps to get to mapped colors. 22.11.18.22.28
@@ -1508,6 +1529,10 @@ function advancePalette(pal) {
   if (typeof bg === "function") bg = bg(); // and same with `bg`.
 
   processNewColor(fg, bg);
+
+  // Advance palette index forward, wrapping around.
+  index = (index + 1) % palette.length;
+  palettes.indices[pal] = index; // Update the global index.
 }
 
 // Here we build a path out of points, which draws
@@ -1915,7 +1940,7 @@ class Tube {
       tris = form.primitive !== "line";
     }
 
-    const shade = capColor;
+    const shade = pathP.color;
 
     // 📐 Triangles
     if (tris) {
@@ -2930,8 +2955,8 @@ class Demo {
       this.frames.push(frame);
     }
 
-    if (label !== "wand")
-      console.log("🔴 Recording:", frame, this.frames.length);
+    // if (label !== "wand")
+    //  console.log("🔴 Recording:", frame, this.frames.length);
   }
 
   // Log the current results.

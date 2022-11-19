@@ -164,13 +164,29 @@ export function isHexString(h) {
 
 // Lerp two RGBA arrays, skipping alpha and rounding the output.
 // (Assumes 0-255)
-export function lerpRGB(a, b, step) {
-  return [
-    round(lerp(a[0], b[0], step)),
-    round(lerp(a[1], b[1], step)),
-    round(lerp(a[2], b[2], step)),
-    255,
-  ];
+export function shiftRGB(a, b, step, mode = "lerp") {
+  if (mode === "add" || mode == "subtract") {
+    if (mode === "subtract") step *= -1;
+    return [
+      round(
+        clamp(a[0] + a[0] * step, randIntRange(1, 10), randIntRange(245, 250))
+      ),
+      round(
+        clamp(a[1] + a[1] * step, randIntRange(1, 10), randIntRange(245, 250))
+      ),
+      round(
+        clamp(a[2] + a[2] * step, randIntRange(1, 10), randIntRange(245, 250))
+      ),
+      255,
+    ];
+  } else {
+    return [
+      round(lerp(a[0], b[0], step)),
+      round(lerp(a[1], b[1], step)),
+      round(lerp(a[2], b[2], step)),
+      255,
+    ];
+  }
 }
 
 // Convert separate rgb values to a single integer.
