@@ -816,7 +816,7 @@ export function handleEvent(event) {
   }
 
   if (event.type === "export-scene") {
-    // Instantiate a exporter
+    // Instantiate an exporter
     const exporter = new GLTFExporter();
     const slug = event.content.slug;
     const output = event.content.output;
@@ -840,13 +840,20 @@ export function handleEvent(event) {
       const colors = new Float32Array(maxPoints * 4);
       const points = sculptureLine.geometry.attributes.position.array;
       const pointColors = sculptureLine.geometry.attributes.color.array;
-      for (let i = 0; i < positions.length; i += 1) positions[i] = points[i];
 
+      // Offset sculpture height.
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i] = points[i];
+        positions[i + 1] = points[i + 1] - sculptureHeight;
+        positions[i + 2] = points[i + 2];
+      }
+
+      // Convert to linear color space.
       for (let i = 0; i < colors.length; i += 4) {
         const color = new THREE.Color(
           pointColors[i],
           pointColors[i + 1],
-          pointColors[i + 2],
+          pointColors[i + 2]
         ).convertSRGBToLinear();
 
         colors[i] = color.r;
@@ -862,7 +869,7 @@ export function handleEvent(event) {
       sculptureLine.geometry.attributes.color.needsUpdate = true;
 
       sceneToExport.add(sculptureLine);
-      sculptureLine.translateY(-sculptureHeight); // Head / preview box height.
+      // sculptureLine.translateY(-sculptureHeight); // Head / preview box height.
     }
 
     if (sculpture) {
@@ -872,12 +879,20 @@ export function handleEvent(event) {
       const colors = new Float32Array(maxPoints * 4);
       const points = sculpture.geometry.attributes.position.array;
       const pointColors = sculpture.geometry.attributes.color.array;
-      for (let i = 0; i < positions.length; i += 1) positions[i] = points[i];
+
+      // Offset sculpture height.
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i] = points[i];
+        positions[i + 1] = points[i + 1] - sculptureHeight;
+        positions[i + 2] = points[i + 2];
+      }
+
+      // Convert to linear color space.
       for (let i = 0; i < colors.length; i += 4) {
         const color = new THREE.Color(
           pointColors[i],
           pointColors[i + 1],
-          pointColors[i + 2],
+          pointColors[i + 2]
         ).convertSRGBToLinear();
 
         colors[i] = color.r;
@@ -892,7 +907,7 @@ export function handleEvent(event) {
       sculpture.geometry.attributes.color.needsUpdate = true;
 
       sceneToExport.add(sculpture);
-      sculpture.translateY(-sculptureHeight); // Head / preview box height.
+      // sculpture.translateY(-sculptureHeight); // Head / preview box height.
     }
 
     // Instantiate an OBJ exporter

@@ -11,8 +11,7 @@
  - [] Make 3 multiple properly oriented test sculptures without refreshing,
 
       and testing various features.
-      - [] Orientation
-      - [] Color
+
       - [] Playback
       - [] Check JSON
       - [] Filesize
@@ -71,7 +70,9 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
-- [x] Add color palettes.
+ - [x] Orientation
+ - [x] Color
+ - [x] Add color palettes.
 #endregion */
 
 // #region 🗺️ global
