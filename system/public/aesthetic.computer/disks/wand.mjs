@@ -6,7 +6,7 @@
 
 /* #region 🏁 todo
 + Tomorrow
- - [] 64 pictures? 
+ - [] 64 pictures?
  - [] Get demos working.
  - [] Send spec for Jens
  - [] Send examples of drawings and file formats for barry.
@@ -707,10 +707,12 @@ function sim({
       } else if (type === "room:color") {
         // ❔ tick, room:color, R, G, B, A
         background = [f[di], f[di + 1], f[di + 2]];
+        bap = true;
       } else if (type === "wand:color") {
         // ❔ tick, wand:color (true / false based on starting light or dark value)
         color = [f[di], f[di + 1], f[di + 2], f[di + 3]];
         capColor = [f[di], f[di + 1], f[di + 2], f[di + 3]];
+        bap = true;
         // Skip `true` and `false` values for now.
       } else if (type === "wand") {
         // ❔ tick, wand, PX, PY, PZ, QX, QY, QZ, QW
