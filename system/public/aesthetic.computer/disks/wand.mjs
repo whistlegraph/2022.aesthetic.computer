@@ -4,10 +4,15 @@
 // v2: (Wand) Now will be used as the official wand program.
 // v1: (Cadwand) A laboratory & development piece for designing the geometry in `wand`.
 
+// 🐕‍🦺 Docs
+// Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
+
 /* #region 🏁 todo
 + Tomorrow
 
  - [] 64 pictures...
+
+ starttime: 9.15
 
  - [] Get demos working.
  - [] Send spec for Jens
@@ -81,13 +86,13 @@ const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
-let cubeHeight = 1.3;
+let cubeHeight = 1.5;
 let originOn = true;
 let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
-  speed = 18; //9; // Race after the cursor quickly.
+  speed = 12; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
@@ -96,7 +101,7 @@ let tube, // Circumscribe the spider's path with a form.
   minRadius = 0.002,
   maxSides = 8,
   minSides = 2, // Don't use 1 side for now.
-  stepRel = () => radius / 2,
+  stepRel = () => radius,
   step = stepRel(), // The length of each tube segment.
   capColor, // [255, 255, 255, 255] The currently selected tube end cap color.
   capVary = 0, // 2; How much to drift the colors for the cap.
@@ -572,7 +577,7 @@ function sim({
           lastWandRotation[3] !== rotation[3])) ||
       (lastWandPosition === undefined && lastWandRotation === undefined)
     ) {
-      const demoPos = position.slice(0, 3); 
+      const demoPos = position.slice(0, 3);
       demoPos[1] -= cubeHeight;
       demo?.rec("wand", [...demoPos, ...rotation]);
       lastWandPosition = position;
@@ -722,7 +727,7 @@ function sim({
         // Skip `true` and `false` values for now.
       } else if (type === "wand") {
         // ❔ tick, wand, PX, PY, PZ, QX, QY, QZ, QW
-        const pos = [f[di], f[di + 1], f[di + 2], 1];
+        const pos = [f[di], f[di + 1] + cubeHeight, f[di + 2], 1];
         const rot = [f[di + 3], f[di + 4], f[di + 5], f[di + 6]];
         const pos2 = vec3.transformQuat(vec3.create(), [0, 0, 0.1], rot);
         const np = [...vec3.add(vec3.create(), pos, pos2), 1];
@@ -1770,12 +1775,9 @@ class Tube {
     if (start.color.length === 3) start.color.push(255); // Use RGBA for demo.
 
     if (fromDemo === false) {
-      const demoPos = start.pos.slice(0, 3); 
+      const demoPos = start.pos.slice(0, 3);
       demoPos[1] -= cubeHeight;
-      this.demo?.rec("tube:start", [
-        ...demoPos,
-        ...start.rotation,
-      ]);
+      this.demo?.rec("tube:start", [...demoPos, ...start.rotation]);
     }
   }
 
@@ -1867,12 +1869,9 @@ class Tube {
     if (pathp.color.length === 3) pathp.color.push(255); // Use RGBA for demo.
 
     if (!fromDemo) {
-      const demoPos = pathp.pos.slice(0, 3); 
+      const demoPos = pathp.pos.slice(0, 3);
       demoPos[1] -= cubeHeight;
-      this.demo?.rec("tube:goto", [
-        ...demoPos,
-        ...pathp.rotation,
-      ]);
+      this.demo?.rec("tube:goto", [...demoPos, ...pathp.rotation]);
     }
 
     if (this.progress() >= 1) {
