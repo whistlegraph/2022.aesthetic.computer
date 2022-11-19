@@ -71,7 +71,7 @@ async function fun(event, context) {
     console.log("🔴 Failed window.preloaded timer.");
   }
 
-  await page.waitForTimeout(500); // A bit of extra time.
+  await page.waitForTimeout(1500); // A bit of extra time.
 
   const buffer = await page.screenshot({
     type: "jpeg",
