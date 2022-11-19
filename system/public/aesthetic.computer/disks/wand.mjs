@@ -1,4 +1,4 @@
-// ️🪄 Wand, 22.11.19.04.40 
+// ️🪄 Wand, 22.11.19.04.40
 // ️🪄 Cadwand, 22.11.05.00.30 ⚙️
 
 // v2: (Wand) Now will be used as the official wand program.
@@ -245,11 +245,13 @@ function boot({
 
   // Load and play a demo file instantly from parameter 0... if it exists.
   if (params[0]) {
-    const speed = parseInt(params[1]) || 50;
+    let speed = parseInt(params[1]);
+    console.log(speed);
+    if (speed <= 0 || isNaN(speed)) speed = true; // Make it instant if speed is <= 0.
     const handle = "@digitpain";
     const recordingSlug = `${params[0]}-recording-${handle}`;
     //wipe(0, 0, 0, 255); // Write a black background while loading.
-    loadDemo = {slug: `${baseURL}/${recordingSlug}.json`, speed}; 
+    loadDemo = { slug: `${baseURL}/${recordingSlug}.json`, speed };
     stageOn = false;
     measuringCubeOn = false;
     originOn = false;
@@ -957,6 +959,7 @@ function act({
   event: e,
   pen,
   gpu,
+  params,
   debug,
   upload,
   download,
@@ -1115,7 +1118,39 @@ function act({
   if (e.is("3d:lhand-trigger-up")) randomPalette = false;
 
   // Save scene data.
-  // if (e.is("keyboard:down:enter")) gpu.message({ type: "export-scene" });
+  if (e.is("keyboard:down:enter")) {
+
+    const ts = params[0] || timestamp();
+    const handle = "digitpain"; // Hardcoded for now.
+    const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
+    const sculptureSlug = `${ts}-sculpture-${bg}-${handle}`;
+
+    gpu
+      .message({
+        type: "export-scene",
+        content: {
+          slug: sculptureSlug,
+          output: "local",
+          sculptureHeight: cubeHeight,
+        },
+      })
+      .then((data) => {
+        console.log(
+          "🪄 Sculpture uploaded:",
+          `https://${baseURL}/${sculptureSlug}.glb`,
+          data
+        );
+
+        ping = true;
+        addFlash([0, 255, 0, 255]);
+      })
+      .catch((err) => {
+        console.error("🪄 Sculpture upload failed:", err);
+
+        pong = true;
+        addFlash([255, 0, 0, 255]);
+      });
+  }
 
   // Remove / cancel a stroke.
   if (e.is("3d:rhand-trigger-secondary-down")) {
@@ -1152,7 +1187,6 @@ function act({
   // 🛑 Finish a piece.
   if (e.is("keyboard:down:f") || e.is("3d:rhand-button-thumb-down")) {
     // demo?.print(); // Print the last demo to the console.
-
     if (tube.gesture.length === 0) {
       pong = true;
       addFlash([50, 0, 0, 255]);
@@ -1231,7 +1265,7 @@ function act({
     } else {
       // Local saving. (Assume "local")
       download(`${ts}-recording-${handle}.json`, demo.frames); // Save demo to json.
-      gpu.message({ type: "export-scene", content: { timestamp: ts } }); // Save scene to json.
+      // gpu.message({ type: "export-scene", content: { timestamp: ts } }); // Save scene to json.
     }
 
     tube.form.clear(); // Clear out the tube.

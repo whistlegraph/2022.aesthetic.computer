@@ -841,7 +841,20 @@ export function handleEvent(event) {
       const points = sculptureLine.geometry.attributes.position.array;
       const pointColors = sculptureLine.geometry.attributes.color.array;
       for (let i = 0; i < positions.length; i += 1) positions[i] = points[i];
-      for (let i = 0; i < colors.length; i += 1) colors[i] = pointColors[i];
+
+      for (let i = 0; i < colors.length; i += 4) {
+        const color = new THREE.Color(
+          pointColors[i],
+          pointColors[i + 1],
+          pointColors[i + 2],
+        ).convertSRGBToLinear();
+
+        colors[i] = color.r;
+        colors[i + 1] = color.g;
+        colors[i + 2] = color.b;
+        // Skip alpha.
+      }
+
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       geo.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
       sculptureLine.geometry = geo;
@@ -860,7 +873,18 @@ export function handleEvent(event) {
       const points = sculpture.geometry.attributes.position.array;
       const pointColors = sculpture.geometry.attributes.color.array;
       for (let i = 0; i < positions.length; i += 1) positions[i] = points[i];
-      for (let i = 0; i < colors.length; i += 1) colors[i] = pointColors[i];
+      for (let i = 0; i < colors.length; i += 4) {
+        const color = new THREE.Color(
+          pointColors[i],
+          pointColors[i + 1],
+          pointColors[i + 2],
+        ).convertSRGBToLinear();
+
+        colors[i] = color.r;
+        colors[i + 1] = color.g;
+        colors[i + 2] = color.b;
+        // Skip alpha.
+      }
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       geo.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
       sculpture.geometry = geo;

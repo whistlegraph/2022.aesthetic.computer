@@ -1999,9 +1999,17 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     let object;
     let MIME = "application/octet-stream"; // Default content type.
 
-    if (extension(filename) === "json" || extension(filename) === "gltf") {
+    if (extension(filename) === "glb") {
+      MIME = "model/gltf+binary";
+      object = URL.createObjectURL(new Blob([data], { type: MIME }));
+    } else if (
+      extension(filename) === "json" ||
+      extension(filename) === "gltf"
+    ) {
       // JSON
       MIME = "application/json";
+      // GLTF
+      if (extension(filename === "gltf")) MIME = "model/gltf+json"; // Hacky conditional above...
 
       // Parse JSON strings if they haven't been already, including support for `bigints`.
       if (typeof data !== "string") {
@@ -2011,7 +2019,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           // 2 // Also make sure we indent by 2 spaces so it's nicely formatted.
         );
       }
-
       object = URL.createObjectURL(new Blob([data], { type: MIME }));
     } else if (extension(filename) === "png") {
       // PNG
