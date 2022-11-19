@@ -106,12 +106,12 @@ let tube, // Circumscribe the spider's path with a form.
 let wandForm; // A live cursor.
 let demoWandForm; // A ghost cursor for playback.
 let demoWandFormOptions;
-let playedOneDemo = false; // Toggled on after a demo plays, so that saving does not do a cubeHeight translation.
 
 let demo, player; // For recording a session and rewatching it in realtime.
 let beep, bop; // For making sounds when pieces begin and end.
 let ping, pong; // For making sounds when pieces upload or fail to upload.
 let bap; // For randomPalette. 🌈
+let bip; // For demo playback.
 let beatCount = 0n; // TODO: This should really go into the main API at this point... 22.11.15.05.22
 
 let flashDuration = 10;
@@ -712,12 +712,12 @@ function sim({
       } else if (type === "room:color") {
         // ❔ tick, room:color, R, G, B, A
         background = [f[di], f[di + 1], f[di + 2]];
-        bap = true;
+        bip = true;
       } else if (type === "wand:color") {
         // ❔ tick, wand:color (true / false based on starting light or dark value)
         color = [f[di], f[di + 1], f[di + 2], f[di + 3]];
         capColor = [f[di], f[di + 1], f[di + 2], f[di + 3]];
-        bap = true;
+        bip = true;
         // Skip `true` and `false` values for now.
       } else if (type === "wand") {
         // ❔ tick, wand, PX, PY, PZ, QX, QY, QZ, QW
@@ -1136,7 +1136,7 @@ function act({
         content: {
           slug: sculptureSlug,
           output: "local",
-          sculptureHeight: playedOneDemo ? 0 : cubeHeight,
+          sculptureHeight: cubeHeight,
         },
       })
       .then((data) => {
@@ -1380,6 +1380,17 @@ function beat({ num, sound: { bpm, square } }) {
       volume: 0.35,
     });
     bap = false;
+  }
+
+  if (bip) {
+    square({
+      tone: num.randIntRange(50, 1600),
+      beats: 1,
+      attack: 0.02,
+      decay: 0.97,
+      volume: 0.1,
+    });
+    bip = false;
   }
 
   if (beep) {
@@ -1854,13 +1865,14 @@ class Tube {
 
     if (pathp.color.length === 3) pathp.color.push(255); // Use RGBA for demo.
 
-    if (!fromDemo)
+    if (!fromDemo) {
       const demoPos = pathp.pos.slice(0, 3); 
       demoPos[1] -= cubeHeight;
       this.demo?.rec("tube:goto", [
         ...demoPos,
         ...pathp.rotation,
       ]);
+    }
 
     if (this.progress() >= 1) {
       if (!fromDemo) waving = false;
@@ -3036,8 +3048,6 @@ class Player {
     // Finish a demo if there are no frames left.
     if (!thisFrame) {
       console.log("🟡 Demo playback completed:", this.frameIndex);
-      playedOneDemo = true;
-      ping = true;
       // Push a completed message with a negative frameCount to mark an ending.
       handler([[-1, "demo:complete"]]);
       return;
