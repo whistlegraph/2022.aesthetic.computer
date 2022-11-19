@@ -178,6 +178,12 @@ export function rgbToHex(r, g, b) {
   return (1 << 24) + (r << 16) + (g << 8) + b;
 }
 
+// The same, as a string. (Via: https://stackoverflow.com/a/5624139)
+// Optionally add a prefix like "#" or "0x"
+export function rgbToHexStr(r, g, b, prefix = "") {
+  return prefix + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+}
+
 // Takes either a string hex or a number hex and outputs and [RGB] array.
 // TODO: Take in alpha.
 export function hexToRgb(h) {
@@ -186,17 +192,6 @@ export function hexToRgb(h) {
 }
 
 // The below was adapted from: https://codepen.io/Elliotclyde/pen/MWyRezZ
-
-// TODO: See how well this functions for wand background encoding. 🪄
-export function toHexStr(n) {
-  n = parseInt(n, 10);
-  if (isNaN(n)) return "00";
-  n = Math.max(0, Math.min(n, 255));
-  return (
-    "0123456789ABCDEF".charAt((n - (n % 16)) / 16) +
-    "0123456789ABCDEF".charAt(n % 16)
-  );
-}
 
 // TODO: The two functions below could be refactored and combined pretty easily. 22.11.19.00.30
 export function saturate(rgb, amount = 1) {

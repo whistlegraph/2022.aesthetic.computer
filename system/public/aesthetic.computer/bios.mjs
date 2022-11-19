@@ -41,6 +41,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // Media Recorder
   let mediaRecorder; // See "recorder-rolling" below.
 
+  // Clipboard
+  let pastedText;
+
   // Events
   let whens = {};
 
@@ -697,10 +700,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           pen: { events: pen.events, pointers: pen.pointers },
           pen3d: ThreeD?.pollControllers(), // TODO: Implement pointers in 3D.
           keyboard: keyboard.events,
+          clipboardText: pastedText,
         },
       },
       [screen.pixels.buffer]
     );
+
+    // Clear any pasted text.
+    pastedText = undefined;
 
     pen.updatePastPositions();
 
@@ -931,6 +938,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               send({ type: "dark-mode", content: { enabled: false } });
             }
           });
+
+        // 📋 User pasting of content.
+        window.addEventListener("paste", (event) => {
+          pastedText = event.clipboardData.getData("text/plain");
+        });
 
         // 🖥️ Display
         frame(resolution?.width, resolution?.height);

@@ -240,7 +240,8 @@ const $commonApi = {
     quat: num.quat,
     saturate: num.saturate,
     desaturate: num.desaturate,
-    lerpRGB: num.lerpRGB
+    lerpRGB: num.lerpRGB,
+    rgbToHexStr: num.rgbToHexStr,
   },
   geo: {
     Box: geo.Box,
@@ -354,7 +355,7 @@ const ORIGIN = {
     [-0.5, 0, 0, 1], // Horizontal X
     [0.5, 0, 0, 1],
     [0, 0, -0.5, 1], // Horizontal Z
-    [0, 0, 0.5, 1],
+    [0, 0, 2, 1],
     [0, -0.5, 0, 1], // Vertical
     [0, 0.5, 0, 1],
   ],
@@ -1652,6 +1653,21 @@ async function makeFrame({ data: { type, content } }) {
         Object.assign(data, {
           device: "none",
           is: (e) => e === (inFocus === true ? "focus" : "defocus"),
+        });
+        $api.event = data;
+        try {
+          act($api);
+        } catch (e) {
+          console.warn("️ ✒ Act failure...", e);
+        }
+      }
+
+      // Keyboard Paste Event
+      if (content.clipboardText) {
+        const data = { text: content.clipboardText };
+        Object.assign(data, {
+          device: "none",
+          is: (e) => e === "pasted:text",
         });
         $api.event = data;
         try {

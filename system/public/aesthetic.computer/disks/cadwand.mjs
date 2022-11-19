@@ -5,10 +5,19 @@
 
 - Randomized pallette arrays...
 
- - [] Write final background color into the filename.
- - [] Remove "@" from user.
  - [] Final GLB color and loading and saving demo test.
- - [] Make multiple, properly oriented sculptures without refreshing!
+ - [] Make 3 multiple properly oriented test sculptures without refreshing,
+      and testing various features.
+      - [] Orientation
+      - [] Color
+      - [] Playback
+      - [] Check JSON
+      - [] Filesize
+  - [] Add parameter support with a copy+paste timestamp shortcut to the prompt
+       for viewing the work.
+
+  - [] Disable any lame "test" keyboard controls.
+  - [] Push the viewer to the server.
 
 + Tomorrow
  - [] 64 pictures? 
@@ -17,6 +26,8 @@
  - [] Send examples of drawings and file formats for barry.
 
 + Later
+ - [x] Add a special line to the top of each demo file.
+ - [x] Write final background color into the filename.
 - [] Master the main materials and lights in the scene.
   - [] Decide on colors / sets, etc.
   - [] Keep the light and dark idea?
@@ -68,15 +79,15 @@ const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
-let cubeHeight = 0.7;
+let cubeHeight = 0.8;
 let originOn = true;
-let background = [0, 0, 0, 255]; // Background color for the 3D environment.
+let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
   speed = 18; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
-  color = [255, 255, 255, 255]; // The current spider color read by the tube..
+  color; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
   sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.004, // The width of the tube.
@@ -85,7 +96,7 @@ let tube, // Circumscribe the spider's path with a form.
   minSides = 2, // Don't use 1 side for now.
   stepRel = () => radius / 2,
   step = stepRel(), // The length of each tube segment.
-  capColor = [255, 255, 255, 255], // [255, 255, 255, 255] The currently selected tube end cap color.
+  capColor, // [255, 255, 255, 255] The currently selected tube end cap color.
   capVary = 0, // 2; How much to drift the colors for the cap.
   tubeVary = 0, // 50; How much to drift the colors for the tube.
   rayDist = 0.1, // How far away to draw the tube on non-spatial devices.
@@ -101,8 +112,6 @@ let ping, pong; // For making sounds when pieces upload or fail to upload.
 let bap; // For randomPalette. 🌈
 let beatCount = 0n; // TODO: This should really go into the main API at this point... 22.11.15.05.22
 
-let flashColor; // Color flashes used for export confirmations.
-let flash = false;
 let flashDuration = 10;
 let flashCount = 0;
 
@@ -127,15 +136,29 @@ let trackerPoints = [],
 let spiderForm, trackerForm;
 let limiter = 0;
 
+const flashes = [];
+let currentFlash;
+let cachedBackground;
+
 // Numeric API hooks for helpers, assigned at `boot` and used in `library`.
 let clamp, rr;
 
 // #endregion
 
+function addFlash(color) {
+  if (cachedBackground == undefined) cachedBackground = background;
+  flashes.push(color);
+}
+
 function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
-  // Assign available color palettes.
+  // Assign some globals from the api.
   clamp = num.clamp;
   rr = num.randIntRange;
+
+  // Set starting colors.
+  color = almostWhite();
+  capColor = color;
+  background = almostBlack();
 
   palettes = {
     rgbwcmyk: [
@@ -199,8 +222,8 @@ function boot({ Camera, Dolly, Form, QUAD, ORIGIN, CUBEL, wipe, num, geo }) {
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 
   demo = new Demo(); // Start logging user interaction on demo frame 0.
-  demo?.rec("room:color", [0, 0, 0, 255]); // Record the starting bg color in case the default ever changes.
-  demo?.rec("wand:color", [255, 255, 255, 255]);
+  demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
+  demo?.rec("wand:color", color);
 }
 
 let lastWandPosition;
@@ -626,15 +649,17 @@ function sim({
 
   demo?.sim(simCount); // 🔴 Update the demo frame count.
 
-  player?.sim((frames, frameCount) => {
+  player?.sim((frames) => {
     // Parse demo frames and act on them in order.
 
     // 🟢 Advance forward any player frames.
     frames.forEach((f) => {
       const type = f[1];
       const di = 2;
-
-      if (type === "room:color") {
+      if (type === "piece:info") {
+        console.log("Artist:", f[di + 1]);
+        console.log("Timestamp:", f[di]);
+      } else if (type === "room:color") {
         // ❔ tick, room:color, R, G, B, A
         background = [f[di], f[di + 1], f[di + 2]];
       } else if (type === "wand:color") {
@@ -703,17 +728,25 @@ function sim({
   });
 }
 
-let cachedBackground;
-
 function paint({ form, Form }) {
   // Flash the screen sometimes.
-  if (flash) {
-    background = flashColor;
-    flashCount += 1;
-    if (flashCount === flashDuration) {
-      flashCount = 0;
-      flash = false;
-      background = cachedBackground;
+  if (flashes.length > 0) {
+    if (currentFlash === undefined) currentFlash = 0;
+
+    if (!flashes[currentFlash]) {
+      flashes.length = 0;
+      cachedBackground = undefined;
+    } else {
+      // If we are in a current flash... count up.
+      background = flashes[currentFlash];
+      flashCount += 1;
+
+      if (flashCount === flashDuration) {
+        flashCount = 0;
+        background = cachedBackground;
+        flashes.shift();
+        // Remove this flash from the flashes list if it exists.
+      }
     }
   }
 
@@ -880,7 +913,8 @@ function act({
   serverUpload,
   num,
 }) {
-  const { quat, timestamp, clamp, saturate, desaturate, lerpRGB } = num;
+  const { quat, timestamp, clamp, saturate, desaturate, lerpRGB, rgbToHexStr } =
+    num;
 
   // 🥽 Start a gesture. (Spatial)
   if (e.is("3d:touch:2")) {
@@ -1050,17 +1084,14 @@ function act({
     tube.lastPathP = undefined;
     tube.gesture = [];
 
-    demo?.rec("room:color", [0, 0, 0, 255]); // Record the starting bg color in case the default ever changes.
-    demo?.rec("wand:color", [255, 255, 255, 255]);
+    demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
+    demo?.rec("wand:color", color);
 
     demo?.rec("tube:sides", tube.sides);
     demo?.rec("tube:radius", tube.radius); // Grab the state of the current tube.
     demo?.rec("tube:step", tube.step);
 
-    ping = true;
-    cachedBackground = background;
-    flash = true;
-    flashColor = [255, 0, 0, 255];
+    addFlash([255, 0, 0, 255]);
 
     console.log("🪄 A new piece...");
     beep = true;
@@ -1071,6 +1102,14 @@ function act({
   // 🛑 Finish a piece.
   if (e.is("keyboard:down:f") || e.is("3d:rhand-button-thumb-down")) {
     // demo?.print(); // Print the last demo to the console.
+
+    if (tube.gesture.length === 0) {
+      pong = true;
+      addFlash([50, 0, 0, 255]);
+      console.log("🪄 No piece to save!");
+      return;
+    }
+
     const ts = timestamp();
 
     console.log("🪄 Piece completed:", ts);
@@ -1081,32 +1120,34 @@ function act({
     //       (In my studio for now they probably won't fail...)
 
     // Attempt to upload the piece to the server...
-    const handle = "@digitpain"; // Hardcoded for now.
+    const handle = "digitpain"; // Hardcoded for now.
 
     // Server saving.
     if (saveMode === "server") {
+      const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
+      const recordingSlug = `${ts}-recording-${bg}-${handle}`;
+      const sculptureSlug = `${ts}-sculpture-${bg}-${handle}`;
+
+      // Prefix a metadata frame to the demo.
+      demo.frames.unshift([0, "piece:info", ts, handle]);
+
       // Save demo JSON.
-      serverUpload(`${ts}-recording-${handle}.json`, demo.frames, "wand")
+      serverUpload(`${recordingSlug}.json`, demo.frames, "wand")
         .then((data) => {
           // console.log("JSON Upload success:", data);
           console.log(
             "🪄 Demo uploaded:",
-            `https://wand.aesthetic.computer/${ts}-recording-${handle}.json`,
+            `https://wand.aesthetic.computer/${recordingSlug}.json`,
             data
           );
 
-          ping = true;
-          cachedBackground = background;
-          flash = true;
-          flashColor = [255, 255, 0, 255];
+          addFlash([255, 255, 0, 255]);
         })
         .catch((err) => {
           console.error("🪄 Demo upload failed:", err);
 
           pong = true;
-          cachedBackground = background;
-          flash = true;
-          flashColor = [255, 0, 0, 255];
+          addFlash([255, 0, 0, 255]);
         });
 
       // Save scene GLTF.
@@ -1114,7 +1155,7 @@ function act({
         .message({
           type: "export-scene",
           content: {
-            timestamp: ts,
+            slug: sculptureSlug,
             output: "server",
             handle,
             sculptureHeight: cubeHeight,
@@ -1123,22 +1164,18 @@ function act({
         .then((data) => {
           console.log(
             "🪄 Sculpture uploaded:",
-            `https://wand.aesthetic.computer/${ts}-sculpture-${handle}.glb`,
+            `https://wand.aesthetic.computer/${sculptureSlug}.glb`,
             data
           );
 
           ping = true;
-          cachedBackground = background;
-          flash = true;
-          flashColor = [0, 255, 0, 255];
+          addFlash([0, 255, 0, 255]);
         })
         .catch((err) => {
           console.error("🪄 Sculpture upload failed:", err);
 
           pong = true;
-          cachedBackground = background;
-          flash = true;
-          flashColor = [255, 0, 0, 255];
+          addFlash([255, 0, 0, 255]);
         });
     } else {
       // Local saving. (Assume "local")
@@ -2818,6 +2855,7 @@ class Demo {
     this.currentTick = undefined;
     this.frames = [];
     this.progress = 0n;
+    console.log("🔴 Recording a demo!");
   }
 }
 

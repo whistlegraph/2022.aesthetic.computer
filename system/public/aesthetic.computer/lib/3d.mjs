@@ -818,7 +818,7 @@ export function handleEvent(event) {
   if (event.type === "export-scene") {
     // Instantiate a exporter
     const exporter = new GLTFExporter();
-    const timestamp = event.content.timestamp;
+    const slug = event.content.slug;
     const output = event.content.output;
     const handle = event.content.handle;
     const sculptureHeight = event.content.sculptureHeight || 0;
@@ -899,7 +899,7 @@ export function handleEvent(event) {
         if (output === "server") {
           upload(
             {
-              filename: `${timestamp}-sculpture-${handle}.glb`,
+              filename: `${slug}.glb`,
               data: glb, //JSON.stringify(gltf),
               bucket: "wand",
             },
@@ -908,7 +908,7 @@ export function handleEvent(event) {
         } else {
           // Assume "local".
           download({
-            filename: `${timestamp}-sculpture-${handle}.glb`,
+            filename: `${slug}.glb`,
             data: glb,
           });
         }

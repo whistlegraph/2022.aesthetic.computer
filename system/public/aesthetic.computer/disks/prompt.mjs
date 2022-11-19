@@ -174,6 +174,12 @@ async function act({
     needsPaint();
   }
 
+  // ✂️ Paste from user clipboard.
+  if (e.is("pasted:text")) {
+    input += e.text;
+    blink?.flip(true);
+  }
+
   if (e.is("keyboard:down")) {
     if (canType === false) {
       canType = true;
