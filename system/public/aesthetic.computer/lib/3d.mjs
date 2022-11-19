@@ -28,9 +28,9 @@ import { radians, rgbToHex, timestamp } from "./num.mjs";
 const debug = window.acDEBUG;
 const { abs } = Math;
 
-const NO_FOG = true;
-const FOG_NEAR = 0.2;
-const FOG_FAR = 2;
+const NO_FOG = false;
+const FOG_NEAR = 0.5;
+const FOG_FAR = 0.9;
 
 let scene,
   renderer,

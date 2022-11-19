@@ -1195,8 +1195,9 @@ function act({
 
   // 🛑 Finish a piece.
   if (e.is("3d:rhand-button-thumb-down")) {
-    // demo?.print(); // Print the last demo to the console.
-    if (!demo) {
+
+    // Don't save empty pieces!
+    if (tube.form.vertices.length === 0 && tube.lineForm.vertices.length === 0) {
       pong = true;
       addFlash([50, 0, 0, 255]);
       console.log("🪄 No piece to save!");
