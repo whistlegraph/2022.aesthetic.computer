@@ -53,6 +53,7 @@ export class CamDoll {
     this.#dolly.sim();
   }
 
+  // TODO: Also add touch controls here.
   act(e) {
     // 💻️ Keyboard: WASD, SPACE and SHIFT for movement, ARROW KEYS for looking.
     if (e.is("keyboard:down:w")) this.#W = true;
@@ -80,12 +81,19 @@ export class CamDoll {
     if (e.is("keyboard:up:arrowleft")) this.#LEFT = false;
     if (e.is("keyboard:up:arrowright")) this.#RIGHT = false;
 
-    // 👀 Look around if 2nd mouse button is held.
     // Note: Sometimes multiple mouse buttons can be held... in which case
     //       e.button only holds the original (duplicate events are not sent).
-    if (e.is("draw") && e.buttons.includes(2)) {
+    if (e.is("draw")) {
       this.cam.rotX -= e.delta.y / 3.5;
       this.cam.rotY -= e.delta.x / 3.5;
     }
+    // 🖖 Touch
+    // Two fingers for move forward.
+    if (e.is("touch:2")) W = true;
+    if (e.is("lift:2")) W = false;
+
+    // Three fingers for moving backward.
+    if (e.is("touch:3")) S = true;
+    if (e.is("lift:3")) S = false;
   }
 }

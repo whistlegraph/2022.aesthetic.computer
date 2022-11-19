@@ -7,7 +7,9 @@
 /* #region 🏁 todo
 
  - [] Final GLB color and loading and saving demo test.
+
  - [] Make 3 multiple properly oriented test sculptures without refreshing,
+
       and testing various features.
       - [] Orientation
       - [] Color
@@ -77,6 +79,7 @@ import { CamDoll } from "../lib/cam-doll.mjs";
 const { min, abs, max, cos, sin, floor, round } = Math;
 
 let camdoll, stage; // Camera and stage.
+let stageOn = true;
 const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
@@ -247,6 +250,9 @@ function boot({
     const recordingSlug = `${params[0]}-recording-${handle}`;
     //wipe(0, 0, 0, 255); // Write a black background while loading.
     loadDemo = {slug: `${baseURL}/${recordingSlug}.json`, speed}; 
+    stageOn = false;
+    measuringCubeOn = false;
+    originOn = false;
   } else {
     // Otherwise start our own demo file...
     demo = new Demo(); // Start logging user interaction on demo frame 0.
@@ -929,7 +935,6 @@ function paint({ form, Form, paintCount }) {
 
   form(
     [
-      stage,
       //raceForm,
       //spiderForm,
       tube.form,
@@ -943,6 +948,7 @@ function paint({ form, Form, paintCount }) {
     { background }
   );
 
+  if (stageOn) form(stage, camdoll.cam);
   if (measuringCubeOn) form(measuringCube, camdoll.cam);
   if (originOn) form(origin, camdoll.cam);
 }

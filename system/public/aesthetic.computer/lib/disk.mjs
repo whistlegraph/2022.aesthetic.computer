@@ -1114,9 +1114,6 @@ async function load(
 
     try {
       const url = new URL(path);
-
-      console.log(url);
-
       if (url.protocol === "demo:") {
         // Load from aesthetic.computer host.
         path = `/demo/${url.pathname}`;
