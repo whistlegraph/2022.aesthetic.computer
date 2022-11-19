@@ -271,7 +271,7 @@ function sim({
   num,
   debug,
   gpuReady,
-  net: { preload },
+  net: { preload, waitForPreload },
   num: { vec3, randIntRange: rr, dist3d, quat, vec4, mat3 },
 }) {
   if (gpuReady && loadDemo) {
@@ -282,7 +282,7 @@ function sim({
       const frames = parseDemoFrames(data);
       console.log("🎞️ Loaded a wand file:", frames.length);
       // Play all frames back.
-      player = new Player(frames, undefined, undefined, speed);
+      player = new Player(frames, undefined, undefined, speed, waitForPreload);
     });
   }
 
@@ -3004,6 +3004,7 @@ class Player {
   startAtFirstIndex;
   collectedFrames = [];
   instant; // Play all frames back instantly after one sim call.
+  waitForPreload;
 
   // loop;
 
@@ -3011,10 +3012,12 @@ class Player {
     frames,
     goUntilFirst = "tube:start",
     endAtLast = "room:color",
-    instant = false
+    instant = false,
+    waitForPreload
   ) {
     this.frames = frames;
     this.instant = instant;
+    this.waitForPreload = waitForPreload;
 
     // Find index of first item if we can.
     for (let f = 0; f < frames.length - 1; f += 1) {
@@ -3050,6 +3053,7 @@ class Player {
       console.log("🟡 Demo playback completed:", this.frameIndex);
       // Push a completed message with a negative frameCount to mark an ending.
       handler([[-1, "demo:complete"]]);
+      this?.waitForPreload();
       return;
     }
 
