@@ -11,6 +11,11 @@
 + Tomorrow
 
  - [] 64 pictures...
+ - [] Update box size...
+ - [] "Feeling Flowers"
+ - [] Score...
+ - [] 1. Write ff#.
+   [] 2.  
 
  starttime: 9.15
 
@@ -20,6 +25,8 @@
 
 + Later / Post-production.
 - [] Parse thumbnail parameters better.
+- [] Metadata on preview links.
+- [] Add ambient fog. 
 - [] Master the main materials and lights in the scene.
   - [] Decide on colors / sets, etc.
   - [] Keep the light and dark idea?
@@ -87,7 +94,8 @@ const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
-let cubeHeight = 1.45;
+// let cubeHeight = 1.45; // head of jeffrey
+let cubeHeight = 0.85; // head of jeffrey
 let originOn = true;
 let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
@@ -100,10 +108,10 @@ let tube, // Circumscribe the spider's path with a form.
   sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.004, // The width of the tube.
   minRadius = 0.001,
-  maxSides = 8,
+  maxSides = 9,
   minSides = 2, // Don't use 1 side for now.
   stepRel = () => {
-    return radius * 1.25;
+    return radius;
   },
   step = stepRel(), // The length of each tube segment.
   capColor, // [255, 255, 255, 255] The currently selected tube end cap color.
@@ -190,30 +198,29 @@ function boot({
 
   palettes = {
     rgbwcmyk: [
-      { fg: barely([255, 0, 0, 255]), bg: barely([64, 32, 32, 255]) }, // Barely-red on barely dim red.
-      { fg: barely([0, 255, 0, 255]), bg: barely([32, 64, 32, 255]) }, // Barely-green on barely dim green.
-      { fg: barely([0, 0, 255, 255]), bg: barely([32, 32, 64, 255]) }, // Barely-blue on barely dim blue.
+      { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely dim red.
+      { fg: barely([0, 255, 0, 255]) }, // Barely-green on barely dim green.
+      { fg: barely([0, 0, 255, 255]) }, // Barely-blue on barely dim blue.
       {
         fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
-        bg: barely([127, 127, 127, 255]),
       }, // Not-quite-white on barely-grey.
-      { fg: barely([0, 255, 255, 255]), bg: barely([32, 64, 64, 255]) }, // Barely-cyan on barely dim cyan.
-      { fg: barely([255, 0, 255, 255]), bg: barely([64, 32, 64, 255]) }, // Barely-magenta on barely dim magenta.
-      { fg: barely([255, 255, 0, 255]), bg: barely([64, 64, 32, 255]) }, // Barely-yellow on barely dim yellow
-      { fg: almostBlack, bg: [127, 127, 127, 255] }, // Not-quite-black on barely grey.
+      { fg: barely([0, 255, 255, 255]) }, // Barely-cyan on barely dim cyan.
+      { fg: barely([255, 0, 255, 255]) }, // Barely-magenta on barely dim magenta.
+      { fg: barely([255, 255, 0, 255]) }, // Barely-yellow on barely dim yellow
+      { fg: almostBlack }, // Not-quite-black on barely grey.
     ],
     binary: [
       { fg: almostWhite, bg: almostBlack }, // Almost-white on almost-black.
       { fg: almostBlack, bg: almostWhite }, // Almost-black on almost-white.
     ],
     roygbiv: [
-      { fg: barely([255, 0, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-red on barely mid-grey
-      { fg: barely([255, 127, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-orange on barely mid-grey.
-      { fg: barely([255, 255, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-yelloww on barely mid-grey.
-      { fg: barely([0, 0, 255, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-blue on barely mid-grey.
-      { fg: barely([0, 255, 0, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-green on barely mid-grey.
-      { fg: barely([75, 0, 30, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-indigo on barely mid-grey.
-      { fg: barely([148, 0, 211, 255]), bg: barely([96, 96, 96, 255]) }, // Barely-violet on barely mid-grey.
+      { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely mid-grey
+      { fg: barely([255, 127, 0, 255]) }, // Barely-orange on barely mid-grey.
+      { fg: barely([255, 255, 0, 255]) }, // Barely-yelloww on barely mid-grey.
+      { fg: barely([0, 255, 0, 255]) }, // Barely-blue on barely mid-grey.
+      { fg: barely([0, 0, 255, 255]) }, // Barely-green on barely mid-grey.
+      { fg: barely([75, 0, 30, 255]) }, // Barely-indigo on barely mid-grey.
+      { fg: barely([148, 0, 211, 255]) }, // Barely-violet on barely mid-grey.
     ],
     // Keep track of which palette color we are on for the picker.
     indices: {
@@ -234,7 +241,7 @@ function boot({
   measuringCube = new Form(
     CUBEL,
     { color: [255, 0, 0, 255] },
-    { pos: [0, cubeHeight, 0], rot: [0, 0, 0], scale: [0.5, 0.5, 0.5] }
+    { pos: [0, cubeHeight, 0], rot: [0, 0, 0], scale: [0.75, 0.75, 0.75] }
   );
 
   origin = new Form(ORIGIN, {
@@ -685,12 +692,13 @@ function sim({
           }
           */
           if (d > step) {
-            const increments = step / 3;
+            const divisor = 5;
+            const increments = step / divisor;
             const repeats = floor(d / step);
 
             for (let r = 0; r < repeats; r += 1) {
-              for (let i = 0; i < 3; i += 1) {
-                spi.crawlTowards(race.pos, increments, (1 / 3)); // <- last parm is a tightness fit
+              for (let i = 0; i < divisor; i += 1) {
+                spi.crawlTowards(race.pos, increments / 1.5, 1 / divisor); // <- last parm is a tightness fit
               }
             }
 
