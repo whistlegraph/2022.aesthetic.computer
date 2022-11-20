@@ -99,10 +99,12 @@ let spi, // Follow it in even increments.
 let tube, // Circumscribe the spider's path with a form.
   sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.004, // The width of the tube.
-  minRadius = 0.002,
+  minRadius = 0.001,
   maxSides = 8,
   minSides = 2, // Don't use 1 side for now.
-  stepRel = () => { return radius / 1.5; },
+  stepRel = () => {
+    return radius * 1.25;
+  },
   step = stepRel(), // The length of each tube segment.
   capColor, // [255, 255, 255, 255] The currently selected tube end cap color.
   capVary = 0, // 2; How much to drift the colors for the cap.
@@ -318,7 +320,7 @@ function sim({
   }
 
   // 🐭️ Live Cursor: generated from the controller position and direction.
-  let position, lastPosition, rotation, controllerRotation;
+  let position, lastPosition, rotation, controllerRotation, lastNormal;
 
   if (pen3d) {
     position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
@@ -411,7 +413,7 @@ function sim({
 
     // Show a live preview of what will be drawn, with measurement lines
     // as needed.
-    // TODO: Move this into aSpider.peekTowards method.
+    // TODO: Move this into Spider.peekTowards method.
 
     {
       // This block is very similar to `crawlTowards` in `Spider`,
@@ -440,7 +442,7 @@ function sim({
         vec3.sub(vec3.create(), tpos, lpos)
       );
 
-      let lastNormal = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], rot);
+      lastNormal = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], rot);
 
       const helper = vec3.normalize(
         vec3.create(),
@@ -481,7 +483,10 @@ function sim({
         newNormal = lastNormal;
       } else {
         // Get angle between first and next tangent.
-        let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
+        let rq = quat.normalize(
+          quat.create(),
+          quat.rotationTo(quat.create(), firstTangent, nextTangent)
+        );
         newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
         spi.lastNormal = lastNormal; // hmm... 22.11.18.03.57
       }
@@ -637,6 +642,8 @@ function sim({
           rotation,
           color
         );
+
+        spi.lastNormal = lastNormal;
       } else {
         // 🖱️ Planar
         //tube.start(spi.state, radius, sides, step);
@@ -667,6 +674,7 @@ function sim({
           }
         } else if (tube.sides > 2) {
           // ♾️ Curvy / cut corner loops.
+
           /*
           if (d > step) {
             const repeats = floor(d / step);
@@ -677,11 +685,15 @@ function sim({
           }
           */
           if (d > step) {
-            const increments = step / 5;
-            const repeats = floor(d / increments);
-            for (let i = 0; i < repeats; i += 1) {
-              spi.crawlTowards(race.pos, increments, 0.2); // <- last parm is a tightness fit
+            const increments = step / 3;
+            const repeats = floor(d / step);
+
+            for (let r = 0; r < repeats; r += 1) {
+              for (let i = 0; i < 3; i += 1) {
+                spi.crawlTowards(race.pos, increments, min(1, (1 / 3) * 1.5)); // <- last parm is a tightness fit
+              }
             }
+
             tube.goto(spi.state); // Knot the tube just once.
           }
         }
@@ -2857,7 +2869,7 @@ class Spider {
       // Get angle between first and next tangent.
 
       // 🅰️ With matrices...
-      // bitangent = vec3.normalize(vec3.create(), bitangent);
+      bitangent = vec3.normalize(vec3.create(), bitangent);
       // Rotate around bitangent by `theta` radians.
       // const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
       // const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
@@ -2865,8 +2877,10 @@ class Spider {
 
       // 🅱️ or a quaternion.
       let rq = quat.rotationTo(quat.create(), firstTangent, nextTangent);
-      newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
-
+      newNormal = vec3.normalize(
+        vec3.create(),
+        vec3.transformQuat(vec3.create(), lastNormal, rq)
+      );
       this.lastNormal = newNormal;
     }
 
