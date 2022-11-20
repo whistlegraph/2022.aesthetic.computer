@@ -27,13 +27,13 @@ export class CamDoll {
     let forward = 0,
       updown = 0,
       strafe = 0;
-    if (this.#W) forward = -0.001;
-    if (this.#S) forward = 0.001;
-    if (this.#A) strafe = -0.001;
-    if (this.#D) strafe = 0.001;
+    if (this.#W) forward = -0.0005;
+    if (this.#S) forward = 0.0005;
+    if (this.#A) strafe = -0.0005;
+    if (this.#D) strafe = 0.0005;
 
-    if (this.#SPACE) updown = 0.001;
-    if (this.#SHIFT) updown = -0.001;
+    if (this.#SPACE) updown = 0.0005;
+    if (this.#SHIFT) updown = -0.0005;
 
     if (
       this.#W ||
