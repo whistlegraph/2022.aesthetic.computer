@@ -86,13 +86,13 @@ const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
-let cubeHeight = 1.5;
+let cubeHeight = 1.45;
 let originOn = true;
 let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
-  speed = 15; //9; // Race after the cursor quickly.
+  speed = 16; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
@@ -101,7 +101,7 @@ let tube, // Circumscribe the spider's path with a form.
   minRadius = 0.002,
   maxSides = 8,
   minSides = 2, // Don't use 1 side for now.
-  stepRel = () => radius,
+  stepRel = () => { return radius / 1.5; },
   step = stepRel(), // The length of each tube segment.
   capColor, // [255, 255, 255, 255] The currently selected tube end cap color.
   capVary = 0, // 2; How much to drift the colors for the cap.
@@ -614,7 +614,6 @@ function sim({
     if (tube.gesture.length === 0 && d > step) {
       // Populate first tube start with the preview state.
       if (pen3d) {
-
         tube.start(spi.state, radius, sides, step);
         // Move manually.
         const direction = vec4.transformQuat(
@@ -637,7 +636,6 @@ function sim({
           rotation,
           color
         );
-
       } else {
         // 🖱️ Planar
         //tube.start(spi.state, radius, sides, step);
@@ -668,12 +666,22 @@ function sim({
           }
         } else if (tube.sides > 2) {
           // ♾️ Curvy / cut corner loops.
+          /*
           if (d > step) {
             const repeats = floor(d / step);
             for (let i = 0; i < repeats; i += 1) {
               spi.crawlTowards(race.pos, step, (i + 1) / repeats); // <- last parm is a tightness fit
             }
             tube.goto(spi.state, undefined, false, false); // Knot the tube just once.
+          }
+          */
+          if (d > step) {
+            const increments = step / 5;
+            const repeats = floor(d / increments);
+            for (let i = 0; i < repeats; i += 1) {
+              spi.crawlTowards(race.pos, increments, 0.2); // <- last parm is a tightness fit
+            }
+            tube.goto(spi.state); // Knot the tube just once.
           }
         }
       } else if (!pen3d) {
@@ -1058,7 +1066,7 @@ function act({
   // Radius
   if (e.is("3d:rhand-axis-y")) {
     if (abs(e.value) > 0.01) {
-      radius = clamp(radius + (e.value * -0.00025), minRadius, 2);
+      radius = clamp(radius + e.value * -0.00025, minRadius, 2);
       step = stepRel();
       tube.update({ radius, step });
       demo?.rec("tube:radius", radius);
@@ -1209,9 +1217,11 @@ function act({
 
   // 🛑 Finish a piece.
   if (e.is("3d:rhand-button-thumb-down")) {
-
     // Don't save empty pieces!
-    if (tube.form.vertices.length === 0 && tube.lineForm.vertices.length === 0) {
+    if (
+      tube.form.vertices.length === 0 &&
+      tube.lineForm.vertices.length === 0
+    ) {
       pong = true;
       addFlash([100, 0, 0, 255]);
       console.log("🪄 No piece to save!");
