@@ -13,6 +13,21 @@
  - [] 64 pictures...
  - [] Update box size...
  - [] "Feeling Flowers"
+
+ 5:19
+
+1. hello my name is je(ff1)rey
+
+
+2. and i am a whistlegrapher...
+3. TRAPPED in the metaverse!
+4. with nothing to do :()
+5. but i did find dis lil freak
+6. and i wanna watch it grow
+
+
+
+
  - [] Score...
  - [] 1. Write ff#.
    [] 2.  
@@ -95,23 +110,23 @@ let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
 // let cubeHeight = 1.45; // head of jeffrey
-let cubeHeight = 0.85; // head of jeffrey
+let cubeHeight = 1.5; // head of jeffrey
 let originOn = true;
 let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
-  speed = 14; //9; // Race after the cursor quickly.
+  speed = 18; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
   sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.004, // The width of the tube.
   minRadius = 0.001,
-  maxSides = 9,
+  maxSides = 12,
   minSides = 2, // Don't use 1 side for now.
   stepRel = () => {
-    return radius;
+    return radius * 1.01;
   },
   step = stepRel(), // The length of each tube segment.
   capColor, // [255, 255, 255, 255] The currently selected tube end cap color.
@@ -241,7 +256,7 @@ function boot({
   measuringCube = new Form(
     CUBEL,
     { color: [255, 0, 0, 255] },
-    { pos: [0, cubeHeight, 0], rot: [0, 0, 0], scale: [0.75, 0.75, 0.75] }
+    { pos: [0, cubeHeight, 0], rot: [0, 0, 0], scale: [0.7, 0.7, 0.7] }
   );
 
   origin = new Form(ORIGIN, {
@@ -327,7 +342,7 @@ function sim({
   }
 
   // 🐭️ Live Cursor: generated from the controller position and direction.
-  let position, lastPosition, rotation, controllerRotation, lastNormal;
+  let position, lastPosition, rotation, controllerRotation, newNormal;
 
   if (pen3d) {
     position = [pen3d.pos.x, pen3d.pos.y, pen3d.pos.z, 1];
@@ -381,7 +396,7 @@ function sim({
     if (spi === undefined) {
       spi = new Spider(
         { num, debug },
-        position,
+        [...position],
         lastPosition,
         dir,
         rotation,
@@ -449,7 +464,7 @@ function sim({
         vec3.sub(vec3.create(), tpos, lpos)
       );
 
-      lastNormal = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], rot);
+      let lastNormal = vec4.transformQuat(vec4.create(), [0, 1, 0, 1], rot);
 
       const helper = vec3.normalize(
         vec3.create(),
@@ -484,8 +499,6 @@ function sim({
       // 🥢 Measurement of normals for rotation.
       let bitangent = vec3.cross(vec3.create(), firstTangent, nextTangent);
 
-      let newNormal;
-
       if (vec3.length(bitangent) === 0) {
         newNormal = lastNormal;
       } else {
@@ -495,7 +508,7 @@ function sim({
           quat.rotationTo(quat.create(), firstTangent, nextTangent)
         );
         newNormal = vec3.transformQuat(vec3.create(), lastNormal, rq);
-        spi.lastNormal = lastNormal; // hmm... 22.11.18.03.57
+        spi.lastNormal = newNormal; // hmm... 22.11.18.03.57
       }
 
       bitangent = vec3.normalize(
@@ -650,7 +663,7 @@ function sim({
           color
         );
 
-        spi.lastNormal = lastNormal;
+        spi.lastNormal = newNormal;
       } else {
         // 🖱️ Planar
         //tube.start(spi.state, radius, sides, step);
@@ -681,7 +694,6 @@ function sim({
           }
         } else if (tube.sides > 2) {
           // ♾️ Curvy / cut corner loops.
-
           /*
           if (d > step) {
             const repeats = floor(d / step);
@@ -691,18 +703,27 @@ function sim({
             tube.goto(spi.state, undefined, false, false); // Knot the tube just once.
           }
           */
-          if (d > step) {
-            const divisor = 5;
+
+          let posd = dist3d(position, race.pos);
+          // This is basically magic. 🪄
+          if (d > step && posd > 0) {
+            let repeats = min(12, floor(d / step));
+            const spiToRace = vec3.normalize(
+              vec3.create(),
+              vec3.sub(vec3.create(), race.pos, spi.state.position)
+            );
+            let dot = vec3.dot(spiToRace, spi.state.direction);
+            let divisor = max(3, round(sides / 2));
+            if (abs(dot) > 0.65) { divisor = 1; }
+            let tightness = 1 / divisor;
             const increments = step / divisor;
-            const repeats = floor(d / step);
 
             for (let r = 0; r < repeats; r += 1) {
               for (let i = 0; i < divisor; i += 1) {
-                spi.crawlTowards(race.pos, increments / 1.5, 1 / divisor); // <- last parm is a tightness fit
+                spi.crawlTowards(race.pos, increments, tightness); // <- last parm is a tightness fit
+                tube.goto(spi.state); // Knot the tube just once per repeat.
               }
             }
-
-            tube.goto(spi.state); // Knot the tube just once.
           }
         }
       } else if (!pen3d) {
@@ -1097,17 +1118,21 @@ function act({
 
   // Side Count
   if (e.is("3d:rhand-trigger-secondary-down")) {
-    ping = true;
-    sides = min(maxSides, sides + 1);
-    tube.update({ sides });
-    demo?.rec("tube:sides", sides);
+    if (tube.gesture.length === 0) {
+      ping = true;
+      sides = min(maxSides, sides + 1);
+      tube.update({ sides });
+      demo?.rec("tube:sides", sides);
+    }
   }
 
   if (e.is("3d:lhand-trigger-secondary-down")) {
-    bop = true;
-    sides = max(minSides, sides - 1);
-    tube.update({ sides });
-    demo?.rec("tube:sides", sides);
+    if (tube.gesture.length === 0) {
+      bop = true;
+      sides = max(minSides, sides - 1);
+      tube.update({ sides });
+      demo?.rec("tube:sides", sides);
+    }
   }
 
   // 🗺️ COLOR:CONTROLS (all on left hand) 🎨
@@ -1631,6 +1656,8 @@ class Tube {
   // TODO: ^ Some of these fields could still be privated. 22.11.11.15.50
   demo; // Points to a demo that is being recorded to in start, goto, and stop.
 
+  mat4Ident;
+
   verticesPerCap; // Used to calculate progress.
   verticesPerSide;
 
@@ -1740,6 +1767,8 @@ class Tube {
     this.form = new $.Form(...formType); // Main form.
     this.form.tag = "sculpture"; // This tells the GPU what to export right now. 22.11.15.09.05
 
+    this.mat4Ident = $.num.mat4.create();
+
     formType[0].type = "line:buffered";
     this.lineForm = new $.Form(...formType); // Single line form. (Sides of 1)
     this.lineForm.tag = "sculpture-line"; // This tells the GPU what to export right now. 22.11.15.09.05
@@ -1764,8 +1793,8 @@ class Tube {
 
     this.#setVertexLimits();
 
-    this.form.MAX_POINTS = 200000;
-    this.lineForm.MAX_POINTS = 50000;
+    this.form.MAX_POINTS = 300000;
+    this.lineForm.MAX_POINTS = 100000;
 
     // this.form.MAX_POINTS = 4096;
     // (this.verticesPerSide + this.verticesPerCap * 2) *
@@ -2260,23 +2289,24 @@ class Tube {
   // Transform the cookie-cutter by the pathP, returning the pathP back.
   #transformShape(pathP) {
     const { quat, mat4, vec4, vec3, radians } = this.$.num;
+
     const rm = mat4.fromRotationTranslationScaleOrigin(
-      mat4.create(),
+      this.mat4Ident,
       pathP.rotation,
       pathP.pos,
       [1, 1, 1],
       [0, 0, 0]
     );
-    quat.normalize(rm, rm);
 
-    pathP.shape.length = 0;
+    // quat.normalize(rm, rm);
+
     this.shape.forEach((shapePos, i) => {
       const newShapePos = vec4.transformMat4(
         vec4.create(),
         [...shapePos, 1],
         rm
       );
-      pathP.shape.push(newShapePos);
+      pathP.shape[i] = newShapePos;
     });
     return pathP;
   }
@@ -2793,7 +2823,9 @@ class Spider {
     this.$ = $; // Shorthand any dependencies.
     // const { num: { vec3 } } = $;
 
-    if (pos.length === 3) pos.push(1); // Make sure pos has a W coordinate.
+    if (pos.length === 3) {
+      pos = [...pos, 1];
+    }
     this.position = pos;
     this.lastPosition = lp;
     this.color = col;
@@ -2857,6 +2889,7 @@ class Spider {
       vec3.cross(vec3.create(), firstTangent, helper)
     );
 
+    /*
     diffPoints.push(
       // For debugging.
       this.position,
@@ -2867,6 +2900,7 @@ class Spider {
       )
     );
     diffColors.push([0, 255, 255, 255], [0, 255, 255, 255]);
+    */
 
     let newNormal;
     let bitangent = vec3.cross(vec3.create(), firstTangent, nextTangent);
@@ -2877,7 +2911,7 @@ class Spider {
       // Get angle between first and next tangent.
 
       // 🅰️ With matrices...
-      bitangent = vec3.normalize(vec3.create(), bitangent);
+      // bitangent = vec3.normalize(vec3.create(), bitangent);
       // Rotate around bitangent by `theta` radians.
       // const theta = acos(vec3.dot(firstTangent, nextTangent)) || 0;
       // const mat = mat4.fromRotation(mat4.create(), theta, bitangent);
@@ -2897,6 +2931,7 @@ class Spider {
       vec3.cross(vec3.create(), newNormal, nextTangent)
     );
 
+    /*
     diffPoints.push(
       // For debugging.
       this.position,
@@ -2918,6 +2953,7 @@ class Spider {
       )
     );
     diffColors.push([255, 255, 0, 255], [255, 255, 0, 255]);
+    */
 
     // Build a rotation transform.
     const qua = quat.normalize(
@@ -2931,6 +2967,8 @@ class Spider {
     // Interpolate it... only apply a section via `tightness` from 0-1.
     let slerpedRot = quat.slerp(quat.create(), this.rotation, qua, tightness);
 
+    // quat.normalize(slerpedRot, slerpedRot);
+
     // console.log(slerpedRot.slice(), this.rotation.slice())
 
     this.rotation = slerpedRot; // Only update the quaternion if it makes sense with the bitangent result.
@@ -2940,11 +2978,11 @@ class Spider {
     // Get the direction between this position and the target position, then
 
     // Original direction.
-    this.direction = vec4.transformQuat(
+    this.direction = vec4.normalize(vec4.create(), vec4.transformQuat(
       vec4.create(),
       [0, 0, 1, 1],
       slerpedRot
-    );
+    ));
 
     const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
     const pos = vec3.add(vec3.create(), this.position, scaledDir);
