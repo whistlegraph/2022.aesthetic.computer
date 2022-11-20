@@ -93,7 +93,7 @@ let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
-  speed = 16; //9; // Race after the cursor quickly.
+  speed = 14; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
@@ -690,7 +690,7 @@ function sim({
 
             for (let r = 0; r < repeats; r += 1) {
               for (let i = 0; i < 3; i += 1) {
-                spi.crawlTowards(race.pos, increments, min(1, (1 / 3) * 1.5)); // <- last parm is a tightness fit
+                spi.crawlTowards(race.pos, increments, (1 / 3)); // <- last parm is a tightness fit
               }
             }
 
