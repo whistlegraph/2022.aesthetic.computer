@@ -418,8 +418,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       geometry.setDrawRange(0, points.length);
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
-      geometry.computeBoundingBox();
-      geometry.computeBoundingSphere();
+      //geometry.computeBoundingBox();
+      //geometry.computeBoundingSphere();
 
       disposal.push({
         keep: f.gpuKeep,

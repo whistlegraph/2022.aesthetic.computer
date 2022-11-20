@@ -92,16 +92,16 @@ let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
-  speed = 12; //9; // Race after the cursor quickly.
+  speed = 16; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
   sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.004, // The width of the tube.
-  minRadius = 0.002,
+  minRadius = 0.0005,
   maxSides = 8,
   minSides = 2, // Don't use 1 side for now.
-  stepRel = () => radius,
+  stepRel = () => radius / 2,
   step = stepRel(), // The length of each tube segment.
   capColor, // [255, 255, 255, 255] The currently selected tube end cap color.
   capVary = 0, // 2; How much to drift the colors for the cap.
@@ -298,15 +298,16 @@ function sim({
   if (randomPalette) {
     if (randomPaletteCount === randomPaletteCountMax) {
       const fg = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
-      const average = (fg[0] + fg[1] + fg[2]) / 3;
+      const bg = [rr(0, 255), rr(0, 255), rr(0, 255), 255];
+      //const average = (fg[0] + fg[1] + fg[2]) / 3;
       // Generate a background either way above or way below the average.
       // (A light <-> dark / fg <-> bg relationship.
-      let bg;
-      if (average >= 128) {
-        bg = [rr(0, 96), rr(0, 96), rr(0, 96), 255];
-      } else {
-        bg = [rr(160, 255), rr(160, 255), rr(160, 255), 255];
-      }
+      // let bg;
+      // if (average >= 128) {
+      //   bg = [rr(0, 96), rr(0, 96), rr(0, 96), 255];
+      // } else {
+      //   bg = [rr(160, 255), rr(160, 255), rr(160, 255), 255];
+      // }
       processNewColor(fg, bg);
       bap = true;
       randomPaletteCount = 0;
@@ -613,6 +614,7 @@ function sim({
     if (tube.gesture.length === 0 && d > step) {
       // Populate first tube start with the preview state.
       if (pen3d) {
+
         tube.start(spi.state, radius, sides, step);
         // Move manually.
         const direction = vec4.transformQuat(
@@ -620,10 +622,22 @@ function sim({
           [0, 0, step, 1],
           rotation
         );
+
+        const lastPosition = spi.position;
         spi.position = vec3.add(vec3.create(), spi.position, direction);
-        spi.direction = direction;
-        //spi.crawlTowards(position, step, 1);
+        const position = spi.position;
+
         tube.goto(spi.state, undefined, false, false);
+
+        spi = new Spider(
+          { num, debug },
+          position,
+          lastPosition,
+          direction,
+          rotation,
+          color
+        );
+
       } else {
         // 🖱️ Planar
         //tube.start(spi.state, radius, sides, step);
@@ -1034,8 +1048,8 @@ function act({
     measuringCubeOn = !measuringCubeOn;
     originOn = !originOn;
     if (measuringCubeOn && originOn) {
-      measuringCube.resetUID();
-      origin.resetUID();
+      //measuringCube.resetUID();
+      //origin.resetUID();
     }
   }
 
@@ -1199,7 +1213,7 @@ function act({
     // Don't save empty pieces!
     if (tube.form.vertices.length === 0 && tube.lineForm.vertices.length === 0) {
       pong = true;
-      addFlash([50, 0, 0, 255]);
+      addFlash([100, 0, 0, 255]);
       console.log("🪄 No piece to save!");
       return;
     }
