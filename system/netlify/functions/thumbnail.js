@@ -56,9 +56,13 @@ async function fun(event, context) {
     filepath[filepath.length - 1].match(/~/g).length >= 1
   ) {
 
-    const lastIndex = filepath[filepath.length - 1].lastIndexOf('~');
-    const trimmed = filepath[filepath.length - 1].slice(0, lastIndex);
-    filepath[filepath.length - 1] = trimmed + "~0"; // Make wand thumbnails show up instantly if a wand is run with just 1 parameter (loading a demo).
+    if (filepath[filepath.length - 1].match(/~/g).length > 1) {
+      const lastIndex = filepath[filepath.length - 1].lastIndexOf('~');
+      const trimmed = filepath[filepath.length - 1].slice(0, lastIndex);
+      filepath[filepath.length - 1] = trimmed + "~0"; // Make wand thumbnails show up instantly if a wand is run with just 1 parameter (loading a demo).
+    } else {
+    filepath[filepath.length - 1] += "~0"; // Make wand thumbnails show up instantly if a wand is run with just 1 parameter (loading a demo).
+    }
   }
 
   try {

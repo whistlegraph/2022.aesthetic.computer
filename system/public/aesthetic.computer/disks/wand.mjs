@@ -92,13 +92,13 @@ let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
 let geometry = "triangles"; // "triangles" for surfaces or "lines" for wireframes
 let race,
-  speed = 16; //9; // Race after the cursor quickly.
+  speed = 15; //9; // Race after the cursor quickly.
 let spi, // Follow it in even increments.
   color; // The current spider color read by the tube..
 let tube, // Circumscribe the spider's path with a form.
   sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.004, // The width of the tube.
-  minRadius = 0.001,
+  minRadius = 0.002,
   maxSides = 8,
   minSides = 2, // Don't use 1 side for now.
   stepRel = () => radius,
@@ -1048,8 +1048,8 @@ function act({
     measuringCubeOn = !measuringCubeOn;
     originOn = !originOn;
     if (measuringCubeOn && originOn) {
-      //measuringCube.resetUID();
-      //origin.resetUID();
+      measuringCube.resetUID();
+      origin.resetUID();
     }
   }
 
