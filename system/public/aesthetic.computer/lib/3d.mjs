@@ -30,7 +30,7 @@ const { abs } = Math;
 
 const NO_FOG = false;
 const FOG_NEAR = 0.5;
-const FOG_FAR = 1.1;
+const FOG_FAR = 0.95;
 
 let scene,
   renderer,

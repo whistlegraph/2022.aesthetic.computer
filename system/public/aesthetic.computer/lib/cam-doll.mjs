@@ -83,6 +83,7 @@ export class CamDoll {
 
     // Note: Sometimes multiple mouse buttons can be held... in which case
     //       e.button only holds the original (duplicate events are not sent).
+    // TODO: These rates should be adjusted on mobile.
     if (e.is("draw")) {
       this.cam.rotX -= e.delta.y / 3.5;
       this.cam.rotY -= e.delta.x / 3.5;

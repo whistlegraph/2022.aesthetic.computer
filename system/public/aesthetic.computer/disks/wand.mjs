@@ -26,6 +26,7 @@
 - [] Organize these after the sculptures are done.
 - [] Show an actual preview while demo'ing?
 - [x] Never show user cursor when demo'ing.. (does it happen when sides change?).
+ - [] These rates should be adjusted on mobile.
  - [] Change the demo file output from JSON to txt.
  - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
   - keep an automated list somewhere... maybe look at the S3 shell scripts?
