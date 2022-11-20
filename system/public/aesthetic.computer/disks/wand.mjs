@@ -98,10 +98,10 @@ let spi, // Follow it in even increments.
 let tube, // Circumscribe the spider's path with a form.
   sides = 2, // Number of tube sides. 1 or 2 means flat.
   radius = 0.004, // The width of the tube.
-  minRadius = 0.0005,
+  minRadius = 0.001,
   maxSides = 8,
   minSides = 2, // Don't use 1 side for now.
-  stepRel = () => radius / 2,
+  stepRel = () => radius,
   step = stepRel(), // The length of each tube segment.
   capColor, // [255, 255, 255, 255] The currently selected tube end cap color.
   capVary = 0, // 2; How much to drift the colors for the cap.
@@ -1058,7 +1058,7 @@ function act({
   // Radius
   if (e.is("3d:rhand-axis-y")) {
     if (abs(e.value) > 0.01) {
-      radius = clamp(radius + e.value * -0.0005, minRadius, 2);
+      radius = clamp(radius + (e.value * -0.00025), minRadius, 2);
       step = stepRel();
       tube.update({ radius, step });
       demo?.rec("tube:radius", radius);
