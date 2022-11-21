@@ -110,7 +110,8 @@ let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
 // let cubeHeight = 1.45; // head of jeffrey
-let cubeHeight = 1.5; // head of jeffrey
+let cubeHeight = 0.7; // floor of jeffrey
+// let cubeHeight = 1.5; // head of jeffrey
 let originOn = true;
 let background; // Background color for the 3D environment.
 let waving = false; // Whether we are making tubes or not.
@@ -213,12 +214,12 @@ function boot({
 
   palettes = {
     rgbwcmyk: [
-      { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely dim red.
-      { fg: barely([0, 255, 0, 255]) }, // Barely-green on barely dim green.
-      { fg: barely([0, 0, 255, 255]) }, // Barely-blue on barely dim blue.
-      {
-        fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
-      }, // Not-quite-white on barely-grey.
+      // { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely dim red.
+      // { fg: barely([0, 255, 0, 255]) }, // Barely-green on barely dim green.
+      // { fg: barely([0, 0, 255, 255]) }, // Barely-blue on barely dim blue.
+      // {
+        // fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
+      // }, // Not-quite-white on barely-grey.
       { fg: barely([0, 255, 255, 255]) }, // Barely-cyan on barely dim cyan.
       { fg: barely([255, 0, 255, 255]) }, // Barely-magenta on barely dim magenta.
       { fg: barely([255, 255, 0, 255]) }, // Barely-yellow on barely dim yellow
@@ -227,6 +228,10 @@ function boot({
     binary: [
       { fg: almostWhite, bg: almostBlack }, // Almost-white on almost-black.
       { fg: almostBlack, bg: almostWhite }, // Almost-black on almost-white.
+    ],
+    blackredyellow: [
+      { fg: almostBlack }, // Almost-white on almost-black.
+      { fg: barely([255, 0, 0, 255]) }, // Almost-black on almost-white.
     ],
     roygbiv: [
       { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely mid-grey
@@ -240,12 +245,13 @@ function boot({
     // Keep track of which palette color we are on for the picker.
     indices: {
       rgbwcmyk: 0,
+      blackredyellow: 0,
       binary: 0,
       roygbiv: 0,
     },
   };
 
-  camdoll = new CamDoll(Camera, Dolly, { z: 0.6, y: cubeHeight }); // Camera controls.
+  camdoll = new CamDoll(Camera, Dolly, { z: 0.9, y: cubeHeight }); // Camera controls.
   stage = new Form(
     QUAD,
     { color: [2, 2, 2, 255] },
@@ -704,25 +710,25 @@ function sim({
           }
           */
 
-          let posd = dist3d(position, race.pos);
+          //let posd = dist3d(position, race.pos);
           // This is basically magic. 🪄
-          if (d > step && posd > 0) {
-            let repeats = min(12, floor(d / step));
+          if (d > step) {
+            let repeats = min(6, floor(d / step));
             const spiToRace = vec3.normalize(
               vec3.create(),
               vec3.sub(vec3.create(), race.pos, spi.state.position)
             );
             let dot = vec3.dot(spiToRace, spi.state.direction);
             let divisor = max(3, round(sides / 2));
-            if (abs(dot) > 0.65) { divisor = 1; }
+            if (abs(dot) > 0.55) { divisor = 1; }
             let tightness = 1 / divisor;
             const increments = step / divisor;
 
             for (let r = 0; r < repeats; r += 1) {
               for (let i = 0; i < divisor; i += 1) {
-                spi.crawlTowards(race.pos, increments, tightness); // <- last parm is a tightness fit
-                tube.goto(spi.state); // Knot the tube just once per repeat.
+                spi.crawlTowards(race.pos, increments, tightness); // <- last param is a tightness fit
               }
+              tube.goto(spi.state); // Knot the tube just once per repeat.
             }
           }
         }
@@ -1234,30 +1240,35 @@ function act({
   // Remove / cancel a stroke.
   // TODO...
 
-  // 🔴 Recording a new piece / start over.
   if (e.is("3d:rhand-button-b-down")) {
-    demo?.dump(); // Start fresh / clear any existing demo cache.
-
-    // Remove all vertices from the existing tube and reset tube state.
-    tube.form.clear();
-    tube.capForm.clear();
-    tube.triCapForm.clear();
-    tube.lineForm.clear();
-    tube.lastPathP = undefined;
-    tube.gesture = [];
-
-    demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
-    demo?.rec("wand:color", color);
-
-    demo?.rec("tube:sides", tube.sides);
-    demo?.rec("tube:radius", tube.radius); // Grab the state of the current tube.
-    demo?.rec("tube:step", tube.step);
-
-    addFlash([255, 0, 0, 255]);
-
-    console.log("🪄 A new piece...");
+    advancePalette("blackredyellow");
     beep = true;
   }
+
+  // 🔴 Recording a new piece / start over.
+  // if (e.is("3d:rhand-button-b-down")) {
+  //   demo?.dump(); // Start fresh / clear any existing demo cache.
+
+  //   // Remove all vertices from the existing tube and reset tube state.
+  //   tube.form.clear();
+  //   tube.capForm.clear();
+  //   tube.triCapForm.clear();
+  //   tube.lineForm.clear();
+  //   tube.lastPathP = undefined;
+  //   tube.gesture = [];
+
+  //   demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
+  //   demo?.rec("wand:color", color);
+
+  //   demo?.rec("tube:sides", tube.sides);
+  //   demo?.rec("tube:radius", tube.radius); // Grab the state of the current tube.
+  //   demo?.rec("tube:step", tube.step);
+
+  //   addFlash([255, 0, 0, 255]);
+
+  //   console.log("🪄 A new piece...");
+  //   beep = true;
+  // }
 
   const saveMode = "server"; // The default for now. 22.11.15.05.32
 
@@ -1274,7 +1285,7 @@ function act({
       return;
     }
 
-    demo?.rec("room:color", background); // Always write a final room color!
+    // demo?.rec("room:color", background); // Always write a final room color!
 
     const ts = timestamp();
 
