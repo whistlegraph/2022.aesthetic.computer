@@ -23,16 +23,9 @@ import { Desktop, MetaBrowser } from "../lib/platform.mjs";
 let glyphs = {};
 
 const motd =
-  `hi i'm not quite there yet                      ` +
-  `  but try                                       ` +
-  `    typing...                                   ` +
-  `                                                ` +
-  `bleep, bubble, line, rect,                      ` +
-  `melody, tracker, metronome,                     ` +
-  `microphone, wg idni,                            ` +
-  `@niki/spinline, @artur/i,                       ` +
-  `@reas/bland                                     ` +
-  `                                                ` +
+  `dec 12: freaky-flowers (ff)                     `+
+  `                                                `+
+  `                                                `+
   `mail@aesthetic.computer                         `;
 
 let input = motd;
@@ -45,12 +38,7 @@ let flashPresent = false;
 let canType = false;
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({
-  net: { preload },
-  pieceCount,
-  glaze,
-}) {
-
+function boot({ net: { preload }, pieceCount, glaze }) {
   glaze({ on: true }); // TODO: Every glaze triggers `frame` in `disk`, this could be optimized. 2022.04.24.04.25
 
   // Preload all glyphs.
@@ -189,7 +177,6 @@ async function act({
     }
     // Other keys.
     else {
-
       if (e.key === "Backspace") input = input.slice(0, -1);
 
       const key = "prompt:history";

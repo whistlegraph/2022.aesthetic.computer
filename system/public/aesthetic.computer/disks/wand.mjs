@@ -8,38 +8,11 @@
 // Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
 
 /* #region 🏁 todo
-+ Tomorrow
-
- - [] 64 pictures...
- - [] Update box size...
- - [] "Feeling Flowers"
-
- 5:19
-
-1. hello my name is je(ff1)rey
-
-
-2. and i am a whistlegrapher...
-3. TRAPPED in the metaverse!
-4. with nothing to do :()
-5. but i did find dis lil freak
-6. and i wanna watch it grow
-
-
-
-
- - [] Score...
- - [] 1. Write ff#.
-   [] 2.  
-
- starttime: 9.15
-
- - [] Get demos working.
- - [] Send spec for Jens
- - [] Send examples of drawings and file formats for barry.
-
+- [] Add screenshot button that works via WebGL for FF stills.
+- [] Pick final URL structure for FF.
+- [] Parse thumbnail parameters better / make it way faster?
+  - [] Is there a nice SAAS for this?
 + Later / Post-production.
-- [] Parse thumbnail parameters better.
 - [] Metadata on preview links.
 - [] Add ambient fog. 
 - [] Master the main materials and lights in the scene.
@@ -49,7 +22,6 @@
 - [] Show an actual preview while demo'ing?
 - [x] Never show user cursor when demo'ing.. (does it happen when sides change?).
  - [] These rates should be adjusted on mobile.
- - [] Change the demo file output from JSON to txt.
  - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
   - keep an automated list somewhere... maybe look at the S3 shell scripts?
   - [] Top wand rotation hmm...
@@ -60,7 +32,7 @@
   - [] Finish all extra-necessary TODOS in this file.
  - [] Create a "view wand timestamp" player that loads the model as a GLTF.
   - [] Add a light to the scene.
- - [] Try to re-enable workers again.
+ - [] Try to re-enable workers again. (Should basically work great now. 22.11.23.09.20)
  - [] Integrate into `wand`.
    - [] Read both pieces side by side.
    - [] Model each wand as a single skinny tube (with colored stripes).
@@ -82,18 +54,21 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
- - [x] Disable any lame "test" keyboard controls.
- - [x] Push the viewer to the server.
- - [x] Add parameter support with a copy+paste timestamp shortcut to the prompt
-      for viewing the work.
- - [x] Add loading of JSON files via parameters in cadwand.
- - [x] Add a special line to the top of each demo file.
- - [x] Write final background color into the filename.
- - [x] Make 3 multiple properly oriented test sculptures without refreshing,
-  - [x] Then check everything!
-      - [x] Playback
-      - [x] Check JSON
-      - [x] Filesize
+- [x] Get demos working.
+- [x] Send spec for Jens
+- [x] Send examples of drawings and file formats for barry.
+- [x] Disable any lame "test" keyboard controls.
+- [x] Push the viewer to the server.
+- [x] Add parameter support with a copy+paste timestamp shortcut to the prompt
+     for viewing the work.
+- [x] Add loading of JSON files via parameters in cadwand.
+- [x] Add a special line to the top of each demo file.
+- [x] Write final background color into the filename.
+- [x] Make 3 multiple properly oriented test sculptures without refreshing,
+ - [x] Then check everything!
+  - [x] Playback
+  - [x] Check JSON
+  - [x] Filesize
  - [x] Orientation
  - [x] Color
  - [x] Add color palettes.
@@ -109,8 +84,8 @@ const rulers = false; // Whether to render arch. guidelines for development.
 let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
-// let cubeHeight = 1.45; // head of jeffrey
-let cubeHeight = 0.7; // floor of jeffrey
+let cubeHeight = 1.45; // head of jeffrey
+//let cubeHeight = 0.7; // floor of jeffrey
 // let cubeHeight = 1.5; // head of jeffrey
 let originOn = true;
 let background; // Background color for the 3D environment.
@@ -214,24 +189,24 @@ function boot({
 
   palettes = {
     rgbwcmyk: [
-      // { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely dim red.
-      // { fg: barely([0, 255, 0, 255]) }, // Barely-green on barely dim green.
-      // { fg: barely([0, 0, 255, 255]) }, // Barely-blue on barely dim blue.
+      { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely dim red.
+      { fg: barely([0, 255, 0, 255]) }, // Barely-green on barely dim green.
+      { fg: barely([0, 0, 255, 255]) }, // Barely-blue on barely dim blue.
       // {
         // fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
       // }, // Not-quite-white on barely-grey.
-      { fg: barely([0, 255, 255, 255]) }, // Barely-cyan on barely dim cyan.
-      { fg: barely([255, 0, 255, 255]) }, // Barely-magenta on barely dim magenta.
-      { fg: barely([255, 255, 0, 255]) }, // Barely-yellow on barely dim yellow
-      { fg: almostBlack }, // Not-quite-black on barely grey.
+      //{ fg: barely([0, 255, 255, 255]) }, // Barely-cyan on barely dim cyan.
+      //{ fg: barely([255, 0, 255, 255]) }, // Barely-magenta on barely dim magenta.
+      //{ fg: barely([255, 255, 0, 255]) }, // Barely-yellow on barely dim yellow
+      //{ fg: almostBlack }, // Not-quite-black on barely grey.
     ],
     binary: [
       { fg: almostWhite, bg: almostBlack }, // Almost-white on almost-black.
       { fg: almostBlack, bg: almostWhite }, // Almost-black on almost-white.
     ],
     blackredyellow: [
-      { fg: almostBlack }, // Almost-white on almost-black.
-      { fg: barely([255, 0, 0, 255]) }, // Almost-black on almost-white.
+      { fg: barely([20, 180, 40, 255]) }, // Almost-black on almost-white.
+      { fg: barely([140, 90, 70, 255]) }, // Almost-black on almost-white.
     ],
     roygbiv: [
       { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely mid-grey
