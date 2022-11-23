@@ -56,6 +56,10 @@
   status = 301
   force = true
 [[redirects]]
+  from = "/ff/*"
+  to = "/.netlify/builders/thumbnail"
+  status = 200
+[[redirects]]
   from = "/thumbnail/*"
   to = "/.netlify/builders/thumbnail"
   status = 200
