@@ -30,7 +30,7 @@ const { abs } = Math;
 
 const NO_FOG = false;
 const FOG_NEAR = 0.5;
-const FOG_FAR = 2.00;
+const FOG_FAR = 2.0;
 
 let scene,
   renderer,
@@ -965,10 +965,11 @@ export function handleEvent(event) {
   }
 
   // Otherwise assume a different kind of event...
-  const form = scene.getObjectByUserDataProperty("aestheticID", event.uid);
-  const painter = form.userData.ac_painter;
-  painter.moveTo(new THREE.Vector3(...event.to));
-  // console.log("move to", [...event.to]);
+  if (scene) {
+    const form = scene.getObjectByUserDataProperty("aestheticID", event.uid);
+    const painter = form.userData.ac_painter;
+    painter.moveTo(new THREE.Vector3(...event.to));
+  }
 }
 
 function handleController(controller) {

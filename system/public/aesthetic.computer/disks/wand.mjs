@@ -8,10 +8,14 @@
 // Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
 
 /* #region 🏁 todo
+- [🥗] Pick final URL structure for FF.
+- [] Re-enable Twitter player? Check `index` and `bios` "twitter";
+  - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
 - [] Add screenshot button that works via WebGL for FF stills.
-- [] Pick final URL structure for FF.
+    - Orthographic camera?
 - [] Parse thumbnail parameters better / make it way faster?
   - [] Is there a nice SAAS for this?
+- [] Ultimate Fatality: Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
 + Later / Post-production.
 - [] Metadata on preview links.
 - [] Add ambient fog. 

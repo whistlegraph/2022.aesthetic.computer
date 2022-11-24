@@ -141,24 +141,25 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // Used by `disk` to set the metatags by default when a piece loads. It can
   // be overridden using `meta` inside of `boot` for any given piece.
   function setMetatags(meta) {
-    if (meta.title) {
+    if (meta?.title && meta?.path) {
       document.title = meta.title;
       document.querySelector('meta[name="og:title"]').content = meta.path;
       document.querySelector('meta[name="twitter:title"]').content = meta.path;
     }
-    if (meta.desc) {
+    if (meta?.desc) {
       document.querySelector('meta[name="og:description"]').content = meta.desc;
     }
-    if (meta.img?.og) {
+    if (meta?.img?.og) {
       document.querySelector('meta[name="og:image"]').content = meta.img.og;
     }
-    if (meta.img?.twitter) {
+    if (meta?.img?.twitter) {
       document.querySelector('meta[name="twitter:image"]').content =
         meta.img.twitter;
     }
-    //if (meta.url) {
-    //document.querySelector('meta[name="twitter:player"').content = meta.url;
-    //}
+    if (meta?.url) {
+      // This might need to be conditional / opt-in?
+      // document.querySelector('meta[name="twitter:player"').content = meta.url;
+    }
   }
 
   function frame(width, height, gap = 8) {
@@ -1090,6 +1091,16 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (content.pieceCount > 0) {
         if (content.fromHistory === false) {
           history.pushState(
+            "",
+            document.title,
+            content.text === "/prompt" ? "/" : "/" + content.text // Replace "prompt" with "/".
+          );
+        }
+
+        // Replace the state if we are running an aliased `load` or `jump`.
+        // (THat doesn't avoids the history stack.)
+        if (content.fromHistory === true && content.alias === false) {
+          history.replaceState(
             "",
             document.title,
             content.text === "/prompt" ? "/" : "/" + content.text // Replace "prompt" with "/".

@@ -23,7 +23,7 @@ import { Desktop, MetaBrowser } from "../lib/platform.mjs";
 let glyphs = {};
 
 const motd =
-  `dec 12: freaky-flowers (ff)                     `+
+  `Dec 12: Freaky Flowers                          `+
   `                                                `+
   `                                                `+
   `mail@aesthetic.computer                         `;

@@ -784,7 +784,8 @@ let firstPiece, firstParams, firstSearch;
 
 async function load(
   { path, host, search, params, hash, text },
-  fromHistory = false
+  fromHistory = false,
+  alias = false
 ) {
   if (loading === false) {
     loading = true;
@@ -849,14 +850,19 @@ async function load(
     } else if (piece === "*" || piece === undefined || currentText === piece) {
       console.log("💾️ Reloading piece...", piece);
       // Reload the disk.
-      load({
-        path: currentPath,
-        host: currentHost,
-        search: currentSearch,
-        params: currentParams,
-        hash: currentHash,
-        text: currentText,
-      });
+      load(
+        {
+          path: currentPath,
+          host: currentHost,
+          search: currentSearch,
+          params: currentParams,
+          hash: currentHash,
+          text: currentText,
+        },
+        // Use the existing contextual values when live-reloading in debug mode.
+        fromHistory,
+        alias
+      );
     }
   };
 
@@ -896,18 +902,22 @@ async function load(
   // ***Client Metadata Fields***
   // Set default metadata fields for SEO and sharing, (requires serverside prerendering).
   // See also: `index.js` which prefills metadata on page load from the server.
-  let title = text + " · aesthetic.computer";
-  if (text === "prompt" || text === "/") title = "aesthetic.computer";
-  const meta = {
-    title,
-    path: text,
-    desc: module.desc, // Note: This doesn't auto-update externally hosted module descriptions, and may never need to? 22.07.19.06.00
-    img: {
-      og: "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
-      twitter: "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
-    },
-    url: "https://aesthetic.computer/" + text,
-  };
+  let meta;
+  if (alias === false) {
+    let title = text + " · aesthetic.computer";
+    if (text === "prompt" || text === "/") title = "aesthetic.computer";
+    meta = {
+      title,
+      path: text,
+      desc: module.desc, // Note: This doesn't auto-update externally hosted module descriptions, and may never need to? 22.07.19.06.00
+      img: {
+        og: "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
+        twitter:
+          "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
+      },
+      url: "https://aesthetic.computer/" + text,
+    };
+  }
 
   // Add meta to the common api so the data can be overridden as needed.
   // $commonApi.meta = (data) => {
@@ -1066,6 +1076,15 @@ async function load(
   $commonApi.query = search;
   $commonApi.params = params || [];
   $commonApi.load = load;
+
+  // A wrapper for `load(parse(...))`
+  // Make it `ahistorical` to prevent a url change.
+  // Make it an `alias` to prevent a metadata change for writing landing or
+  // router pieces such as `freaky-flowers` -> `wand`. 22.11.23.16.29
+  $commonApi.jump = function jump(to, ahistorical = false, alias = false) {
+    load(parse(to), ahistorical, alias);
+  };
+
   $commonApi.pieceCount += 1;
   $commonApi.content = new Content();
 
@@ -1163,6 +1182,7 @@ async function load(
       text,
       pieceCount: $commonApi.pieceCount,
       fromHistory,
+      alias,
       meta,
       // noBeat: beat === defaults.beat,
     },
