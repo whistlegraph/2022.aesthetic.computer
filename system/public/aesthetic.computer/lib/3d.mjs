@@ -209,18 +209,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
     lastPerspectiveCam = cam;
 
-    if (camera?.type === "OrthographicCamera") {
-      aspect = width / height;
-      const frustumSize = 1;
-      cam = new THREE.OrthographicCamera(
-        (frustumSize * aspect) / -2,
-        (frustumSize * aspect) / 2,
-        frustumSize / 2,
-        frustumSize / -2,
-        0,
-        20
-      );
-    } else {
+    if (!camera) {
       camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     }
 
@@ -1028,8 +1017,6 @@ export function handleEvent(event) {
       if (!NO_FOG)
         scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
       aspect = size.width / size.height;
-      renderer.setViewport(0, 0, size.width, size.height);
-      renderer.setSize(size.width, size.height);
       const frustumSize = 1;
       camera = new THREE.OrthographicCamera(
         (frustumSize * aspect) / -2,
@@ -1068,9 +1055,7 @@ export function handleEvent(event) {
     if (event.content.squareThumbnail) {
       width = 8192;
       height = 8192;
-      if (camera.type === "OrthographicCamera") {
-        aspect = width / height / 1.2;
-      }
+      aspect = 1 / 1.1; // Zoom n a bit for the square thumbs. 22.11.24.20.11
     } else {
       const size = new THREE.Vector2();
       renderer.getSize(size);
@@ -1082,6 +1067,7 @@ export function handleEvent(event) {
     const newTarget = new THREE.WebGLRenderTarget(width, height, {
       encoding: THREE.sRGBEncoding,
     }); // If I'm not *really* using this then it's probably inefficiently creating a texture on each resize.
+
     renderer.setViewport(0, 0, width, height);
     renderer.setSize(width, height);
     renderer.setRenderTarget(newTarget);
@@ -1091,29 +1077,21 @@ export function handleEvent(event) {
 
     if (camera.type === "PerspectiveCamera") {
       // Perspective
-      FOG_NEAR = 0.5;
-      FOG_FAR = 2.0;
-      if (!NO_FOG)
-        scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
-      const fov = 80;
-      const near = 0.001;
-      const far = 1000;
-      cam = new THREE.PerspectiveCamera(fov, aspect, near, far);
+      cam = camera;
     } else {
       // Orthographic
-      FOG_NEAR = 0.9;
-      FOG_FAR = 1.19;
-      if (!NO_FOG)
-        scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
-      const frustumSize = 1;
-      cam = new THREE.OrthographicCamera(
-        (frustumSize * aspect) / -2,
-        (frustumSize * aspect) / 2,
-        frustumSize / 2,
-        frustumSize / -2,
-        0,
-        20
-      );
+      if (event.content.squareThumbnail) {
+        cam = new THREE.OrthographicCamera(
+          aspect / -2,
+          aspect / 2,
+          aspect / 2,
+          aspect / -2,
+          0,
+          20
+        );
+      } else {
+        cam = camera;
+      }
     }
 
     cam.scale.set(1, 1, 1);
