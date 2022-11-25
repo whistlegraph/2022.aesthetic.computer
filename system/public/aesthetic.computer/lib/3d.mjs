@@ -210,11 +210,13 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     lastPerspectiveCam = cam;
 
     if (camera?.type === "OrthographicCamera") {
-      camera = new THREE.OrthographicCamera(
-        aspect / -2,
-        aspect / 2,
-        aspect / 2,
-        aspect / -2,
+      aspect = width / height;
+      const frustumSize = 1;
+      cam = new THREE.OrthographicCamera(
+        (frustumSize * aspect) / -2,
+        (frustumSize * aspect) / 2,
+        frustumSize / 2,
+        frustumSize / -2,
         0,
         20
       );
@@ -223,17 +225,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     }
 
     if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
-    //const oD = 800; // orthoDistance
-    /*
-    orthoCamera = new THREE.OrthographicCamera(
-      width / -oD,
-      width / oD,
-      height / oD,
-      height / -oD,
-      0.05,
-      5
-    );
-    */
   }
 
   // 🎥 Camera
@@ -1028,7 +1019,7 @@ export function handleEvent(event) {
   if (event.type === "camera:orthographic") {
     const size = new THREE.Vector2();
     renderer.getSize(size);
-    const aspect = size.width / size.height;
+    let aspect = size.width / size.height;
 
     if (camera.type === "PerspectiveCamera") {
       // Orthographic
@@ -1036,11 +1027,15 @@ export function handleEvent(event) {
       FOG_FAR = 1.19;
       if (!NO_FOG)
         scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
+      aspect = size.width / size.height;
+      renderer.setViewport(0, 0, size.width, size.height);
+      renderer.setSize(size.width, size.height);
+      const frustumSize = 1;
       camera = new THREE.OrthographicCamera(
-        aspect / -2,
-        aspect / 2,
-        aspect / 2,
-        aspect / -2,
+        (frustumSize * aspect) / -2,
+        (frustumSize * aspect) / 2,
+        frustumSize / 2,
+        frustumSize / -2,
         0,
         20
       );
@@ -1074,7 +1069,7 @@ export function handleEvent(event) {
       width = 8192;
       height = 8192;
       if (camera.type === "OrthographicCamera") {
-        aspect = (width / height) / 1.2;
+        aspect = width / height / 1.2;
       }
     } else {
       const size = new THREE.Vector2();
@@ -1110,11 +1105,12 @@ export function handleEvent(event) {
       FOG_FAR = 1.19;
       if (!NO_FOG)
         scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
+      const frustumSize = 1;
       cam = new THREE.OrthographicCamera(
-        aspect / -2,
-        aspect / 2,
-        aspect / 2,
-        aspect / -2,
+        (frustumSize * aspect) / -2,
+        (frustumSize * aspect) / 2,
+        frustumSize / 2,
+        frustumSize / -2,
         0,
         20
       );
