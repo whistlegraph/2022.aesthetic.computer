@@ -26,11 +26,11 @@ import { GLTFExporter } from "../dep/three/GLTFExporter.js";
 import { OBJExporter } from "../dep/three/OBJExporter.js";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
 const debug = window.acDEBUG;
-const { abs } = Math;
+const { abs, floor } = Math;
 
 const NO_FOG = false;
-const FOG_NEAR = 0.5;
-const FOG_FAR = 2.0;
+let FOG_NEAR = 0.5;
+let FOG_FAR = 2.0;
 
 let scene,
   renderer,
@@ -70,7 +70,7 @@ export function initialize(
 
   renderer.debug.checkShaderErrors = false;
 
-  renderer.sortObjects = false;
+  renderer.sortObjects = true;
   renderer.xr.enabled = true;
   renderer.xr.setFramebufferScaleFactor(1);
   renderer.xr.setFoveation(0);
@@ -79,10 +79,9 @@ export function initialize(
   renderer.domElement.dataset.type = "3d";
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000000);
-  if (!NO_FOG) scene.fog = new THREE.Fog(0x000000, FOG_NEAR, FOG_FAR); // More basic fog.
-  //scene.fog = new THREE.FogExp2(0x000000, FOG);
-  //scene.fog = new THREE.FogExp2(0x030303, 0.5);
+  scene.background = new THREE.Color(0x000000, THREE.SRGBColorSpace);
+  if (!NO_FOG)
+    scene.fog = new THREE.Fog(new THREE.Color(0, 0, 0), FOG_NEAR, FOG_FAR); // More basic fog.
 
   scene.add(new THREE.HemisphereLight(0xff9900, 0xff0000));
   //   const ambientLight = new THREE.AmbientLight();
@@ -190,21 +189,51 @@ export function initialize(
   status.alive = true;
 }
 
+let lastPerspectiveCam = {};
+
 export function bake({ cam, forms, color }, { width, height }, size) {
   // Only instantiate some things once.
   if (!target || target.width !== width || target.height !== height) {
-    target = new THREE.WebGLRenderTarget(width, height);
+    target = new THREE.WebGLRenderTarget(width, height); // If I'm not *really* using this then it's probably inefficiently creating a texture on each resize.
+    renderer.setViewport(0, 0, size.width, size.height);
     renderer.setSize(size.width, size.height);
     //renderer.setPixelRatio(1 / 2.2);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputEncoding = THREE.sRGBEncoding;
     // renderer.setRenderTarget(target); // For rendering offsceen.
-    // pixels = new Uint8Array(width * height * 4);
+    // pixels = new Uint8ClampedArray(width * height * 4);
     const fov = cam.fov;
     const aspect = width / height;
     const near = cam.near;
     const far = cam.far;
-    camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+    lastPerspectiveCam = cam;
+
+    if (camera?.type === "OrthographicCamera") {
+      camera = new THREE.OrthographicCamera(
+        aspect / -2,
+        aspect / 2,
+        aspect / 2,
+        aspect / -2,
+        0,
+        20
+      );
+    } else {
+      camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    }
+
+    if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
+    //const oD = 800; // orthoDistance
+    /*
+    orthoCamera = new THREE.OrthographicCamera(
+      width / -oD,
+      width / oD,
+      height / oD,
+      height / -oD,
+      0.05,
+      5
+    );
+    */
   }
 
   // 🎥 Camera
@@ -346,6 +375,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       material.vertexColors = true;
       material.vertexAlphas = false;
+      //material.shading = THREE.SmoothShading;
 
       let points = [];
       let pointColors = [];
@@ -369,10 +399,25 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       for (let i = 0; i < pointColors.length; i += 1) {
         const colStart = i * 4;
-        colorsArr[colStart] = pointColors[i].x / 255;
-        colorsArr[colStart + 1] = pointColors[i].y / 255;
-        colorsArr[colStart + 2] = pointColors[i].z / 255;
-        colorsArr[colStart + 3] = pointColors[i].w / 255;
+        const color = new THREE.Color(
+          pointColors[i].x / 255,
+          pointColors[i].y / 255,
+          pointColors[i].z / 255
+        );
+
+        // colorsArr[colStart] = Math.random();//color.r;// / 255;
+        // colorsArr[colStart + 1] = Math.random();//color.g;// / 255;
+        // colorsArr[colStart + 2] = 0;//color.b;// / 255;
+
+        colorsArr[colStart] = color.r; // / 255;
+        colorsArr[colStart + 1] = color.g; // / 255;
+        colorsArr[colStart + 2] = color.b; // / 255;
+        colorsArr[colStart + 3] = pointColors[i].w / 255; // / 255;
+
+        // colorsArr[colStart] = pointColors[i].x / 255;
+        // colorsArr[colStart + 1] = pointColors[i].y / 255;
+        // colorsArr[colStart + 2] = pointColors[i].z / 255;
+        // colorsArr[colStart + 3] = pointColors[i].w / 255;
       }
 
       const positions = new THREE.BufferAttribute(positionsArr, 3);
@@ -666,7 +711,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       const fu = f;
       const form = scene.getObjectByUserDataProperty("aestheticID", fu.uid);
       if (!form) return;
-      form.material.color = new THREE.Color(...[...fu.color]);
+      form.material.color = new THREE.Color(
+        ...[...fu.color.slice(1, 3)]
+        //THREE.SRGBColorSpace
+      );
     }
 
     if (f.update === "form:transform") {
@@ -756,15 +804,24 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
         for (let i = 0; i < pointColors.length; i += 1) {
           const colStart = (form.userData.ac_lastLength + i) * 4;
-          colors[colStart] = pointColors[i].x / 255;
-          colors[colStart + 1] = pointColors[i].y / 255;
-          colors[colStart + 2] = pointColors[i].z / 255;
-          colors[colStart + 3] = pointColors[i].w / 255;
+
+          const color = new THREE.Color(
+            pointColors[i].x / 255,
+            pointColors[i].y / 255,
+            pointColors[i].z / 255
+          );
+
+          colors[colStart] = 0; //color.r;// / 255;
+          colors[colStart + 1] = 0; //color.g;// / 255;
+          colors[colStart + 2] = 0; //color.b;// / 255;
+          colors[colStart + 3] = pointColors[i].w / 255; // / 255;
         }
 
         form.geometry.setDrawRange(0, form.userData.ac_length);
         form.geometry.attributes.position.needsUpdate = true;
         form.geometry.attributes.color.needsUpdate = true;
+
+        // form.geometry.computeVertexNormals(true);
 
         //form.geometry.computeBoundingBox();
         //form.geometry.computeBoundingSphere();
@@ -808,9 +865,13 @@ export function checkForRemovedForms(formsBaked) {
 }
 
 // Receives events from aesthetic.computer.
+// Exporting data / changing background colors, etc. Anything other than
+// direct rendering which is what "Bake" is used for.
 export function handleEvent(event) {
   if (event.type === "background-change" && scene) {
-    scene.background = new THREE.Color(...event.content.map((ch) => ch / 255));
+    scene.background = new THREE.Color(
+      ...event.content.slice(0, 3).map((ch) => ch / 255)
+    );
     if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
     return;
   }
@@ -820,7 +881,7 @@ export function handleEvent(event) {
     const exporter = new GLTFExporter();
     const slug = event.content.slug;
     const output = event.content.output;
-    const handle = event.content.handle;
+    // const handle = event.content.handle;
     const bucket = event.content.bucket;
     const sculptureHeight = event.content.sculptureHeight || 0;
 
@@ -961,6 +1022,120 @@ export function handleEvent(event) {
     );
 
     removeObjectsWithChildren(sceneToExport);
+    return;
+  }
+
+  if (event.type === "camera:orthographic") {
+    const size = new THREE.Vector2();
+    renderer.getSize(size);
+    const aspect = size.width / size.height;
+
+    if (camera.type === "PerspectiveCamera") {
+      // Orthographic
+      FOG_NEAR = 0.9;
+      FOG_FAR = 1.19;
+      if (!NO_FOG)
+        scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
+      camera = new THREE.OrthographicCamera(
+        aspect / -2,
+        aspect / 2,
+        aspect / 2,
+        aspect / -2,
+        0,
+        20
+      );
+    } else {
+      FOG_NEAR = 0.5;
+      FOG_FAR = 2.0;
+      const { fov, near, far } = lastPerspectiveCam;
+      camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    }
+
+    return;
+  }
+
+  if (event.type === "screenshot") {
+    // Download to disk.
+    const pos = event.content.camera.position;
+    const rot = event.content.camera.rotation;
+    let scale = 4;
+    let flipY = false;
+    let width, height;
+    let pixels;
+    let cam;
+    let aspect;
+
+    flipY = true;
+    scale = 1;
+
+    if (event.content.squareThumbnail) {
+      width = 8192;
+      height = 8192;
+      if (camera.type === "OrthographicCamera") {
+        aspect = (width / height) / 1.2;
+      }
+    } else {
+      const size = new THREE.Vector2();
+      renderer.getSize(size);
+      width = floor(size.width);
+      height = floor(size.height);
+      aspect = width / height;
+    }
+
+    const newTarget = new THREE.WebGLRenderTarget(width, height, {
+      encoding: THREE.sRGBEncoding,
+    }); // If I'm not *really* using this then it's probably inefficiently creating a texture on each resize.
+    renderer.setViewport(0, 0, width, height);
+    renderer.setSize(width, height);
+    renderer.setRenderTarget(newTarget);
+    pixels = new Uint8ClampedArray(width * height * 4);
+    const cachedBackground = scene.background.clone();
+    scene.background = scene.background.convertSRGBToLinear();
+
+    if (camera.type === "PerspectiveCamera") {
+      // Perspective
+      if (!NO_FOG)
+        scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
+      const fov = 80;
+      const near = 0.001;
+      const far = 1000;
+      cam = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    } else {
+      // Orthographic
+      FOG_NEAR = 0.9;
+      FOG_FAR = 1.19;
+      if (!NO_FOG)
+        scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
+      cam = new THREE.OrthographicCamera(
+        aspect / -2,
+        aspect / 2,
+        aspect / 2,
+        aspect / -2,
+        0,
+        20
+      );
+    }
+
+    cam.scale.set(1, 1, 1);
+    cam.position.set(pos[0], -pos[1], pos[2]);
+    cam.rotation.order = "YXZ"; // Set to match the software renderer.
+    cam.rotation.set(radians(rot[0]), radians(rot[1]), 0);
+
+    renderer.render(scene, cam);
+    renderer.readRenderTargetPixels(newTarget, 0, 0, width, height, pixels);
+    renderer.setRenderTarget(null);
+    newTarget.dispose();
+    scene.background = cachedBackground;
+    target = null;
+
+    if (event.content.output === "local") {
+      download({
+        filename: `${event.content.slug}.png`,
+        data: pixels ? { width, height, pixels } : renderer.domElement,
+        //data: renderer.domElement,//{ width, height, pixels },
+        modifiers: { scale, flipY },
+      });
+    }
     return;
   }
 
@@ -1197,7 +1372,7 @@ export function render(now) {
   //console.log(scene, now)
   // TODO: If keeping the renderer alive between pieces, then make sure to
   //       top rendering! 22.10.14.13.05
-  if (scene && camera) {
+  if (scene && camera && renderer.getRenderTarget() === null) {
     // CTO Rapter's line jiggling request:
 
     /*

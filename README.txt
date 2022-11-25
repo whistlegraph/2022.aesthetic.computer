@@ -66,6 +66,10 @@ Welcome to...
 - [] vec3.dist from glMatrix yields innacurate numbers. Factor it out of the project. 
 - [] The quaternions also don't seem to work?
 
+*** Painting ***
+ - [] Add a 'mask' command to crop an existing painting to a certain border or
+      aspect ratio?
+
 *** Furthering VR Support ***
 - [] Add grip of controller in addition to hand support.
   - [] Grip: https://threejs.org/docs/#api/en/renderers/webxr/WebXRManager.getControllerGrip

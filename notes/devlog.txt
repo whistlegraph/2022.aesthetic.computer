@@ -27,6 +27,7 @@ Practical and conceptual notes weaved together.
   browser editor?
 
 🧑‍💻 Text Editor / Shell Notes
+- [] Install / try the new embedded neovim extension for VSCode.
 - [] https://github.com/ggandor/leap.nvim
 - [] Start a blog or journal of some kind - that is sourced from
      this repository?

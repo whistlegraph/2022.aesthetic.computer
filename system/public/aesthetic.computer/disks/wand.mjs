@@ -4,19 +4,19 @@
 // v2: (Wand) Now will be used as the official wand program.
 // v1: (Cadwand) A laboratory & development piece for designing the geometry in `wand`.
 
-// 🐕‍🦺 Docs
-// Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
+/* #region 🐕‍🦺 docs
+  Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
+*/
 
 /* #region 🏁 todo
-- [🥗] Pick final URL structure for FF.
+
++ Later / Post-production.
 - [] Re-enable Twitter player? Check `index` and `bios` "twitter";
   - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
-- [] Add screenshot button that works via WebGL for FF stills.
-    - Orthographic camera?
 - [] Parse thumbnail parameters better / make it way faster?
   - [] Is there a nice SAAS for this?
 - [] Ultimate Fatality: Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
-+ Later / Post-production.
+- [] Auto jump from piece to piece.
 - [] Metadata on preview links.
 - [] Add ambient fog. 
 - [] Master the main materials and lights in the scene.
@@ -58,6 +58,9 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+- [x] Add screenshot button that works via WebGL for FF stills.
+   - [x] Orthographic camera?
+- [x] Pick final URL structure for FF.
 - [x] Get demos working.
 - [x] Send spec for Jens
 - [x] Send examples of drawings and file formats for barry.
@@ -89,6 +92,9 @@ let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
 let cubeHeight = 1.45; // head of jeffrey
+const camStartPos = [0, -cubeHeight, 0.9]; // A starting position for the camera,
+//                                            used also for `direct` screenshot
+//                                            taking.
 //let cubeHeight = 0.7; // floor of jeffrey
 // let cubeHeight = 1.5; // head of jeffrey
 let originOn = true;
@@ -197,7 +203,7 @@ function boot({
       { fg: barely([0, 255, 0, 255]) }, // Barely-green on barely dim green.
       { fg: barely([0, 0, 255, 255]) }, // Barely-blue on barely dim blue.
       // {
-        // fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
+      // fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
       // }, // Not-quite-white on barely-grey.
       //{ fg: barely([0, 255, 255, 255]) }, // Barely-cyan on barely dim cyan.
       //{ fg: barely([255, 0, 255, 255]) }, // Barely-magenta on barely dim magenta.
@@ -699,7 +705,9 @@ function sim({
             );
             let dot = vec3.dot(spiToRace, spi.state.direction);
             let divisor = max(3, round(sides / 2));
-            if (abs(dot) > 0.55) { divisor = 1; }
+            if (abs(dot) > 0.55) {
+              divisor = 1;
+            }
             let tightness = 1 / divisor;
             const increments = step / divisor;
 
@@ -1077,7 +1085,7 @@ function act({
     }
   }
 
-  // Toggle cube and origin measurement lines.
+  // 🧊 Toggle cube and origin measurement lines.
   if (e.is("keyboard:down:t") || e.is("3d:rhand-button-a-down")) {
     pong = true;
     measuringCubeOn = !measuringCubeOn;
@@ -1086,6 +1094,30 @@ function act({
       measuringCube.resetUID();
       origin.resetUID();
     }
+  }
+
+  // Take a screenshot / save a still.
+
+  if (e.alt && e.is("keyboard:down:o")) {
+    gpu.message({
+      type: "camera:orthographic",
+    });
+  }
+
+  if (e.is("keyboard:down:i")) {
+    const ts = params[0] || timestamp();
+    const handle = "digitpain"; // Hardcoded for now.
+    const screenshotSlug = `${ts}-screenshot-${handle}`;
+    gpu.message({
+      type: "screenshot",
+      content: {
+        slug: screenshotSlug,
+        output: "local",
+        //camera: { position: [0, -cubeHeight, camStartPos[2]] },
+        camera: { position: camdoll.cam.position, rotation: camdoll.cam.rotation },
+        squareThumbnail: e.alt
+      },
+    });
   }
 
   // Left hand controller.
@@ -2968,11 +3000,10 @@ class Spider {
     // Get the direction between this position and the target position, then
 
     // Original direction.
-    this.direction = vec4.normalize(vec4.create(), vec4.transformQuat(
+    this.direction = vec4.normalize(
       vec4.create(),
-      [0, 0, 1, 1],
-      slerpedRot
-    ));
+      vec4.transformQuat(vec4.create(), [0, 0, 1, 1], slerpedRot)
+    );
 
     const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
     const pos = vec3.add(vec3.create(), this.position, scaledDir);

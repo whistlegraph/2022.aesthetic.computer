@@ -61,9 +61,7 @@ const nopaint = {
     store,
   }) {
     if (e.is("keyboard:down:enter")) {
-      download(`painting-${num.timestamp()}.png`, sys.painting);
-      // TODO: Should be able to save a `.png` here...
-      // TODO: Crop images when saving.
+      download(`painting-${num.timestamp()}.png`, sys.painting, { scale: 4});
     }
 
     if (e.is("reframed")) {
@@ -1656,8 +1654,8 @@ async function makeFrame({ data: { type, content } }) {
 
       // 💾 Uploading + Downloading
       // Add download event to trigger a file download from the main thread.
-      $api.download = (filename, data) =>
-        send({ type: "download", content: { filename, data } });
+      $api.download = (filename, data, modifiers) =>
+        send({ type: "download", content: { filename, data, modifiers } });
 
       // Add upload event to allow the main thread to open a file chooser.
       // type: Accepts N mimetypes or file extensions as comma separated string.

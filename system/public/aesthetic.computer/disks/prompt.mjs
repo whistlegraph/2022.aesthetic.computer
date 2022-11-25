@@ -195,7 +195,7 @@ async function act({
         // 🍎 In-prompt commands...
         if (input === "dl" || input === "download") {
           if (store["painting"]) {
-            download(`painting-${num.timestamp()}.png`, store["painting"]);
+            download(`painting-${num.timestamp()}.png`, store["painting"], { scale: 4});
             // Show a green flash if we succesfully download the file.
             flashColor = [0, 255, 0];
           } else {
