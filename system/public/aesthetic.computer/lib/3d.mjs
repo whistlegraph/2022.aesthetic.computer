@@ -1047,6 +1047,8 @@ export function handleEvent(event) {
     } else {
       FOG_NEAR = 0.5;
       FOG_FAR = 2.0;
+      if (!NO_FOG)
+        scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
       const { fov, near, far } = lastPerspectiveCam;
       camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     }
@@ -1094,6 +1096,8 @@ export function handleEvent(event) {
 
     if (camera.type === "PerspectiveCamera") {
       // Perspective
+      FOG_NEAR = 0.5;
+      FOG_FAR = 2.0;
       if (!NO_FOG)
         scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
       const fov = 80;
