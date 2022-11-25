@@ -79,7 +79,8 @@ export function initialize(
   renderer.domElement.dataset.type = "3d";
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000000, THREE.SRGBColorSpace);
+  scene.background = new THREE.Color(0x000000, THREE.LinearSRGBColorSpace);
+
   if (!NO_FOG)
     scene.fog = new THREE.Fog(new THREE.Color(0, 0, 0), FOG_NEAR, FOG_FAR); // More basic fog.
 
@@ -200,6 +201,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     //renderer.setPixelRatio(1 / 2.2);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputEncoding = THREE.sRGBEncoding;
+    //renderer.gammaFactor = 1.2;
     // renderer.setRenderTarget(target); // For rendering offsceen.
     // pixels = new Uint8ClampedArray(width * height * 4);
     const fov = cam.fov;
@@ -209,8 +211,18 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
     lastPerspectiveCam = cam;
 
-    if (!camera) {
+    if (!camera || camera.type === "PerspectiveCamera") {
       camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    } else if (camera?.type === "OrthographicCamera") {
+      const frustumSize = 1;
+      camera = new THREE.OrthographicCamera(
+        (frustumSize * aspect) / -2,
+        (frustumSize * aspect) / 2,
+        frustumSize / 2,
+        frustumSize / -2,
+        0,
+        20
+      );
     }
 
     if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
@@ -278,10 +290,19 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       for (let i = 0; i < pointColors.length; i += 1) {
         const colStart = i * 4;
-        colors[colStart] = pointColors[i].x / 255;
-        colors[colStart + 1] = pointColors[i].y / 255;
-        colors[colStart + 2] = pointColors[i].z / 255;
-        colors[colStart + 3] = pointColors[i].w / 255;
+
+        const color = new THREE.Color(
+          pointColors[i].x / 255,
+          pointColors[i].y / 255,
+          pointColors[i].z / 255
+        );
+
+        if (f.gpuConvertColors) color = color.convertSRGBToLinear();
+
+        colors[colStart] = color.r; // / 255;
+        colors[colStart + 1] = color.g; // / 255;
+        colors[colStart + 2] = color.b; // / 255;
+        colors[colStart + 3] = pointColors[i].w / 255; // / 255;
       }
 
       geometry.setAttribute(
@@ -379,25 +400,16 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       for (let i = 0; i < pointColors.length; i += 1) {
         const colStart = i * 4;
-        const color = new THREE.Color(
+        let color = new THREE.Color(
           pointColors[i].x / 255,
           pointColors[i].y / 255,
           pointColors[i].z / 255
         );
-
-        // colorsArr[colStart] = Math.random();//color.r;// / 255;
-        // colorsArr[colStart + 1] = Math.random();//color.g;// / 255;
-        // colorsArr[colStart + 2] = 0;//color.b;// / 255;
-
+        if (f.gpuConvertColors) color = color.convertSRGBToLinear();
         colorsArr[colStart] = color.r; // / 255;
         colorsArr[colStart + 1] = color.g; // / 255;
         colorsArr[colStart + 2] = color.b; // / 255;
         colorsArr[colStart + 3] = pointColors[i].w / 255; // / 255;
-
-        // colorsArr[colStart] = pointColors[i].x / 255;
-        // colorsArr[colStart + 1] = pointColors[i].y / 255;
-        // colorsArr[colStart + 2] = pointColors[i].z / 255;
-        // colorsArr[colStart + 3] = pointColors[i].w / 255;
       }
 
       const positions = new THREE.BufferAttribute(positionsArr, 3);
@@ -423,6 +435,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
+      tri.userData.ac_convertColors = f.gpuConvertColors;
       tri.userData.ac_length = points.length;
       tri.userData.ac_lastLength = tri.userData.ac_length;
       tri.userData.ac_MAX_POINTS = f.MAX_POINTS;
@@ -545,10 +558,19 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       for (let i = 0; i < pointColors.length; i += 1) {
         const colStart = i * 4;
-        colors[colStart] = pointColors[i].x / 255;
-        colors[colStart + 1] = pointColors[i].y / 255;
-        colors[colStart + 2] = pointColors[i].z / 255;
-        colors[colStart + 3] = pointColors[i].w / 255;
+
+        let color = new THREE.Color(
+          pointColors[i].x / 255,
+          pointColors[i].y / 255,
+          pointColors[i].z / 255
+        );
+
+        if (f.gpuConvertColors) color = color.convertSRGBToLinear();
+
+        colors[colStart] = color.r; // / 255;
+        colors[colStart + 1] = color.g; // / 255;
+        colors[colStart + 2] = color.b; // / 255;
+        colors[colStart + 3] = pointColors[i].w / 255; // / 255;
       }
 
       geometry.setAttribute(
@@ -623,10 +645,16 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       for (let i = 0; i < pointColors.length; i += 1) {
         const colStart = i * 4;
-        colors[colStart] = pointColors[i].x / 255;
-        colors[colStart + 1] = pointColors[i].y / 255;
-        colors[colStart + 2] = pointColors[i].z / 255;
-        colors[colStart + 3] = pointColors[i].w / 255;
+        let color = new THREE.Color(
+          pointColors[i].x / 255,
+          pointColors[i].y / 255,
+          pointColors[i].z / 255
+        );
+        if (f.gpuConvertColors) color = color.convertSRGBToLinear();
+        colors[colStart] = color.r; // / 255;
+        colors[colStart + 1] = color.g; // / 255;
+        colors[colStart + 2] = color.b; // / 255;
+        colors[colStart + 3] = pointColors[i].w / 255; // / 255;
       }
 
       geometry.setAttribute(
@@ -649,6 +677,7 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       // Custom properties added from the aesthetic.computer runtime.
       // TODO: Bunch all these together on both sides of the worker. 22.10.30.16.32
+      lineb.userData.ac_convertColors = f.gpuConvertColors;
       lineb.userData.ac_length = points.length;
       lineb.userData.ac_lastLength = lineb.userData.ac_length;
       lineb.userData.ac_MAX_POINTS = f.MAX_POINTS;
@@ -784,16 +813,16 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
         for (let i = 0; i < pointColors.length; i += 1) {
           const colStart = (form.userData.ac_lastLength + i) * 4;
-
-          const color = new THREE.Color(
+          let color = new THREE.Color(
             pointColors[i].x / 255,
             pointColors[i].y / 255,
             pointColors[i].z / 255
           );
-
-          colors[colStart] = 0; //color.r;// / 255;
-          colors[colStart + 1] = 0; //color.g;// / 255;
-          colors[colStart + 2] = 0; //color.b;// / 255;
+          if (form.userData.ac_convertColors)
+            color = color.convertSRGBToLinear();
+          colors[colStart] = color.r;
+          colors[colStart + 1] = color.g;
+          colors[colStart + 2] = color.b;
           colors[colStart + 3] = pointColors[i].w / 255; // / 255;
         }
 
@@ -801,13 +830,13 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         form.geometry.attributes.position.needsUpdate = true;
         form.geometry.attributes.color.needsUpdate = true;
 
-        // form.geometry.computeVertexNormals(true);
+        //form.geometry.computeVertexNormals(true);
 
         //form.geometry.computeBoundingBox();
         //form.geometry.computeBoundingSphere();
 
-        // form.geometry.computeBoundingBox();
-        // form.geometry.computeBoundingSphere();
+        //form.geometry.computeBoundingBox();
+        //form.geometry.computeBoundingSphere();
 
         //form.geometry.setPositions(positions);
         //form.geometry.setColors(colors);
@@ -851,7 +880,7 @@ export function handleEvent(event) {
   if (event.type === "background-change" && scene) {
     scene.background = new THREE.Color(
       ...event.content.slice(0, 3).map((ch) => ch / 255)
-    );
+    ).convertSRGBToLinear();
     if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
     return;
   }
@@ -891,11 +920,11 @@ export function handleEvent(event) {
 
       // Convert to linear color space.
       for (let i = 0; i < colors.length; i += 4) {
-        const color = new THREE.Color(
+        let color = new THREE.Color(
           pointColors[i],
           pointColors[i + 1],
           pointColors[i + 2]
-        ).convertSRGBToLinear();
+        );
 
         colors[i] = color.r;
         colors[i + 1] = color.g;
@@ -910,7 +939,6 @@ export function handleEvent(event) {
       sculptureLine.geometry.attributes.color.needsUpdate = true;
 
       sceneToExport.add(sculptureLine);
-      // sculptureLine.translateY(-sculptureHeight); // Head / preview box height.
     }
 
     if (sculpture) {
@@ -930,11 +958,11 @@ export function handleEvent(event) {
 
       // Convert to linear color space.
       for (let i = 0; i < colors.length; i += 4) {
-        const color = new THREE.Color(
+        let color = new THREE.Color(
           pointColors[i],
           pointColors[i + 1],
           pointColors[i + 2]
-        ).convertSRGBToLinear();
+        );
 
         colors[i] = color.r;
         colors[i + 1] = color.g;
@@ -948,7 +976,6 @@ export function handleEvent(event) {
       sculpture.geometry.attributes.color.needsUpdate = true;
 
       sceneToExport.add(sculpture);
-      // sculpture.translateY(-sculptureHeight); // Head / preview box height.
     }
 
     // Instantiate an OBJ exporter
@@ -1011,6 +1038,7 @@ export function handleEvent(event) {
     let aspect = size.width / size.height;
 
     if (camera.type === "PerspectiveCamera") {
+      // Switch to...
       // Orthographic
       FOG_NEAR = 0.9;
       FOG_FAR = 1.19;
@@ -1027,6 +1055,8 @@ export function handleEvent(event) {
         20
       );
     } else {
+      // Switch to...
+      // Perspective
       FOG_NEAR = 0.5;
       FOG_FAR = 2.0;
       if (!NO_FOG)
@@ -1066,6 +1096,7 @@ export function handleEvent(event) {
 
     const newTarget = new THREE.WebGLRenderTarget(width, height, {
       encoding: THREE.sRGBEncoding,
+      samples: 8,
     }); // If I'm not *really* using this then it's probably inefficiently creating a texture on each resize.
 
     renderer.setViewport(0, 0, width, height);
@@ -1073,7 +1104,7 @@ export function handleEvent(event) {
     renderer.setRenderTarget(newTarget);
     pixels = new Uint8ClampedArray(width * height * 4);
     const cachedBackground = scene.background.clone();
-    scene.background = scene.background.convertSRGBToLinear();
+    //scene.background = scene.background.convertSRGBToLinear();
 
     if (camera.type === "PerspectiveCamera") {
       // Perspective

@@ -1238,11 +1238,13 @@ class Form {
   // TODO: Should this use a parameter called shader?
   texture; // = makeBuffer(32, 32);
   color;
+  colorModifier;
 
   // GPU Specific Params & Buffers
   gpuVerticesSent = 0;
   gpuReset = false; // Assumes this object is being recreated on the GPU.
   gpuKeep = true;
+  gpuConvertColors = true;
   gpuTransformed = false;
   gpuRecolored = false;
   MAX_POINTS = 100000; // Some buffered geometry gpu calls may use this hint.
@@ -1382,7 +1384,7 @@ class Form {
     if (pointsAvailable < incomingLength) {
       end = pointsAvailable;
       maxedOut = true;
-      if (debug) console.warn("Max. cutoff in GPU form!", this);
+      if (debug) console.warn("Max. cutoff in GPU form!", this, incomingLength, pointsAvailable);
     }
 
     // Create new vertices from incoming positions.
@@ -1404,11 +1406,16 @@ class Form {
 
       this.uvs.push(...texCoord); // For sending to the GPU.
 
+      // Optionally put color through a special function here.
+      if (attributes.colors?.[i] && typeof this.colorModifier === "function") {
+        attributes.colors[i] = this.colorModifier(attributes.colors[i]);
+      }
+
       this.vertices.push(
         // For sending to the CPU.
         new Vertex(
           attributes.positions[i],
-          attributes?.colors?.[i],
+          attributes.colors?.[i],
           // this.#gradientColors[i % 3],
           texCoord //this.#texCoords[i % 3] // Replace to enable bespoke texture coordinates.
         )

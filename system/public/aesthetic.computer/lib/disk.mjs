@@ -128,7 +128,8 @@ function darkMode(enabled = !$commonApi.dark) {
 // The `local` method encodes everything as a JSON string.
 
 // Note: It strangely also contains an API which could be redefined
-//       unintentionally. 22.10.15.01.57 (The methods should be refactored.)
+//       unintentionally. 22.10.15.01.57
+// 22.11.25.11.07: The methods should be refactored out of the storage object / not share keys.
 const store = {
   persist: function (key, method = "local") {
     // Send data over the thread through a key in this object.
@@ -1621,6 +1622,12 @@ async function makeFrame({ data: { type, content } }) {
       // 🕶️ VR Pen
       $commonApi.pen3d = content.pen3d?.pen;
 
+      // 💾 Uploading + Downloading
+      // Add download event to trigger a file download from the main thread.
+      $api.download = (filename, data, modifiers) =>
+        send({ type: "download", content: { filename, data, modifiers } });
+
+
       // TODO: A booted check could be higher up the chain here?
       // Or this could just move. 22.10.11.01.31
       if (loading === false && booted) {
@@ -1651,11 +1658,6 @@ async function makeFrame({ data: { type, content } }) {
       $api.signal = (content) => {
         send({ type: "signal", content });
       };
-
-      // 💾 Uploading + Downloading
-      // Add download event to trigger a file download from the main thread.
-      $api.download = (filename, data, modifiers) =>
-        send({ type: "download", content: { filename, data, modifiers } });
 
       // Add upload event to allow the main thread to open a file chooser.
       // type: Accepts N mimetypes or file extensions as comma separated string.

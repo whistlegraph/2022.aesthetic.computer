@@ -67,7 +67,7 @@ export class CamDoll {
     if (e.is("keyboard:up:d")) this.#D = false;
 
     if (e.is("keyboard:down:space")) this.#SPACE = true;
-    if (e.is("keyboard:down:shift")) this.#SHIFT = true;
+    if (e.ctrl === false && e.is("keyboard:down:shift")) this.#SHIFT = true;
     if (e.is("keyboard:up:space")) this.#SPACE = false;
     if (e.is("keyboard:up:shift")) this.#SHIFT = false;
 

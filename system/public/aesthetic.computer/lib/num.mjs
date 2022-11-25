@@ -164,28 +164,28 @@ export function isHexString(h) {
 
 // Lerp two RGBA arrays, skipping alpha and rounding the output.
 // (Assumes 0-255)
-export function shiftRGB(a, b, step, mode = "lerp") {
+export function shiftRGB(a, b, step, mode = "lerp", range = 255) {
+  const low = range === 255 ? [1, 10] : [0.01, 0.05];
+  const high = range === 255 ? [245, 250] : [0.92, 0.95];
   if (mode === "add" || mode == "subtract") {
     if (mode === "subtract") step *= -1;
-    return [
-      round(
-        clamp(a[0] + a[0] * step, randIntRange(1, 10), randIntRange(245, 250))
-      ),
-      round(
-        clamp(a[1] + a[1] * step, randIntRange(1, 10), randIntRange(245, 250))
-      ),
-      round(
-        clamp(a[2] + a[2] * step, randIntRange(1, 10), randIntRange(245, 250))
-      ),
-      255,
+    const shifted = [
+      clamp(a[0] + a[0] * step, randIntRange(...low), randIntRange(...high)),
+      clamp(a[1] + a[1] * step, randIntRange(...low), randIntRange(...high)),
+      clamp(a[2] + a[2] * step, randIntRange(...low), randIntRange(...high)),
+      range,
     ];
+    if (range === 255) return shifted.map((v) => round(v));
+    else return shifted;
   } else {
-    return [
-      round(lerp(a[0], b[0], step)),
-      round(lerp(a[1], b[1], step)),
-      round(lerp(a[2], b[2], step)),
-      255,
+    const shifted = [
+      lerp(a[0], b[0], step),
+      lerp(a[1], b[1], step),
+      lerp(a[2], b[2], step),
+      range,
     ];
+    if (range === 255) return shifted.map((v) => round(v));
+    else return shifted;
   }
 }
 

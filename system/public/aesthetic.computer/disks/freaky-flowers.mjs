@@ -5,9 +5,9 @@
 // TODO
 /* #region 🏁 todo
 #endregion */
-  // TODO: Also how could I tell "wand" that we came from "freaky flowers" so
-  //       that audio-advancing somehow works... and how does auto-advance work
-  //       with titles, etc.
+// TODO: Also how could I tell "wand" that we came from "freaky flowers" so
+//       that audio-advancing somehow works... and how does auto-advance work
+//       with titles, etc.
 
 // 0-128
 const tokens = [
@@ -143,14 +143,46 @@ const tokens = [
 ];
 
 // 🥾 Boot (Runs once before first paint and sim)
-export function boot({ wipe, params, num: { randInt }, jump }) {
+export function boot({ wipe, params, num: { randInt }, jump, store }) {
   // Perform basic setup here.
   // resize(50, 20); // Add a custom resolution.
   const param1 = parseInt(params[0]);
   const tokenID =
     typeof param1 === "number" ? param1 : randInt(tokens.length - 1);
-  // console.log(tokenID, tokens.length - 1, jump);
-  jump(`wand~${tokens[tokenID]}` + params.slice(1).map((p) => `~` + p).join(""), true, true);
+  store["freaky-flowers"] = { tokenID, tokens }; // Note: Storage could automatically
+  //                                                know the disk. 22.11.25.11.14
+
+  console.log(
+    `%cFreaky Flowers`,
+    `background: rgba(50, 10, 10);
+     color: rgb(255, 255, 25);
+     font-size: 140%;
+     padding: 0 0.25em;
+     border-radius: 0.15em;
+     border-bottom: 0.75px solid rgb(120, 0, 0);
+     border-right: 0.75px solid rgb(120, 0, 0);`
+  );
+
+  console.log(
+    `%cSculpture No. ${tokenID}/${tokens.length - 1}`,
+    `background: rgba(0, 10, 10);
+     color: rgb(150, 150, 150);
+     font-size: 120%;
+     padding: 0 0.25em;
+     border-radius: 0.15em;
+     border-bottom: 0.75px solid rgb(120, 120, 120);
+     border-right: 0.75px solid rgb(120, 120, 120);`
+  );
+
+  jump(
+    `wand~ff${tokenID}-${tokens[tokenID]}` +
+      params
+        .slice(1)
+        .map((p) => `~` + p)
+        .join(""),
+    true,
+    true
+  );
   wipe(); // Note: Could I possibly nab the background color here for loading and
-          //       carry it through to wand?
+  //       carry it through to wand?
 }
