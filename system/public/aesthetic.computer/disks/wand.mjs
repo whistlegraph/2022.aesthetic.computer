@@ -11,13 +11,15 @@
 /* #region 🏁 todo
 
 + Later / Post-production.
+- [️‍🔥] Take PNG screenshots of each work.
+- [] Parse thumbnail parameters better / make it way faster?
+- [] Metadata on preview links.
+
 - [] Re-enable Twitter player? Check `index` and `bios` "twitter";
   - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
-- [] Parse thumbnail parameters better / make it way faster?
   - [] Is there a nice SAAS for this?
 - [] Ultimate Fatality: Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
 - [] Auto jump from piece to piece.
-- [] Metadata on preview links.
 - [] Add ambient fog. 
 - [] Master the main materials and lights in the scene.
   - [] Decide on colors / sets, etc.

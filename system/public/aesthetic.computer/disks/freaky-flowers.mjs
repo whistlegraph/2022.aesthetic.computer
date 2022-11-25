@@ -149,7 +149,7 @@ export function boot({ wipe, params, num: { randInt }, jump }) {
   const param1 = parseInt(params[0]);
   const tokenID =
     typeof param1 === "number" ? param1 : randInt(tokens.length - 1);
-  console.log(tokenID, tokens.length - 1, jump);
+  // console.log(tokenID, tokens.length - 1, jump);
   jump(`wand~${tokens[tokenID]}` + params.slice(1).map((p) => `~` + p).join(""), true, true);
   wipe(); // Note: Could I possibly nab the background color here for loading and
           //       carry it through to wand?
