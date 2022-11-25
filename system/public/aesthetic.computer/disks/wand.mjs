@@ -4,19 +4,27 @@
 // v2: (Wand) Now will be used as the official wand program.
 // v1: (Cadwand) A laboratory & development piece for designing the geometry in `wand`.
 
-// 🐕‍🦺 Docs
-// Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
+/* #region 🐕‍🦺 docs
+  Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
+*/
 
 /* #region 🏁 todo
-- [] Add screenshot button that works via WebGL for FF stills.
-- [] Pick final URL structure for FF.
-- [] Parse thumbnail parameters better / make it way faster?
-  - [] Is there a nice SAAS for this?
+
 + Later / Post-production.
-- [] Metadata on preview links.
+- [️‍🔥] Take Final PNG screenshots of each work.
+
+- [] Auto jump from piece to piece.
 - [] Add ambient fog. 
 - [] Master the main materials and lights in the scene.
   - [] Decide on colors / sets, etc.
+
+- [] Parse thumbnail parameters better / make it way faster?
+- [] Metadata on preview links.
+
+- [] Re-enable Twitter player? Check `index` and `bios` "twitter";
+  - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
+  - [] Is there a nice SAAS for this?
+- [] Ultimate Fatality: Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
   - [] Keep the light and dark idea?
 - [] Organize these after the sculptures are done.
 - [] Show an actual preview while demo'ing?
@@ -39,6 +47,7 @@
        (Bring Tube geometry into Wand)
    - [] Remove strips from the tube as needed.
    - [] Allow
+- [] Make sure demos can't record beyond the alotted geometry MAX. See `Tube` MAX.
 - [] Add transparent triangle rendered vertices to measurement cube. 
 - [] Reload last camera position on refresh.
 - [] Record some GIFs.
@@ -54,6 +63,13 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+- [x] Generate a new GLB and JSON demo for every piece to replace each one,
+     prefixing them with their token ID.
+  - [x] Visit each piece in order, exporting a new (prefixed) demo from each.
+- [x] Produce much more accurate colors everywhere.
+- [x] Add screenshot button that works via WebGL for FF stills.
+   - [x] Orthographic camera?
+- [x] Pick final URL structure for FF.
 - [x] Get demos working.
 - [x] Send spec for Jens
 - [x] Send examples of drawings and file formats for barry.
@@ -85,6 +101,9 @@ let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
 let cubeHeight = 1.45; // head of jeffrey
+const camStartPos = [0, -cubeHeight, 0.9]; // A starting position for the camera,
+//                                            used also for `direct` screenshot
+//                                            taking.
 //let cubeHeight = 0.7; // floor of jeffrey
 // let cubeHeight = 1.5; // head of jeffrey
 let originOn = true;
@@ -116,6 +135,13 @@ let demoWandForm; // A ghost cursor for playback.
 let demoWandFormOptions;
 
 let demo, player; // For recording a session and rewatching it in realtime.
+let lastPlayedFrames; // Keeps track of recently run through Player frames / demo frames.
+// (Useful for re-dumping / modifying demo data.)
+
+let lastWandPosition;
+let lastWandRotation;
+let loadDemo;
+
 let beep, bop; // For making sounds when pieces begin and end.
 let ping, pong; // For making sounds when pieces upload or fail to upload.
 let bap; // For randomPalette. 🌈
@@ -160,11 +186,6 @@ const bucket = "wand";
 
 // #endregion
 
-function addFlash(color) {
-  if (cachedBackground == undefined) cachedBackground = background;
-  flashes.push(color);
-}
-
 function boot({
   Camera,
   Dolly,
@@ -176,6 +197,7 @@ function boot({
   num,
   geo,
   params,
+  store,
   net: { preload },
 }) {
   // Assign some globals from the api.
@@ -193,7 +215,7 @@ function boot({
       { fg: barely([0, 255, 0, 255]) }, // Barely-green on barely dim green.
       { fg: barely([0, 0, 255, 255]) }, // Barely-blue on barely dim blue.
       // {
-        // fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
+      // fg: () => [rr(245, 255), rr(245, 255), rr(245, 255), 255],
       // }, // Not-quite-white on barely-grey.
       //{ fg: barely([0, 255, 255, 255]) }, // Barely-cyan on barely dim cyan.
       //{ fg: barely([255, 0, 255, 255]) }, // Barely-magenta on barely dim magenta.
@@ -211,7 +233,7 @@ function boot({
     roygbiv: [
       { fg: barely([255, 0, 0, 255]) }, // Barely-red on barely mid-grey
       { fg: barely([255, 127, 0, 255]) }, // Barely-orange on barely mid-grey.
-      { fg: barely([255, 255, 0, 255]) }, // Barely-yelloww on barely mid-grey.
+      { fg: barely([255, 255, 0, 255]) }, // Barely-yellow on barely mid-grey.
       { fg: barely([0, 255, 0, 255]) }, // Barely-blue on barely mid-grey.
       { fg: barely([0, 0, 255, 255]) }, // Barely-green on barely mid-grey.
       { fg: barely([75, 0, 30, 255]) }, // Barely-indigo on barely mid-grey.
@@ -255,25 +277,22 @@ function boot({
     if (speed === 0) speed = true;
     const handle = "digitpain";
     const recordingSlug = `${params[0]}-recording-${handle}`;
-    //wipe(0, 0, 0, 255); // Write a black background while loading.
     loadDemo = { slug: `${baseURL}/${recordingSlug}.json`, speed };
     stageOn = false;
     measuringCubeOn = false;
     originOn = false;
+    //wipe(0, 0, 0, 255); // Write a black background while loading.
   }
 
-  // Start a demo recording.
-  demo = new Demo(); // Start logging user interaction on demo frame 0.
-  demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
-  demo?.rec("wand:color", color);
-
+  // Start a demo recording (unless we are coming to watch only).
+  if (params[0]?.length === 0) {
+    demo = new Demo(); // Start logging user interaction on demo frame 0.
+    demo?.rec("room:color", background); // Record the starting bg color in case the default ever changes.
+    demo?.rec("wand:color", color);
+  }
   tube = new Tube({ Form, num }, radius, sides, step, geometry, demo);
   wipe(0, 0); // Clear the software buffer to make sure we see the gpu layer.
 }
-
-let lastWandPosition;
-let lastWandRotation;
-let loadDemo;
 
 function sim({
   pen,
@@ -283,14 +302,36 @@ function sim({
   num,
   debug,
   gpuReady,
+  gpu,
+  store,
+  params,
+  download,
   net: { preload, waitForPreload },
-  num: { vec3, randIntRange: rr, dist3d, quat, vec4, mat3 },
+  num: {
+    vec3,
+    randIntRange: rr,
+    dist3d,
+    quat,
+    vec4,
+    mat3,
+    shiftRGB,
+    rgbToHexStr,
+  },
 }) {
   if (gpuReady && loadDemo) {
     const { speed, slug } = loadDemo;
     loadDemo = null;
     preload(slug, false).then((data) => {
       // console.log(data);
+
+      // Reset the tube here...
+      tube.form.clear();
+      tube.capForm.clear();
+      tube.triCapForm.clear();
+      tube.lineForm.clear();
+      tube.lastPathP = undefined;
+      tube.gesture = [];
+
       const frames = parseDemoFrames(data);
       console.log("🎞️ Loaded a wand file:", frames.length);
       // Play all frames back.
@@ -695,7 +736,9 @@ function sim({
             );
             let dot = vec3.dot(spiToRace, spi.state.direction);
             let divisor = max(3, round(sides / 2));
-            if (abs(dot) > 0.55) { divisor = 1; }
+            if (abs(dot) > 0.55) {
+              divisor = 1;
+            }
             let tightness = 1 / divisor;
             const increments = step / divisor;
 
@@ -825,7 +868,79 @@ function sim({
         // A "synthesized frame" with no other information to destroy our player.
         demoWandForm = null;
         demoWandFormOptions = null;
+        lastPlayedFrames = player.frames;
         player = null;
+        // #region relic-1
+        // 📔 Some old scripts to automate making changes to demos and GLB files.
+        //    Leaving them here in case I need to do automation again!
+        // Advance to next piece, save json, etc. etc.
+        // {
+        // GLB
+        // const tokenID = store["freaky-flowers"].tokenID;
+        // const ts = store["freaky-flowers"].tokens[tokenID] || timestamp();
+        // const handle = "digitpain"; // Hardcoded for now.
+        // const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
+
+        // let sculptureSlug = `ff${tokenID}-${ts}-sculpture-${bg}-${handle}`;
+
+        // Prepend "ff#-" if a freakyFlowersToken has been loaded.
+        // if (store["freaky-flowers"]?.tokenID >= 0) {
+        //   sculptureSlug = `${store["freaky-flowers"].tokenID}-${sculptureSlug}`;
+        // }
+
+        /*
+          setTimeout(function () {
+            gpu
+              .message({
+                type: "export-scene",
+                content: {
+                  slug: sculptureSlug,
+                  output: "local",
+                  sculptureHeight: cubeHeight,
+                },
+              })
+            advanceSeries(store["freaky-flowers"], 1, true);
+          }, 100);
+          */
+        // }
+        /*
+      // DEMOS
+        setTimeout(function () {
+          {
+            const ts = lastPlayedFrames[0][2]; // 0n, "piece:info", timestamp, author
+            const handle = lastPlayedFrames[0][3]; // 0n, "piece:info", timestamp, author
+
+            console.log("🎨 Adjusting colors!");
+            lastPlayedFrames.forEach((f, i) => {
+              if (f[1].endsWith("color")) {
+                let c = f.slice(2, 5).map((v) => v / 255);
+                let nc = c;
+                // Convert everything to sRGB.
+                nc = [
+                  LinearToSRGB(nc[0]),
+                  LinearToSRGB(nc[1]),
+                  LinearToSRGB(nc[2]),
+                ];
+
+                // And bump down things that aren't black...
+                if ((nc[0] + nc[1] + nc[2]) / 3 > 0.08) {
+                  nc = shiftRGB(nc, c, 0.2, "lerp", 1);
+                }
+
+                f[2] = round(nc[0] * 255);
+                f[3] = round(nc[1] * 255);
+                f[4] = round(nc[2] * 255);
+              }
+            });
+
+            // TODO: These params do not reload each time.
+            const slug = `ff${store["freaky-flowers"].tokenID}-${ts}-recording-${handle}.json`;
+            download(slug, lastPlayedFrames.slice()); // Save modified demo to json.
+          }
+          advanceSeries(store["freaky-flowers"], 1, true);
+        }, 100);
+        */
+       // #endregion
       }
     });
   });
@@ -1016,6 +1131,7 @@ function act({
   download,
   serverUpload,
   num,
+  store,
 }) {
   const {
     quat,
@@ -1073,7 +1189,7 @@ function act({
     }
   }
 
-  // Toggle cube and origin measurement lines.
+  // 🧊 Toggle cube and origin measurement lines.
   if (e.is("keyboard:down:t") || e.is("3d:rhand-button-a-down")) {
     pong = true;
     measuringCubeOn = !measuringCubeOn;
@@ -1082,6 +1198,36 @@ function act({
       measuringCube.resetUID();
       origin.resetUID();
     }
+  }
+
+  // Take a screenshot / save a still.
+
+  if (e.alt && e.is("keyboard:down:o")) {
+    gpu.message({
+      type: "camera:orthographic",
+    });
+  }
+
+  if (e.shift === false && e.is("keyboard:down:i")) {
+    const tokenID = store["freaky-flowers"]?.tokenID;
+    let tokenSlug = store["freaky-flowers"]?.tokens[tokenID];
+    if (tokenSlug) tokenSlug = `ff${tokenID}-` + tokenSlug;
+    const ts = tokenSlug || params[0] || timestamp();
+    const handle = "digitpain"; // Hardcoded for now.
+    const screenshotSlug = `${ts}-screenshot-${handle}`;
+    gpu.message({
+      type: "screenshot",
+      content: {
+        slug: screenshotSlug,
+        output: "local",
+        //camera: { position: [0, -cubeHeight, camStartPos[2]] },
+        camera: {
+          position: camdoll.cam.position,
+          rotation: camdoll.cam.rotation,
+        },
+        squareThumbnail: e.alt,
+      },
+    });
   }
 
   // Left hand controller.
@@ -1178,12 +1324,23 @@ function act({
   if (e.is("3d:lhand-trigger-down")) randomPalette = true;
   if (e.is("3d:lhand-trigger-up")) randomPalette = false;
 
+  if (e.alt && e.is("keyboard:down:]"))
+    advanceSeries(store["freaky-flowers"], 1);
+  if (e.alt && e.is("keyboard:down:["))
+    advanceSeries(store["freaky-flowers"], -1);
+
   // Save scene data as a GLB.
   if (e.is("keyboard:down:enter")) {
     const ts = params[0] || timestamp();
     const handle = "digitpain"; // Hardcoded for now.
     const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
-    const sculptureSlug = `${ts}-sculpture-${bg}-${handle}`;
+
+    let sculptureSlug = `${ts}-sculpture-${bg}-${handle}`;
+
+    // Prepend "ff#-" if a freakyFlowersToken has been loaded.
+    // if (store["freaky-flowers"]?.tokenID >= 0) {
+    //   sculptureSlug = `ff${store["freaky-flowers"].tokenID}-${sculptureSlug}`;
+    // }
 
     gpu
       .message({
@@ -1195,18 +1352,12 @@ function act({
         },
       })
       .then((data) => {
-        console.log(
-          "🪄 Sculpture uploaded:",
-          `https://${baseURL}/${sculptureSlug}.glb`,
-          data
-        );
-
+        console.log("🪄 Sculpture downloaded:", `${sculptureSlug}.glb`, data);
         ping = true;
         addFlash([0, 255, 0, 255]);
       })
       .catch((err) => {
-        console.error("🪄 Sculpture upload failed:", err);
-
+        console.error("🪄 Sculpture download failed:", err);
         pong = true;
         addFlash([255, 0, 0, 255]);
       });
@@ -1246,6 +1397,34 @@ function act({
   // }
 
   const saveMode = "server"; // The default for now. 22.11.15.05.32
+
+  // Save an already loaded demo back to disk.
+  if (e.alt && e.is("keyboard:down:m")) {
+    const ts = lastPlayedFrames[0][2]; // 0n, "piece:info", timestamp, author
+    const handle = lastPlayedFrames[0][3]; // 0n, "piece:info", timestamp, author
+
+    console.log("🎨 Adjusting colors!");
+    lastPlayedFrames.forEach((f, i) => {
+      if (f[1].endsWith("color")) {
+        let c = f.slice(2, 5).map((v) => v / 255);
+        let nc = c;
+        // Convert everything to sRGB.
+        nc = [LinearToSRGB(nc[0]), LinearToSRGB(nc[1]), LinearToSRGB(nc[2])];
+
+        // And bump down things that aren't black...
+        if ((nc[0] + nc[1] + nc[2]) / 3 > 0.08) {
+          nc = shiftRGB(nc, c, 0.2, "lerp", 1);
+        }
+
+        f[2] = round(nc[0] * 255);
+        f[3] = round(nc[1] * 255);
+        f[4] = round(nc[2] * 255);
+      }
+    });
+
+    const slug = `ff${store["freaky-flowers"].tokenID}-${ts}-recording-${handle}.json`;
+    download(slug, lastPlayedFrames); // Save modified demo to json.
+  }
 
   // 🛑 Finish a piece.
   if (e.is("3d:rhand-button-thumb-down")) {
@@ -1505,6 +1684,28 @@ export { boot, paint, sim, act, beat };
 
 // #region 📑 library
 
+function advanceSeries(series, dir, stop) {
+  if (series) {
+    let id = series.tokenID;
+    id = (id + dir) % series.tokens.length;
+    if (id === 0 && stop) return; // Stop on every ending.
+    series.tokenID = id;
+    const prefixedTimestamp = "ff" + id + "-" + series.tokens[id];
+    console.log("Loading token:", id, prefixedTimestamp);
+    function queueDemo(speed = 1) {
+      const handle = "digitpain";
+      const recordingSlug = `${prefixedTimestamp}-recording-${handle}`;
+      loadDemo = { slug: `${baseURL}/${recordingSlug}.json`, speed };
+    }
+    queueDemo(0);
+  }
+}
+
+function addFlash(color) {
+  if (cachedBackground == undefined) cachedBackground = background;
+  flashes.push(color);
+}
+
 function parseDemoFrames(data) {
   return JSON.parse(data).map((f) => {
     // TODO: This may not cover embedded array types.
@@ -1752,6 +1953,7 @@ class Tube {
 
     this.form = new $.Form(...formType); // Main form.
     this.form.tag = "sculpture"; // This tells the GPU what to export right now. 22.11.15.09.05
+    // this.form.gpuConvertColors = false;
 
     this.mat4Ident = $.num.mat4.create();
 
@@ -1779,8 +1981,8 @@ class Tube {
 
     this.#setVertexLimits();
 
-    this.form.MAX_POINTS = 300000;
-    this.lineForm.MAX_POINTS = 100000;
+    this.form.MAX_POINTS = 301000; // Make sure demos can't record beyond the alotted geometry. 22.11.25.11.44
+    this.lineForm.MAX_POINTS = 101000;
 
     // this.form.MAX_POINTS = 4096;
     // (this.verticesPerSide + this.verticesPerCap * 2) *
@@ -2964,11 +3166,10 @@ class Spider {
     // Get the direction between this position and the target position, then
 
     // Original direction.
-    this.direction = vec4.normalize(vec4.create(), vec4.transformQuat(
+    this.direction = vec4.normalize(
       vec4.create(),
-      [0, 0, 1, 1],
-      slerpedRot
-    ));
+      vec4.transformQuat(vec4.create(), [0, 0, 1, 1], slerpedRot)
+    );
 
     const scaledDir = vec3.scale(vec3.create(), this.direction, stepSize);
     const pos = vec3.add(vec3.create(), this.position, scaledDir);
@@ -3125,7 +3326,7 @@ class Player {
       console.log("🟡 Demo playback completed:", this.frameIndex);
       // Push a completed message with a negative frameCount to mark an ending.
       handler([[-1, "demo:complete"]]);
-      this?.waitForPreload();
+      this.waitForPreload?.();
       return;
     }
 
@@ -3171,5 +3372,16 @@ class Player {
     handler(this.collectedFrames, this.frameCount); // Run our action handler.
     this.collectedFrames = [];
   }
+}
+
+// Via `three.module.js`
+function SRGBToLinear(c) {
+  return c < 0.04045
+    ? c * 0.0773993808
+    : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
+}
+
+function LinearToSRGB(c) {
+  return c < 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 0.41666) - 0.055;
 }
 // #endregion

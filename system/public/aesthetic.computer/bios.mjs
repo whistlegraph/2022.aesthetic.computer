@@ -141,24 +141,25 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // Used by `disk` to set the metatags by default when a piece loads. It can
   // be overridden using `meta` inside of `boot` for any given piece.
   function setMetatags(meta) {
-    if (meta.title) {
+    if (meta?.title && meta?.path) {
       document.title = meta.title;
       document.querySelector('meta[name="og:title"]').content = meta.path;
       document.querySelector('meta[name="twitter:title"]').content = meta.path;
     }
-    if (meta.desc) {
+    if (meta?.desc) {
       document.querySelector('meta[name="og:description"]').content = meta.desc;
     }
-    if (meta.img?.og) {
+    if (meta?.img?.og) {
       document.querySelector('meta[name="og:image"]').content = meta.img.og;
     }
-    if (meta.img?.twitter) {
+    if (meta?.img?.twitter) {
       document.querySelector('meta[name="twitter:image"]').content =
         meta.img.twitter;
     }
-    //if (meta.url) {
-    //document.querySelector('meta[name="twitter:player"').content = meta.url;
-    //}
+    if (meta?.url) {
+      // This might need to be conditional / opt-in?
+      // document.querySelector('meta[name="twitter:player"').content = meta.url;
+    }
   }
 
   function frame(width, height, gap = 8) {
@@ -1095,6 +1096,16 @@ async function boot(parsed, bpm = 60, resolution, debug) {
             content.text === "/prompt" ? "/" : "/" + content.text // Replace "prompt" with "/".
           );
         }
+
+        // Replace the state if we are running an aliased `load` or `jump`.
+        // (THat doesn't avoids the history stack.)
+        if (content.fromHistory === true && content.alias === false) {
+          history.replaceState(
+            "",
+            document.title,
+            content.text === "/prompt" ? "/" : "/" + content.text // Replace "prompt" with "/".
+          );
+        }
       }
 
       send({ type: "loading-complete" });
@@ -1993,7 +2004,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   // Reads the extension off of filename to determine the mimetype and then
   // handles the data accordingly and downloads the file in the browser.
-  async function receivedDownload({ filename, data }) {
+  async function receivedDownload({ filename, data, modifiers }) {
     console.log("💾 Downloading locally:", filename, typeof data);
 
     let object;
@@ -2023,18 +2034,52 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     } else if (extension(filename) === "png") {
       // PNG
       MIME = "image/png";
-      // Encode a pixel buffer as a png.
-      // See also: https://stackoverflow.com/questions/11112321/how-to-save-canvas-as-png-image
-      const img = data;
-      const imageData = new ImageData(img.pixels, img.width, img.height);
 
-      const pngCan = document.createElement("canvas");
-      const pngCtx = pngCan.getContext("2d");
-      pngCan.width = img.width;
-      pngCan.height = img.height;
-      pngCtx.putImageData(imageData, 0, 0);
+      let can;
+      if (data.pixels) {
+        // Encode a pixel buffer as a png.
+        // See also: https://stackoverflow.com/questions/11112321/how-to-save-canvas-as-png-image
+        const img = data;
+        //console.log(img)
+        const imageData = new ImageData(img.pixels, img.width, img.height);
 
-      const blob = await new Promise((resolve) => pngCan.toBlob(resolve));
+        can = document.createElement("canvas");
+        const ctx = can.getContext("2d");
+        can.width = img.width;
+        can.height = img.height;
+        ctx.putImageData(imageData, 0, 0);
+
+        // Scale the image as needed.
+        if (
+          (modifiers?.scale !== 1 && modifiers?.scale > 0) ||
+          modifiers?.flipY
+        ) {
+          const scale = modifiers?.scale || 1;
+          const flipY = modifiers?.flipY;
+          const can2 = document.createElement("canvas");
+          const ctx2 = can2.getContext("2d");
+          can2.width = can.width * scale;
+          can2.height = can.height * scale;
+          ctx2.imageSmoothingEnabled = false;
+          if (flipY) ctx2.scale(1, -1);
+          ctx2.drawImage(can, 0, 0, can2.width, -can2.height);
+          can = can2;
+        }
+      } else {
+        if (modifiers?.scale !== 1 && modifiers?.scale > 0) {
+          const can2 = document.createElement("canvas");
+          const ctx2 = can2.getContext("2d");
+          can2.width = data.width * modifiers.scale;
+          can2.height = data.height * modifiers.scale;
+          ctx2.imageSmoothingEnabled = false;
+          ctx2.drawImage(data, 0, 0, can2.width, can2.height);
+
+          can = can2;
+        } else {
+          can = data;
+        }
+      }
+      const blob = await new Promise((resolve) => can.toBlob(resolve));
       object = URL.createObjectURL(blob, { type: MIME });
     }
 
@@ -2044,7 +2089,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     a.click();
     URL.revokeObjectURL(a.href);
 
-    // Picture in Picture
+    // Picture in Picture: Image Download UI? 22.11.24.08.51
     //const container = document.createElement('div');
     //const iframe = document.createElement('iframe');
 

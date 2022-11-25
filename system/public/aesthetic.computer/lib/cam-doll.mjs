@@ -27,13 +27,13 @@ export class CamDoll {
     let forward = 0,
       updown = 0,
       strafe = 0;
-    if (this.#W) forward = -0.0005;
-    if (this.#S) forward = 0.0005;
-    if (this.#A) strafe = -0.0005;
-    if (this.#D) strafe = 0.0005;
+    if (this.#W) forward = -0.00025;
+    if (this.#S) forward = 0.00025;
+    if (this.#A) strafe = -0.00025;
+    if (this.#D) strafe = 0.00025;
 
-    if (this.#SPACE) updown = 0.0005;
-    if (this.#SHIFT) updown = -0.0005;
+    if (this.#SPACE) updown = 0.00025;
+    if (this.#SHIFT) updown = -0.00025;
 
     if (
       this.#W ||
@@ -67,7 +67,7 @@ export class CamDoll {
     if (e.is("keyboard:up:d")) this.#D = false;
 
     if (e.is("keyboard:down:space")) this.#SPACE = true;
-    if (e.is("keyboard:down:shift")) this.#SHIFT = true;
+    if (e.ctrl === false && e.is("keyboard:down:shift")) this.#SHIFT = true;
     if (e.is("keyboard:up:space")) this.#SPACE = false;
     if (e.is("keyboard:up:shift")) this.#SHIFT = false;
 
