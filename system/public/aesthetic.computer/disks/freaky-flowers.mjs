@@ -272,15 +272,28 @@ const tokenColors = [
   "7DB76B",
   "12122F",
 ];
+
 // #endregion
 
 // 🥾 Boot (Runs once before first paint and sim)
-export function boot({ wipe, params, num: { randInt }, jump, store }) {
+export function boot({
+  wipe,
+  params,
+  download,
+  num: { randInt, hexToRgb },
+  jump,
+  store,
+}) {
+  // Download
+  // download("colors.json", JSON.stringify(tokenColors.map((c) => hexToRgb(c))));
+
   // Perform basic setup here.
   // resize(50, 20); // Add a custom resolution.
   const param1 = parseInt(params[0]);
   const tokenID =
-    typeof param1 === "number" ? param1 : randInt(tokens.length - 1);
+    param1 >= 0 && param1 < tokens.length - 1
+      ? param1
+      : randInt(tokens.length - 1);
 
   const headers = (id) => {
     console.log(

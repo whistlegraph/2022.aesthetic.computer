@@ -13,12 +13,15 @@ export class CamDoll {
   #LEFT;
   #RIGHT;
 
+  sensitivity;
+
   constructor(Camera, Dolly, opts) {
     this.cam = new Camera(80, {
       z: opts.z || 0,
       y: opts.y * -1 || -0.5,
       scale: [1, 1, 1],
     });
+    this.sensitivity = opts.sensitivity || 0.00025;
     this.#dolly = new Dolly(this.cam); // moves the camera
   }
 
@@ -27,13 +30,12 @@ export class CamDoll {
     let forward = 0,
       updown = 0,
       strafe = 0;
-    if (this.#W) forward = -0.00025;
-    if (this.#S) forward = 0.00025;
-    if (this.#A) strafe = -0.00025;
-    if (this.#D) strafe = 0.00025;
-
-    if (this.#SPACE) updown = 0.00025;
-    if (this.#SHIFT) updown = -0.00025;
+    if (this.#W) forward = -this.sensitivity;
+    if (this.#S) forward = this.sensitivity;
+    if (this.#A) strafe = -this.sensitivity;
+    if (this.#D) strafe = this.sensitivity;
+    if (this.#SPACE) updown = this.sensitivity;
+    if (this.#SHIFT) updown = -this.sensitivity;
 
     if (
       this.#W ||

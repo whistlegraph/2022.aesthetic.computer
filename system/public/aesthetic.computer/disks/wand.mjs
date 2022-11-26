@@ -13,6 +13,10 @@
 + Later / Post-production.
 - [️‍🔥] Take Final PNG screenshots of each work.
 
+- [] What would it be like if I tried to rotate the form around it's center slowly...
+     in orthographic mode?
+- [] What would happen if I just randomly started removing or vibrating sets of vertices after
+     a piece loaded?
 - [] Auto jump from piece to piece.
 - [] Add ambient fog. 
 - [] Master the main materials and lights in the scene.
@@ -102,9 +106,12 @@ let measuringCube; // A toggled cube for conforming a sculpture to a scale.
 let origin; // Some crossing lines to check the center of a sculpture.
 let measuringCubeOn = true;
 let cubeHeight = 1.45; // head of jeffrey
-const camStartPos = [0, -cubeHeight, 0.9]; // A starting position for the camera,
-//                                            used also for `direct` screenshot
-//                                            taking.
+// const camStartPos = [0, -cubeHeight, 0.9]; // A starting position for the camera,
+// //                                            used also for `direct` screenshot
+// //                                            taking.
+let orthographic = false; // Only in GPU for now.
+let orthoZoom = 1; // Sent every frame when the camera is in orthographic mode.
+let orthoZoomDir = 0; // Sent every frame when the camera is in orthographic mode.
 //let cubeHeight = 0.7; // floor of jeffrey
 // let cubeHeight = 1.5; // head of jeffrey
 let originOn = true;
@@ -249,7 +256,11 @@ function boot({
     },
   };
 
-  camdoll = new CamDoll(Camera, Dolly, { z: 0.9, y: cubeHeight }); // Camera controls.
+  camdoll = new CamDoll(Camera, Dolly, {
+    z: 0.9,
+    y: cubeHeight,
+    sensitivity: 0.0001,
+  }); // Camera controls.
   stage = new Form(
     QUAD,
     { color: [2, 2, 2, 255] },
@@ -363,6 +374,12 @@ function sim({
     } else {
       randomPaletteCount += 1;
     }
+  }
+
+  // Orthographic Camera Zoom
+  if (orthographic) {
+    orthoZoom += orthoZoomDir * 0.001;
+    gpu.message({ type: "camera:ortho-zoom", content: orthoZoom });
   }
 
   // 🐭️ Live Cursor: generated from the controller position and direction.
@@ -1220,10 +1237,16 @@ function act({
 
   // Switch camera mode.
   if (e.alt && e.is("keyboard:down:o")) {
+    orthographic = !orthographic;
     gpu.message({
-      type: "camera:orthographic",
+      type: "camera:mode-switch",
     });
   }
+
+  // Zoom in and out while in orthographic mode.
+  if (e.is("keyboard:down:=") && !e.repeat) orthoZoomDir = -1;
+  if (e.is("keyboard:down:-") && !e.repeat) orthoZoomDir = 1;
+  if (e.is("keyboard:up:=") || e.is("keyboard:up:-")) orthoZoomDir = 0;
 
   if (e.shift === false && e.is("keyboard:down:i")) {
     const tokenID = store["freaky-flowers"]?.tokenID;

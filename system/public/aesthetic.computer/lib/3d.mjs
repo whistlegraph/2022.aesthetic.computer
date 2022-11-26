@@ -27,7 +27,7 @@ import { GLTFExporter } from "../dep/three/GLTFExporter.js";
 import { Safari } from "./platform.mjs";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
 const debug = window.acDEBUG;
-const { abs, floor } = Math;
+const { min, max, abs, floor } = Math;
 
 const NO_FOG = false;
 let FOG_NEAR = 0.5;
@@ -40,6 +40,9 @@ let scene,
   //pixels,
   renderedOnce = false,
   target;
+
+let orthoZoom = 1;
+let storedSize;
 
 let send, download, upload;
 
@@ -197,8 +200,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
   // Only instantiate some things once.
   if (!target || target.width !== width || target.height !== height) {
     target = new THREE.WebGLRenderTarget(width, height); // If I'm not *really* using this then it's probably inefficiently creating a texture on each resize.
-    renderer.setViewport(0, 0, size.width, size.height);
+
     renderer.setSize(size.width, size.height);
+
+    storedSize = { width: size.width, height: size.height };
     //renderer.setPixelRatio(1 / 2.2);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputEncoding = THREE.sRGBEncoding;
@@ -206,25 +211,32 @@ export function bake({ cam, forms, color }, { width, height }, size) {
     // renderer.setRenderTarget(target); // For rendering offsceen.
     // pixels = new Uint8ClampedArray(width * height * 4);
     const fov = cam.fov;
-    const aspect = width / height;
+    let aspect = size.width / size.height;
     const near = cam.near;
     const far = cam.far;
 
     lastPerspectiveCam = cam;
 
+    //camera = { type: "OrthographicCamera" };
+
+    if (camera?.type !== "OrthographicCamera") {
+      renderer.setViewport(0, 0, size.width, size.height);
+    } else {
+      const short = min(size.width, size.height);
+      const long = max(size.width, size.height);
+      const offset = long / 2 - short / 2;
+      const axes = size.width > size.height ? [offset, 0] : [0, offset];
+      renderer.setScissorTest(false);
+      renderer.setViewport(...axes, short, short);
+      renderer.setScissor(...axes, short, short);
+      renderer.setClearColor(new THREE.Color(0x000000));
+      renderer.clear();
+      renderer.setScissorTest(true);
+    }
+
     if (!camera || camera.type === "PerspectiveCamera") {
       camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    } else if (camera?.type === "OrthographicCamera") {
-      const frustumSize = 1;
-      camera = new THREE.OrthographicCamera(
-        (frustumSize * aspect) / -2,
-        (frustumSize * aspect) / 2,
-        frustumSize / 2,
-        frustumSize / -2,
-        0,
-        20
-      );
-    }
+    } else if (camera?.type === "OrthographicCamera") makeOrthoCamera(1);
 
     if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
   }
@@ -1033,7 +1045,13 @@ export function handleEvent(event) {
     return;
   }
 
-  if (event.type === "camera:orthographic") {
+  if (event.type === "camera:ortho-zoom") {
+    orthoZoom = event.content;
+    makeOrthoCamera(1);
+    return;
+  }
+
+  if (event.type === "camera:mode-switch") {
     const size = new THREE.Vector2();
     renderer.getSize(size);
     let aspect = size.width / size.height;
@@ -1045,21 +1063,31 @@ export function handleEvent(event) {
       FOG_FAR = 1.19;
       if (!NO_FOG)
         scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
-      aspect = size.width / size.height;
-      const frustumSize = 1;
-      camera = new THREE.OrthographicCamera(
-        (frustumSize * aspect) / -2,
-        (frustumSize * aspect) / 2,
-        frustumSize / 2,
-        frustumSize / -2,
-        0,
-        20
-      );
+      aspect = (size.width / size.height) * orthoZoom;
+      renderer.view;
+
+      // Set to a square viewport and resize accordingly.
+      const short = min(size.width, size.height);
+      const long = max(size.width, size.height);
+      const offset = long / 2 - short / 2;
+      const axes = size.width > size.height ? [offset, 0] : [0, offset];
+      renderer.setViewport(...axes, short, short);
+      renderer.setScissor(...axes, short, short);
+      renderer.setClearColor(new THREE.Color(0x000000));
+      renderer.clear();
+      renderer.setScissorTest(true);
+
+      makeOrthoCamera(1);
     } else {
       // Switch to...
       // Perspective
+      renderer.setViewport(0, 0, storedSize.width, storedSize.height);
+      renderer.setScissor(0, 0, storedSize.width, storedSize.height);
+      renderer.setScissorTest(false);
+
       FOG_NEAR = 0.5;
       FOG_FAR = 2.0;
+
       if (!NO_FOG)
         scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
       const { fov, near, far } = lastPerspectiveCam;
@@ -1097,7 +1125,7 @@ export function handleEvent(event) {
 
     const newTarget = new THREE.WebGLRenderTarget(width, height, {
       encoding: THREE.sRGBEncoding,
-      samples: 8,
+      samples: 4,
     }); // If I'm not *really* using this then it's probably inefficiently creating a texture on each resize.
 
     renderer.setViewport(0, 0, width, height);
@@ -1106,8 +1134,7 @@ export function handleEvent(event) {
     pixels = new Uint8ClampedArray(width * height * 4);
     const cachedBackground = scene.background.clone();
     scene.background = scene.background.convertSRGBToLinear();
-    if (!NO_FOG)
-      scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
+    if (!NO_FOG) scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
 
     if (camera.type === "PerspectiveCamera") {
       // Perspective
@@ -1119,7 +1146,7 @@ export function handleEvent(event) {
       );
     } else {
       // Orthographic
-      aspect /= 1.1; // Zoom in a bit for the square thumbs. 22.11.24.20.11
+      aspect *= orthoZoom; // Zoom in a bit for the square thumbs. 22.11.24.20.11
       if (event.content.squareThumbnail) {
         cam = new THREE.OrthographicCamera(
           aspect / -2,
@@ -1346,6 +1373,18 @@ export function pollControllers() {
 
     return { events: penEvents, pen };
   }
+}
+
+function makeOrthoCamera(aspect) {
+  const frustumSize = 1 * orthoZoom;
+  camera = new THREE.OrthographicCamera(
+    (frustumSize * aspect) / -2,
+    (frustumSize * aspect) / 2,
+    frustumSize / 2,
+    frustumSize / -2,
+    0,
+    20
+  );
 }
 
 // Create a pen event.

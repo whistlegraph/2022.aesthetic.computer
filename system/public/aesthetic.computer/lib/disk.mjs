@@ -241,6 +241,7 @@ const $commonApi = {
     desaturate: num.desaturate,
     shiftRGB: num.shiftRGB,
     rgbToHexStr: num.rgbToHexStr,
+    hexToRgb: num.hexToRgb,
   },
   geo: {
     Box: geo.Box,
@@ -1108,6 +1109,12 @@ async function load(
     const processed = defaultTemplateStringProcessor(strings, ...vars);
     $commonApi.content.add(`<script>${processed}</script>`);
   };
+  // 💾 Uploading + Downloading
+  // Add download event to trigger a file download from the main thread.
+  $commonApi.download = (filename, data, modifiers) =>
+    send({ type: "download", content: { filename, data, modifiers } });
+
+
 
   // * Preload *
   // Add preload to the boot api.
@@ -1626,12 +1633,6 @@ async function makeFrame({ data: { type, content } }) {
 
       // 🕶️ VR Pen
       $commonApi.pen3d = content.pen3d?.pen;
-
-      // 💾 Uploading + Downloading
-      // Add download event to trigger a file download from the main thread.
-      $api.download = (filename, data, modifiers) =>
-        send({ type: "download", content: { filename, data, modifiers } });
-
 
       // TODO: A booted check could be higher up the chain here?
       // Or this could just move. 22.10.11.01.31

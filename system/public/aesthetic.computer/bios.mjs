@@ -1337,7 +1337,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     if (type === "preload-ready") {
       window.preloaded = true;
-      if (debug) console.log("⏳ Preloaded: ✅️", window.preloaded);
+      if (debug) console.log("⏳ Preloaded: ✅️");
       return;
     }
 
@@ -1743,7 +1743,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     if (type === "disk-loaded-and-booted") {
       if (!window.waitForPreload) window.preloaded = true;
-      if (debug) console.log("⏳ Preloaded: ❌", window.preloaded);
+      if (debug) console.log("⏳ Preloaded:", window.preloaded ? "✅" : "❌");
       return;
     }
 
@@ -2091,7 +2091,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         }
       }
 
-      const blob = await new Promise((resolve) => can.toBlob(resolve, MIME, 100));
+      const blob = await new Promise((resolve) =>
+        can.toBlob(resolve, MIME, 100)
+      );
       object = URL.createObjectURL(blob, { type: MIME });
     }
 
