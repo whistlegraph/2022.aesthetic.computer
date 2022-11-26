@@ -933,6 +933,7 @@ let screenMatrix;
 // For producing a projection matrix.
 // For matrix & linear algebra help: https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab
 class Camera {
+  type = "perspective";
   matrix;
   #x = 0;
   #rotX = 0;

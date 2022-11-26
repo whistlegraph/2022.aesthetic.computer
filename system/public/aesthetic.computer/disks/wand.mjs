@@ -13,8 +13,6 @@
 + Later / Post-production.
 - [️‍🔥] Take Final PNG screenshots of each work.
 
-- [] What would it be like if I tried to rotate the form around it's center slowly...
-     in orthographic mode?
 - [] What would happen if I just randomly started removing or vibrating sets of vertices after
      a piece loaded?
 - [] Auto jump from piece to piece.
@@ -93,6 +91,8 @@
  - [x] Orientation
  - [x] Color
  - [x] Add color palettes.
+- [x] What would it be like if I tried to rotate the form around it's center slowly...
+     in orthographic mode?
 #endregion */
 
 // #region 🗺️ global
@@ -112,6 +112,7 @@ let cubeHeight = 1.45; // head of jeffrey
 let orthographic = false; // Only in GPU for now.
 let orthoZoom = 1; // Sent every frame when the camera is in orthographic mode.
 let orthoZoomDir = 0; // Sent every frame when the camera is in orthographic mode.
+let autoRotate = false; // Automatically rotate the Tube model.
 //let cubeHeight = 0.7; // floor of jeffrey
 // let cubeHeight = 1.5; // head of jeffrey
 let originOn = true;
@@ -331,6 +332,13 @@ function sim({
     rgbToHexStr,
   },
 }) {
+  // 😵‍💫 Spinning a sculpture around via `Tube`.
+  if (autoRotate) {
+    tube.form.rotation[1] -= 0.05;
+    tube.form.gpuTransformed = true;
+  }
+
+  // 📽️ Loading and triggering a demo once the graphics system is ready.
   if (gpuReady && loadDemo) {
     const { speed, slug } = loadDemo;
     loadDemo = null;
@@ -1134,7 +1142,10 @@ function paint({ form, Form, paintCount }) {
     //#endregion
   }
 
-  if (demoWandFormOptions) demoWandForm = new Form(demoWandFormOptions);
+  if (demoWandFormOptions)
+    demoWandForm = new Form(demoWandFormOptions, {
+      rot: [0, tube.form.rotation[1], [0]],
+    });
 
   form(
     [
@@ -1238,9 +1249,22 @@ function act({
   // Switch camera mode.
   if (e.alt && e.is("keyboard:down:o")) {
     orthographic = !orthographic;
+    camdoll.cam.type = orthographic ? "orthographic" : "perspective";
     gpu.message({
       type: "camera:mode-switch",
     });
+  }
+
+  // Automatic model rotation.
+  if (e.is("keyboard:down:1")) autoRotate = !autoRotate;
+
+  // Orthographic model rotation.
+  if (e.is("draw")) {
+    if (camdoll.cam.type === "orthographic") {
+      //tube.form.rotation[1] -= e.delta.y / 3.5; // Up and down?
+      tube.form.rotation[1] += e.delta.x / 3.5; // Left and right.
+      tube.form.gpuTransformed = true;
+    }
   }
 
   // Zoom in and out while in orthographic mode.

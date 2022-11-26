@@ -87,8 +87,10 @@ export class CamDoll {
     //       e.button only holds the original (duplicate events are not sent).
     // TODO: These rates should be adjusted on mobile.
     if (e.is("draw")) {
-      this.cam.rotX -= e.delta.y / 3.5;
-      this.cam.rotY -= e.delta.x / 3.5;
+      if (this.cam.type === "perspective") {
+        this.cam.rotX -= e.delta.y / 3.5;
+        this.cam.rotY -= e.delta.x / 3.5;
+      }
     }
     // 🖖 Touch
     // Two fingers for move forward.
