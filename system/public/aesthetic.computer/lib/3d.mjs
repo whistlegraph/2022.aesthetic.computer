@@ -23,7 +23,8 @@
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from "../dep/three/GLTFExporter.js";
-import { OBJExporter } from "../dep/three/OBJExporter.js";
+// import { OBJExporter } from "../dep/three/OBJExporter.js";
+import { Safari } from "./platform.mjs";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
 const debug = window.acDEBUG;
 const { abs, floor } = Math;
@@ -1085,7 +1086,7 @@ export function handleEvent(event) {
     if (event.content.squareThumbnail) {
       width = 8192;
       height = 8192;
-      aspect = 1 / 1.1; // Zoom n a bit for the square thumbs. 22.11.24.20.11
+      aspect = 1;
     } else {
       const size = new THREE.Vector2();
       renderer.getSize(size);
@@ -1104,13 +1105,21 @@ export function handleEvent(event) {
     renderer.setRenderTarget(newTarget);
     pixels = new Uint8ClampedArray(width * height * 4);
     const cachedBackground = scene.background.clone();
-    //scene.background = scene.background.convertSRGBToLinear();
+    scene.background = scene.background.convertSRGBToLinear();
+    if (!NO_FOG)
+      scene.fog = new THREE.Fog(scene.background, FOG_NEAR, FOG_FAR);
 
     if (camera.type === "PerspectiveCamera") {
       // Perspective
-      cam = camera;
+      cam = new THREE.PerspectiveCamera(
+        lastPerspectiveCam.fov,
+        aspect,
+        lastPerspectiveCam.near,
+        lastPerspectiveCam.far
+      );
     } else {
       // Orthographic
+      aspect /= 1.1; // Zoom in a bit for the square thumbs. 22.11.24.20.11
       if (event.content.squareThumbnail) {
         cam = new THREE.OrthographicCamera(
           aspect / -2,
@@ -1139,7 +1148,9 @@ export function handleEvent(event) {
 
     if (event.content.output === "local") {
       download({
-        filename: `${event.content.slug}.png`,
+        filename: `${event.content.slug}.${
+          event.content.format || (Safari ? "png" : "webp")
+        }`,
         data: pixels ? { width, height, pixels } : renderer.domElement,
         //data: renderer.domElement,//{ width, height, pixels },
         modifiers: { scale, flipY },

@@ -750,6 +750,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       return;
     }
 
+    if (type === "rewrite-url-path") {
+      const newPath = content.path;
+      history.replaceState("", document.title, newPath);
+    }
+
     if (type === "disk-loaded") {
       currentPiece = content.path;
 
@@ -2031,9 +2036,15 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         );
       }
       object = URL.createObjectURL(new Blob([data], { type: MIME }));
-    } else if (extension(filename) === "png") {
+    } else if (
+      extension(filename) === "png" ||
+      extension(filename) === "webp"
+    ) {
       // PNG
       MIME = "image/png";
+      if (extension(filename) === "webp") {
+        MIME = "image/webp";
+      }
 
       let can;
       if (data.pixels) {
@@ -2079,7 +2090,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           can = data;
         }
       }
-      const blob = await new Promise((resolve) => can.toBlob(resolve));
+
+      const blob = await new Promise((resolve) => can.toBlob(resolve, MIME, 100));
       object = URL.createObjectURL(blob, { type: MIME });
     }
 

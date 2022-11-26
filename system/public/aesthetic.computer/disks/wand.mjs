@@ -63,6 +63,7 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+- [x] Advancing a "freaky-flowers" token should advance its URL parameters.
 - [x] Generate a new GLB and JSON demo for every piece to replace each one,
      prefixing them with their token ID.
   - [x] Visit each piece in order, exporting a new (prefixed) demo from each.
@@ -306,7 +307,8 @@ function sim({
   store,
   params,
   download,
-  net: { preload, waitForPreload },
+  meta,
+  net: { preload, waitForPreload, rewrite },
   num: {
     vec3,
     randIntRange: rr,
@@ -870,6 +872,22 @@ function sim({
         demoWandFormOptions = null;
         lastPlayedFrames = player.frames;
         player = null;
+
+        // Update the url if we are in a freaky-flowers piece...
+        if (store["freaky-flowers"]) {
+          const headers = store["freaky-flowers"].headers;
+          const tokenID = store["freaky-flowers"].tokenID;
+          const hook = store["freaky-flowers"].hook;
+          let path = `${hook}~${tokenID}`;
+          path += params
+            .slice(1)
+            .map((p) => "~" + p)
+            .join("");
+          meta({ title: path + " · aesthetic.computer", path });
+          rewrite(path); // Update the path in the URL bar.
+          store["freaky-flowers"].headers(tokenID); // Print any series headers.
+        }
+
         // #region relic-1
         // 📔 Some old scripts to automate making changes to demos and GLB files.
         //    Leaving them here in case I need to do automation again!
@@ -940,7 +958,7 @@ function sim({
           advanceSeries(store["freaky-flowers"], 1, true);
         }, 100);
         */
-       // #endregion
+        // #endregion
       }
     });
   });
@@ -1200,8 +1218,7 @@ function act({
     }
   }
 
-  // Take a screenshot / save a still.
-
+  // Switch camera mode.
   if (e.alt && e.is("keyboard:down:o")) {
     gpu.message({
       type: "camera:orthographic",
@@ -1219,6 +1236,7 @@ function act({
       type: "screenshot",
       content: {
         slug: screenshotSlug,
+        format: "png",
         output: "local",
         //camera: { position: [0, -cubeHeight, camStartPos[2]] },
         camera: {
@@ -1691,7 +1709,8 @@ function advanceSeries(series, dir, stop) {
     if (id === 0 && stop) return; // Stop on every ending.
     series.tokenID = id;
     const prefixedTimestamp = "ff" + id + "-" + series.tokens[id];
-    console.log("Loading token:", id, prefixedTimestamp);
+    // console.log("Loading token:", id, prefixedTimestamp);
+
     function queueDemo(speed = 1) {
       const handle = "digitpain";
       const recordingSlug = `${prefixedTimestamp}-recording-${handle}`;
@@ -1989,7 +2008,7 @@ class Tube {
     // this.sides *
     // segmentTotal; // Must be a multiple of two for "line".
 
-    console.log("Maximum vertices set to: ", this.form.MAX_POINTS);
+    // console.log("Maximum vertices set to: ", this.form.MAX_POINTS);
 
     // TODO: 8192 should be plenty of a buffer for 1 segment without doing
     //       this math for now. 22.11.16.05.39
@@ -3323,7 +3342,7 @@ class Player {
 
     // Finish a demo if there are no frames left.
     if (!thisFrame) {
-      console.log("🟡 Demo playback completed:", this.frameIndex);
+      // console.log("🟡 Demo playback completed:", this.frameIndex);
       // Push a completed message with a negative frameCount to mark an ending.
       handler([[-1, "demo:complete"]]);
       this.waitForPreload?.();

@@ -919,9 +919,9 @@ async function load(
   }
 
   // Add meta to the common api so the data can be overridden as needed.
-  // $commonApi.meta = (data) => {
-  //  send({ type: "meta", content: data });
-  // };
+  $commonApi.meta = (data) => {
+   send({ type: "meta", content: data });
+  };
 
   // *** Resize ***
   // Accepts width, height and gap either as numbers or as
@@ -1008,6 +1008,11 @@ async function load(
   $commonApi.density = function (newDensity) {
     console.log("Density has been deprecated. Use `resize` instead.");
   };
+
+  // Rewrite a new URL / parameter path without affecting the history.
+  $commonApi.net.rewrite = (path) => {
+    send({ type: "rewrite-url-path", content: { path } }); // Jump the browser to a new url.
+  }
 
   // Add host to the networking api.
   $commonApi.net.host = host;

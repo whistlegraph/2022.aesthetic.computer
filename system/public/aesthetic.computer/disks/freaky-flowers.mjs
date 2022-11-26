@@ -2,13 +2,12 @@
 // This piece is a router that loads a specific Freaky Flower token in `wand` by
 // sending it a sequence starting with the current piece.
 
-// TODO
 /* #region 🏁 todo
+  - [] How to not clear the console log here in the router or carry forward the
+       headers?
 #endregion */
-// TODO: Also how could I tell "wand" that we came from "freaky flowers" so
-//       that audio-advancing somehow works... and how does auto-advance work
-//       with titles, etc.
 
+// #region 🧮 data
 // 0-128
 const tokens = [
   "2022.11.22.13.12.16",
@@ -143,135 +142,137 @@ const tokens = [
 ];
 
 const tokenColors = [
-"2C2920",
-"BAF9EE",
-"F081B5",
-"ED85B3",
-"9ABC3A",
-"733EF4",
-"8C4C94",
-"DFD9FF",
-"AEC147",
-"E272A3",
-"B67DC1",
-"D2C591",
-"D60060",
-"EB77FB",
-"F9FB4C",
-"9C8AB9",
-"DCD56A",
-"FCFEFA",
-"1C1C2C",
-"CD96B9",
-"D4C3B1",
-"B09BE0",
-"E3D726",
-"F1B5E0",
-"6347C5",
-"8AD5FE",
-"FDED56",
-"91C100",
-"B243EF",
-"CEAA89",
-"71730A",
-"F9E2DA",
-"C5CCCC",
-"FABFF9",
-"E8C1FD",
-"8452BD",
-"2F0A29",
-"93B686",
-"8CB0DE",
-"7087E4",
-"4F94A1",
-"C569B8",
-"4A60FB",
-"F754BF",
-"A4BDD4",
-"ED5A17",
-"A5A572",
-"6D8DBA",
-"47C4D0",
-"9ED89E",
-"B80000",
-"7D98B3",
-"969AB8",
-"86FDE8",
-"407B77",
-"FEFAFE",
-"7DCE0A",
-"7F6929",
-"4C2626",
-"AEB9EF",
-"EB8031",
-"B1D0D5",
-"ED48CD",
-"FACAD9",
-"FF7271",
-"23231C",
-"171720",
-"F0CD40",
-"FEC492",
-"D0CAA8",
-"6F3683",
-"EDF6D9",
-"7D4731",
-"2C1C1C",
-"292617",
-"23261C",
-"290A17",
-"A68A8E",
-"922053",
-"8896A9",
-"E7E5A4",
-"2CAA2F",
-"5212C9",
-"BEDD00",
-"916AF6",
-"16001C",
-"A54C5A",
-"23E500",
-"577085",
-"FFBA9F",
-"EFD9CE",
-"D30000",
-"202C2C",
-"D4AE60",
-"F4B3AB",
-"5AE0F0",
-"D4ABF9",
-"84ABB0",
-"B5AAAC",
-"F9A5F3",
-"122917",
-"2F170A",
-"B6DCEB",
-"FAC53C",
-"96ADD2",
-"2C81F9",
-"693185",
-"85405C",
-"26171C",
-"0A2320",
-"83BDBC",
-"906BC8",
-"669583",
-"60432F",
-"E8E5F2",
-"F3CAF2",
-"EADCCB",
-"2C1C2F",
-"6384FB",
-"478E50",
-"17D312",
-"C848A0",
-"C2CBF4",
-"1C2C2C",
-"FFC100",
-"6578F9",
-"232626",
-"7DB76B",
-"12122F"];
+  "2C2920",
+  "BAF9EE",
+  "F081B5",
+  "ED85B3",
+  "9ABC3A",
+  "733EF4",
+  "8C4C94",
+  "DFD9FF",
+  "AEC147",
+  "E272A3",
+  "B67DC1",
+  "D2C591",
+  "D60060",
+  "EB77FB",
+  "F9FB4C",
+  "9C8AB9",
+  "DCD56A",
+  "FCFEFA",
+  "1C1C2C",
+  "CD96B9",
+  "D4C3B1",
+  "B09BE0",
+  "E3D726",
+  "F1B5E0",
+  "6347C5",
+  "8AD5FE",
+  "FDED56",
+  "91C100",
+  "B243EF",
+  "CEAA89",
+  "71730A",
+  "F9E2DA",
+  "C5CCCC",
+  "FABFF9",
+  "E8C1FD",
+  "8452BD",
+  "2F0A29",
+  "93B686",
+  "8CB0DE",
+  "7087E4",
+  "4F94A1",
+  "C569B8",
+  "4A60FB",
+  "F754BF",
+  "A4BDD4",
+  "ED5A17",
+  "A5A572",
+  "6D8DBA",
+  "47C4D0",
+  "9ED89E",
+  "B80000",
+  "7D98B3",
+  "969AB8",
+  "86FDE8",
+  "407B77",
+  "FEFAFE",
+  "7DCE0A",
+  "7F6929",
+  "4C2626",
+  "AEB9EF",
+  "EB8031",
+  "B1D0D5",
+  "ED48CD",
+  "FACAD9",
+  "FF7271",
+  "23231C",
+  "171720",
+  "F0CD40",
+  "FEC492",
+  "D0CAA8",
+  "6F3683",
+  "EDF6D9",
+  "7D4731",
+  "2C1C1C",
+  "292617",
+  "23261C",
+  "290A17",
+  "A68A8E",
+  "922053",
+  "8896A9",
+  "E7E5A4",
+  "2CAA2F",
+  "5212C9",
+  "BEDD00",
+  "916AF6",
+  "16001C",
+  "A54C5A",
+  "23E500",
+  "577085",
+  "FFBA9F",
+  "EFD9CE",
+  "D30000",
+  "202C2C",
+  "D4AE60",
+  "F4B3AB",
+  "5AE0F0",
+  "D4ABF9",
+  "84ABB0",
+  "B5AAAC",
+  "F9A5F3",
+  "122917",
+  "2F170A",
+  "B6DCEB",
+  "FAC53C",
+  "96ADD2",
+  "2C81F9",
+  "693185",
+  "85405C",
+  "26171C",
+  "0A2320",
+  "83BDBC",
+  "906BC8",
+  "669583",
+  "60432F",
+  "E8E5F2",
+  "F3CAF2",
+  "EADCCB",
+  "2C1C2F",
+  "6384FB",
+  "478E50",
+  "17D312",
+  "C848A0",
+  "C2CBF4",
+  "1C2C2C",
+  "FFC100",
+  "6578F9",
+  "232626",
+  "7DB76B",
+  "12122F",
+];
+// #endregion
 
 // 🥾 Boot (Runs once before first paint and sim)
 export function boot({ wipe, params, num: { randInt }, jump, store }) {
@@ -280,30 +281,36 @@ export function boot({ wipe, params, num: { randInt }, jump, store }) {
   const param1 = parseInt(params[0]);
   const tokenID =
     typeof param1 === "number" ? param1 : randInt(tokens.length - 1);
-  store["freaky-flowers"] = { tokenID, tokens }; // Note: Storage could automatically
-  //                                                know the disk. 22.11.25.11.14
 
-  console.log(
-    `%cFreaky Flowers`,
-    `background: rgba(50, 10, 10);
+  const headers = (id) => {
+    console.log(
+      `%cFreaky Flowers`,
+      `background: rgba(50, 10, 10);
      color: rgb(255, 255, 25);
      font-size: 140%;
      padding: 0 0.25em;
      border-radius: 0.15em;
      border-bottom: 0.75px solid rgb(120, 0, 0);
      border-right: 0.75px solid rgb(120, 0, 0);`
-  );
+    );
 
-  console.log(
-    `%cSculpture No. ${tokenID}/${tokens.length - 1}`,
-    `background: rgba(0, 10, 10);
+    console.log(
+      `%cSculpture No. ${id}/${tokens.length - 1}`,
+      `background: rgba(0, 10, 10);
      color: rgb(150, 150, 150);
      font-size: 120%;
      padding: 0 0.25em;
      border-radius: 0.15em;
      border-bottom: 0.75px solid rgb(120, 120, 120);
      border-right: 0.75px solid rgb(120, 120, 120);`
-  );
+    );
+  };
+
+  store["freaky-flowers"] = { tokenID, tokens, headers }; // Note: Storage could automatically
+  //                                                know the disk. 22.11.25.11.14
+
+  if (store["ff"]) store["freaky-flowers"].hook = "ff";
+  else store["freaky-flowers"].hook = "freaky-flowers";
 
   jump(
     `wand~ff${tokenID}-${tokens[tokenID]}` +
