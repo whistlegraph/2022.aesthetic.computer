@@ -31,6 +31,7 @@ Welcome to...
 
 🐞 Annoying Bugs & Regressions (Some dev only.)
   + API
+  - [] Research the use of "requestProvider.js.map" and work it into `index.js`.
   - [] Rename $api.upload to $api.open? or $api.importFile? 
   + In Production
   - [🍽️] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`

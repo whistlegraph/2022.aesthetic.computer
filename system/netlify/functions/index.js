@@ -46,6 +46,7 @@ async function fun(event, context) {
   */
 
   let desc;
+  let meta;
 
   const redirect = {
     statusCode: 302,
@@ -62,7 +63,7 @@ async function fun(event, context) {
       const externalPiece = await getPage(
         `https://${parsed.host}/${parsed.path}.mjs`
       );
-      console.log(externalPiece)
+      console.log(externalPiece);
       if (externalPiece?.code === 200) {
         desc =
           externalPiece.data.split(/\r?\n/)[0].replace("//", "").trim() ||
@@ -73,16 +74,33 @@ async function fun(event, context) {
     } else {
       // Locally hosted piece.
       try {
-        //console.log(parsed.path);
-        //desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
+        // Just whitelist freaky-flowers for now 22.11.28.13.36.
+        if (
+          !parsed.text.startsWith("requestProvider.js.map") &&
+          (parsed.text.startsWith("ff") ||
+            parsed.text.startsWith("freaky-flowers"))
+        ) {
+          // desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
+          const m = await import(`../../public/${parsed.path}.mjs`);
+          meta = m.meta?.(parsed); // Parse any special piece metadata if it exists.
+        }
       } catch (e) {
-        console.log(e)
+        console.log(e);
       }
     }
   } catch {
     // If either module doesn't load, then we KNOW we won't be able to load
     // the piece, so we can fallback to the main route.
     return redirect;
+  }
+
+  // Set canonical metadata images, or just use some defaults.
+  let ogImage, twitterImage;
+  if (meta?.image_url) {
+    ogImage = twitterImage = meta.image_url;
+  } else {
+    ogImage = `https://${event.headers["host"]}/thumbnail/1200x630/${slug}.jpg`;
+    twitterImage = `https://${event.headers["host"]}/thumbnail/1800x900/${slug}.jpg`;
   }
 
   const html = `
@@ -99,15 +117,11 @@ async function fun(event, context) {
         <meta name="og:description" content="${
           desc || "An aesthetic.computer piece."
         }" />
-        <meta name="og:image" content="https://${
-          event.headers['host']
-        }/thumbnail/1200x630/${slug}.jpg" />
+        <meta name="og:image" content="${ogImage}" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="${slug}" />
         <meta name="twitter:site" content="aesthetic.computer" />
-        <meta name="twitter:image" content="https://${
-         event.headers['host'] 
-        }/thumbnail/1800x900/${slug}.jpg"/>
+        <meta name="twitter:image" content="${twitterImage}"/>
       </head>
       <body class="native-cursor">
       <script>
@@ -126,7 +140,7 @@ async function fun(event, context) {
       "Cross-Origin-Embedder-Policy": "require-corp",
       "Cross-Origin-Opener-Policy": "same-origin",
       // "Cross-Origin-Resource-Policy": "cross-origin", // for aframe. 22.10.04.21.35
-      "Vary": "*"
+      Vary: "*",
     },
     body: html,
     ttl: 60,

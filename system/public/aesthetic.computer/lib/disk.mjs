@@ -61,7 +61,7 @@ const nopaint = {
     store,
   }) {
     if (e.is("keyboard:down:enter")) {
-      download(`painting-${num.timestamp()}.png`, sys.painting, { scale: 4});
+      download(`painting-${num.timestamp()}.png`, sys.painting, { scale: 4 });
     }
 
     if (e.is("reframed")) {
@@ -782,11 +782,9 @@ let lastHost; // = "disks.aesthetic.computer"; TODO: Add default host here.
 let firstLoad = true;
 let firstPiece, firstParams, firstSearch;
 
-async function load(
-  { path, host, search, params, hash, text },
-  fromHistory = false,
-  alias = false
-) {
+async function load(parsed, fromHistory = false, alias = false) {
+  let { path, host, search, params, hash, text } = parsed;
+
   if (loading === false) {
     loading = true;
   } else {
@@ -900,9 +898,22 @@ async function load(
   // const source = await (await fetch(fullUrl)).text();
 
   // ***Client Metadata Fields***
-  // Set default metadata fields for SEO and sharing, (requires serverside prerendering).
+  // Set default metadata fields for SEO and sharing,
+  // (requires serverside prerendering, also via `index.js`).
   // See also: `index.js` which prefills metadata on page load from the server.
   let meta;
+  const pieceMetadata = module.meta?.(parsed); // Parse any special piece metadata if it exists.
+  const imageHost = "https://aesthetic.computer";
+
+  // See also: `index.js`
+  let ogImage, twitterImage;
+  if (pieceMetadata?.image_url) {
+    ogImage = twitterImage = pieceMetadata.image_url;
+  } else {
+    ogImage = `https://${imageHost}/thumbnail/1200x630/${text}.jpg`;
+    twitterImage = `https://${imageHost}/thumbnail/1800x900/${text}.jpg`;
+  }
+
   if (alias === false) {
     let title = text + " · aesthetic.computer";
     if (text === "prompt" || text === "/") title = "aesthetic.computer";
@@ -911,9 +922,8 @@ async function load(
       path: text,
       desc: module.desc, // Note: This doesn't auto-update externally hosted module descriptions, and may never need to? 22.07.19.06.00
       img: {
-        og: "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
-        twitter:
-          "https://aesthetic.computer/thumbnail/1200x630/" + text + ".jpg",
+        og: ogImage,
+        twitter: twitterImage,
       },
       url: "https://aesthetic.computer/" + text,
     };
@@ -921,7 +931,7 @@ async function load(
 
   // Add meta to the common api so the data can be overridden as needed.
   $commonApi.meta = (data) => {
-   send({ type: "meta", content: data });
+    send({ type: "meta", content: data });
   };
 
   // *** Resize ***
@@ -1013,7 +1023,7 @@ async function load(
   // Rewrite a new URL / parameter path without affecting the history.
   $commonApi.net.rewrite = (path) => {
     send({ type: "rewrite-url-path", content: { path } }); // Jump the browser to a new url.
-  }
+  };
 
   // Add host to the networking api.
   $commonApi.net.host = host;
@@ -1113,8 +1123,6 @@ async function load(
   // Add download event to trigger a file download from the main thread.
   $commonApi.download = (filename, data, modifiers) =>
     send({ type: "download", content: { filename, data, modifiers } });
-
-
 
   // * Preload *
   // Add preload to the boot api.

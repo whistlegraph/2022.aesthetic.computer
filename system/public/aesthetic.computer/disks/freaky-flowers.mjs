@@ -3,8 +3,6 @@
 // sending it a sequence starting with the current piece.
 
 /* #region 🏁 todo
-  - [] How to not clear the console log here in the router or carry forward the
-       headers?
 #endregion */
 
 // #region 🧮 data
@@ -144,7 +142,7 @@ const tokens = [
 const tokenColors = [
   "2C2920",
   "BAF9EE",
-  "F081B5",
+  "8C5065",
   "ED85B3",
   "9ABC3A",
   "733EF4",
@@ -276,24 +274,8 @@ const tokenColors = [
 // #endregion
 
 // 🥾 Boot (Runs once before first paint and sim)
-export function boot({
-  wipe,
-  params,
-  download,
-  num: { randInt, hexToRgb },
-  jump,
-  store,
-}) {
-  // Download
-  // download("colors.json", JSON.stringify(tokenColors.map((c) => hexToRgb(c))));
-
-  // Perform basic setup here.
-  // resize(50, 20); // Add a custom resolution.
-  const param1 = parseInt(params[0]);
-  const tokenID =
-    param1 >= 0 && param1 < tokens.length 
-      ? param1
-      : randInt(tokens.length - 1);
+export function boot({ wipe, params, jump, store }) {
+  const i = tokenID(params);
 
   const headers = (id) => {
     console.log(
@@ -319,21 +301,43 @@ export function boot({
     );
   };
 
-  store["freaky-flowers"] = { tokenID, tokens, headers }; // Note: Storage could automatically
+  store["freaky-flowers"] = { tokenID: i, tokens, headers }; // Note: Storage could automatically
   //                                                know the disk. 22.11.25.11.14
 
   if (store["ff"]) store["freaky-flowers"].hook = "ff";
   else store["freaky-flowers"].hook = "freaky-flowers";
 
   jump(
-    `wand~ff${tokenID}-${tokens[tokenID]}` +
+    `wand~ff${i}-${tokens[i]}` +
       params
         .slice(1)
         .map((p) => `~` + p)
         .join(""),
-    true,
-    true
+    true, // ahistorical (skip the web history stack)
+    true // alias (don't change the address bar url)
   );
   wipe(); // Note: Could I possibly nab the background color here for loading and
   //       carry it through to wand?
+}
+
+const baseURL = "https://wand.aesthetic.computer";
+const handle = "digitpain";
+
+// Retrieve or generate a token index, given this piece's parameter list.
+export function tokenID(params) {
+  const param1 = parseInt(params[0]);
+  return param1 >= 0 && param1 < tokens.length
+    ? param1
+    : randInt(tokens.length - 1);
+}
+
+// Generates metadata fields for this piece.
+// (Run by the server.)
+export function meta({ params }) {
+  const i = tokenID(params);
+  return {
+    // Note: high res png's are also stored, but webps are for Open Graph. 22.11.28.13.13
+    image_url: `${baseURL}/ff${i}-${tokens[i]}-still-${handle}.webp`,
+    // https://wand.aesthetic.computer/ff1-2022.11.20.11.42.50-still-digitpain.png
+  };
 }

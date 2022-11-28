@@ -1,24 +1,16 @@
 # this is a shell script for converting all images in a directory to webp
 # currently supports all files with an "image*" mimetype 
 
-# you can pass `-ll` for lossless compression
+# Usage from directory of images... `fish img-to-webp.fish any-flags`
+# Useful flags: `-resize 2048x2048` `-define webp:lossless=true`  
 # (requires imagemagick)
+# last updated 22.11.28.12.57
 
-if test "$argv[1]" = -ll
-    # use lossless encoding if -ll is passed 
-    for file in * 
-      if test (string match "image/*" (file -b --mime-type $file))
-        echo "Converting $file to webp with LOSSLESS compression..."
-        convert $file -define webp:lossless=true (path change-extension '' $file).webp
-      end
-    end
-else
-    # otherwise use imagemagick default
-    for file in * 
-      if test (string match "image/*" (file -b --mime-type $file))
-        echo "Converting $file to webp with DEFAULT compression..."
-        convert $file (path change-extension '' $file).webp
-      end
+# otherwise use imagemagick's defaults
+for file in *
+    if test (string match "image/*" (file -b --mime-type $file))
+        echo "Converting $file to webp with flags: $argv"
+        convert $file $argv (path change-extension '' $file).webp
     end
 end
 
