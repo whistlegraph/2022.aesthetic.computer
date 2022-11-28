@@ -275,9 +275,6 @@ const tokenColors = [
 
 // 🥾 Boot (Runs once before first paint and sim)
 export function boot({ wipe, params, jump, store }) {
-  // Uncomment and import `download` grab the above arrays as needed.
-  // download("colors.json", JSON.stringify(tokenColors.map((c) => hexToRgb(c))));
-
   const i = tokenID(params);
 
   const headers = (id) => {
