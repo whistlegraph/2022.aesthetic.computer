@@ -1278,7 +1278,7 @@ function act({
     if (tokenSlug) tokenSlug = `ff${tokenID}-` + tokenSlug;
     const ts = tokenSlug || params[0] || timestamp();
     const handle = "digitpain"; // Hardcoded for now.
-    const screenshotSlug = `${ts}-screenshot-${handle}`;
+    const screenshotSlug = `${ts}-still-${handle}`;
     gpu.message({
       type: "screenshot",
       content: {
@@ -1753,6 +1753,8 @@ function advanceSeries(series, dir, stop) {
   if (series) {
     let id = series.tokenID;
     id = (id + dir) % series.tokens.length;
+    if (id < 0) id = series.tokens.length + id;
+    console.log(id);
     if (id === 0 && stop) return; // Stop on every ending.
     series.tokenID = id;
     const prefixedTimestamp = "ff" + id + "-" + series.tokens[id];

@@ -291,7 +291,7 @@ export function boot({
   // resize(50, 20); // Add a custom resolution.
   const param1 = parseInt(params[0]);
   const tokenID =
-    param1 >= 0 && param1 < tokens.length - 1
+    param1 >= 0 && param1 < tokens.length 
       ? param1
       : randInt(tokens.length - 1);
 

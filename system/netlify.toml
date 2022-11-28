@@ -10,7 +10,7 @@
 [functions.presigned-upload-url]
   external_node_modules = ["nanoid", "@aws-sdk-client-s3", "@aws-sdk/s3-request-presigner"]
 [functions.thumbnail]
-  external_node_modules = ["chrome-aws-lambda"]
+  # external_node_modules = ["chrome-aws-lambda"]
 [dev]
   NODE_ENV = "development"
   publish = "public/"
