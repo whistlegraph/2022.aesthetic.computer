@@ -74,9 +74,16 @@ async function fun(event, context) {
     } else {
       // Locally hosted piece.
       try {
-        // desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
-        const m = await import(`../../public/${parsed.path}.mjs`);
-        meta = m.meta?.(parsed); // Parse any special piece metadata if it exists.
+        // Just whitelist freaky-flowers for now 22.11.28.13.36.
+        if (
+          !parsed.text.startsWith("requestProvider.js.map") &&
+          (parsed.text.startsWith("ff") ||
+            parsed.text.startsWith("freaky-flowers"))
+        ) {
+          // desc = (await import(`../../public/${parsed.path}.mjs`)).desc;
+          const m = await import(`../../public/${parsed.path}.mjs`);
+          meta = m.meta?.(parsed); // Parse any special piece metadata if it exists.
+        }
       } catch (e) {
         console.log(e);
       }
@@ -87,7 +94,7 @@ async function fun(event, context) {
     return redirect;
   }
 
-  // Set canonical metadata images, or just use some defaults. 
+  // Set canonical metadata images, or just use some defaults.
   let ogImage, twitterImage;
   if (meta?.image_url) {
     ogImage = twitterImage = meta.image_url;

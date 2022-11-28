@@ -324,7 +324,7 @@ const baseURL = "https://wand.aesthetic.computer";
 const handle = "digitpain";
 
 // Retrieve or generate a token index, given this piece's parameter list.
-function tokenID(params) {
+export function tokenID(params) {
   const param1 = parseInt(params[0]);
   return param1 >= 0 && param1 < tokens.length
     ? param1

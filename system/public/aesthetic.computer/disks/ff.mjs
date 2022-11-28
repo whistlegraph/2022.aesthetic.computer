@@ -8,3 +8,5 @@ export function boot({ params, jump, store }) {
   // store["ff"] = true; // But remember where we came from!
   jump(`freaky-flowers` + params.map((p) => `~` + p).join(""), true, false);
 }
+
+export { meta } from "./freaky-flowers.mjs";
