@@ -9,20 +9,16 @@
 */
 
 /* #region 🏁 todo
-
 + Later / Post-production.
-- [️‍🔥] Take Final PNG screenshots of each work.
-
+- [] Hook up screenshots as og:images in `thumbnail` / make a special case in index.js for freaky-flowers and ff urls...
+  - [] Parse thumbnail parameters better / make it way faster?
+- [] Metadata on preview links.
+- [] Record some GIFs.
 - [] What would happen if I just randomly started removing or vibrating sets of vertices after
      a piece loaded?
 - [] Auto jump from piece to piece.
-- [] Add ambient fog. 
 - [] Master the main materials and lights in the scene.
   - [] Decide on colors / sets, etc.
-
-- [] Parse thumbnail parameters better / make it way faster?
-- [] Metadata on preview links.
-
 - [] Re-enable Twitter player? Check `index` and `bios` "twitter";
   - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
   - [] Is there a nice SAAS for this?
@@ -52,7 +48,6 @@
 - [] Make sure demos can't record beyond the alotted geometry MAX. See `Tube` MAX.
 - [] Add transparent triangle rendered vertices to measurement cube. 
 - [] Reload last camera position on refresh.
-- [] Record some GIFs.
 - [] There should be an "inner" and "outer" triangulation option.
       - [] Inner ONLY for complexity 1 and 2.
       - [] Optional elsewhere.
@@ -65,6 +60,7 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+- [x‍] Take Final PNG screenshots of each work.
 - [x] Advancing a "freaky-flowers" token should advance its URL parameters.
 - [x] Generate a new GLB and JSON demo for every piece to replace each one,
      prefixing them with their token ID.
