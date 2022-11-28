@@ -260,7 +260,7 @@ function boot({
   camdoll = new CamDoll(Camera, Dolly, {
     z: 0.9,
     y: cubeHeight,
-    sensitivity: 0.0001,
+    sensitivity: 0.00025,
   }); // Camera controls.
   stage = new Form(
     QUAD,
