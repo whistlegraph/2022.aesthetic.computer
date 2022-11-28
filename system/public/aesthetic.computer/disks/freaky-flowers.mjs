@@ -3,8 +3,6 @@
 // sending it a sequence starting with the current piece.
 
 /* #region 🏁 todo
-  - [] How to not clear the console log here in the router or carry forward the
-       headers?
 #endregion */
 
 // #region 🧮 data
@@ -276,15 +274,8 @@ const tokenColors = [
 // #endregion
 
 // 🥾 Boot (Runs once before first paint and sim)
-export function boot({
-  wipe,
-  params,
-  download,
-  num: { randInt, hexToRgb },
-  jump,
-  store,
-}) {
-  // Uncomment to download the above arrays as needed.
+export function boot({ wipe, params, jump, store }) {
+  // Uncomment and import `download` grab the above arrays as needed.
   // download("colors.json", JSON.stringify(tokenColors.map((c) => hexToRgb(c))));
 
   const i = tokenID(params);
