@@ -139,6 +139,88 @@ const tokens = [
   "2022.11.22.09.33.26",
 ];
 
+const tokenTitlesAndDescriptions = [
+  [
+    "Title Sign",
+    "Welcome to Freaky Flowers! This piece is locked away in a wallet. The seed phrase of which is hidden among the other 128 flowers that follow this one.",
+  ],
+  [
+    "First Freak",
+    'This is the first flower I drew once I got my software working and decided on a basic score. I signed the corner "ff" with a double-entendre pointing the two repeated consonants in my first name (Jeffrey) and the series title.',
+  ],
+  [
+    "Simple Screamer",
+    "The primary gesture (stem) of my previous drawing is repeated here to produce another flower, illustrating the score's repeatability and establishing a motif.",
+  ],
+  [
+    "Tongue Warrior",
+    "A small green stick figure stands with gun and sword on the tongue of this large clownflower. Three large emoticons grace the backside.",
+  ],
+  [
+    "Dribbles",
+    "A drooling, dribbling yellow flower with a three sided stem, boxed in by a colorful ribbon of its own tears.",
+  ],
+  [
+    "Splayed Face",
+    "Cornflower blue petals surround this tiny-faced flower. One petal drifts off to describe a frowning figure in a field.",
+  ],
+  [
+    "Teal Star",
+    "A frenetically rendered teal flower with RGB petals lives in a bed of white roses, one of which happily cries blood.",
+  ],
+  [
+    "Connected Tongues",
+    "Two dis-integrated flowers are bridged by a common stem and common tongue. A scrawled butterfly cosplayer whistlegraph stands on the floor.",
+  ],
+  [
+    "Fake Tree",
+    'The facade of this piece presents as an old, bonsai-like tree, hiding its stochastically colored stem. This is the first "Rainbow Petal" appearance.',
+  ],
+  [
+    "Blown",
+    "This scared, zebra stemmed blue flower anchors its long tongue on the ground whilst facing a windy challenge.",
+  ],
+  [
+    "Corner Life",
+    "Shooting straight from a predictable backend corner, this basic flower plays it safe and narrow up until the end.",
+  ][
+    "Rainbow Tipped Tongue",
+    "Giant eyebrows, scared stiff, and just trying to be heard intellectually."
+  ],
+  [
+    "Devout Sun Worshipper",
+    "This red flower with wireframe nose lives obediently under a purple cross. A Scared of Stairs whistlegraph graces the floor here.",
+  ],
+  [
+    "Growing Pains",
+    "Too long, too coily, too thin... and totally strung out, manifesting two faces. It's hard to be 13!",
+  ],
+  [
+    "Plane Pals",
+    "Two flowers wrap around one another, one of which pukes rainbows into the metadata and looks towards the first Red Message in the series. The other is completely petal-less.",
+  ],
+  [
+    "Nose Growth",
+    "The nose of the teal flower on the left mutated out into a new species generation, killing its host in the process.",
+  ],
+  [
+    "Snack Back",
+    "An extremely excited, gap-toothed flower has turned its back on the audience to enjoy a tasty snack."
+  ],
+  [
+    "Rainbow Emptiness",
+    "The Rainbow Petal here is not healthy for 17. It's too heavy an appendage, sucking in all surrounding interest. This flower is growing from an asteroid."
+  ],
+  [
+    "Squashed & Destroyed",
+    "This facade bears all, but behind is a different spatial metaphor: one of unrequited flower love. First \"Flat\" flower of the series."
+  ],
+  [
+    "FREAK",
+    "Five faceless buds spell out FREAK. On the right, a "
+  ]
+];
+
 const tokenColors = [
   "2C2920",
   "BAF9EE",
