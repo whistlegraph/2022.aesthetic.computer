@@ -10,11 +10,12 @@
 
 /* #region 🏁 todo
 + Later / Post-production.
-- [x] Hook up screenshots as og:images in `thumbnail` / make a special case in index.js for freaky-flowers and ff urls...
-  - [] Parse thumbnail parameters better / make it way faster? Eh...
 - [] Metadata on preview links.
-- [] Switch shift and space.
-- [] Record some GIFs.
+- [] Organize TODOs.
+- [] Add metadata / attributes and tags from the Google Sheet to the JSON.
+  - [] Ask about the Google Sheet / json generation flow.
+- [] Switch shift and space in camdoll (space should move up).
+- [] Record some turn-around animation GIFs.
 - [] What would happen if I just randomly started removing or vibrating sets of vertices after
      a piece loaded?
 - [] Auto jump from piece to piece.
@@ -22,7 +23,6 @@
   - [] Decide on colors / sets, etc.
 - [] Re-enable Twitter player? Check `index` and `bios` "twitter";
   - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
-  - [] Is there a nice SAAS for this?
 - [] Ultimate Fatality: Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
   - [] Keep the light and dark idea?
 - [] Organize these after the sculptures are done.
@@ -61,6 +61,8 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+- [x] Hook up screenshots as og:images in `thumbnail` / make a special case in index.js for freaky-flowers and ff urls...
+  - [-] Parse thumbnail parameters better / make it way faster? Eh...
 - [x‍] Take Final PNG screenshots of each work.
 - [x] Advancing a "freaky-flowers" token should advance its URL parameters.
 - [x] Generate a new GLB and JSON demo for every piece to replace each one,
