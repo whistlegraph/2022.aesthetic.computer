@@ -170,11 +170,11 @@ const tokenTitlesAndDescriptions = [
   ],
   [
     "Connected Tongues",
-    "Two dis-integrated flowers are bridged by a common stem and common tongue. A scrawled butterfly cosplayer whistlegraph stands on the floor.",
+    "Two dis-integrated flowers are bridged by a common stem and common tongue. A scrawled Butterfly Cosplayer whistlegraph stands on the floor.",
   ],
   [
     "Fake Tree",
-    'The facade of this piece presents as an old, bonsai-like tree, hiding its stochastically colored stem. This is the first "Rainbow Petal" appearance.',
+    "The facade of this piece presents as an old, bonsai-like tree, hiding its stochastically colored stem. This is the first Rainbow Petal appearance.",
   ],
   [
     "Blown",
@@ -183,9 +183,10 @@ const tokenTitlesAndDescriptions = [
   [
     "Corner Life",
     "Shooting straight from a predictable backend corner, this basic flower plays it safe and narrow up until the end.",
-  ][
-    ("Rainbow Tipped Tongue",
-    "Giant eyebrows, scared stiff, and just trying to be heard intellectually.")
+  ],
+  [
+    "Rainbow Tipped Tongue",
+    "Giant eyebrows, scared stiff, and just trying to be heard intellectually.",
   ],
   [
     "Devout Sun Worshipper",
@@ -201,7 +202,7 @@ const tokenTitlesAndDescriptions = [
   ],
   [
     "Nose Growth",
-    "The nose of the teal flower on the left mutated out into a new species generation, killing its host in the process.",
+    "The nose of the teal flower on the left mutated out into a new species generation, killing its host in the process. First Double Head of the series.",
   ],
   [
     "Snack Back",
@@ -314,7 +315,7 @@ const tokenTitlesAndDescriptions = [
   ],
   [
     "Basic Rainbow Petal",
-    'Unable to face the audience, this flower has little self-esteem because despite having a "Rainbow Petal" its others are all empty.',
+    "Unable to face the audience, this flower has little self-esteem because despite having a Rainbow Petal its others are all empty.",
   ],
   [
     "Melter",
@@ -328,101 +329,330 @@ const tokenTitlesAndDescriptions = [
     "Hangers",
     "Caught in a bind by this purple predator with CMYK petals are two excited snacks.",
   ],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
-  ["", ""],
+  [
+    "Backplane Poker",
+    "An elegently hued impressionist flower juts out of a totally normal, not special, teal back plane.",
+  ],
+  [
+    "Sad & Planar",
+    "A planar stem with a black shadow drawing on the back emphasises the heavy emotions of this light olive green blossom.",
+  ],
+  [
+    "Dead Projection",
+    'This violntly dismembered, deconstructed flower projects an image of a dead face for the audience. The first "Dead" of the series.',
+  ],
+  [
+    "Chased",
+    "This flower is scurrying away from the backplane drawing of a two dimensional dual wielder.",
+  ],
+  [
+    "First Base",
+    "Pretty much black and red, always knowing what's cool. Has a great eye and solid taste!",
+  ],
+  [
+    "Borderline Pathetic",
+    'This is an ultra basic yellow flower whose face is wounded on the left side. The first "Ultra" of the series.',
+  ],
+  [
+    "Crushed",
+    "Sometimes you cry so hard that the tears are the colors of your insides and you can't tell the difference anymore. That's where this flower is at rn! Also, a rainbow colored ribbon passes through Sonic-style rings.",
+  ],
+  [
+    "Chunky Nosebleeder",
+    "Constructed with large chunks, a natural at commanding the space, and a little unhealthy.",
+  ],
+  [
+    "Nervously Flat",
+    "Behind this inconfident flower is someone signalling support and showing a sign of love.",
+  ],
+  [
+    "Gaping Quintet",
+    "Five flowers left agape and in awe in a diagonal that reveals a Red Message. The second flower from the top has a Rainbow Petal!",
+  ],
+  [
+    "Rocky No Face",
+    "Closed off to the world and growing in the dark (off a rock) with glowing red petals.",
+  ],
+  [
+    "Dismantled Outliner",
+    "A broken up pastel stem and discombobulated face tries to keep it together with a black outline.",
+  ],
+  [
+    "Base Flower Eater",
+    "This dank snacker just finished consuming a smaller flower and is sucking up the stem like spaghetti.",
+  ],
+  [
+    "Knotted",
+    "A super long stem compacted and bunched up in knots is responsible for the issues this flower exhibits.",
+  ],
+  [
+    "Capital Freak",
+    "A large, lime-green capital letter F outlines this happily lilac-faced flower.",
+  ],
+  [
+    "Senseless",
+    "A fairly simple freak with a magenta and mauve petals, losing all senses.",
+  ],
+  [
+    "Halftime",
+    "This Nintendo friendly minimal outline of a flower with a thick polychrome petal outline represents the mid-point of the series.",
+  ],
+  [
+    "Tubular CMYK",
+    "A very abstract flower, using known palettes. The stem is planar with a thin volumetric core. A Red Message is on the left!",
+  ],
+  [
+    "Monoprinted",
+    "The sharp Gestalt on this flower shows how applicable it is towards being flattened, impressed, and ultimately conserved through various media. Please be gentle. First Mono of the series.",
+  ],
+  [
+    "Parasitic Choker",
+    "This large green flower is wearing a smaller monochromatic one as a scarf which circumnavigates its stem.",
+  ],
+  [
+    "Left Turner",
+    "A tiny welcome wagon under an arch is inviting you to look left and check out the monstrosity it lives under the presence of.",
+  ],
+  [
+    "Focused Drooler",
+    "With intense conviction, this Basic flower dribbles left-over mesh that leads to a Red Message.",
+  ],
+  [
+    "Ultra Basic UWU",
+    'Small and, exquisitely adorable. The underside of this piece reads: "so basic i wud kms". First UWU of the series.',
+  ],
+  [
+    "Kooning",
+    "This spiraling flower has incredible gestural energy, a Zebra stem section and a happy figure with stochastic shirt on the back.",
+  ],
+  [
+    "Just Woke",
+    "This flatty just woke up! Behind it's pulled up stem is a new Red Message about Apple Computer.",
+  ],
+  [
+    "Being There",
+    "This outlined flower is modest, concerned, and staying present! First Wireframe of the series.",
+  ],
+  [
+    "Windmill",
+    "A healthy level of whirlwind energy exists in this Wireframe flower. It keeps things transparent.",
+  ],
+  [
+    "Crossed Wireframe",
+    "The Wireframe label on the bottom right of this flower was cancelled out... does it really know itself? No.",
+  ],
+  [
+    "Monumental Wireframe",
+    "Boldy stating its major use case, this Wireframe flower is sad and demanding. A Red Message is on the right!",
+  ],
+  [
+    "Staying Put",
+    "Fully wedded to its home this plump specimen is consistently concerned about its own labels, even though nobody else can see them.",
+  ],
+  [
+    "Clipping",
+    'Geometry keeps intersecting itself in the stem of this flower with a flat projection. First "noclip" of the series.',
+  ],
+  [
+    "Stood Up",
+    "This chunky flower grew legs and stands tall, holding up its own weight for once. An RGB stripe on the back yields an array of faces.",
+  ],
+  [
+    "Low Poly",
+    "This Low Poly (only of the series) labeled piece ostensibly flaps one petal, according to the motion lines.",
+  ],
+  [
+    "Barrel",
+    "Adjacent bars shoot out from each of this flower's octagonal, pink-eyed face. A small figure in the corner raises their hand for attention.",
+  ],
+  [
+    "Weeper",
+    "This mint-faced depressive has a beatiful magenta and cornflower blue stem, which grows from a river of is own tears.",
+  ],
+  [
+    "Pink Ricochet",
+    "Thin-stemmed and bouncing around inside of its container. Check that Red Message to the left!",
+  ],
+  [
+    "Idiosyncratic Sign Holder",
+    "Purple flower holding a frontal Red Message with a beautiful lightly colored mane of petals. It's crying planar rainbows. 😥",
+  ],
+  [
+    "Homemaker",
+    "This flower works hard on its home, found from scraps of plane and mesh. Plus it's got an incredibly long Zebra stem.",
+  ],
+  [
+    "Trick No Face",
+    "From the front this flower has no face, but the back reveals something different. A tongue sticks out like a shadow, with eyes on each branch.",
+  ],
+  [
+    "Rainbow Lion",
+    "Rainbow stemmed in high contrast this yellow this lion of a flower struts forth awkwardly.",
+  ],
+  [
+    "Pastel Baby",
+    "This tiny flower with bold petals is just looking for a comfy home to fly its freak flag in. The Red Message on the back refers to outdated software platforms.",
+  ],
+  [
+    "Anthropromouthbleeder",
+    "This humanistic flower face dribbles blood and bunches up in the back, where a 2D red flower sits atop a cliff.",
+  ],
+  [
+    "Somberstem",
+    "Upset, in a well constrained palette, this flower has a stem that moves in straight segments before changing tone.",
+  ],
+  [
+    "Junky Baby",
+    "This pastel colored yellow beast was crudely grown. Tough youth. It offers a small RGB flower as a gift.",
+  ],
+  [
+    "RGB Error",
+    "Something went wrong here and this flower grew in-between the spaces that were allocated to it. It won't survive.",
+  ],
+  [
+    "Hopeful Coiler",
+    "Around a thin white arch this flower hangs out and looks up to better days. A Red Message on the back sits in the center of a large face.",
+  ],
+  [
+    "UWU BFFs",
+    "Double heads make up this red-faced pastel couple who pretty much always get along and don't mind growing up on the same thin plane! A Butterfly Cosplayer whistlegraph appears behind the UWU.",
+  ],
+  [
+    "Chill AF & Based",
+    "Literally so cool this face barely expresses interest in the audience. It's busy doing something else, like... focusing on new ways to avoid you.",
+  ],
+  [
+    "Ocular Charmer",
+    "Covered in all kinds of circumscribed ornament this peacock of a flower can barely hold its head up to say hello, but it's doing it! On the back is a confused pixelation.",
+  ],
+  [
+    "Heavy Soaker",
+    "Seeded from a raincloud this drenched and sullen friend spits out a stream of polychrome planes that underline its own metadata.",
+  ],
+  [
+    "Extroverted Bricolage",
+    "A fairly confident but unkept flower with georgeous planar stem is just so happy to be in the spotlight!",
+  ],
+  [
+    "Little Big UWU Ultra",
+    "A densely painted surface makes up the face of one of the cutest positions in the series... so cute it's crying basically all the time.",
+  ],
+  [
+    "RGB Buzz",
+    "Growing only in the directions of each color channel and harboring a Red Message on the right! This is the first RGB label in the series.",
+  ],
+  [
+    "Responsive & Adaptable",
+    "By showing only the elements that really make up the structure of itself this flower is capable of growing on almost any platform!",
+  ],
+  [
+    "Pastel Monet Goddess",
+    "Freaky and seductive the elegantly constrained palette of this flower comes together to produce that cushy modernist aesthetic we all know so well at this point.",
+  ],
+  [
+    "Framed Right Turner",
+    "Look to the right and notice a giant, shy purple flower hiding behind a sad, monochromatic drawing of someone else.",
+  ],
+  [
+    "Gee's Stem Bend",
+    "Inspired by quilting aesthetics, this flat flower has a crafty feedback loop in lieu of a face. Simply put, there is a Red Message in the back!",
+  ],
+  [
+    "Base Mouthbleeder",
+    "Bold and daring mouthbleeder, with colorful flourishes jutting out along the stem, one of which goes quite far before dropping off in the back corner.",
+  ],
+  [
+    "Clue Finder",
+    "Cylindrical eyes protrude far out of this excited flower who just discovered an important clue.",
+  ],
+  [
+    "Impressively Sad",
+    "This loosely painted monochromatic flower epitomizes sadness. Frought with worry and crying a single, multicolored tear.",
+  ],
+  [
+    "Broken Off",
+    "In this all white flower, the head has been broken off from the stem. It still hangs out alone in empty space.",
+  ],
+  [
+    "Cut Off",
+    "A desaturated blue plane slices through the head of this extremely lowly feeling flower.",
+  ],
+  [
+    "Sinister Shape",
+    "A Devilishly floppy-petaled form leans in and smirks at the audience. Behind is a Red Message.",
+  ],
+  [
+    "Rainbow Wing",
+    "Flower's got a planar Rainbow Petal so big it could be carried away by the wind.",
+  ],
+  [
+    "Y Combinator Thing",
+    "A happy flower with electrons shooting from its eyes is enjoying this Red Message that faces the audience directly.",
+  ],
+  [
+    "Ethereal Doodle",
+    "A nervous purple headed flower looks at a linear olive-green flower growing from a volumetric patch. A Scared of Stairs whistlegraph appears on the bottom of the right side.",
+  ],
+  [
+    "Trio",
+    "Three Freaky Flower stems held up front and back produce separate projections of a trio. In one version they're terrified, the other looks bleak.",
+  ],
+  [
+    "Personal Eye",
+    "A small yellow face grows out of the eye of this hurt flower. Its eyes have been taken over by another being so it's struggling to see. A Red Message is present on the lower back.",
+  ],
+  [
+    "Chunky Grasslicker",
+    "Mucky, gloopy, and licking grass, this flower rolls eyes at its own label. A lyrically rendered orange rose grows out the back of its head.",
+  ],
+  [
+    "Three Dead Stems",
+    'Three Freaky Flower stems jut from the back ceiling... their heads chopped off, forming pools of blood. First "Dead" of the series.',
+  ],
+  [
+    "Dead Stem",
+    "A purple headed flower explosively bleeds out on a red carpet. Do flowers even bleed? Yes!",
+  ],
+  [
+    "Basically Dead",
+    "Curling around itself one last time, this otherwise pleasant stem spits coagulations neatly beside its metadata.",
+  ],
+  [
+    "Lovely Error",
+    "A logo-like brushy orange flower got erroneously disconnected from its stem. Still happy though! A Red Message is on the right. (The second to last!)",
+  ],
+  [
+    "Dead Attacker",
+    "Just because a flower is dead doesn't mean it can't attack you with its bloodspray. Be careful dude.",
+  ],
+  [
+    "Basically Lost",
+    "Does this flower have a face? We'll never know because it came through one end of it's containment and went out the other, ignoring the audience completely! First \"Lost\" in the series.",
+  ],
+  [
+    "Dead & Lost",
+    "Even though it's been flanked by two happy projections, this flower didn't exit quite early enough and died in transit.",
+  ],
+  [
+    "Love Note",
+    "A graciously gentle flower envelopes a goodbye Red Message. A dot appears between the 1 and 2 because 1·24 is also my birthday!",
+  ],
+  [
+    "Blue on Blue",
+    "Blue petals on a blue backdrop satisfy the eye with a Gestalt-style play on this seriously expressive, pony-faced flower.",
+  ],
+  [
+    "Out of Bounds Error",
+    "The mesh went out of bounds here as a scared flower looks on to read the entire system alert as they get walled in and destroyed.",
+  ],
+  [
+    "Base Master UWU",
+    "Holding so much space for conflicting labels but still showing up happy, cute, and alive. This is the most succesful flower I've ever seen. 🥲",
+  ],
+  [
+    "Squiggle Destroyer Ultimate",
+    "Beware! This flower is a weapon. Guaranteed to totally destroy any Chromie Squiggle at any auction for all eternity.",
+  ],
 ];
 
 const tokenColors = [

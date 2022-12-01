@@ -13,6 +13,7 @@
 - [x] Hook up screenshots as og:images in `thumbnail` / make a special case in index.js for freaky-flowers and ff urls...
   - [] Parse thumbnail parameters better / make it way faster? Eh...
 - [] Metadata on preview links.
+- [] Switch shift and space.
 - [] Record some GIFs.
 - [] What would happen if I just randomly started removing or vibrating sets of vertices after
      a piece loaded?
