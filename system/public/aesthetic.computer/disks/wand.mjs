@@ -98,6 +98,7 @@
 import { CamDoll } from "../lib/cam-doll.mjs";
 const { min, abs, max, cos, sin, floor, round } = Math;
 
+let unreal = false; // Flip to true in case meshes need to be rendered for Unreal engine. Basically just prevents duplicate / two sided triangles.
 let camdoll, stage; // Camera and stage.
 let stageOn = false;
 const rulers = false; // Whether to render arch. guidelines for development.
@@ -2687,11 +2688,6 @@ class Tube {
           if (tris) {
             // Two Sides
             if (this.sides === 2) {
-              // This may *not* only be a sides 2 thing...
-              //             if (this.gesture.length > 1) {
-              //                positions.push(this.lastPathP.shape[si]); // First tri complete for side length of 2.
-              //              colors.push(this.vary(shade));
-
               if (si === 1) {
                 // Double up the sides here.
                 positions.push(this.lastPathP.shape[si]);
@@ -2703,14 +2699,16 @@ class Tube {
                   this.vary(shade)
                 );
 
-                positions.push(pathP.shape[si]);
-                positions.push(this.lastPathP.shape[si]);
-                positions.push(pathP.shape[si + 1]);
-                colors.push(
-                  this.vary(shade),
-                  this.vary(shade),
-                  this.vary(shade)
-                );
+                if (!unreal) {
+                  positions.push(pathP.shape[si]);
+                  positions.push(this.lastPathP.shape[si]);
+                  positions.push(pathP.shape[si + 1]);
+                  colors.push(
+                    this.vary(shade),
+                    this.vary(shade),
+                    this.vary(shade)
+                  );
+                }
 
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si + 1]);
@@ -2721,14 +2719,16 @@ class Tube {
                   this.vary(shade)
                 );
 
-                positions.push(pathP.shape[si + 1]);
-                positions.push(this.lastPathP.shape[si]);
-                positions.push(this.lastPathP.shape[si + 1]);
-                colors.push(
-                  this.vary(shade),
-                  this.vary(shade),
-                  this.vary(shade)
-                );
+                if (!unreal) {
+                  positions.push(pathP.shape[si + 1]);
+                  positions.push(this.lastPathP.shape[si]);
+                  positions.push(this.lastPathP.shape[si + 1]);
+                  colors.push(
+                    this.vary(shade),
+                    this.vary(shade),
+                    this.vary(shade)
+                  );
+                }
               }
 
               // positions.push(pathP.shape[si]);
