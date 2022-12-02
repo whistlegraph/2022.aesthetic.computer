@@ -141,10 +141,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // Used by `disk` to set the metatags by default when a piece loads. It can
   // be overridden using `meta` inside of `boot` for any given piece.
   function setMetatags(meta) {
-    if (meta?.title && meta?.path) {
+    if (meta?.title) {
       document.title = meta.title;
-      document.querySelector('meta[name="og:title"]').content = meta.path;
-      document.querySelector('meta[name="twitter:title"]').content = meta.path;
+      document.querySelector('meta[name="og:title"]').content = meta.title;
+      document.querySelector('meta[name="twitter:title"]').content = meta.title;
     }
     if (meta?.desc) {
       document.querySelector('meta[name="og:description"]').content = meta.desc;
@@ -1069,8 +1069,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
 
       setMetatags(content.meta);
-
-      // console.log(content.text);
 
       // TODO: Make this automatic for pieces that use 3d.
       if (

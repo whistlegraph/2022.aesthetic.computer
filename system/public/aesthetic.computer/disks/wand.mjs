@@ -10,7 +10,7 @@
 
 /* #region 🏁 todo
 + Later / Post-production.
-- [] Metadata on preview links.
+- [] Proofread all titles and descriptions.
 - [] Organize TODOs.
 - [] Add metadata / attributes and tags from the Google Sheet to the JSON.
   - [] Ask about the Google Sheet / json generation flow.
@@ -61,6 +61,7 @@
  - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
  - [x] Try out different export formats. (Using glb)
 + Done
+- [x] Plug metadata into preview links.
 - [x] Hook up screenshots as og:images in `thumbnail` / make a special case in index.js for freaky-flowers and ff urls...
   - [-] Parse thumbnail parameters better / make it way faster? Eh...
 - [x‍] Take Final PNG screenshots of each work.
@@ -900,7 +901,6 @@ function sim({
 
         // Update the url if we are in a freaky-flowers piece...
         if (store["freaky-flowers"]) {
-          const headers = store["freaky-flowers"].headers;
           const tokenID = store["freaky-flowers"].tokenID;
           const hook = store["freaky-flowers"].hook;
           let path = `${hook}~${tokenID}`;
@@ -908,8 +908,8 @@ function sim({
             .slice(1)
             .map((p) => "~" + p)
             .join("");
-          meta({ title: path + " · aesthetic.computer", path });
           rewrite(path); // Update the path in the URL bar.
+          meta(store["freaky-flowers"].meta({ params: [tokenID] }));
           store["freaky-flowers"].headers(tokenID); // Print any series headers.
         }
 

@@ -78,7 +78,7 @@ function parse(text, location = self?.location) {
 
 // Cleans a url for feeding into `parse` as the text parameter.
 function slug(url) {
-// Remove http protocol and host from current url before feeding it to parser.
+  // Remove http protocol and host from current url before feeding it to parser.
   return url
     .replace(/^http(s?):\/\//i, "")
     .replace(window.location.hostname + ":" + window.location.port + "/", "")
@@ -86,4 +86,25 @@ function slug(url) {
     .split("#")[0]; // Remove any hash.
 }
 
-export { parse, slug };
+// Generates some metadata fields that are shared both on the client and server.
+function metadata(host, slug, pieceMetadata) {
+  // Use a default title if there is no override.
+  const title =
+    pieceMetadata?.title ||
+    (slug !== "prompt" ? slug + " · aesthetic.computer" : "aesthetic.computer");
+  // Use existing or default description.
+  const desc = pieceMetadata?.desc || "An aesthetic.computer piece.";
+
+  // See also: `index.js`
+  let ogImage, twitterImage;
+  if (pieceMetadata?.image_url) {
+    ogImage = twitterImage = pieceMetadata.image_url;
+  } else {
+    ogImage = `https://${host}/thumbnail/1200x630/${slug}.jpg`;
+    twitterImage = `https://${host}/thumbnail/1800x900/${slug}.jpg`;
+  }
+
+  return { title, desc, ogImage, twitterImage };
+}
+
+export { parse, slug, metadata };

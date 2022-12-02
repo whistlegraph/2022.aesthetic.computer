@@ -817,7 +817,7 @@ export function boot({ wipe, params, jump, store }) {
     );
   };
 
-  store["freaky-flowers"] = { tokenID: i, tokens, headers }; // Note: Storage could automatically
+  store["freaky-flowers"] = { tokenID: i, tokens, headers, meta }; // Note: Storage could automatically
   //                                                know the disk. 22.11.25.11.14
 
   if (store["ff"]) store["freaky-flowers"].hook = "ff";
@@ -854,6 +854,8 @@ export function meta({ params }) {
   return {
     // Note: high res png's are also stored, but webps are for Open Graph. 22.11.28.13.13
     image_url: `${baseURL}/ff${i}-${tokens[i]}-still-${handle}.webp`,
+    title: tokenTitlesAndDescriptions[i][0],
+    desc: tokenTitlesAndDescriptions[i][1],
     // https://wand.aesthetic.computer/ff1-2022.11.20.11.42.50-still-digitpain.png
   };
 }

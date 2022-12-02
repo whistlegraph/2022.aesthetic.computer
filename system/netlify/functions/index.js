@@ -12,7 +12,7 @@ import { builder } from "@netlify/functions";
 import https from "https";
 import { URLSearchParams } from "url";
 
-import { parse } from "../../public/aesthetic.computer/lib/parse.mjs";
+import { parse, metadata } from "../../public/aesthetic.computer/lib/parse.mjs";
 
 async function fun(event, context) {
   if (process.env.CONTEXT === "dev")
@@ -28,9 +28,6 @@ async function fun(event, context) {
 
   if (process.env.CONTEXT === "dev") console.log(slug, parsed);
 
-  let title = "aesthetic.computer";
-  if (slug !== "prompt") title = slug + " · aesthetic.computer";
-
   // Remote host.
   // TODO: Node currently doesn't support dynamic imports from http/s - 22.07.19.05.25
   //       - Implementation below.
@@ -45,7 +42,6 @@ async function fun(event, context) {
   const { desc } = await import(importPath);
   */
 
-  let desc;
   let meta;
 
   const redirect = {
@@ -64,13 +60,7 @@ async function fun(event, context) {
         `https://${parsed.host}/${parsed.path}.mjs`
       );
       console.log(externalPiece);
-      if (externalPiece?.code === 200) {
-        desc =
-          externalPiece.data.split(/\r?\n/)[0].replace("//", "").trim() ||
-          `A piece by ${slug.split("/")[0].replace("@", "")}.`;
-      } else {
-        return redirect;
-      }
+      if (externalPiece?.code !== 200) return redirect;
     } else {
       // Locally hosted piece.
       try {
@@ -94,14 +84,12 @@ async function fun(event, context) {
     return redirect;
   }
 
-  // Set canonical metadata images, or just use some defaults.
-  let ogImage, twitterImage;
-  if (meta?.image_url) {
-    ogImage = twitterImage = meta.image_url;
-  } else {
-    ogImage = `https://${event.headers["host"]}/thumbnail/1200x630/${slug}.jpg`;
-    twitterImage = `https://${event.headers["host"]}/thumbnail/1800x900/${slug}.jpg`;
-  }
+  // *** Server Metadata Fields***
+  const { title, desc, ogImage, twitterImage } = metadata(
+    event.headers["host"],
+    slug,
+    meta
+  );
 
   const html = `
     <!DOCTYPE html>
@@ -114,12 +102,10 @@ async function fun(event, context) {
         <link rel="stylesheet" href="/aesthetic.computer/style.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="og:title" content="${title}" />
-        <meta name="og:description" content="${
-          desc || "An aesthetic.computer piece."
-        }" />
+        <meta name="og:description" content="${desc}" />
         <meta name="og:image" content="${ogImage}" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="${slug}" />
+        <meta name="twitter:title" content="${title}" />
         <meta name="twitter:site" content="aesthetic.computer" />
         <meta name="twitter:image" content="${twitterImage}"/>
       </head>

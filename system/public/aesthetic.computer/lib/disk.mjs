@@ -5,7 +5,7 @@ import * as geo from "./geo.mjs";
 import * as gizmo from "./gizmo.mjs";
 import * as ui from "./ui.mjs";
 import * as help from "./help.mjs";
-import { parse } from "./parse.mjs";
+import { parse, metadata } from "./parse.mjs";
 import { Socket } from "./socket.mjs"; // TODO: Eventually expand to `net.Socket`
 import { UDP } from "./udp.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
@@ -783,7 +783,7 @@ let firstLoad = true;
 let firstPiece, firstParams, firstSearch;
 
 async function load(parsed, fromHistory = false, alias = false) {
-  let { path, host, search, params, hash, text } = parsed;
+  let { path, host, search, params, hash, text: slug } = parsed;
 
   if (loading === false) {
     loading = true;
@@ -900,39 +900,29 @@ async function load(parsed, fromHistory = false, alias = false) {
   // ***Client Metadata Fields***
   // Set default metadata fields for SEO and sharing,
   // (requires serverside prerendering, also via `index.js`).
-  // See also: `index.js` which prefills metadata on page load from the server.
   let meta;
-  const pieceMetadata = module.meta?.(parsed); // Parse any special piece metadata if it exists.
-  const imageHost = "https://aesthetic.computer";
-
-  // See also: `index.js`
-  let ogImage, twitterImage;
-  if (pieceMetadata?.image_url) {
-    ogImage = twitterImage = pieceMetadata.image_url;
-  } else {
-    ogImage = `https://${imageHost}/thumbnail/1200x630/${text}.jpg`;
-    twitterImage = `https://${imageHost}/thumbnail/1800x900/${text}.jpg`;
-  }
 
   if (alias === false) {
-    let title = text + " · aesthetic.computer";
-    if (text === "prompt" || text === "/") title = "aesthetic.computer";
+    // Parse any special piece metadata.
+    const { title, desc, ogImage, twitterImage } = metadata(
+      "aesthetic.computer",
+      slug,
+      module.meta?.(parsed)
+    );
+
     meta = {
       title,
-      path: text,
-      desc: module.desc, // Note: This doesn't auto-update externally hosted module descriptions, and may never need to? 22.07.19.06.00
+      desc, // Note: This doesn't auto-update externally hosted module descriptions, and may never need to? 22.07.19.06.00
       img: {
         og: ogImage,
         twitter: twitterImage,
       },
-      url: "https://aesthetic.computer/" + text,
+      url: "https://aesthetic.computer/" + slug,
     };
   }
 
   // Add meta to the common api so the data can be overridden as needed.
-  $commonApi.meta = (data) => {
-    send({ type: "meta", content: data });
-  };
+  $commonApi.meta = (data) => send({ type: "meta", content: data });
 
   // *** Resize ***
   // Accepts width, height and gap either as numbers or as
@@ -1086,7 +1076,7 @@ async function load(parsed, fromHistory = false, alias = false) {
   currentSearch = search;
   currentParams = params;
   currentHash = hash;
-  currentText = text;
+  currentText = slug;
 
   $commonApi.query = search;
   $commonApi.params = params || [];
@@ -1198,7 +1188,7 @@ async function load(parsed, fromHistory = false, alias = false) {
       search,
       params,
       hash,
-      text,
+      text: slug,
       pieceCount: $commonApi.pieceCount,
       fromHistory,
       alias,
