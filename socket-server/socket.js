@@ -121,7 +121,7 @@ const start = async () => {
   }
 };
 
-start();
+await start();
 
 /*
 const server = createServer((req, res) => {

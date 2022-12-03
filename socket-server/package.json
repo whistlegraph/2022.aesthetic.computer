@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A node socket server for multi-user rooms and local development.",
   "type": "module",
+  "main": "socket.js",
   "scripts": {
     "server": "node socket.js",
     "test": "echo \"Error: no test specified\" && exit 1"
