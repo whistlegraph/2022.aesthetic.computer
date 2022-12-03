@@ -4,9 +4,9 @@
 // TODO: 🔐 Setup client<->server identity validation for both anonymous users and
 //          authenticated ones.
 
-import { createServer } from "http";
-import * as https from "https";
-import { readFileSync } from "fs";
+// import { createServer } from "http";
+// import * as https from "https";
+// import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
@@ -33,6 +33,7 @@ const jamSocketToken = process.env.JAMSOCKET_ACCESS_TOKEN;
 //  console.log("Twilio:", token);
 //});
 
+/*
 import geckos from "@geckos.io/server";
 
 const io = geckos();
@@ -50,6 +51,7 @@ io.onConnection((channel) => {
     io.room(channel.roomId).emit("chat message", data);
   });
 });
+*/
 
 // HTTP Server:
 // 1. Live Reload Endpoint for Remote Development Mode
