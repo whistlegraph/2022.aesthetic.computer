@@ -50,49 +50,56 @@ Welcome to...
 
 🌟 Projects In Progress (PIP) 🌟
 
+*** Project Order **
+ - [-] BGM
+ - [] MUD
+ - [] Painting
+ - [] Mintable Paintings
+
 *** BGM ***
-- READ Audio properties (Will do for bgm)
-  - [] Global amplitude read out.
-  - [] Amplitude within frequency range function. (Cropped amplitude)
-  - [] Time position (formattable as 00:00:00)
-- FILTER Audio properties (Will do later)
-  - [] High pass
-  - [] Low pass
-  - [] Panning
-  - [] Speed
-  - [] Spatialization
+ - [] Add vf music to a bucket or a server / make the bgm piece to load a track.
+ - [] This piece should have a common library that any piece can opt into in boot via a music() or track() function. 
+ - [] Play it back via a system soundtrack node in the bios audio-graph.
+ - READ Audio properties (Will do for bgm)
+   - [] Global amplitude read out.
+   - [] Amplitude within frequency range function. (Cropped amplitude)
+   - [] Time position (formattable as 00:00:00)
+ - FILTER Audio properties (Will do later)
+   - [] High pass
+   - [] Low pass
+   - [] Panning
+   - [] Speed
+   - [] Spatialization
 
 *** Important 3D Details ***
-- [] Invert Y position in original constructor.
-- [] vec3.dist from glMatrix yields innacurate numbers. Factor it out of the project. 
-- [] The quaternions also don't seem to work?
+  - [] Invert Y position in original constructor.
+  - [] vec3.dist from glMatrix yields innacurate numbers. Factor it out of the project. 
+  - [] The quaternions also don't seem to work?
 
 *** Painting ***
  - [] Add a 'mask' command to crop an existing painting to a certain border or
       aspect ratio?
 
 *** Furthering VR Support ***
-- [] Add grip of controller in addition to hand support.
-  - [] Grip: https://threejs.org/docs/#api/en/renderers/webxr/WebXRManager.getControllerGrip
-  - [] "hand" event
+  - [] Try to re-enable workers again for VR. (Should basically work great now. 22.11.23.09.20)
+  - [] Add grip of controller in addition to hand support.
+    - [] Grip: https://threejs.org/docs/#api/en/renderers/webxr/WebXRManager.getControllerGrip
+    - [] "hand" event
 
 *** GIF Support ***
-- [] Add keyboard shortcut to download a still frame of whatever you're 
-     looking at, (a 100% accurate screenshot in the presented resolution).
-     - [] Get working with normal buffer.
-     - [] Get working with glaze and mouse.
-     - [] Have mouse be optional.
-- [] Add ability to store frames as gif frames and end a recording.
-- [] This can use ffmpeg behind the scenes in (almost) the same way I'm doing now...?
-- [] Just the software renderer for now? Or should I composite?
-- [] https://macr.ae/article/canvas-to-gif
+  - [] Add keyboard shortcut to download a still frame of whatever you're 
+      looking at, (a 100% accurate screenshot in the presented resolution).
+      - [] Get working with normal buffer.
+      - [] Get working with glaze and mouse.
+      - [] Have mouse be optional.
+  - [] Add ability to store frames as gif frames and end a recording.
+  - [] This can use ffmpeg behind the scenes in (almost) the same way I'm doing now...?
+  - [] Just the software renderer for now? Or should I composite?
+  - [] https://macr.ae/article/canvas-to-gif
 
 ***Live Reloading***
-- [] Fix live reloading for everyone / add some people to dev server.
-- [] Disable nginx cache? https://ubiq.co/tech-blog/disable-nginx-cache
-
-***Walkie Talkie***
-- [] Maybe recordings / videos can be sent back and forth between two parties?
+  - [] Fix live reloading for everyone / add some people to dev server.
+  - [] Disable nginx cache? https://ubiq.co/tech-blog/disable-nginx-cache
 
 *** Mintable Paintings (Screen Buffers) ***
   - [] 🅰️ Client
@@ -169,25 +176,67 @@ Welcome to...
     - [] Use it as an avatar on @digitpain twitter. 
     - [] Point to @aesthetic_cpu in a tweet to launch the Twitter account.
 
+***No Paint System***
+  + Now
+  - [] Center painting with the transparent backbuffer if a specific
+       size is set (which would turn resize off). (Make crop tool to do this, that can be NOd but automatically runs through.
+  - [] The default "mint" command in aesthetic.computer saves
+       the system wallpaper. Uniqueness is guaranteed? - https://www.google.com/search?q=sha-512+uniqueness&oq=sha-512+uniqueness&aqs=chrome..69i57j0i13i512j0i390l4.4876j0j4&sourceid=chrome&ie=UTF-8
+    - [] Fix weird negative space / non-drawing issues on startup.
+  - [] Add "no" command to the prompt.
+    - [] Store two history states?
+  - [] Enter for paint and ESC for no.
+    - [] Prevent "paint" from occuring when pressing Escape.
+         (Back button still defaults to paint)
+         - [] Esc: Autoflash red on loading prompt or on leave.
+         - [] Return: Autoflash green on loading prompt or on leave.
+  - [] There seems to be a backbuffer / transparency error
+       that's easy to find on mobile iOS but hard to 
+       reproduce otherwise.
+  - [] Add "sign" command which writes a timestamp with a signature.
+       Should "sign" and mint be the same thing?
+  - [] Add "mint" command to trigger a wallet signature request
+       and produce a work.
+       * Should be able to specify a contract here.
+  + Later
+  - [] How can the "nopaint" system be multiplayer and turn based?
+    - [] What if turns could be negotiated?
+  - [] Add `nopaint` template for Sage, Casey and Niki.
+    - [x] Sage
+  + Done
+  - [x] Set up a glitch account / editing situation for Sage.
+  - [x] Write `rect` tool, which necessitates an extra buffer.
+  - [x️] Write boilerplate for painting tool.
+  - [x] Make a glaze appear instantly after it loads the first time?
+  - [x] The painting resolution should auto-expand, but not contract.
+  - [x] Jumping from prompt to a nopaint brush removes the gap.
+  - [x] Cache the current painting to indexedDB.
+  - [x] Either use the added `umd.js` in dep or what's below:
+          See also: https://www.npmjs.com/package/idb#installation
+                    https://cdn.jsdelivr.net/npm/idb@7/+esm
+  - [x] Add "dl" or "download" command to the prompt.
+    - [x] Test this inside of an iOS in-app browser.
+    - [x] Shouldn't have to leave the prompt to
+         save the image.
+
+*** Piece Caching ***
+  - [] Cache already remotely loaded pieces in a given session,
+       so they can be reloaded without having to re-download them or show a spinner.
+  - [] Disable this in debug / development mode.
+
+*** MUD ***
+ - [] Make a multi-user dungeon chat / room system, designed for single session play.
+  * welkum 2 mud *
+  & there r 32 playrz ONLINE
+
 *** (Wand) ***
  + Now
-  - [-] Line thickness.
-    - [] https://codepen.io/garciahurtado/pen/WNVjog?editors=0010
-    - [-] Work on implementing: https://github.com/mrdoob/three.js/blob/master/examples/webgl_lines_fat.html
-    - [] Billboarded MeshLine?
-    - [] Tube geometry?
-  - [] Add CSV unreal exporter that follows this pattern:
-      ---,Vertices,Color
-      NewRow,"((X=10.000000,Y=20.000000,Z=-30.000000))","((B=0,G=0,R=201,A=0))"
-      NewRow_0,"((X=10.000000,Y=20.000000,Z=-30.000000))","((B=0,G=0,R=201,A=0))"
-  - [] Replace Gl.lines with something cooler.
-  - [] Add / design / consider touch controls.
-    - [F] [B] [W/L]
+  - [] See `wand` todo section for pre-launch Freaky Flower items.
+  - [] Add / design / consider better touch controls. [F] [B] [W/L]
   - [] Add circular buffer to wand lines (buffer-geometry) / infinite
-      wand with dissolving trail.
-  - [] Leave drawing up / fade drawing.
-  - [] Add demo recording and playback with vocals.
+      wand with dissolving trail? Spectator mode.
  + Later
+  - [] Add audio to demo recording and playback.
   - [] Shrink three.js filesize: https://github.com/mrdoob/three.js/issues/19148
   - [] Fix keyboard hold and drag to symbol in Meta Quest software keyboard.
   - [] Add user connected messages.
@@ -228,6 +277,16 @@ Welcome to...
   - [] Updates on the 3D object pipeline.
     - [] Also be able to delete stuff from the GPU scene.
  + Done
+  - [x] Line thickness.
+    - [x] https://codepen.io/garciahurtado/pen/WNVjog?editors=0010
+    - [x] Work on implementing: https://github.com/mrdoob/three.js/blob/master/examples/webgl_lines_fat.html
+    - [x] Tube geometry?
+    - [] Billboarded MeshLine?
+  - [x] Add CSV unreal exporter that follows this pattern:
+      ---,Vertices,Color
+      NewRow,"((X=10.000000,Y=20.000000,Z=-30.000000))","((B=0,G=0,R=201,A=0))"
+      NewRow_0,"((X=10.000000,Y=20.000000,Z=-30.000000))","((B=0,G=0,R=201,A=0))"
+  - [x] Replace Gl.lines with something cooler.
   - [x] Clear console on new disk load. (Only in production.) 
   - [x] Make workers optional / turn them back on. (but not for Meta Quest Browser).
   - [x] Make buffers transferrable.
@@ -330,11 +389,6 @@ Welcome to...
 *** Ambient Presence ***
  - [] No matter what disk you're on... queue into the ambient presence of others. You should be able to meet others.
 
-*** MUD ***
- - [] Make a multi-user dungeon / room system, designed for single session play.
-  * welkum 2 mud *
-  & there r 32 playrz ONLINE
-
 *** Palette ***
   - [] Create a basic palette that enables one finger drawing. 
   - [] Add tools to palette that utilize existing toolset.
@@ -344,6 +398,11 @@ Welcome to...
 *** p1xelfool additions ***
  - [] Complete TODOS @p1xelgool/blank. 
  - [x] Add ability to directly manipulate the buffer again. (Via `edit`)
+
+*** (`turtle` / `spider`) ***
+  - [] Simplify and generalize the Spider out of Wand.
+  - [x] Make a spider that can crawl around in 3D and draw.
+       (Use a turtle graphics API)
 
 *** Communication ***
   - [] Add text chat.
@@ -389,6 +448,10 @@ Welcome to...
       5. The piece can return other data, like color, for the slider.
 
 *** Native Apps ***
+
+***Walkie Talkie***
+  - [] Maybe recordings / videos can be sent back and forth between two parties?
+
   - Research: https://capacitorjs.com
   - And/or continue to use my own shim?
 
@@ -416,10 +479,6 @@ Welcome to...
 *** 3D Optimization ***
   - [] Use imageBitmap for textures: https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap
 
-*** (`turtle` / `spider`) ***
-  - [] Make a spider that can crawl around in 3D and draw.
-       (Use a turtle graphics API)
-
 ***Cursors***
   - [] View current custom cursor css examples.
   - "Chromium cursor images are restricted to 128x128 pixels by default, but it is
@@ -436,53 +495,6 @@ Welcome to...
   - [] Add wasm infrastructure speed up for blend function.
   - [] WASMify the `blend` function to see if it can be any faster.
 
-*** Whistlegraph (wg) ***
-  - [] Use `wg` to improve dynamic metadata descriptions for link previews.
-    (Does this mean making a export meta function that can be read on the server and the client both?)
-
-***No Paint System***
-  + Now
-  - [] Center painting with the transparent backbuffer if a specific
-       size is set (which would turn resize off). (Make crop tool to do this, that can be NOd but automatically runs through.
-  - [] The default "mint" command in aesthetic.computer saves
-       the system wallpaper. Uniqueness is guaranteed? - https://www.google.com/search?q=sha-512+uniqueness&oq=sha-512+uniqueness&aqs=chrome..69i57j0i13i512j0i390l4.4876j0j4&sourceid=chrome&ie=UTF-8
-    - [] Fix weird negative space / non-drawing issues on startup.
-  - [] Add "no" command to the prompt.
-    - [] Store two history states?
-  - [] Enter for paint and ESC for no.
-    - [] Prevent "paint" from occuring when pressing Escape.
-         (Back button still defaults to paint)
-         - [] Esc: Autoflash red on loading prompt or on leave.
-         - [] Return: Autoflash green on loading prompt or on leave.
-  - [] There seems to be a backbuffer / transparency error
-       that's easy to find on mobile iOS but hard to 
-       reproduce otherwise.
-  - [] Add "sign" command which writes a timestamp with a signature.
-       Should "sign" and mint be the same thing?
-  - [] Add "mint" command to trigger a wallet signature request
-       and produce a work.
-       * Should be able to specify a contract here.
-  + Later
-  - [] How can the "nopaint" system be multiplayer and turn based?
-    - [] What if turns could be negotiated?
-  - [] Add `nopaint` template for Sage, Casey and Niki.
-    - [x] Sage
-  + Done
-  - [x] Set up a glitch account / editing situation for Sage.
-  - [x] Write `rect` tool, which necessitates an extra buffer.
-  - [x️] Write boilerplate for painting tool.
-  - [x] Make a glaze appear instantly after it loads the first time?
-  - [x] The painting resolution should auto-expand, but not contract.
-  - [x] Jumping from prompt to a nopaint brush removes the gap.
-  - [x] Cache the current painting to indexedDB.
-  - [x] Either use the added `umd.js` in dep or what's below:
-          See also: https://www.npmjs.com/package/idb#installation
-                    https://cdn.jsdelivr.net/npm/idb@7/+esm
-  - [x] Add "dl" or "download" command to the prompt.
-    - [x] Test this inside of an iOS in-app browser.
-    - [x] Shouldn't have to leave the prompt to
-         save the image.
-
 *** Storage ***
   - [] Write much shorter, clearer console.logs with `📦 Store (method) message`
   - [] Add "remote:temporary" storage method. (Default for remote)
@@ -498,7 +510,7 @@ Welcome to...
 
 *** SSH (code.aesthetic.computer) ***
  + Later
-   - [] Add ping-pinging back to socket server.
+   - [] Add ping-ponging back to socket server.
    - [] Only send reload messages to all clients if `export const reload = true`; ?
    - [] Start moving individual glitch accounts over to pieces.aesthetic.computer.
    - [] People should be able to mint / submit their pieces from here.
@@ -532,11 +544,6 @@ Welcome to...
   *** Load ***
   - [x] From a URL into a buffer.
   - [x] and then be able to paste it.
-
-*** Piece Caching ***
-  - [] Cache already remotely loaded pieces in a given session,
-       so they can be reloaded without having to re-download them or show a spinner.
-  - [] Disable this in debug / development mode.
 
 ***Audio + Video Storage (Microphone)***
  + Now

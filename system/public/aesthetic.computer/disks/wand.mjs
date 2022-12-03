@@ -9,58 +9,63 @@
 */
 
 /* #region 🏁 todo
-+ Later / Post-production.
-- [] Proofread all titles and descriptions.
-- [] Organize TODOs.
-- [] Add metadata / attributes and tags from the Google Sheet to the JSON.
-  - [] Ask about the Google Sheet / json generation flow.
-- [] Switch shift and space in camdoll (space should move up).
-- [] Record some turn-around animation GIFs.
-- [] What would happen if I just randomly started removing or vibrating sets of vertices after
-     a piece loaded?
++ January Launch 
+
+*** Metadata ***
+  - [] Proofread all titles and descriptions.
+  - [] Re-enable Twitter player? Check `index` and `bios` "twitter";
+    - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
+  - [] Add metadata / attributes and tags from the Google Sheet to the JSON.
+    - [] Ask about the Google Sheet / json generation flow.
+
+*** Asset Generation ***
+  - [] Record some turn-around animation GIFs.
+
+*** Behavior ***
 - [] Auto jump from piece to piece.
-- [] Master the main materials and lights in the scene.
-  - [] Decide on colors / sets, etc.
-- [] Re-enable Twitter player? Check `index` and `bios` "twitter";
-  - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
+- [] Make instant demo playback much, much faster.
+- [] Add demo scrubbing.
+- [] Prevent users from viewing or moving outside a certain range.
+
+*** Networking ***
 - [] Ultimate Fatality: Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
   - [] Keep the light and dark idea?
-- [] Organize these after the sculptures are done.
-- [] Show an actual preview while demo'ing?
-- [x] Never show user cursor when demo'ing.. (does it happen when sides change?).
- - [] These rates should be adjusted on mobile.
- - [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
-  - keep an automated list somewhere... maybe look at the S3 shell scripts?
-  - [] Top wand rotation hmm...
-  - [-] Maybe the color could slowly change?
-  - [] Fix geometry lines again on tubes.
-  - [] Upgrade demo format to support overloaded color parameters for
-       special / animated type colors.
-  - [] Finish all extra-necessary TODOS in this file.
- - [] Create a "view wand timestamp" player that loads the model as a GLTF.
-  - [] Add a light to the scene.
- - [] Try to re-enable workers again. (Should basically work great now. 22.11.23.09.20)
- - [] Integrate into `wand`.
-   - [] Read both pieces side by side.
-   - [] Model each wand as a single skinny tube (with colored stripes).
-       (Bring Tube geometry into Wand)
-   - [] Remove strips from the tube as needed.
-   - [] Allow
-- [] Make sure demos can't record beyond the alotted geometry MAX. See `Tube` MAX.
-- [] Add transparent triangle rendered vertices to measurement cube. 
-- [] Reload last camera position on refresh.
+- [] Integrate `oldwand` multiplayer architecture.
+  - [] Read both pieces side by side.
+  - [] Model each wand as a single skinny tube (with colored stripes).
+      (Bring Tube geometry into Wand)
+  - [] Remove strips from the tube as needed.
+  - [] Allow
+
+*** UI ***
+- [] Switch shift and space in camdoll (space should move up).
+- [] What would happen if I just randomly started removing or vibrating sets of vertices after
+     a piece loaded?
+- [] Show a full preview cursor while running a demo for demoWand? (Need a `demoWandCapForm`)
+- [] Reload last camera position on refresh... make sense for users too?
+- [] Master the main materials and lights in the scene.
 - [] There should be an "inner" and "outer" triangulation option.
       - [] Inner ONLY for complexity 1 and 2.
       - [] Optional elsewhere.
-  - [] Should each stroke be its own Tube in order to support different
-        geometry types? Yes if I wanna easily select and delete.
-        Do we need that for demo recording? No...
-        - Would it be nice for the export data? Yes!
-        - Could it be added subsequently after the drawings are complete? Yes.
-        - (The files would load the same way.)
- - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
- - [x] Try out different export formats. (Using glb)
+
++ Later / Bonus / User Release
+- [] Add a generic `turn` function to `Spider` for fun procedural stuff.
+- [] Make sure no demo can record beyond the alotted geometry MAX. See `Tube` MAX.
+- [] Upgrade demo format to support overloaded color parameters for
+      special / animated type colors.
+- [] Make a discord bot that pings the jeffrey channel for updated wand sculpture URLs /
+  - keep an automated list somewhere... maybe look at the S3 shell scripts?
+- [] Should each stroke be its own Tube in order to support different
+      geometry types? Yes if I wanna easily select and delete.
+  - Do we need that for demo recording? No...
+    - Would it be nice for the export data? Yes!
+    - Could it be added subsequently after the drawings are complete? Yes.
+    - (The files would load the same way.)
+- [] Change the top wand cursor position to something better. 
+- [] Re-enable thin line drawing.
 + Done
+- [x] Create a "view wand timestamp" player that loads the model as a GLTF.
+- [x] Try out different export formats. (Using glb)
 - [x] Plug metadata into preview links.
 - [x] Hook up screenshots as og:images in `thumbnail` / make a special case in index.js for freaky-flowers and ff urls...
   - [-] Parse thumbnail parameters better / make it way faster? Eh...
