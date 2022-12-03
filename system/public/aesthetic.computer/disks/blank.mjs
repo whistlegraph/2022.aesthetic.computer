@@ -21,10 +21,11 @@
 // Jeffrey (me@jas.life / digitpain#2262 / @digitpain)
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ resize }) {
+function boot({ resize, wipe }) {
 
   // Perform basic setup here.
   //resize(50, 20); // Add a custom resolution. 
+  wipe(0, 0, 100);
 }
 
 let rotY = 0;
