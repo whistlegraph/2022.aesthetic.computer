@@ -1,0 +1,17 @@
+{
+  "name": "session-server",
+  "version": "1.0.0",
+  "description": "A per session-backend implementation for aesthetic.computer.",
+  "main": "session.mjs",
+  "type": "module",
+  "scripts": {
+    "create": "npx jamsocket service create session-server",
+    "build": "docker build --platform linux/amd64 --tag session-server-image .",
+    "deploy": "jamsocket push session-server session-server-image",
+    "spawn": "jamsocket spawn session-server"
+  },
+  "author": "Jeffrey Alan Scudder",
+  "dependencies": {
+    "jamsocket": "^0.4.5"
+  }
+}

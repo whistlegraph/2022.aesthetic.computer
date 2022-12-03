@@ -5,25 +5,32 @@
 //          authenticated ones.
 
 import { createServer } from "http";
+import * as https from "https";
 import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
 import "dotenv/config";
 
-// UDP Server
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
+// ESM
+import Fastify from "fastify";
+//const fastify = Fastify({ logger: process.env.NODE_ENV === "development" });
+const fastify = Fastify({ logger: false });
+const server = fastify.server;
 
+// Jamsocket
+const jamSocketToken = process.env.JAMSOCKET_ACCESS_TOKEN;
+
+// UDP Server (using Twilio ICE servers)
+//const accountSid = process.env.TWILIO_ACCOUNT_SID;
+//const authToken = process.env.TWILIO_AUTH_TOKEN;
 // See also: https://www.twilio.com/docs/stun-turn/api?code-sample=code-create-a-token-resource&code-language=Node.js&code-sdk-version=3.x#
-import twilio from "twilio";
-
-const client = twilio(accountSid, authToken);
-
+//import twilio from "twilio";
+//const client = twilio(accountSid, authToken);
 // console.log(client);
-client.tokens.create({ ttl: 3600 }).then((token) => {
-  console.log("Twilio:", token);
-});
+//client.tokens.create({ ttl: 3600 }).then((token) => {
+//  console.log("Twilio:", token);
+//});
 
 import geckos from "@geckos.io/server";
 
@@ -43,11 +50,46 @@ io.onConnection((channel) => {
   });
 });
 
-// File Watching for Remote Development Mode (HTTP Server)
+// HTTP Server:
+// 1. Live Reload Endpoint for Remote Development Mode
+// 2. Session Backend Spawning.
+const backends = {};
+
 let port = 8080;
 if (process.env.NODE_ENV === "development") port = 8082;
 
+// TODO: Make sure this still works on the piece server? 22.12.02.16.18
+fastify.post("/reload", async (req, rep) => {
+  everyone(pack("reload", req.body, "pieces"));
+  // console.log("Reload!", req.body);
+  return { msg: "Reload request sent!", body: req.body };
+});
+
+fastify.get("/session/:slug", async (req, rep) => {
+  const { slug } = req.params;
+
+  console.log("hmm", slug);
+
+
+});
+
+/**
+ * Run the server!
+ */
+const start = async () => {
+  try {
+    await fastify.listen({ port });
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+};
+
+start();
+
+/*
 const server = createServer((req, res) => {
+  // 1. Live Reload Endpoint.
   if (req.method === "POST") {
     if (req.url === "/reload") {
       let body = "";
@@ -61,15 +103,128 @@ const server = createServer((req, res) => {
       res.writeHead(200, { "Content-Type": "text/html" });
       res.end("Sorry.");
     }
+  } else if (req.method === "GET" && req.url.startsWith("/session")) {
+    // 2. Session Backend Spawning
+    // See also: https://docs.jamsocket.com/api-docs/#authentication
+
+    const slug = req.url.split("/")[2] || ""; // Cache this to know if we already have a backend spun up.
+
+    if (slug.length === 0) {
+      res.writeHead(500, { "Content-Type": "text/json" });
+      res.end(
+        JSON.stringify({
+          msg: "😇 Sorry. No backend could be spawned!",
+          backend: backends[slug],
+        })
+      );
+      return;
+    }
+
+    // TODO: Check to see if an "existing" backend is still alive.
+    // If it's not then make a new one.
+    // If it is active then return a message that this one already exists.
+    if (backends[slug]) {
+      const options = {
+        hostname: "api.jamsocket.com",
+        path: `/backend/${backends[slug].name}/status`,
+        method: "GET",
+      };
+
+      const req = https.request(options, (response) => {
+        let data = "";
+        response.on("data", (chunk) => {
+          data = data + chunk.toString();
+        });
+
+        response.on("end", () => {
+          const body = JSON.parse(data);
+          console.log("Status update!", body.state);
+          if (body.state === "Ready") {
+            res.writeHead(200, { "Content-Type": "text/json" });
+            res.end(
+              JSON.stringify({
+                msg: `🍏 Already running a backend for ${slug}`,
+                backend: backends[slug],
+              })
+            );
+          } else {
+            console.log("Status is not ready...", body);
+          }
+        });
+      });
+
+      req.on("error", (error) => {
+        console.log("⚠️ Error", error);
+      });
+
+      req.end();
+    }
+
+    // With the body:
+    {
+      const body = {
+        grace_period_seconds: 60,
+        // tag?: string,
+        //port?: number,
+        //env?: {
+        //  [env_var: string]: string
+        //}
+      };
+
+      const data = JSON.stringify(body);
+
+      const options = {
+        hostname: "api.jamsocket.com",
+        path: "/user/jas/service/session-server/spawn",
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${jamSocketToken}`,
+          "Content-Type": "application/json",
+          "Content-Length": data.length,
+        },
+      };
+
+      const req = https.request(options, (response) => {
+        let data = "";
+        response.on("data", (chunk) => {
+          data = data + chunk.toString();
+        });
+
+        response.on("end", () => {
+          const body = JSON.parse(data);
+          backends[slug] = body;
+          res.writeHead(200, { "Content-Type": "text/json" });
+          res.end(
+            JSON.stringify({
+              msg: `🍏 Added backend for ${slug}`,
+              backend: backends[slug],
+            })
+          );
+        });
+      });
+
+      req.on("error", (error) => {
+        res.writeHead(500, { "Content-Type": "text/json" });
+        res.end(JSON.stringify({ msg: "⚠️ Error", error }));
+      });
+
+      req.write(data);
+      req.end();
+    }
+
+    // And the headers:
+    // Authorization: `Bearer ${jams}`
   } else {
-    res.writeHead(200, { "Content-Type": "text/html" });
+    // Any other http method...
+    res.writeHead(200, { "Content-Type": "text/json" });
     res.end(
       JSON.stringify({ msg: "🏀 Sorry. Please visit aesthetic.computer!" })
     );
   }
 });
+*/
 
-server.listen(port);
+//server.listen(port);
 
 // Web Socket Server
 let wss;
