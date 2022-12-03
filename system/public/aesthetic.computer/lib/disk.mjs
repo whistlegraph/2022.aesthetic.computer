@@ -270,7 +270,44 @@ const $commonApi = {
     print: () => send({ type: "recorder-print" }),
     printProgress: 0,
   },
-  net: {},
+  net: {
+    session: async () => {
+      const req = await fetch(
+        (debug === true
+          ? "http://" + servers.local
+          : "https://" + servers.main) +
+          "/session/" +
+          currentText
+      );
+      const session = await req.json();
+
+      // Return the active session if the server knows it's "Ready", otherwise
+      // wait for the one we requested to spin up before doing anything else.
+      if (session.preceding) {
+        return session;
+      } else {
+        const eventSource = new EventSource(
+          `https://api.jamsocket.com/backend/${session.name}/status/stream`
+          // See also: https://docs.jamsocket.com/api-docs/#get-a-backends-status-stream
+        );
+
+        return new Promise((resolve, reject) => {
+          eventSource.onmessage = (event) => {
+            const update = JSON.parse(event.data);
+            if (update.state === "Ready") {
+              console.log("🟢 Backend:", update.state);
+              resolve(session);
+            } else {
+              console.log("🟡 Backend:", update.state);
+              if (update.state !== "Loading" && update.state !== "Starting") {
+                eventSource = null;
+              }
+            }
+          };
+        });
+      }
+    },
+  },
   needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
   store,
 

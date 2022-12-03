@@ -10,6 +10,7 @@ import { readFileSync } from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import ip from "ip";
 import chokidar from "chokidar";
+import got from "got";
 import "dotenv/config";
 
 // ESM
@@ -56,7 +57,11 @@ io.onConnection((channel) => {
 const backends = {};
 
 let port = 8080;
-if (process.env.NODE_ENV === "development") port = 8082;
+let corsOrigin = "https://aesthetic.computer";
+if (process.env.NODE_ENV === "development") {
+  corsOrigin = "https://localhost:8888";
+  port = 8082;
+}
 
 // TODO: Make sure this still works on the piece server? 22.12.02.16.18
 fastify.post("/reload", async (req, rep) => {
@@ -65,12 +70,41 @@ fastify.post("/reload", async (req, rep) => {
   return { msg: "Reload request sent!", body: req.body };
 });
 
+// TODO: Could this whole route be an edge function? 22.12.03.00.12
+//       Then it could store the data somewhere else like in a redis instance...
 fastify.get("/session/:slug", async (req, rep) => {
   const { slug } = req.params;
+  rep.header("Access-Control-Allow-Origin", corsOrigin);
 
-  console.log("hmm", slug);
+  // 1. Check to see if we actually should make a backend.
+  if (slug.length === 0) {
+    rep.status(500).send({
+      msg: "😇 Sorry. No backend could be spawned!",
+    });
+  }
 
+  // Check to see if an "existing" backend for this slug is still alive.
+  // - [-] If it's not then make a new one.
+  // - [] If it is active then return a message that this one already exists.
 
+  let headers;
+  if (backends[slug])
+    headers = await got(
+      `https://api.jamsocket.com/backend/${backends[slug].name}/status`
+    ).json();
+
+  if (headers?.state !== "Ready") {
+    // Make a new session backend if one doesn't already exist.
+    const session = await got
+      .post({
+        url: "https://api.jamsocket.com/user/jas/service/session-server/spawn",
+        json: { grace_period_seconds: 60 }, // jamsocket api settings
+        headers: { Authorization: `Bearer ${jamSocketToken}` },
+      })
+      .json(); // Note: A failure will yield a 500 code here to the client.
+    backends[slug] = session;
+    return session;
+  } else return { ...backends[slug], preceding: true }; // Or return a cached one and mark it as preceding.
 });
 
 /**
@@ -107,60 +141,12 @@ const server = createServer((req, res) => {
     // 2. Session Backend Spawning
     // See also: https://docs.jamsocket.com/api-docs/#authentication
 
-    const slug = req.url.split("/")[2] || ""; // Cache this to know if we already have a backend spun up.
-
-    if (slug.length === 0) {
-      res.writeHead(500, { "Content-Type": "text/json" });
-      res.end(
-        JSON.stringify({
-          msg: "😇 Sorry. No backend could be spawned!",
-          backend: backends[slug],
-        })
-      );
-      return;
-    }
 
     // TODO: Check to see if an "existing" backend is still alive.
     // If it's not then make a new one.
     // If it is active then return a message that this one already exists.
-    if (backends[slug]) {
-      const options = {
-        hostname: "api.jamsocket.com",
-        path: `/backend/${backends[slug].name}/status`,
-        method: "GET",
-      };
-
-      const req = https.request(options, (response) => {
-        let data = "";
-        response.on("data", (chunk) => {
-          data = data + chunk.toString();
-        });
-
-        response.on("end", () => {
-          const body = JSON.parse(data);
-          console.log("Status update!", body.state);
-          if (body.state === "Ready") {
-            res.writeHead(200, { "Content-Type": "text/json" });
-            res.end(
-              JSON.stringify({
-                msg: `🍏 Already running a backend for ${slug}`,
-                backend: backends[slug],
-              })
-            );
-          } else {
-            console.log("Status is not ready...", body);
-          }
-        });
-      });
-
-      req.on("error", (error) => {
-        console.log("⚠️ Error", error);
-      });
-
-      req.end();
-    }
-
     // With the body:
+
     {
       const body = {
         grace_period_seconds: 60,
