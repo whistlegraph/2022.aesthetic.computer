@@ -16,7 +16,7 @@ import "dotenv/config";
 // ESM
 import Fastify from "fastify";
 //const fastify = Fastify({ logger: process.env.NODE_ENV === "development" });
-const fastify = Fastify({ logger: false });
+const fastify = Fastify({ logger: true });
 const server = fastify.server;
 
 // Jamsocket
@@ -242,6 +242,7 @@ if (process.env.NODE_ENV === "development") {
   // And assume that in production we are already behind an https proxy.
   wss = new WebSocketServer({ server });
   //wss = new WebSocketServer({ port });
+  console.log(wss);
   console.log(
     `🤖 server.aesthetic.computer (Production) socket: wss://${ip.address()}:${port}`
   );
