@@ -59,6 +59,7 @@ io.onConnection((channel) => {
 const backends = {};
 
 let port = 8080;
+const host =  process.env.NODE_ENV === "development" ? "localhost" : "0.0.0.0";
 let corsOrigin = "https://aesthetic.computer";
 if (process.env.NODE_ENV === "development") {
   corsOrigin = "https://localhost:8888";
@@ -114,7 +115,7 @@ fastify.get("/session/:slug", async (req, rep) => {
  */
 const start = async () => {
   try {
-    await fastify.listen({ port });
+    await fastify.listen({ port, host });
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
