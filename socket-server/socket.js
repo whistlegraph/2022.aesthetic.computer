@@ -1,8 +1,7 @@
 // 🐕‍ Server
-// Handles online multiplayer and realtime interaction @ server.aesthetic.computer.
-
-// TODO: 🔐 Setup client<->server identity validation for both anonymous users and
-//          authenticated ones.
+// Handles *some* online multiplayer and realtime interaction @ server.aesthetic.computer.
+// TODO: Move multiplayer functionality over to session-server but keep this
+//       in production for "development" features only? (Research it... 22.12.04.16.06)
 
 // import { createServer } from "http";
 // import * as https from "https";
@@ -73,46 +72,20 @@ fastify.post("/reload", async (req, rep) => {
   return { msg: "Reload request sent!", body: req.body };
 });
 
-// TODO: Could this whole route be an edge function? 22.12.03.00.12
-//       Then it could store the data somewhere else like in a redis instance...
-fastify.get("/session/:slug", async (req, rep) => {
-  const { slug } = req.params;
-  rep.header("Access-Control-Allow-Origin", corsOrigin);
+/*
+// 1. Live Reload Endpoint.
+if (req.method === "POST" && req.url === "/reload") {
+  let body = "";
+  req.on("data", (data) => (body += data));
+  req.on("end", () => {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    everyone(pack("reload", body, "pieces"));
+    res.end(JSON.stringify({ msg: "Reload request sent!" }));
+  });
+}
+*/
 
-  // 1. Check to see if we actually should make a backend.
-  if (slug.length === 0) {
-    rep.status(500).send({
-      msg: "😇 Sorry. No backend could be spawned!",
-    });
-  }
-
-  // Check to see if an "existing" backend for this slug is still alive.
-  // - [-] If it's not then make a new one.
-  // - [] If it is active then return a message that this one already exists.
-
-  let headers;
-  if (backends[slug])
-    headers = await got(
-      `https://api.jamsocket.com/backend/${backends[slug].name}/status`
-    ).json();
-
-  if (headers?.state !== "Ready") {
-    // Make a new session backend if one doesn't already exist.
-    const session = await got
-      .post({
-        url: "https://api.jamsocket.com/user/jas/service/session-server/spawn",
-        json: { grace_period_seconds: 60 }, // jamsocket api settings
-        headers: { Authorization: `Bearer ${jamSocketToken}` },
-      })
-      .json(); // Note: A failure will yield a 500 code here to the client.
-    backends[slug] = session;
-    return session;
-  } else return { ...backends[slug], preceding: true }; // Or return a cached one and mark it as preceding.
-});
-
-/**
- * Run the server!
- */
+// Run server.
 const start = async () => {
   try {
     await fastify.listen({ port, host });
@@ -123,97 +96,6 @@ const start = async () => {
 };
 
 await start();
-
-/*
-const server = createServer((req, res) => {
-  // 1. Live Reload Endpoint.
-  if (req.method === "POST") {
-    if (req.url === "/reload") {
-      let body = "";
-      req.on("data", (data) => (body += data));
-      req.on("end", () => {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        everyone(pack("reload", body, "pieces"));
-        res.end(JSON.stringify({ msg: "Reload request sent!" }));
-      });
-    } else {
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end("Sorry.");
-    }
-  } else if (req.method === "GET" && req.url.startsWith("/session")) {
-    // 2. Session Backend Spawning
-    // See also: https://docs.jamsocket.com/api-docs/#authentication
-
-
-    // TODO: Check to see if an "existing" backend is still alive.
-    // If it's not then make a new one.
-    // If it is active then return a message that this one already exists.
-    // With the body:
-
-    {
-      const body = {
-        grace_period_seconds: 60,
-        // tag?: string,
-        //port?: number,
-        //env?: {
-        //  [env_var: string]: string
-        //}
-      };
-
-      const data = JSON.stringify(body);
-
-      const options = {
-        hostname: "api.jamsocket.com",
-        path: "/user/jas/service/session-server/spawn",
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${jamSocketToken}`,
-          "Content-Type": "application/json",
-          "Content-Length": data.length,
-        },
-      };
-
-      const req = https.request(options, (response) => {
-        let data = "";
-        response.on("data", (chunk) => {
-          data = data + chunk.toString();
-        });
-
-        response.on("end", () => {
-          const body = JSON.parse(data);
-          backends[slug] = body;
-          res.writeHead(200, { "Content-Type": "text/json" });
-          res.end(
-            JSON.stringify({
-              msg: `🍏 Added backend for ${slug}`,
-              backend: backends[slug],
-            })
-          );
-        });
-      });
-
-      req.on("error", (error) => {
-        res.writeHead(500, { "Content-Type": "text/json" });
-        res.end(JSON.stringify({ msg: "⚠️ Error", error }));
-      });
-
-      req.write(data);
-      req.end();
-    }
-
-    // And the headers:
-    // Authorization: `Bearer ${jams}`
-  } else {
-    // Any other http method...
-    res.writeHead(200, { "Content-Type": "text/json" });
-    res.end(
-      JSON.stringify({ msg: "🏀 Sorry. Please visit aesthetic.computer!" })
-    );
-  }
-});
-*/
-
-//server.listen(port);
 
 // Web Socket Server
 let wss;

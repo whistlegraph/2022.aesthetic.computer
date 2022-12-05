@@ -272,21 +272,17 @@ const $commonApi = {
   },
   net: {
     session: async () => {
-      const req = await fetch(
-        (debug === true
-          ? "http://" + servers.local
-          : "https://" + servers.main) +
-          "/session/" +
-          currentText
-      );
+      const req = await fetch("/session/" + currentText);
       const session = await req.json();
 
       // Return the active session if the server knows it's "Ready", otherwise
       // wait for the one we requested to spin up before doing anything else.
-      if (session.preceding) {
+      // (And in debug mode we just get a local url from "/session" so no need
+      // to check that.)
+      if (session.preceding || debug) {
         return session;
       } else {
-        const eventSource = new EventSource(
+        let eventSource = new EventSource(
           `https://api.jamsocket.com/backend/${session.name}/status/stream`
           // See also: https://docs.jamsocket.com/api-docs/#get-a-backends-status-stream
         );
@@ -300,7 +296,7 @@ const $commonApi = {
             } else {
               console.log("🟡 Backend:", update.state);
               if (update.state !== "Loading" && update.state !== "Starting") {
-                eventSource = null;
+                eventSource = null; // Clears the event stream handler.
               }
             }
           };

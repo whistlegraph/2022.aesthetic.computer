@@ -40,6 +40,7 @@
     "@geckos.io/client": "^2.2.3",
     "chrome-aws-lambda": "^10.1.0",
     "gl-matrix": "^3.4.3",
+    "got": "^12.5.3",
     "idb": "^7.1.0",
     "nanoid": "^4.0.0",
     "three": "^0.146.0"

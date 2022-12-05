@@ -10,7 +10,9 @@
 [functions.presigned-upload-url]
   external_node_modules = ["nanoid", "@aws-sdk-client-s3", "@aws-sdk/s3-request-presigner"]
 [functions.thumbnail]
-  # external_node_modules = ["chrome-aws-lambda"]
+  external_node_modules = ["chrome-aws-lambda"]
+[functions.session]
+  external_node_modules = ["got"]
 [dev]
   NODE_ENV = "development"
   publish = "public/"
@@ -62,6 +64,10 @@
 [[redirects]]
   from = "/thumbnail/*"
   to = "/.netlify/builders/thumbnail"
+  status = 200
+[[redirects]]
+  from = "/session/*"
+  to = "/.netlify/functions/session"
   status = 200
 [[redirects]]
   from = "/presigned-upload-url/*"
