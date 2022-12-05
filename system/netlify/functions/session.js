@@ -3,11 +3,25 @@
 
 /* #region todo 📓 
 - [] Add a SAAS cache to replace "backends" maybe redis? 
+  - [] How to view all keys in redis database / connect via terminal?
+  - [] How to set a grouping / hashmap for "backends" so that they contain an association
+  // between the jamsocket URLs and a slug?
+- [] Add a "local" redis database also, when it's actually necessary...
+  - https://github.com/redis/node-redis follow these and setup a local server
+  - https://redis.io/docs/getting-started
 + Done
 - [x] Produce a local URL when in development.
 #endregion */
 
+import { createClient } from "redis";
+
+console.log(createClient);
+
 const dev = false; //process.env.NETLIFY_DEV;
+
+let redisConnectionString = dev
+  ? "local_redis"
+  : process.env.REDIS_CONNECTION_STRING;
 
 async function fun(event, context) {
   let out,
@@ -30,6 +44,18 @@ async function fun(event, context) {
 
     // Check to see if an "existing" backend for this slug is still alive.
     let headers;
+
+    // Connect to redis...
+    console.log(redisConnectionString);
+    const client = createClient({ url: redisConnectionString });
+    client.on("error", (err) => console.log("🔴 Redis client error!", err));
+    await client.connect();
+
+    await client.set("aesthetic.computer", "success!");
+    const value = await client.get("aesthetic.computer");
+    await client.disconnect();
+
+    console.log(value); // Did it work!?
 
     // TODO: Replace with redis or database. 🔴
     // if (backends[slug])
