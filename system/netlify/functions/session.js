@@ -3,9 +3,10 @@
 
 /* #region todo 📓 
 - [] Add a SAAS cache to replace "backends" maybe redis? 
-  - [] How to view all keys in redis database / connect via terminal?
-  - [] How to set a grouping / hashmap for "backends" so that they contain an association
-  // between the jamsocket URLs and a slug?
+  - [-] How to set a grouping / hashmap for "backends" so that they contain an
+        association between the jamsocket URLs and a slug?
+  - [-] Read through: https://redis.io/docs/data-types
+  - [x] How to view all keys in redis database / connect via terminal?
 - [] Add a "local" redis database also, when it's actually necessary...
   - https://github.com/redis/node-redis follow these and setup a local server
   - https://redis.io/docs/getting-started
