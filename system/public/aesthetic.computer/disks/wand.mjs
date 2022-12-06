@@ -922,35 +922,35 @@ function sim({
         // 📔 Some old scripts to automate making changes to demos and GLB files.
         //    Leaving them here in case I need to do automation again!
         // Advance to next piece, save json, etc. etc.
-        // {
-        // GLB
-        // const tokenID = store["freaky-flowers"].tokenID;
-        // const ts = store["freaky-flowers"].tokens[tokenID] || timestamp();
-        // const handle = "digitpain"; // Hardcoded for now.
-        // const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
-
-        // let sculptureSlug = `ff${tokenID}-${ts}-sculpture-${bg}-${handle}`;
-
-        // Prepend "ff#-" if a freakyFlowersToken has been loaded.
-        // if (store["freaky-flowers"]?.tokenID >= 0) {
-        //   sculptureSlug = `${store["freaky-flowers"].tokenID}-${sculptureSlug}`;
-        // }
-
         /*
+        {
+          // GLB
+          const tokenID = store["freaky-flowers"].tokenID;
+          const ts = store["freaky-flowers"].tokens[tokenID] || timestamp();
+          const handle = "digitpain"; // Hardcoded for now.
+          const bg = rgbToHexStr(...background.slice(0, 3)).toUpperCase(); // Empty string for no `#` prefix.
+
+          let sculptureSlug = `ff${tokenID}-${ts}-sculpture-${bg}-${handle}`;
+
+          // Prepend "ff#-" if a freakyFlowersToken has been loaded.
+          //if (store["freaky-flowers"]?.tokenID >= 0) {
+          //  sculptureSlug = `${store["freaky-flowers"].tokenID}-${sculptureSlug}`;
+          //}
+
           setTimeout(function () {
-            gpu
-              .message({
-                type: "export-scene",
-                content: {
-                  slug: sculptureSlug,
-                  output: "local",
-                  sculptureHeight: cubeHeight,
-                },
-              })
+            gpu.message({
+              type: "export-scene",
+              content: {
+                slug: sculptureSlug,
+                output: "local",
+                sculptureHeight: cubeHeight,
+              },
+            });
             advanceSeries(store["freaky-flowers"], 1, true);
           }, 100);
-          */
-        // }
+        }
+        */
+
         /*
       // DEMOS
         setTimeout(function () {
