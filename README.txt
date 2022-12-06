@@ -53,10 +53,9 @@ Welcome to...
 *** Project Order **
  - [-] Spin up session-server in sb.
  - [] Add a database / hosted DB.
-    - [] Digital Ocean?
-    - [] Redis?
-    - [] What else?
     - [] 🔐 Setup client<->server identity validation / user system!
+    - [x] Digital Ocean
+    - [x] Redis
  - [] Make 'play'... a recordable chat program in X turns.
    - "What are you playing as?"
    - Is it possible for one person to play multiple characters also?

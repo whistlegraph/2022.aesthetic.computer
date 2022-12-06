@@ -1295,7 +1295,8 @@ function act({
           position: camdoll.cam.position,
           rotation: camdoll.cam.rotation,
         },
-        squareThumbnail: e.alt,
+        // squareThumbnail: e.alt,
+        squareThumbnail: true,
       },
     });
   }
