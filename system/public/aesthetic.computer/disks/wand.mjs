@@ -1252,7 +1252,7 @@ function act({
   }
 
   // Switch camera mode.
-  if (e.alt && e.is("keyboard:down:o")) {
+  if (e.is("keyboard:down:o")) {
     orthographic = !orthographic;
     camdoll.cam.type = orthographic ? "orthographic" : "perspective";
     gpu.message({
