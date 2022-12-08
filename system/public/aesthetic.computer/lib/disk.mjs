@@ -197,6 +197,14 @@ let wiggleAngle = 0;
 
 // For every function to access.
 const $commonApi = {
+  // Trigger background music.
+  // Eventually add an "@" style parameter similar to what a stamp system would have.
+  bgm: {
+    set: function (trackNumber) {
+      send({ type: "bgm-change", content: { trackNumber } });
+    },
+    data: {},
+  },
   system: {},
   wiggle: function (n, level = 0.2, speed = 6) {
     wiggleAngle = (wiggleAngle + 1 * speed) % 360;
@@ -1601,6 +1609,12 @@ async function makeFrame({ data: { type, content } }) {
       pixels = new Uint8ClampedArray(content.pixels);
       if (screen) screen.pixels = pixels;
     }
+
+    // Globalize any background music data, retrievable via bgm.data
+    $commonApi.bgm.data = {
+      amplitude: content.audioMusicAmplitude,
+      sample: content.audioMusicSampleData,
+    };
 
     // Act & Sim (Occurs after first boot and paint.)
     if (booted && paintCount > 0n) {

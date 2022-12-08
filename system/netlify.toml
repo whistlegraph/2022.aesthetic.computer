@@ -33,7 +33,8 @@
   Access-Control-Allow-Origin = "*"
   # These headers are required in order for SharedArrayBuffer to be enabled.
   # Currently used by ffmpeg.wasm. 22.08.06.11.01
-  Cross-Origin-Embedder-Policy = "require-corp"
+  # Cross-Origin-Embedder-Policy = "require-corp"
+  Cross-Origin-Embedder-Policy = "credentialless"
   Cross-Origin-Opener-Policy = "same-origin"
   # Cross-Origin-Resource-Policy = "cross-origin"
   Vary = "*"
@@ -57,10 +58,6 @@
   to = "https://aesthetic.computer/prompt"
   status = 301
   force = true
-[[redirects]]
-  from = "/ff/*"
-  to = "/.netlify/builders/thumbnail"
-  status = 200
 [[redirects]]
   from = "/thumbnail/*"
   to = "/.netlify/builders/thumbnail"

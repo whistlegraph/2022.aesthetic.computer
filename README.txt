@@ -50,7 +50,8 @@ Welcome to...
 
 🌟 Projects In Progress (PIP) 🌟
 
-*** Project Order **
+*** Project Order ***
+ - [-] BGM
  - [-] Spin up session-server in sb.
  - [] Add a database / hosted DB.
     - [] 🔐 Setup client<->server identity validation / user system!
@@ -60,7 +61,6 @@ Welcome to...
    - "What are you playing as?"
    - Is it possible for one person to play multiple characters also?
     - [] Multiple windows...
- - [-] BGM
  - [] MUD
  - [] Painting
  - [] Mintable Paintings
