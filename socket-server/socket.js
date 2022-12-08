@@ -181,9 +181,6 @@ wss.on("connection", (ws, req) => {
     // others(JSON.stringify(msg));
   });
 
-  //Note: for some reason pinging was disconnecting users over and over again...
-  //         TBD: Is pinging even necessary?
-
   ws.isAlive = true; // For checking persistence between ping-pong messages.
 
   // Send a ping message to all clients every 30 seconds, and kill
@@ -194,7 +191,7 @@ wss.on("connection", (ws, req) => {
       client.isAlive = false;
       client.ping();
     });
-  }, 30000);
+  }, 3000);
 
   ws.on("pong", () => (ws.isAlive = true)); // Receive a pong.
 
@@ -214,9 +211,7 @@ function everyone(string) {
 }
 
 // 🚧 File Watching in Local Development Mode
-// TODO: Extend this feature to the SSH server for developers. 22.10.18.21.48
 // File watching uses: https://github.com/paulmillr/chokidar
-// TODO: Stop logging every file and instead count them up and report a number.
 if (process.env.NODE_ENV === "development") {
   // 1. Watch for local file changes in pieces.
   chokidar

@@ -4,7 +4,9 @@
 // that requests it.
 
 /* #region todo 📓 
- - [] Add sockets back.
+ - [] Add sockets back... or switch to UDP?
+ - [] Cache some stuff in redis / connect to redis here.
+ - [] Read through: https://redis.io/docs/data-types
  + Done
  - [x] Make a "local" option.
 #endregion */

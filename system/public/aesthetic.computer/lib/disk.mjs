@@ -279,7 +279,7 @@ const $commonApi = {
       // wait for the one we requested to spin up before doing anything else.
       // (And in debug mode we just get a local url from "/session" so no need
       // to check that.)
-      if (session.preceding || debug) {
+      if (session.state === "Ready" || debug) {
         return session;
       } else {
         let eventSource = new EventSource(

@@ -2,27 +2,22 @@
 // Produces a valid URL for a given session backend.
 
 /* #region todo 📓 
-- [] Add a SAAS cache to replace "backends" maybe redis? 
-  - [-] How to set a grouping / hashmap for "backends" so that they contain an
-        association between the jamsocket URLs and a slug?
-  - [-] Read through: https://redis.io/docs/data-types
-  - [x] How to view all keys in redis database / connect via terminal?
-- [] Add a "local" redis database also, when it's actually necessary...
-  - https://github.com/redis/node-redis follow these and setup a local server
-  - https://redis.io/docs/getting-started
 + Done
+- [x] Add a "local" redis database also, once it's actually necessary...
+  (It should work, just gotta make sure Redis is runnin')
+  - https://redis.io/docs/getting-started
+  - https://github.com/redis/node-redis follow these and setup a local server
+- [x] Add a SAAS cache to replace "backends" maybe redis? 
+  - [x] How to set a grouping / hashmap for "backends" so that they contain an
+        association between the jamsocket URLs and a slug?
+  - [x] How to view all keys in redis database / connect via terminal?
 - [x] Produce a local URL when in development.
 #endregion */
 
 import { createClient } from "redis";
 
-console.log(createClient);
-
-const dev = false; //process.env.NETLIFY_DEV;
-
-let redisConnectionString = dev
-  ? "local_redis"
-  : process.env.REDIS_CONNECTION_STRING;
+const dev = process.env.NETLIFY_DEV;
+const redisConnectionString = process.env.REDIS_CONNECTION_STRING;
 
 async function fun(event, context) {
   let out,
@@ -47,24 +42,23 @@ async function fun(event, context) {
     let headers;
 
     // Connect to redis...
-    console.log(redisConnectionString);
-    const client = createClient({ url: redisConnectionString });
+    const client = !dev
+      ? createClient({ url: redisConnectionString })
+      : createClient();
     client.on("error", (err) => console.log("🔴 Redis client error!", err));
     await client.connect();
 
-    await client.set("aesthetic.computer", "success!");
-    const value = await client.get("aesthetic.computer");
-    await client.disconnect();
+    // Check to see if a backend is already available...
+    const currentBackend = await client.HGET("backends", slug);
 
-    console.log(value); // Did it work!?
+    if (currentBackend) {
+      out = await got(
+        `https://api.jamsocket.com/backend/${currentBackend}/status`
+      ).json();
+      out.url = `https://${currentBackend}.jamsocket.run`; // Tack on the URL for the client.
+    }
 
-    // TODO: Replace with redis or database. 🔴
-    // if (backends[slug])
-    //   headers = await got(
-    //     `https://api.jamsocket.com/backend/${backends[slug].name}/status`
-    //   ).json();
-
-    if (headers?.state !== "Ready") {
+    if (out?.state !== "Ready") {
       // Make a new session backend if one doesn't already exist.
       const session = await got
         .post({
@@ -73,12 +67,12 @@ async function fun(event, context) {
           headers: { Authorization: `Bearer ${jamSocketToken}` },
         })
         .json(); // Note: A failure will yield a 500 code here to the client.
-
-      // TODO: Replace with redis or database. 🔴
-      // backends[slug] = session;
-
+      await client.HSET("backends", slug, session.name); // Store the session name in redis using the 'slug' key.
       out = session;
     }
+
+    await client.quit(); // Disconnect from redis client.
+
     // TOOD: Pull from redis or database. 🔴
     // else return { ...backends[slug], preceding: true }; // Or return a cached one and mark it as preceding.
   }
