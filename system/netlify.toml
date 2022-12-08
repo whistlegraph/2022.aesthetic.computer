@@ -12,7 +12,7 @@
 [functions.thumbnail]
   external_node_modules = ["chrome-aws-lambda"]
 [functions.session]
-  external_node_modules = ["got"]
+  external_node_modules = ["got", "redis"]
 [dev]
   NODE_ENV = "development"
   publish = "public/"

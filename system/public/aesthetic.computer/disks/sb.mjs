@@ -3,7 +3,7 @@
 
 async function boot({ resize, wipe, net }) {
   const sesh = await net.session();
-  console.log("Sesh:", sesh);
+  console.log("Session:", sesh);
   // Perform basic setup here.
   // resize(50, 20); // Add a custom resolution.
 }

@@ -50,8 +50,7 @@ Welcome to...
 
 🌟 Projects In Progress (PIP) 🌟
 
-*** Project Order ***
- - [-] BGM
+*** Project Order **
  - [-] Spin up session-server in sb.
  - [] Add a database / hosted DB.
     - [] 🔐 Setup client<->server identity validation / user system!
@@ -61,24 +60,35 @@ Welcome to...
    - "What are you playing as?"
    - Is it possible for one person to play multiple characters also?
     - [] Multiple windows...
+ - [-] BGM
  - [] MUD
  - [] Painting
  - [] Mintable Paintings
+ + Done
+ - [x] Prototype BGM
+ - [x] Spin up session-server in sb.
+ - [x] Add a database / hosted DB.
+    - [x] Digital Ocean
+    - [x] Redis
 
 *** BGM ***
- - [] Add vf music to a bucket or a server / make the bgm piece to load a track.
- - [] This piece should have a common library that any piece can opt into in boot via a music() or track() function. 
- - [] Play it back via a system soundtrack node in the bios audio-graph.
- - READ Audio properties (Will do for bgm)
-   - [] Global amplitude read out.
+ - [] Add ability to stop bgm from playing.
+ - [] Global volume / play + pause controls too?
+ - [] Make a cool visualizer for bgm.
+ - [] READ Audio properties (Will do for bgm)
    - [] Amplitude within frequency range function. (Cropped amplitude)
    - [] Time position (formattable as 00:00:00)
+   - [x] Global amplitude read out.
  - FILTER Audio properties (Will do later)
    - [] High pass
    - [] Low pass
    - [] Panning
    - [] Speed
    - [] Spatialization
+ + Done
+  - [x] Add vf music to a bucket or a server / make the bgm piece to load a track.
+  - [x] This piece should have a common library that any piece can opt into in boot via a music() or track() function. 
+  - [x] Play it back via an audio tag in the bios audio-graph.
 
 *** Important 3D Details ***
   - [] Invert Y position in original constructor.
