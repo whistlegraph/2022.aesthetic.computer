@@ -51,11 +51,8 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order **
- - [-] Spin up session-server in sb.
- - [] Add a database / hosted DB.
-    - [] 🔐 Setup client<->server identity validation / user system!
-    - [x] Digital Ocean
-    - [x] Redis
+ - [] 🔐 Setup client<->server identity validation / user system!
+  - [] Research auth methods.
  - [] Make 'play'... a recordable chat program in X turns.
    - "What are you playing as?"
    - Is it possible for one person to play multiple characters also?
@@ -65,6 +62,10 @@ Welcome to...
  - [] Painting
  - [] Mintable Paintings
  + Done
+ - [x] Spin up session-server in sb.
+ - [x] Add a database / hosted DB.
+    - [x] Digital Ocean
+    - [x] Redis
  - [x] Prototype BGM
  - [x] Spin up session-server in sb.
  - [x] Add a database / hosted DB.
