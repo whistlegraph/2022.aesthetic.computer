@@ -418,7 +418,59 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   let requestMicrophoneAmplitude, requestMicrophoneWaveform;
 
+  // TODO: Eventually this would be replaced with a more dynamic system.
+  const backgroundTrackURLs = [
+    "0 - analog multiplication.m4a",
+    "1 - castlecowards.m4a",
+    "10 - or perhaps destroyed.m4a",
+    "11 - sunsmidnought.m4a",
+    "12 - improvements design.m4a",
+    "13 - consideration.m4a",
+    "14 - magellanic clouds.m4a",
+    "15 - syncopation demotic.m4a",
+    "16 - textual criticism ambiguity.m4a",
+    "2 - epanodos clinamen.m4a",
+    "3 - for not being able.m4a",
+    "4 - pantoum chain rhyme.m4a",
+    "5 - they sit so nicely.m4a",
+    "6 - vociferatings witchbefooled.m4a",
+    "7 - an accuracy which it seems as impossible to attain.m4a",
+    "8 - bivariate beamforming.m4a",
+    "9 - and the three of them began to make.m4a",
+  ];
+
+  const backgroundMusicEl = document.createElement("audio");
+  backgroundMusicEl.id = "background-music";
+  backgroundMusicEl.crossOrigin = "anonymous";
+  wrapper.appendChild(backgroundMusicEl);
+
+  let analyserCtx, analyserSrc, analyser, frequencyData;
+  let currentBackgroundTrack;
+
+  function playBackgroundMusic(n) {
+    if (currentBackgroundTrack !== n && !isNaN(n)) {
+      const origin = "https://bgm.aesthetic.computer/";
+      backgroundMusicEl.src = origin + backgroundTrackURLs[n];
+      if (audioContext) backgroundMusicEl.play();
+      currentBackgroundTrack = n;
+    }
+  }
+
+  function stopBackgroundMusic() {
+    backgroundMusicEl.stop();
+  }
+
   function startSound() {
+    // BGM Analyser
+    analyserCtx = new AudioContext();
+    analyserSrc = analyserCtx.createMediaElementSource(backgroundMusicEl);
+    analyser = analyserCtx.createAnalyser();
+
+    analyserSrc.connect(analyser);
+    analyser.connect(analyserCtx.destination);
+    frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+    // Main audio feed
     audioContext = new AudioContext({
       latencyHint: "interactive",
       // TODO: Eventually choose a good sample rate and/or make it settable via
@@ -550,6 +602,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         diskSupervisor.requestBeat?.(time);
       };
 
+      //soundProcessor.connect()
+
       // Connect soundProcessor to the mediaStream.
       soundProcessor.connect(audioStreamDest);
 
@@ -559,19 +613,20 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       modal.classList.remove("on");
       bumper.innerText = "";
+
     })();
 
-    window.addEventListener("pointerdown", async () => {
+    function enableAudioPlayback() {
+      if (backgroundMusicEl.paused) backgroundMusicEl.play();
       if (["suspended", "interrupted"].includes(audioContext.state)) {
         audioContext.resume();
       }
-    });
+    }
 
-    window.addEventListener("keydown", async () => {
-      if (["suspended", "interrupted"].includes(audioContext.state)) {
-        audioContext.resume();
-      }
-    });
+    enableAudioPlayback();
+
+    window.addEventListener("pointerdown", async () => enableAudioPlayback());
+    window.addEventListener("keydown", async () => enableAudioPlayback());
   }
 
   // TODO: Add mute
@@ -701,6 +756,21 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // console.log("Sending frame...", frameCount, performance.now())
 
+    // Grab a sample of any playing background music, calculate the frequency
+    // and send as needed.
+    let amplitude = 0;
+    if (backgroundMusicEl.paused === false) {
+      // Get the frequency data from the audio element
+      analyser.getByteFrequencyData(frequencyData);
+
+      // Calculate the maximum amplitude in the frequency data for this period.
+      for (let i = 0; i < frequencyData.length; i += 1) {
+        if (frequencyData[i] > amplitude) {
+          amplitude = frequencyData[i];
+        }
+      }
+    }
+
     //
     send(
       {
@@ -712,6 +782,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           inFocus: true, // document.hasFocus(),
           audioTime: audioContext?.currentTime,
           audioBpm: sound.bpm, // TODO: Turn this into a messaging thing.
+          audioMusicAmplitude: amplitude,
+          audioMusicSampleData: amplitude > 0 ? frequencyData : [],
           width: canvas.width,
           height: canvas.height,
           // TODO: Do all fields of `pointer` need to be sent? 22.09.19.23.30
@@ -721,7 +793,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           clipboardText: pastedText,
         },
       },
-      [screen.pixels.buffer]
+      [screen.pixels.buffer, frequencyData]
     );
 
     // Clear any pasted text.
@@ -824,6 +896,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     if (type === "rewrite-url-path") {
       const newPath = content.path;
       history.replaceState("", document.title, newPath);
+      return;
+    }
+
+    if (type === "bgm-change") {
+      playBackgroundMusic(content.trackNumber);
+      return;
     }
 
     if (type === "disk-loaded") {
@@ -1266,8 +1344,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         type: "content-created",
         content: { id: content.id, response: "Content was made!" }, // TODO: Return an API / better object?
       });
-
-      // debugger;
 
       return;
     }

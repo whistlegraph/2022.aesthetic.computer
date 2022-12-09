@@ -51,14 +51,24 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order **
- - [] 🔐 Setup a web3 based client<->server identity validation / login system
-   - [] 
- - [] Turn sb into 'play'... a recordable chat program in X turns.
- - [] That can play back the conversation!
- - [] MUD
- - [] Painting
+ - [-] 🔐 Setup client<->server identity validation / user system!
+  - [-] Add user feedback for web3 connect.
+  - [x] Basic web3 integration.
+  - [x] Research auth methods.
+ - [] Make 'play'... a recordable chat program in X turns.
+   - [] Abstract the text entry logic out of 'prompt'.
+   - How to play anonymously?
+    - "Who are you playing as?"
+ - [] Make a basic MUD.
  - [] Mintable Paintings
+ - [] Finish Brushes: https://www.notion.so/aesthetic-computer/aesthetic-computer-hq-97376f353dbd4503970910777d6c7241
+ - [] Finish Freaky Flowers client
  + Done
+ - [x] BGM Protoype
+ - [x] Spin up session-server in sb.
+ - [x] Add a database / hosted DB.
+    - [x] Digital Ocean
+    - [x] Redis
  - [x] Prototype BGM
  - [x] Spin up session-server in sb.
  - [x] Add a database / hosted DB.

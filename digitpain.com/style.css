@@ -132,3 +132,7 @@ footer::before {
   text-indent: -4.8em;
   padding-left: 4.8em;
 }
+
+audio#background-music {
+  display: none;
+}

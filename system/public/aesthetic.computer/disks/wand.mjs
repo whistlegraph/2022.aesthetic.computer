@@ -14,7 +14,7 @@
 *** Metadata ***
   - [] Proofread all titles and descriptions.
   - [] Re-enable Twitter player? Check `index` and `bios` "twitter";
-    - [] https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
+    - [] https://developer. twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
   - [] Add metadata / attributes and tags from the Google Sheet to the JSON.
     - [] Ask about the Google Sheet / json generation flow.
 
@@ -28,7 +28,7 @@
 - [] Prevent users from viewing or moving outside a certain range.
 
 *** Networking ***
-- [] Ultimate Fatality: Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
+- [] Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
   - [] Keep the light and dark idea?
 - [] Integrate `oldwand` multiplayer architecture.
   - [] Read both pieces side by side.
