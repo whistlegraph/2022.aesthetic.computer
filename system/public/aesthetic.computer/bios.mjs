@@ -138,6 +138,23 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     );
   }
 
+  // Web3
+  async function loadWeb3() {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "aesthetic.computer/dep/web3/web3.min.js";
+
+      script.onerror = (err) => reject(err, s);
+
+      script.onload = function handleScriptLoaded() {
+        if (debug) console.log("🕸️3️⃣ Ready...");
+        resolve(Web3);
+      };
+
+      document.head.appendChild(script);
+    });
+  }
+
   // Used by `disk` to set the metatags by default when a piece loads. It can
   // be overridden using `meta` inside of `boot` for any given piece.
   function setMetatags(meta) {
@@ -747,6 +764,60 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     // *** Route to different functions if this change is not a full frame update.
     if (type === "load-failure" && MetaBrowser) {
       document.querySelector("#software-keyboard-input")?.blur();
+      return;
+    }
+
+    if (type === "web3-connect") {
+      if (window.ethereum) {
+        const addresses = await (typeof window.ethereum.request === "function"
+          ? window.ethereum.request({ method: "eth_requestAccounts" })
+          : window.ethereum.enable());
+
+        await loadWeb3(); // Load the web3.js library.
+        const w3 = new Web3(window.ethereum);
+
+        const address = addresses[0];
+
+        // From: https://github.com/web3/web3.js/issues/2683#issuecomment-1304496119
+        async function ensReverse(address) {
+          const web3 = new Web3("https://eth.public-rpc.com/");
+          const namehash = await web3.eth.call({
+            to: "0x084b1c3c81545d370f3634392de611caabff8148", // ENS: Reverse Registrar
+            data: web3.eth.abi.encodeFunctionCall(
+              {
+                name: "node",
+                type: "function",
+                inputs: [{ type: "address", name: "addr" }],
+              },
+              [address]
+            ),
+          });
+          return web3.eth.abi.decodeParameter(
+            "string",
+            await web3.eth.call({
+              to: "0xa2c122be93b0074270ebee7f6b7292c7deb45047", // ENS: Default Reverse Resolver
+              data: web3.eth.abi.encodeFunctionCall(
+                {
+                  name: "name",
+                  type: "function",
+                  inputs: [{ type: "bytes32", name: "hash" }],
+                },
+                [namehash]
+              ),
+            })
+          );
+        }
+
+        const ensName = await ensReverse(address);
+        const userID = ensName || address; 
+        if (debug) console.log("🕸️3️⃣ Connected to:", userID);
+        // TODO: Send back a success to the disk here...
+      } else {
+        // TODO: Send back a failure to the disk here...
+        console.warn(
+          "🔴 Web3 is unavailable. Please install an Ethereum wallet or enable your extension."
+        );
+      }
       return;
     }
 

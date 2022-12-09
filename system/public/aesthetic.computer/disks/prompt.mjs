@@ -152,6 +152,7 @@ async function act({
   painting,
   darkMode,
   num,
+  connect
 }) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
@@ -251,6 +252,9 @@ async function act({
           input = "";
         } else if (input.startsWith("2022")) {
           load(parse("wand~" + input)); // Execute the current command.
+        } else if (input === "connect") { 
+          connect(); // Web3 connect.
+          flashColor = [0, 0, 255];
         } else {
           // 🟠 Local and remote pieces...
           load(parse(input.replaceAll(" ", "~"))); // Execute the current command.

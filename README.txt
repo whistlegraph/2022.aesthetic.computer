@@ -51,7 +51,7 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order **
- - [] 🔐 Setup a client<->server identity validation / login system
+ - [] 🔐 Setup a web3 based client<->server identity validation / login system
    - [] 
  - [] Turn sb into 'play'... a recordable chat program in X turns.
  - [] That can play back the conversation!

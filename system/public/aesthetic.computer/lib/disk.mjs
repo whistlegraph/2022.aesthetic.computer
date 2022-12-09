@@ -198,6 +198,7 @@ let wiggleAngle = 0;
 // For every function to access.
 const $commonApi = {
   system: {},
+  connect: () => send({ type: "web3-connect" }),
   wiggle: function (n, level = 0.2, speed = 6) {
     wiggleAngle = (wiggleAngle + 1 * speed) % 360;
     const osc = sin(num.radians(wiggleAngle));

@@ -44,7 +44,8 @@
     "idb": "^7.1.0",
     "nanoid": "^4.0.0",
     "redis": "^4.5.1",
-    "three": "^0.146.0"
+    "three": "^0.146.0",
+    "web3": "^1.8.1"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.183.0",
