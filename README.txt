@@ -51,17 +51,18 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order **
- - [] 🔐 Setup client<->server identity validation / user system!
+ - [-] 🔐 Setup client<->server identity validation / user system!
   - [] Research auth methods.
  - [] Make 'play'... a recordable chat program in X turns.
-   - "What are you playing as?"
-   - Is it possible for one person to play multiple characters also?
-    - [] Multiple windows...
- - [-] BGM
- - [] MUD
- - [] Painting
+   - [] Abstract the text entry logic out of 'prompt'.
+   - How to play anonymously?
+    - "Who are you playing as?"
+ - [] Make a basic MUD.
  - [] Mintable Paintings
+ - [] Finish Brushes: https://www.notion.so/aesthetic-computer/aesthetic-computer-hq-97376f353dbd4503970910777d6c7241
+ - [] Finish Freaky Flowers client
  + Done
+ - [x] BGM Protoype
  - [x] Spin up session-server in sb.
  - [x] Add a database / hosted DB.
     - [x] Digital Ocean

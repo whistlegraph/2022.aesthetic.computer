@@ -158,6 +158,8 @@ function act($) {
     }
   }
 
+  console.log($);
+
   bleeps.forEach((bleep) => {
     bleep.button.act(event, {
       push: () => needsPaint(),
@@ -180,7 +182,7 @@ function act($) {
         anyBleepDowned = false;
         needsPaint();
       },
-    }, pens()); // Passing pens here enables multi-touch support for ui buttons.
+    }, pens?.()); // Passing pens here enables multi-touch support for ui buttons.
   });
 }
 
