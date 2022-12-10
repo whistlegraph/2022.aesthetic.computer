@@ -200,6 +200,7 @@ let wiggleAngle = 0;
 const $commonApi = {
   // Trigger background music.
   // Eventually add an "@" style parameter similar to what a stamp system would have.
+  send,
   bgm: {
     set: function (trackNumber) {
       send({ type: "bgm-change", content: { trackNumber } });
@@ -1128,6 +1129,7 @@ async function load(parsed, fromHistory = false, alias = false) {
   currentHash = hash;
   currentText = slug;
 
+  $commonApi.slug = slug;
   $commonApi.query = search;
   $commonApi.params = params || [];
   $commonApi.load = load;

@@ -12,13 +12,14 @@
 export const desc =
   "A global text prompt for accessing any aesthetic.computer piece.";
 
-const { entries } = Object;
+const { entries, keys } = Object;
 const { floor } = Math;
 
 import { parse } from "../lib/parse.mjs";
 import { font1 } from "./common/fonts.mjs";
 import { nopaint_adjust } from "../systems/nopaint.mjs";
 import { Desktop, MetaBrowser } from "../lib/platform.mjs";
+import { Prompt } from "../lib/type.mjs";
 
 let glyphs = {};
 
@@ -133,9 +134,9 @@ function paint({ box, screen, wipe, ink, paste, store, system, dark }) {
   // Trigger a red or green screen flash with a timer.
   if (showFlash) ink(flashColor).box(0, 0, screen.width, screen.height);
 
-  // Return false if we are yet to load every glyph.
+  // Return false if we have loaded every glyph.
   // TODO: This causes some extra paints on startup.
-  return !(Object.keys(glyphs).length === Object.keys(font1).length);
+  return !(keys(glyphs).length === keys(font1).length);
 }
 
 let promptHistoryDepth = 0;
@@ -273,6 +274,7 @@ async function act({
           // 🟠 Local and remote pieces...
           load(parse(input.replaceAll(" ", "~"))); // Execute the current command.
         }
+
       }
 
       if (e.key === "Escape") input = "";
@@ -301,9 +303,6 @@ async function act({
     blink?.flip(true);
   }
 
-  // TODO: Do I still need these events?
-  // if (e.is("keyboard:open")) blink.flip(true);
-
   if (e.is("keyboard:close")) {
     canType = false;
     needsPaint();
@@ -327,38 +326,5 @@ async function act({
 // 📚 Library (Useful classes & functions used throughout the piece)
 
 // TODO: Refactor this into "Text" so it can be used in Tracker
-
-class Prompt {
-  top = 0;
-  left = 0;
-
-  scale = 1;
-  blockWidth = 6;
-  blockHeight = 10;
-  letterWidth = this.blockWidth * this.scale;
-  letterHeight = this.blockHeight * this.scale;
-
-  colWidth = 48; // Maximum width of each line before wrapping.
-
-  cursor = { x: 0, y: 0 };
-
-  gutter = (this.colWidth + 1) * this.blockWidth;
-
-  constructor(top = 0, left = 0) {
-    this.top = top;
-    this.left = left;
-  }
-
-  get pos() {
-    const x = this.top + this.cursor.x * this.letterWidth;
-    const y = this.left + this.cursor.y * this.letterHeight;
-    return { x, y, w: this.letterWidth, h: this.letterHeight };
-  }
-
-  forward() {
-    this.cursor.x = (this.cursor.x + 1) % this.colWidth;
-    if (this.cursor.x === 0) this.cursor.y += 1;
-  }
-}
 
 export { boot, sim, paint, act };

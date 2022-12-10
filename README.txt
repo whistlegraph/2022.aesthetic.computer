@@ -52,7 +52,10 @@ Welcome to...
 
 *** Project Order **
  - [-] Turn 'sb' -> 'play'... a recordable chat program in X turns.
-   - [] Abstract the text entry logic out of 'prompt'.
+   - [🍏] Fix major segfault regression.
+   - [x] Retrofit `prompt` with the new abstraction in `type.mjs`
+    - [] Clear any prompt specifics in bios.
+   - [x] Abstract the text entry logic out of 'prompt'.
    - [] Add tab auto-completion feature that can be side-loaded with contextual
         data based on where the text module is used.
    - How to play anonymously?

@@ -37,6 +37,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
   let diskSupervisor;
   let currentPiece = null; // Gets set to a path after `loaded`.
+  let currentPieceHasTextInput = false;
 
   // Media Recorder
   let mediaRecorder; // See "recorder-rolling" below.
@@ -909,6 +910,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     if (type === "disk-loaded") {
       currentPiece = content.path;
+      currentPieceHasTextInput = false;
 
       // Initialize some global stuff after the first piece loads.
       if (content.pieceCount === 0) {
@@ -1031,7 +1033,10 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           let inTime = false;
 
           window.addEventListener("pointerdown", (e) => {
-            if (currentPiece === "aesthetic.computer/disks/prompt") {
+            if (
+              currentPieceHasTextInput ||
+              currentPiece === "aesthetic.computer/disks/prompt"
+            ) {
               down = true;
               downPos = { x: e.x, y: e.y };
               inTime = true;
@@ -1045,7 +1050,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               down &&
               // dist(downPos.x, downPos.y, e.x, e.y) < 32 && // Distance threshold for opening keyboard.
               inTime &&
-              currentPiece === "aesthetic.computer/disks/prompt" // &&
+              (currentPieceHasTextInput ||
+                currentPiece === "aesthetic.computer/disks/prompt") // &&
               // Refactoring the above could allow iframes to capture keyboard events.
               // via sending things from input... 22.10.24.17.16, 2022.04.07.02.10
             ) {
@@ -1298,6 +1304,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       //   content: { width: screen.width, height: screen.height, pixels },
       // }, [pixels]);
 
+      return;
+    }
+
+    if (type === "text-input-enabled") {
+      currentPieceHasTextInput = true;
       return;
     }
 
