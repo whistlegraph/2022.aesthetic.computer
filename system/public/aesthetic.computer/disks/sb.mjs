@@ -1,9 +1,11 @@
 // sb, 22.12.03.00.38
 // A session-server backend test piece.
 
-async function boot({ resize, wipe, net }) {
+async function boot({ resize, wipe, net, store }) {
   const sesh = await net.session();
   console.log("Session:", sesh);
+  const id = await store.retrieve("identity");
+  console.log("Identity:", id);
   // Perform basic setup here.
   // resize(50, 20); // Add a custom resolution.
 }

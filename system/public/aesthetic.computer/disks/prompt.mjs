@@ -23,9 +23,9 @@ import { Desktop, MetaBrowser } from "../lib/platform.mjs";
 let glyphs = {};
 
 const motd =
-  `Dec 12: Freaky Flowers                          `+
-  `                                                `+
-  `                                                `+
+  `January: Freaky Flowers                         ` +
+  `                                                ` +
+  `                                                ` +
   `mail@aesthetic.computer                         `;
 
 let input = motd;
@@ -152,7 +152,7 @@ async function act({
   painting,
   darkMode,
   num,
-  connect
+  connect,
 }) {
   //needsPaint(); // Why do things get jittery when this is not here? (Windows, Chrome) 2022.01.31.01.14
 
@@ -196,7 +196,9 @@ async function act({
         // 🍎 In-prompt commands...
         if (input === "dl" || input === "download") {
           if (store["painting"]) {
-            download(`painting-${num.timestamp()}.png`, store["painting"], { scale: 4});
+            download(`painting-${num.timestamp()}.png`, store["painting"], {
+              scale: 4,
+            });
             // Show a green flash if we succesfully download the file.
             flashColor = [0, 255, 0];
           } else {
@@ -252,9 +254,21 @@ async function act({
           input = "";
         } else if (input.startsWith("2022")) {
           load(parse("wand~" + input)); // Execute the current command.
-        } else if (input === "connect") { 
-          connect(); // Web3 connect.
-          flashColor = [0, 0, 255];
+        } else if (input === "connect") {
+          let identity;
+          input = "";
+          try {
+            identity = await connect(); // Web3 connect.
+            store["identity"] = identity; // Store the identity.
+            store.persist("identity"); // ... and persist it! 
+            flashPresent = true;
+            showFlash = true;
+            flashColor = [0, 255, 0];
+          } catch (e) {
+            flashPresent = true;
+            showFlash = true;
+            flashColor = [255, 0, 0];
+          }
         } else {
           // 🟠 Local and remote pieces...
           load(parse(input.replaceAll(" ", "~"))); // Execute the current command.

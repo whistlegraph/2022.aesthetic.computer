@@ -613,11 +613,12 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
       modal.classList.remove("on");
       bumper.innerText = "";
-
     })();
 
     function enableAudioPlayback() {
-      if (backgroundMusicEl.paused) backgroundMusicEl.play();
+      if (backgroundMusicEl.paused && backgroundMusicEl.src.length > 0) {
+        backgroundMusicEl.play();
+      }
       if (["suspended", "interrupted"].includes(audioContext.state)) {
         audioContext.resume();
       }
@@ -625,8 +626,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     enableAudioPlayback();
 
-    window.addEventListener("pointerdown", async () => enableAudioPlayback());
-    window.addEventListener("keydown", async () => enableAudioPlayback());
+    window.addEventListener("pointerdown", enableAudioPlayback);
+    window.addEventListener("keydown", enableAudioPlayback);
   }
 
   // TODO: Add mute
@@ -845,10 +846,9 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           ? window.ethereum.request({ method: "eth_requestAccounts" })
           : window.ethereum.enable());
 
-        await loadWeb3(); // Load the web3.js library.
-        const w3 = new Web3(window.ethereum);
-
         const address = addresses[0];
+        await loadWeb3(); // Load the web3.js library.
+        // const w3 = new Web3(window.ethereum);
 
         // From: https://github.com/web3/web3.js/issues/2683#issuecomment-1304496119
         async function ensReverse(address) {
@@ -881,11 +881,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         }
 
         const ensName = await ensReverse(address);
-        const userID = ensName || address; 
-        if (debug) console.log("🕸️3️⃣ Connected to:", userID);
-        // TODO: Send back a success to the disk here...
+        const id = ensName || address;
+        if (debug) console.log("🕸️3️⃣ Connected to:", id);
+        send({
+          type: "web3-connect-response",
+          content: { result: "success", id },
+        });
       } else {
-        // TODO: Send back a failure to the disk here...
+        send({ type: "web3-connect-response", content: { result: "error" } });
         console.warn(
           "🔴 Web3 is unavailable. Please install an Ethereum wallet or enable your extension."
         );
@@ -1903,6 +1906,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     // BIOS:RENDER
     // 🌟 Assume `type === render` from now on.
+    if (!content) return;
 
     // This is a bit messy compared to what happens inside of content.reframe -> frame below. 22.10.27.02.05
     if (content.pixels) {

@@ -181,6 +181,7 @@ const store = {
 let fileImport;
 let serverUpload;
 let gpuResponse;
+let web3Response;
 
 // Other
 let activeVideo; // TODO: Eventually this can be a bank to store video textures.
@@ -206,7 +207,13 @@ const $commonApi = {
     data: {},
   },
   system: {},
-  connect: () => send({ type: "web3-connect" }),
+  connect: () => {
+    const p = new Promise((resolve, reject) => {
+      web3Response = { resolve, reject };
+    });
+    send({ type: "web3-connect" });
+    return p;
+  },
   wiggle: function (n, level = 0.2, speed = 6) {
     wiggleAngle = (wiggleAngle + 1 * speed) % 360;
     const osc = sin(num.radians(wiggleAngle));
@@ -218,10 +225,11 @@ const $commonApi = {
   gpuReady: false,
   gpu: {
     message: (content) => {
-      send({ type: "gpu-event", content });
-      return new Promise((resolve, reject) => {
+      const p = new Promise((resolve, reject) => {
         gpuResponse = { resolve, reject };
       });
+      send({ type: "gpu-event", content });
+      return p;
     },
   },
   num: {
@@ -1525,6 +1533,17 @@ async function makeFrame({ data: { type, content } }) {
       fileImport?.reject(content.data);
     }
     fileImport = undefined;
+    return;
+  }
+
+  // Resolve a web3 connection message.
+  if (type === "web3-connect-response" && web3Response) {
+    if (content.result === "success") {
+      web3Response?.resolve(content.id);
+    } else if (content.result === "error") {
+      web3Response?.reject("error");
+    }
+    web3Response = undefined;
     return;
   }
 
