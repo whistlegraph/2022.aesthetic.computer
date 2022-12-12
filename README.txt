@@ -34,6 +34,7 @@ Welcome to...
   - [] Research the use of "requestProvider.js.map" and work it into `index.js`.
   - [] Rename $api.upload to $api.open? or $api.importFile? 
   + In Production
+  - [⏰] Firefox: Fix blank screen on boot.
   - [🍽️] Fix Firefox AudioWorklet Initialization Bug `Error: Module resolve hook not set`
     - [] https://gist.github.com/lukaslihotzki/b50ccb61ff3a44b48fc4d5ed7e54303f
   - [] Zooming in on the page a lot will make the margin too large
@@ -50,7 +51,7 @@ Welcome to...
 
 🌟 Projects In Progress (PIP) 🌟
 
-*** Project Order **
+*** Project Order *1*
  - [😀] Finish basic version of `play`.
  - [] Mintable Paintings
   - [] Finish all Brushes todos: https://www.notion.so/aesthetic-computer/aesthetic-computer-hq-97376f353dbd4503970910777d6c7241
