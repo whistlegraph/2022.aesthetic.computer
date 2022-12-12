@@ -2,7 +2,10 @@
 // Abstraction for typography and text input.
 
 /* #region 🏁 todo
+ - [] Make history on message input optional?
  - [] Gracefully allow for multiple instances of TextInput in a single piece? 
+ - [] Add tab auto-completion feature that can be side-loaded with contextual
+      data based on where the text module is used.
 #endregion */
 
 import { font1 } from "../disks/common/fonts.mjs";
@@ -28,21 +31,30 @@ class Typeface {
 
 // An interactive text prompt object.
 class TextInput {
-  input; // text content
+  text; // text content
 
   blink; // block cursor blink timer
   showBlink = false;
 
   canType = false;
   typeface;
-  color;
+
+  pal;
+
   processCommand;
 
-  constructor($, input = "", color = 255, processCommand, font = font1) {
+  historyDepth = 0;
+
+  constructor($, text = "", palette, processCommand, font = font1) {
     this.typeface = new Typeface($.net.preload, font);
-    this.input = input;
-    this.startingInput = this.input;
-    this.color = color;
+    this.text = text;
+    this.startingInput = this.text;
+    this.pal = palette || {
+      fg: 255,
+      bg: 0,
+      block: 255,
+      line: 255,
+    };
     this.processCommand = processCommand;
     $.send({ type: "text-input-enabled" });
   }
@@ -52,20 +64,25 @@ class TextInput {
     const prompt = new Prompt(6, 6);
 
     // Print `text` to the prompt one letter at time.
-    for (const char of this.input) {
+    for (const char of this.text) {
       //ink(255, 255, 0, 20).box(prompt.pos); // Paint a highlight background.
       // And the letter if it is present.
       const pic = this.typeface.glyphs[char];
       if (pic)
-        $.ink(this.color).draw(pic, prompt.pos.x, prompt.pos.y, prompt.scale);
+        $.ink(this.pal.fg).draw(pic, prompt.pos.x, prompt.pos.y, prompt.scale);
       // Only move the cursor forward if we matched a character or typed a space.
       if (pic || char === " ") prompt.forward();
     }
 
     if (this.canType) {
-      $.ink(this.color).line(prompt.gutter, 0, prompt.gutter, screen.height); // Ruler
-      $.ink(127).box(0, 0, screen.width, screen.height, "inline"); // Focus
-      if (this.showBlink) $.ink(this.color).box(prompt.pos); // Draw blinking cursor.
+      $.ink(this.pal.line).line(
+        prompt.gutter,
+        0,
+        prompt.gutter,
+        $.screen.height
+      ); // Ruler
+      $.ink(127).box(0, 0, $.screen.width, $.screen.height, "inline"); // Focus
+      if (this.showBlink) $.ink(this.pal.block).box(prompt.pos); // Draw blinking cursor.
     }
 
     // Return false if we have loaded every glyph.
@@ -97,7 +114,7 @@ class TextInput {
 
     // ✂️ Paste from user clipboard.
     if (e.is("pasted:text")) {
-      this.input += e.text;
+      this.text += e.text;
       this.blink?.flip(true);
     }
 
@@ -105,12 +122,12 @@ class TextInput {
     if (e.is("keyboard:down")) {
       if (this.canType === false) {
         this.canType = true;
-        this.input = "";
+        this.text = "";
       } else if (e.key.length === 1 && e.ctrl === false && e.key !== "`") {
-        this.input += e.key; // Printable keys.
+        this.text += e.key; // Printable keys.
       } else {
         // Other keys.
-        if (e.key === "Backspace") this.input = this.input.slice(0, -1);
+        if (e.key === "Backspace") this.text = this.text.slice(0, -1);
         const key = `${slug}:history`;
 
         // Send a command or message.
@@ -119,33 +136,32 @@ class TextInput {
           store[key] = store[key] || [];
 
           // Push input to a history stack, avoiding repeats.
-          if (store[key][0] !== this.input) store[key].unshift(this.input);
+          if (store[key][0] !== this.text) store[key].unshift(this.text);
 
           // console.log("📚 Stored prompt history:", store[key]);
-
           store.persist(key); // Persist the history stack across tabs.
 
-          // 🍎 Process commands for a given context, passing the `act` API.
-          this.processCommand?.($);
-          this.input = "";
+          // 🍎 Process commands for a given context, passing the text input.
+          this.processCommand?.(this.text);
+          this.text = "";
         }
 
-        if (e.key === "Escape") this.input = "";
+        if (e.key === "Escape") this.text = "";
 
         // Move backwards through history stack.
         if (e.key === "ArrowUp") {
-          const promptHistory = (await store.retrieve(key)) || [""];
-          this.input = promptHistory[promptHistoryDepth];
-          promptHistoryDepth = (promptHistoryDepth + 1) % promptHistory.length;
+          const history = (await store.retrieve(key)) || [""];
+          this.text = history[this.historyDepth];
+          this.historyDepth = (this.historyDepth + 1) % history.length;
         }
 
         // ... and forwards.
         if (e.key === "ArrowDown") {
-          const promptHistory = (await store.retrieve(key)) || [""];
-          this.input = promptHistory[promptHistoryDepth];
-          promptHistoryDepth -= 1;
-          if (promptHistoryDepth < 0)
-            promptHistoryDepth = promptHistory.length - 1;
+          const history = (await store.retrieve(key)) || [""];
+          this.text = history[this.historyDepth];
+          this.historyDepth -= 1;
+          if (this.historyDepth < 0)
+            this.historyDepth = history.length - 1;
         }
       }
       this.blink?.flip(true);
@@ -155,7 +171,7 @@ class TextInput {
     // (including os-level software keyboard overlays)
     if (e.is("typing-input-ready")) {
       this.canType = true;
-      this.input = "";
+      this.text = "";
       this.blink?.flip(true);
     }
 
@@ -166,7 +182,7 @@ class TextInput {
 
     if (e.is("defocus")) {
       this.canType = false;
-      this.input = this.startingInput;
+      this.text = this.startingInput;
       needsPaint();
     }
   }

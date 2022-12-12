@@ -1,40 +1,34 @@
 // BGM, 22.12.07.12.56
 
+/* #region 🏁 todo
+ - [] Add a clickable play button overlay if bgm is used as a landing page.
+  - [] Draw a rasterized, filled triangle for the play button!
+  - [] Draw thicker rasterized lines for the visualizer?
+    - [] Use ChatGPT to generate the bresenham thickness code again.
+ - [] Experiment with a nicer visualizer.
+ - [] Radiate lines out from the center?
+#endregion */
+
+const trackCount = 17; // See `backgroundTrackURLs` in `bios.mjs`. 
+
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ resize, wipe, bgm, params }) {
-  // Perform basic setup here.
-  //resize(50, 20); // Add a custom resolution.
-  params = params.map((str) => parseInt(str));
+function boot({ wipe, bgm, params, num }) {
+  params = params.map((str) => parseInt(str)) || 0;
+  if (params.length === 0) params[0] = num.randInt(trackCount - 1);
   bgm.set(params[0]);
   wipe(0, 0, 100);
 }
 
 // 🎨 Paint (Executes every display frame)
-function paint({
-  Camera,
-  Form,
-  TRI,
-  form,
-  line,
-  wipe,
-  bgm,
-  ink,
-  screen,
-  painting: p,
-  noise16DIGITPAIN,
-}) {
-
+function paint({ line, wipe, bgm, ink, screen }) {
   wipe(bgm.data.amplitude);
 
-  // TODO: Radiate lines out from the center?
   let x = 0;
   bgm.data.sample.forEach((smp) => {
     ink(smp, 0, 0);
     line(x, screen.height, x, screen.height - smp);
     x += 1;
   });
-
-  //noise16DIGITPAIN();
 }
 
 // PS... I enjoy using `destructuring` to access the APIs!

@@ -1,12 +1,5 @@
 // Serves HTML from a template for every landing route on aesthetic.computer.
 
-// TODO: Replace the description with something from the actual
-//       piece files... or a database?
-// Ideally they should just be specified at the top of the piece file.
-// export const description = ""; // Maybe just use this? 22.07.18.08.25
-
-// Note: this metadata is also set clientside via `disk.js`.
-
 import { builder } from "@netlify/functions";
 // import { readFile } from "fs/promises";
 import https from "https";

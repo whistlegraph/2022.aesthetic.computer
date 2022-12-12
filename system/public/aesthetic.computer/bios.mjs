@@ -423,13 +423,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   const backgroundTrackURLs = [
     "0 - analog multiplication.m4a",
     "1 - castlecowards.m4a",
-    "10 - or perhaps destroyed.m4a",
-    "11 - sunsmidnought.m4a",
-    "12 - improvements design.m4a",
-    "13 - consideration.m4a",
-    "14 - magellanic clouds.m4a",
-    "15 - syncopation demotic.m4a",
-    "16 - textual criticism ambiguity.m4a",
     "2 - epanodos clinamen.m4a",
     "3 - for not being able.m4a",
     "4 - pantoum chain rhyme.m4a",
@@ -438,6 +431,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     "7 - an accuracy which it seems as impossible to attain.m4a",
     "8 - bivariate beamforming.m4a",
     "9 - and the three of them began to make.m4a",
+    "10 - or perhaps destroyed.m4a",
+    "11 - sunsmidnought.m4a",
+    "12 - improvements design.m4a",
+    "13 - consideration.m4a",
+    "14 - magellanic clouds.m4a",
+    "15 - syncopation demotic.m4a",
+    "16 - textual criticism ambiguity.m4a",
   ];
 
   const backgroundMusicEl = document.createElement("audio");
@@ -458,7 +458,8 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   }
 
   function stopBackgroundMusic() {
-    backgroundMusicEl.stop();
+    currentBackgroundTrack = null;
+    backgroundMusicEl.src = "";
   }
 
   function startSound() {
@@ -466,6 +467,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     analyserCtx = new AudioContext();
     analyserSrc = analyserCtx.createMediaElementSource(backgroundMusicEl);
     analyser = analyserCtx.createAnalyser();
+    analyser.fftSize = 256; // See also: https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/frequencyBinCount
 
     analyserSrc.connect(analyser);
     analyser.connect(analyserCtx.destination);
@@ -616,16 +618,17 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       bumper.innerText = "";
     })();
 
-    function enableAudioPlayback() {
-      if (backgroundMusicEl.paused && backgroundMusicEl.src.length > 0) {
+    function enableAudioPlayback(skip = false) {
+      if (backgroundMusicEl.paused && currentBackgroundTrack !== null) {
         backgroundMusicEl.play();
       }
-      if (["suspended", "interrupted"].includes(audioContext.state)) {
+      if (!skip && ["suspended", "interrupted"].includes(audioContext.state)) {
         audioContext.resume();
       }
     }
 
-    enableAudioPlayback();
+    enableAudioPlayback(true);
+    //
 
     window.addEventListener("pointerdown", enableAudioPlayback);
     window.addEventListener("keydown", enableAudioPlayback);
@@ -661,11 +664,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   // Always use workers if they are supported, except for
   // when we are in VR (MetaBrowser).
 
-  // const workersEnabled = true;
-  const workersEnabled = false;
+  const workersEnabled = true;
+  //const workersEnabled = false;
 
-  if (workersEnabled) {
-    // if (!MetaBrowser && workersEnabled) {
+  //if (workersEnabled) {
+  if (!MetaBrowser && workersEnabled) {
     const worker = new Worker(new URL(fullPath, window.location.href), {
       type: "module",
     });
@@ -773,7 +776,14 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       }
     }
 
-    //
+    // Transferrable objects
+    const transferrableObjects = [screen.pixels.buffer];
+
+    // TODO: Eventually make frequencyData transferrable?
+    // if (frequencyData) {
+    // transferrableObjects.push(frequencyData.buffer);
+    // }
+
     send(
       {
         type: "frame",
@@ -795,7 +805,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           clipboardText: pastedText,
         },
       },
-      [screen.pixels.buffer, frequencyData]
+      transferrableObjects
     );
 
     // Clear any pasted text.
@@ -905,6 +915,11 @@ async function boot(parsed, bpm = 60, resolution, debug) {
 
     if (type === "bgm-change") {
       playBackgroundMusic(content.trackNumber);
+      return;
+    }
+
+    if (type === "bgm-stop") {
+      stopBackgroundMusic();
       return;
     }
 
@@ -1029,16 +1044,13 @@ async function boot(parsed, bpm = 60, resolution, debug) {
           // Make a pointer "tap" gesture with an `inTime` window of 250ms to
           // trigger the keyboard on all browsers.
           let down = false;
-          let downPos;
+          // let downPos;
           let inTime = false;
 
           window.addEventListener("pointerdown", (e) => {
-            if (
-              currentPieceHasTextInput ||
-              currentPiece === "aesthetic.computer/disks/prompt"
-            ) {
+            if (currentPieceHasTextInput) {
               down = true;
-              downPos = { x: e.x, y: e.y };
+              // downPos = { x: e.x, y: e.y };
               inTime = true;
               setTimeout(() => (inTime = false), 500);
               e.preventDefault();
@@ -1050,8 +1062,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
               down &&
               // dist(downPos.x, downPos.y, e.x, e.y) < 32 && // Distance threshold for opening keyboard.
               inTime &&
-              (currentPieceHasTextInput ||
-                currentPiece === "aesthetic.computer/disks/prompt") // &&
+              currentPieceHasTextInput
               // Refactoring the above could allow iframes to capture keyboard events.
               // via sending things from input... 22.10.24.17.16, 2022.04.07.02.10
             ) {
@@ -2104,8 +2115,6 @@ async function boot(parsed, bpm = 60, resolution, debug) {
     //}
     //lastRender = performance.now()
   }
-
-  let lastRender;
 
   // Reads a file and uploads it to the server.
   async function receivedUpload(

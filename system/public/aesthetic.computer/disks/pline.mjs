@@ -3,8 +3,6 @@
 // This piece also functions as a test implementation for `dirtyBox` rendering.
 // (Where only partial screen updates are sent to the main thread)
 
-export const desc = "A 1px line drawing algorithm";
-
 // 🚒
 // TODO: For some reason the first wipe is not always running...
 //       Maybe it's a race condition? 22.09.17.13.34

@@ -205,6 +205,7 @@ const $commonApi = {
     set: function (trackNumber) {
       send({ type: "bgm-change", content: { trackNumber } });
     },
+    stop: () => send({ type: "bgm-stop" }),
     data: {},
   },
   system: {},

@@ -1,5 +1,3 @@
-export const desc = "A simple display of zooming, colored points.";
-
 let width, height;
 
 export function boot ($) {

@@ -51,20 +51,18 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order **
- - [-] Turn 'sb' -> 'play'... a recordable chat program in X turns.
-   - [🍏] Fix major segfault regression.
-   - [x] Retrofit `prompt` with the new abstraction in `type.mjs`
-    - [] Clear any prompt specifics in bios.
-   - [x] Abstract the text entry logic out of 'prompt'.
-   - [] Add tab auto-completion feature that can be side-loaded with contextual
-        data based on where the text module is used.
-   - How to play anonymously?
-    - "Who are you playing as?"
- - [] Make a basic MUD.
+ - [😀] Finish basic version of `play`.
  - [] Mintable Paintings
- - [] Finish Brushes: https://www.notion.so/aesthetic-computer/aesthetic-computer-hq-97376f353dbd4503970910777d6c7241
+  - [] Finish all Brushes todos: https://www.notion.so/aesthetic-computer/aesthetic-computer-hq-97376f353dbd4503970910777d6c7241
+  - [] Get smart contract launched. See "Mintable Paintings" below.
  - [] Finish Freaky Flowers client
+  - [] Hook up multiplayer presence. 
  + Done
+ - [x] Turn 'sb' -> 'play'... a *tiny* recordable chat program in X turns.
+ - [x] Retrofit `prompt` with the new abstraction in `type.mjs`
+ - [x] Clear any prompt specifics in bios.
+ - [x] Fix major segfault regression.
+ - [x] Abstract the text entry logic out of 'prompt'.
  - [x] 🔐 Setup user system! (Ethereum)
   - [x] Add user feedback for web3 connect.
   - [x] Basic web3 integration.
@@ -81,9 +79,8 @@ Welcome to...
     - [x] Redis
 
 *** BGM ***
- - [] Add ability to stop bgm from playing.
+ - [] Make a cool default visualizer for bgm.
  - [] Global volume / play + pause controls too?
- - [] Make a cool visualizer for bgm.
  - [] READ Audio properties (Will do for bgm)
    - [] Amplitude within frequency range function. (Cropped amplitude)
    - [] Time position (formattable as 00:00:00)
@@ -95,6 +92,7 @@ Welcome to...
    - [] Speed
    - [] Spatialization
  + Done
+  - [x] Add ability to stop bgm from playing.
   - [x] Add vf music to a bucket or a server / make the bgm piece to load a track.
   - [x] This piece should have a common library that any piece can opt into in boot via a music() or track() function. 
   - [x] Play it back via an audio tag in the bios audio-graph.
@@ -557,7 +555,6 @@ Welcome to...
          file if `export const reload = true;`
    - [x] Set up a developers / "pieces" SSH server.
    - [x] Prototype live editing with SSH and live share?
-
 
 *** Image Support ***
   *** Save ***
