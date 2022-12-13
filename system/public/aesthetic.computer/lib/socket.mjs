@@ -1,3 +1,10 @@
+// Socket
+// Manages clientside WebSocket connections.
+
+/* #region 🏁 todo
+- [] Queue any sent messages to be received when the connection opens?
+#endregion */
+
 export class Socket {
   id; // Will be filled in with the user identifier after the first message.
   #debug;
@@ -5,14 +12,12 @@ export class Socket {
   #ws;
   #reconnectTime = 1000;
 
-  constructor(host, receive, reload, protocol = "wss", debug) {
+  constructor(debug) {
     this.#debug = debug;
-    this.#connect(host, receive, reload, protocol);
   }
 
   // Connects a WebSocket object and takes a handler for messages.
-  #connect(host, receive, reload, protocol = "wss") {
-
+  connect(host, receive, reload, protocol = "wss") {
     try {
       this.#ws = new WebSocket(`${protocol}://${host}`);
     } catch {
@@ -41,7 +46,7 @@ export class Socket {
       if (this.#killSocket === false) {
         console.log("📡 Reconnecting in:", this.#reconnectTime, "ms");
         setTimeout(() => {
-          this.#connect(host, receive, reload, protocol);
+          this.connect(host, receive, reload, protocol);
         }, this.#reconnectTime);
         this.#reconnectTime = Math.min(this.#reconnectTime * 2, 32000);
       }
@@ -57,7 +62,7 @@ export class Socket {
   // Send a formatted message to the connected WebSocket server.
   // Passes silently on no connection.
   send(type, content) {
-    if (this.#ws.readyState === WebSocket.OPEN)
+    if (this.#ws?.readyState === WebSocket.OPEN)
       this.#ws.send(JSON.stringify({ type, content }));
   }
 
@@ -91,7 +96,9 @@ export class Socket {
       reload(c);
     } else {
       if (type === "left")
-        console.log(`📡 ${content.id} has left. Connections open: ${content.count}`);
+        console.log(
+          `📡 ${content.id} has left. Connections open: ${content.count}`
+        );
       receive?.(id, type, content); // Finally send the message to the client.
     }
   }

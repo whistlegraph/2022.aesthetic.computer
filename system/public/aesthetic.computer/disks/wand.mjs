@@ -104,7 +104,7 @@
 import { CamDoll } from "../lib/cam-doll.mjs";
 const { min, abs, max, cos, sin, floor, round } = Math;
 
-let unreal = false; // Flip to true in case meshes need to be rendered for Unreal engine. Basically just prevents duplicate / two sided triangles.
+let unreal = true; // Flip to true in case meshes need to be rendered for Unreal engine. Basically just prevents duplicate / two sided triangles.
 let camdoll, stage; // Camera and stage.
 let stageOn = false;
 const rulers = false; // Whether to render arch. guidelines for development.

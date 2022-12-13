@@ -55,6 +55,7 @@ function boot($) {
     dark,
     darkMode,
     num,
+    store,
     connect,
     bgm,
   } = $;

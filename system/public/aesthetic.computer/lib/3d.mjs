@@ -23,7 +23,7 @@
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from "../dep/three/GLTFExporter.js";
-import { mergeVertices } from "../dep/three/BufferGeometryUtils.js";
+import { mergeVertices, computeMikkTSpaceTangents } from "../dep/three/BufferGeometryUtils.js";
 // import { OBJExporter } from "../dep/three/OBJExporter.js";
 import { Safari } from "./platform.mjs";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
@@ -986,17 +986,20 @@ export function handleEvent(event) {
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       geo.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
 
+      // geo.computeVertexNormals();
+      // geo.normalizeNormals();
+      // geo.computeTangents();
       geo = mergeVertices(geo); // Combine vertices here.
 
-      geo.computeVertexNormals();
-
-      sculpture.userData.gltfExtensions = {
-        KHR_materials_unlit: {},
-      };
+      // sculpture.userData.gltfExtensions = {
+        // KHR_materials_unlit: {},
+      // };
 
       sculpture.geometry = geo;
       sculpture.geometry.attributes.position.needsUpdate = true;
       sculpture.geometry.attributes.color.needsUpdate = true;
+
+      //debugger;
 
       sceneToExport.add(sculpture);
     }

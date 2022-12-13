@@ -11,7 +11,7 @@ let dot = false; // Show preview dot while moving cursor.
 let server; // Networking
 
 // 🥾 Boot (Runs once before first paint and sim)
-function boot({ paste, cursor, painting: p, screen, net: { socket }, debug }) {
+function boot({ paste, cursor, painting: p, screen, net: { socket } }) {
   cursor("none");
 
   // Make & display the canvas.

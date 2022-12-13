@@ -7,7 +7,7 @@ import * as ui from "./ui.mjs";
 import * as help from "./help.mjs";
 import { parse, metadata } from "./parse.mjs";
 import { Socket } from "./socket.mjs"; // TODO: Eventually expand to `net.Socket`
-import { UDP } from "./udp.mjs"; // TODO: Eventually expand to `net.Socket`
+//import { UDP } from "./udp.mjs"; // TODO: Eventually expand to `net.Socket`
 import { notArray } from "./helpers.mjs";
 const { round } = Math;
 import { nopaint_adjust } from "../systems/nopaint.mjs";
@@ -16,11 +16,6 @@ import { headers } from "./console-headers.mjs";
 export const noWorker = { onMessage: undefined, postMessage: undefined };
 
 const { abs, cos, sin } = Math;
-
-const servers = {
-  main: "server.aesthetic.computer",
-  local: `${location.hostname}:8082`,
-};
 
 let ROOT_PIECE = "prompt"; // This gets set straight from the host html file for the ac.
 let debug = false; // This can be overwritten on boot.
@@ -289,40 +284,7 @@ const $commonApi = {
     print: () => send({ type: "recorder-print" }),
     printProgress: 0,
   },
-  net: {
-    session: async () => {
-      const req = await fetch("/session/" + currentText);
-      const session = await req.json();
-
-      // Return the active session if the server knows it's "Ready", otherwise
-      // wait for the one we requested to spin up before doing anything else.
-      // (And in debug mode we just get a local url from "/session" so no need
-      // to check that.)
-      if (session.state === "Ready" || debug) {
-        return session;
-      } else {
-        let eventSource = new EventSource(
-          `https://api.jamsocket.com/backend/${session.name}/status/stream`
-          // See also: https://docs.jamsocket.com/api-docs/#get-a-backends-status-stream
-        );
-
-        return new Promise((resolve, reject) => {
-          eventSource.onmessage = (event) => {
-            const update = JSON.parse(event.data);
-            if (update.state === "Ready") {
-              console.log("🟢 Backend:", update.state);
-              resolve(session);
-            } else {
-              console.log("🟡 Backend:", update.state);
-              if (update.state !== "Loading" && update.state !== "Starting") {
-                eventSource = null; // Clears the event stream handler.
-              }
-            }
-          };
-        });
-      }
-    },
-  },
+  net: {},
   needsPaint: () => (noPaint = false), // TODO: Does "paint" needs this?
   store,
 
@@ -330,6 +292,48 @@ const $commonApi = {
   //                 Increments by 1 each time a new piece loads.
   debug,
 };
+
+// Spawn a session backend for a piece.
+async function session(slug, forceProduction = false) {
+  let endPoint = "/session/" + slug;
+
+  if (forceProduction)
+    endPoint += "?" + new URLSearchParams({ forceProduction: 1 });
+
+  const req = await fetch(endPoint);
+
+  const session = await req.json();
+
+  if (debug) console.log("🐕‍🦺 Session: ", session);
+
+  // Return the active session if the server knows it's "Ready", otherwise
+  // wait for the one we requested to spin up before doing anything else.
+  // (And in debug mode we just get a local url from "/session" so no need
+  // to check that.)
+  if (session.state === "Ready" || (debug && !forceProduction)) {
+    return session;
+  } else {
+    let eventSource = new EventSource(
+      `https://api.jamsocket.com/backend/${session.name}/status/stream`
+      // See also: https://docs.jamsocket.com/api-docs/#get-a-backends-status-stream
+    );
+
+    return new Promise((resolve, reject) => {
+      eventSource.onmessage = (event) => {
+        const update = JSON.parse(event.data);
+        if (update.state === "Ready") {
+          console.log("🟢 Backend:", update.state);
+          resolve(session);
+        } else {
+          console.log("🟡 Backend:", update.state);
+          if (update.state !== "Loading" && update.state !== "Starting") {
+            eventSource = null; // Clears the event stream handler.
+          }
+        }
+      };
+    });
+  }
+}
 
 // Just for "update".
 const $updateApi = {};
@@ -916,13 +920,23 @@ async function load(parsed, fromHistory = false, alias = false) {
     }
   };
 
-  socket = new Socket(
-    debug === true ? servers.local : servers.main,
-    (id, type, content) => receiver?.(id, type, content),
-    $commonApi.reload,
-    debug === true ? "ws" : "wss",
-    debug
-  );
+  const forceProd = true; // Just a helpful flag for testing production backends
+  //                         in development.
+
+  socket = new Socket(debug);
+
+  // // Requests a session-backend and connects via websockets.
+  async function startSocket() {
+    const sesh = await session(slug, forceProd); // Grab a session backend for this piece.
+    socket.connect(
+      new URL(sesh.url).host,
+      (id, type, content) => receiver?.(id, type, content),
+      $commonApi.reload,
+      debug === true && !forceProd ? "ws" : "wss"
+    );
+  }
+
+  startSocket();
 
   $commonApi.net.socket = function (receive) {
     //console.log("📡 Mapping receiver.");

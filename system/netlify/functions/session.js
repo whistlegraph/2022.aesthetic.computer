@@ -22,9 +22,12 @@ const redisConnectionString = process.env.REDIS_CONNECTION_STRING;
 async function fun(event, context) {
   let out,
     status = 200;
-  if (dev) {
+  if (dev && parseInt(event.queryStringParameters.forceProduction) !== 1) {
     out = { url: "http://localhost:8889" };
   } else {
+
+    debugger;
+
     const { got } = await import("got");
     const slug = event.path.slice(1).split("/")[1];
     const jamSocketToken = process.env.JAMSOCKET_ACCESS_TOKEN;
@@ -57,6 +60,8 @@ async function fun(event, context) {
       ).json();
       out.url = `https://${currentBackend}.jamsocket.run`; // Tack on the URL for the client.
     }
+
+    console.log("Current backend:", out);
 
     if (out?.state !== "Ready") {
       // Make a new session backend if one doesn't already exist.

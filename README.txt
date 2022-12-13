@@ -51,7 +51,11 @@ Welcome to...
 
 🌟 Projects In Progress (PIP) 🌟
 
-*** Project Order *1*
+*** Project Order ***
+ - [] Queue any sent socket messages to be sent once the socket
+      backend connects. 
+ - [] Get developer reload working again.
+ - [] Delete / kill `socket.js` server.
  - [😀] Finish basic version of `play`.
  - [] Mintable Paintings
   - [] Finish all Brushes todos: https://www.notion.so/aesthetic-computer/aesthetic-computer-hq-97376f353dbd4503970910777d6c7241
