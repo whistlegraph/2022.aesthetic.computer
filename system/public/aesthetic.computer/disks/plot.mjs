@@ -161,7 +161,7 @@ function paint({
   }
 
   // Outline the active square and highlight its center point.
-  const sq = g.under(pen, (sq) => {
+  const sq = g.under(pen || {x: 0, y: 0}, (sq) => {
     ink(colors.activeSquareInline).box(sq, "inline");
     g.centers.forEach((p) =>
       ink(colors.activeSquareCenter).point(sq.x + p.x, sq.y + p.y)
