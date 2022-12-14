@@ -1,5 +1,7 @@
 *** my 😢 friend ***  (loop)
-todo: - how can i work out the notes of this song using
+
+todo: - update lyrics based on the recorded whistlegraph
+      - how can i work out the notes of this song using
         an a.c instrument?
       - and then put the lyrics in a sing-a-long piece
 

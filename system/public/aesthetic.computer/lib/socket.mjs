@@ -69,7 +69,7 @@ export class Socket {
   // Kills the socket permanently.
   kill() {
     this.#killSocket = true;
-    this.#ws.close();
+    this.#ws?.close();
   }
 
   // Before passing messages to disk code, handle some system messages here.
