@@ -304,7 +304,7 @@ async function session(slug, forceProduction = false) {
 
   const session = await req.json();
 
-  if (debug) console.log("🐕‍🦺 Session: ", session);
+  if (debug) console.log("🐕‍🦺 Session:", session.backend);
 
   // Return the active session if the server knows it's "Ready", otherwise
   // wait for the one we requested to spin up before doing anything else.
@@ -321,11 +321,16 @@ async function session(slug, forceProduction = false) {
     return new Promise((resolve, reject) => {
       eventSource.onmessage = (event) => {
         const update = JSON.parse(event.data);
+        const colors = {
+          Ready: "🟢",
+          Loading: "🟠",
+          Starting: "🟡",
+        };
+        const color = colors[update.state] || "🔵";
+        console.log(color + " Backend:", update.state);
         if (update.state === "Ready") {
-          console.log("🟢 Backend:", update.state);
           resolve(session);
         } else {
-          console.log("🟡 Backend:", update.state);
           if (update.state !== "Loading" && update.state !== "Starting") {
             eventSource = null; // Clears the event stream handler.
           }

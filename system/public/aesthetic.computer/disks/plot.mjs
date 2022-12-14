@@ -19,6 +19,9 @@
 
 const { min, floor } = Math;
 
+import { Typeface } from "../lib/type.mjs";
+import { font1 } from "../disks/common/fonts.mjs";
+
 let g; // Our virtual drawing guide.
 let save; // A button to save drawings.
 let open; // ..and to open them.
@@ -36,7 +39,7 @@ const colors = {
   background: [0, 30, 0],
   grid: [0, 70, 0],
   gridOutline: [255, 255, 0, 32],
-  lines: [0, 120, 220, 50],
+  lines: [0, 120, 220, 150],
   innerLine: [128, 128, 0, 200],
   inlinePreview: [128, 128, 0, 64],
   activeSquareInline: [255, 128],
@@ -48,8 +51,8 @@ const colors = {
 
 const plots = {}; // Stored preloaded drawings.
 
-let width = 6; // Starting size.
-let height = 10;
+let width = 13; // Starting size.
+let height = 13;
 
 // TODO: Add query params to plot starting size.
 
@@ -57,6 +60,8 @@ let scale = 5;
 
 const abc123Baseline = 8;
 const typography = false; // Enabled or disables the baseline.
+
+let typeface;
 
 // 🥾 Boot (Runs once before first paint and sim)
 function boot({
@@ -66,10 +71,12 @@ function boot({
   ui: { Button },
   net: { host, preload },
   query,
+  screen,
   needsPaint,
 }) {
+  typeface = new Typeface(preload, font1);
   // cursor("tiny"); // TODO: Why doesn't cursor tiny work here? 22.11.01.16.59
-  resize(64, 64); // It might have to do with this resize call?
+  resize(96, 96); // It might have to do with this resize call?
 
   // Read some basic query parameters for configuring the resolution.
   //const params = new URLSearchParams(query);
@@ -80,13 +87,22 @@ function boot({
   width = query?.[0] || width;
   height = query?.[1] || height;
 
-  g = new Grid(8, 4, width, height, scale);
-  save = new Button(41, 64 - 8, 15, 6);
-  open = new Button(8, 64 - 8, 15, 6);
+  const btnW = 15;
+  const gap = 8;
+
+  const gridWidth = width * scale;
+  const gridHeight = height * scale;
+
+  const gridX = (screen.width / 2) - gridWidth / 2; 
+  const gridY = (screen.height / 2) - gridHeight / 2; 
+
+  g = new Grid(gridX, gridY, width, height, scale);
+  open = new Button(gap, screen.height - gap - 2, btnW, 6);
+  save = new Button(screen.width - btnW - gap, screen.height - gap - 2, btnW, 6);
   needsPaint();
   // preload("drawings/default.json").then(decode); // Preload drawing.
   // Preload save button icon.
-  preload("./aesthetic.computer/disks/drawings/save_open_icon.json").then(
+  preload("aesthetic.computer/disks/drawings/save_open_icon.json").then(
     (r) => {
       plots.icon = r;
       needsPaint();
@@ -106,6 +122,7 @@ function paint({
   ink,
   point,
   screen,
+  num: { randIntRange }
 }) {
   // A. 🌟 Grid
   // Clear the background and draw a grid with an outline.
@@ -114,6 +131,14 @@ function paint({
     .grid(g)
     .ink(colors.gridOutline)
     .box(g.scaled, "outline");
+
+  // Add text on the top...
+  ink(
+    randIntRange(200, 250),
+    randIntRange(200, 250),
+    randIntRange(200, 250),
+    150
+  ).printLine("Amalia Plot :)", typeface.glyphs, 2, 2, 6, 1, 0);
 
   // Render all added lines by generating a bitmap and projecting it on a grid.
   if (commands.length > 0) {
@@ -185,6 +210,12 @@ function paint({
 
 // ✒ Act (Runs once per user interaction)
 function act({ event: e, download, upload, num: { timestamp }, needsPaint }) {
+
+  // Undo a step!
+  if (e.is("keyboard:down:u")) {
+    commands.pop();
+  }
+
   // Add first point if we touch in the grid.
   if (e.is("touch")) {
     g.under(e, (sq) => {

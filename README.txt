@@ -52,8 +52,6 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order ***
- - [] Queue any sent socket messages to be sent once the socket
-      backend connects. 
  - [] Get developer reload working again.
  - [] Delete / kill `socket.js` server.
  - [😀] Finish basic version of `play`.
@@ -63,6 +61,9 @@ Welcome to...
  - [] Finish Freaky Flowers client
   - [] Hook up multiplayer presence. 
  + Done
+ - [x] Wire up plot for Amalia.
+ - [x] Queue any sent socket messages to be sent once the socket
+      backend connects. 
  - [x] Turn 'sb' -> 'play'... a *tiny* recordable chat program in X turns.
  - [x] Retrofit `prompt` with the new abstraction in `type.mjs`
  - [x] Clear any prompt specifics in bios.

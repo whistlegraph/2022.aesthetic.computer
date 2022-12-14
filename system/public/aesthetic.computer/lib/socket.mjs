@@ -11,6 +11,7 @@ export class Socket {
   #killSocket = false;
   #ws;
   #reconnectTime = 1000;
+  #queue = [];
 
   constructor(debug) {
     this.#debug = debug;
@@ -21,7 +22,7 @@ export class Socket {
     try {
       this.#ws = new WebSocket(`${protocol}://${host}`);
     } catch {
-      console.warn("📡 Connection failed.");
+      console.warn("📡 Connection failed");
       return;
     }
 
@@ -29,7 +30,8 @@ export class Socket {
 
     // Send a message to the console after the first connection.
     ws.onopen = (e) => {
-      // if (this.#debug) console.log("📡 Connected.");
+      // if (this.#debug) console.log("📡 Connected"); // Redundant log given an initial message from the server.
+      this.#queue.forEach((q) => this.send(...q)); // Send any held messages.
       this.#reconnectTime = 1000;
     };
 
@@ -62,8 +64,11 @@ export class Socket {
   // Send a formatted message to the connected WebSocket server.
   // Passes silently on no connection.
   send(type, content) {
-    if (this.#ws?.readyState === WebSocket.OPEN)
+    if (this.#ws?.readyState === WebSocket.OPEN) {
       this.#ws.send(JSON.stringify({ type, content }));
+    } else {
+      this.#queue.push([type, content]);
+    }
   }
 
   // Kills the socket permanently.

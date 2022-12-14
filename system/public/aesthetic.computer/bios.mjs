@@ -1435,7 +1435,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
       if (content.method === "local") {
         const data = JSON.parse(localStorage.getItem(content.key));
         if (debug)
-          console.log("📦 Retrieved persisted local data:", content.key, data);
+          console.log("📦 Retrieved local data:", content.key, data);
         send({
           type: "store:retrieved",
           content: data,
@@ -1446,7 +1446,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
         const retrievedContent = await Store.get(content.key);
         if (debug)
           console.log(
-            "📦 Retrieved persisted local:db data:",
+            "📦 Retrieved local:db data:",
             content.key,
             retrievedContent
           );
