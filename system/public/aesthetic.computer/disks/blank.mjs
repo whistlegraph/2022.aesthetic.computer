@@ -20,57 +20,26 @@
 
 // Jeffrey (me@jas.life / digitpain#2262 / @digitpain)
 
-// 🥾 Boot (Runs once before first paint and sim)
-function boot({ resize, wipe }) {
 
-  // Perform basic setup here.
-  //resize(50, 20); // Add a custom resolution. 
-  wipe(0, 0, 100);
+// 🥾 Boot (Runs once before first paint and sim)
+function boot({ resize, wipe, ink, line, pan }) {
+  resize(128, 127);
+  wipe(255, 0, 0);
 }
 
-let rotY = 0;
+let x = 0;
 
 // 🎨 Paint (Executes every display frame)
-function paint({Camera, Form, TRI, form, painting: p}) {
-
-  /*
-  rotY += 1;
-  rotY %= 360;
-
-  const cam = new Camera(80, { z: 2, y: 0.8, scale: [1, 1, 1] }); // camera with fov
-
-  const tri = new Form(
-    TRI,
-    { tex: p(1, 8, (g) => g.noise16DIGITPAIN()), alpha: 0.75 },
-    { pos: [0, 0, 0], scale: [0.5, 0.5, 0.5], rot:  [0, rotY, 0] }
-  );
-
-  //form(tri, cam, { cpu: true });
-  form(tri, cam, { cpu: true });
-  */
-
-  //$api.wipe(undefined, 100, 120); // Draw a background. (You can also use hex.)
-
-  //$api.ink(0).line(0, 0, $api.screen.width, $api.screen.height);
-
-  // Loop through / edit a pixel array. 
-  //$api.edit((pix, w, h) => {
-  //  pix[0] = 255;
-  //});
-
-  //const onePixel = $api.pixel(0, 0); // Get a pixel.
-  //$api.ink(0, 0, 255); // Change colors.
-  //$api.point(40, 40); // Set a pixel.
-
-  //return false; // You can return false to draw only once!
+function paint({ink, line, pan, unpan, pen}) {
+  x += 0.1;
+  ink();
+  pan(pen.x, pen.y);
+  line(0, 0, 50, 50);
+  line(0, 50, 50, 0);
+  unpan();
 }
 
-// PS... I enjoy using `destructuring` to access the APIs!
-// This is the same as the above:
-// function paint({ wipe }) {
-//  wipe(255, 200, 200); // Draw a pink background
-//  return false; // You can return false to draw only once!
-// }
+/*
 
 // ✒ Act (Runs once per user interaction)
 function act({ event }) {
@@ -91,8 +60,11 @@ function beat($api) {
 function leave($api) {
   // Pass data to the next piece here.
 }
+*/
 
 // 📚 Library (Useful functions used throughout the piece)
 // ...
 
-export { boot, sim, paint, act, beat, leave };
+export { boot, paint }
+
+//export { boot, sim, paint, act, beat, leave };
