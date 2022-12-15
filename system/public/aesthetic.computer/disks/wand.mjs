@@ -104,7 +104,8 @@
 import { CamDoll } from "../lib/cam-doll.mjs";
 const { min, abs, max, cos, sin, floor, round } = Math;
 
-let unreal = true; // Flip to true in case meshes need to be rendered for Unreal engine. Basically just prevents duplicate / two sided triangles.
+let debug; // Set in boot.
+let unreal = false; // Flip to true in case meshes need to be rendered for Unreal engine. Basically just prevents duplicate / two sided triangles.
 let camdoll, stage; // Camera and stage.
 let stageOn = false;
 const rulers = false; // Whether to render arch. guidelines for development.
@@ -212,9 +213,11 @@ function boot({
   num,
   geo,
   params,
+  debug: dbg,
   store,
   net: { preload },
 }) {
+  debug = dbg; // Set a global debug flag.
   // Assign some globals from the api.
   clamp = num.clamp;
   rr = num.randIntRange;
@@ -947,7 +950,7 @@ function sim({
               },
             });
             advanceSeries(store["freaky-flowers"], 1, true);
-          }, 100);
+          }, 500);
         }
         */
 
@@ -1760,11 +1763,10 @@ function advanceSeries(series, dir, stop) {
     let id = series.tokenID;
     id = (id + dir) % series.tokens.length;
     if (id < 0) id = series.tokens.length + id;
-    console.log(id);
     if (id === 0 && stop) return; // Stop on every ending.
     series.tokenID = id;
     const prefixedTimestamp = "ff" + id + "-" + series.tokens[id];
-    // console.log("Loading token:", id, prefixedTimestamp);
+    if (debug) console.log("⌛ Loading token:", id, prefixedTimestamp);
 
     function queueDemo(speed = 1) {
       const handle = "digitpain";
@@ -2287,6 +2289,10 @@ class Tube {
   // Generate a start or end (where ring === false) cap to the tube.
   // Has a form input that is either `form` or `capForm`.
   #cap(pathP, form, ring = true) {
+    const { vec3 } = this.$.num;
+    const positions = [];
+    const colors = [];
+    const normals = [];
     // const tris =
     //   form?.primitive !== "line" ||
     //   (form === undefined && this.geometry === "triangles"); // This is a hack for wireframe capForms.
@@ -2331,63 +2337,54 @@ class Tube {
           //   //colors: [pathP.color],
           //   colors: [this.varyCap(shade), this.varyCap(shade)],
           // });
-          form.addPoints({
-            positions: [pathP.shape[1], pathP.shape[2], pathP.shape[3]],
-            colors: [
-              this.varyCap(shade),
-              this.varyCap(shade),
-              this.varyCap(shade),
-            ],
-          });
+          positions.push(pathP.shape[1], pathP.shape[2], pathP.shape[3]);
+          colors.push(
+            this.varyCap(shade),
+            this.varyCap(shade),
+            this.varyCap(shade)
+          );
         } else {
           // End cap.
-          form.addPoints({
-            positions: [pathP.shape[2], pathP.shape[1], pathP.shape[3]],
-            colors: [
-              this.varyCap(shade),
-              this.varyCap(shade),
-              this.varyCap(shade),
-            ],
-          });
+          positions.push(pathP.shape[2], pathP.shape[1], pathP.shape[3]);
+          colors.push(
+            this.varyCap(shade),
+            this.varyCap(shade),
+            this.varyCap(shade)
+          );
         }
       }
 
       // 4️⃣ Four sides.
       if (this.sides === 4) {
-        let positions;
-
         if (!ring) {
-          positions = [
+          positions.push(
             pathP.shape[2],
             pathP.shape[1],
             pathP.shape[3],
             pathP.shape[4],
             pathP.shape[3],
-            pathP.shape[1],
-          ];
+            pathP.shape[1]
+          );
         } else {
-          positions = [
+          positions.push(
             pathP.shape[1],
             pathP.shape[2],
             pathP.shape[3],
             pathP.shape[3],
             pathP.shape[4],
-            pathP.shape[1],
-          ];
+            pathP.shape[1]
+          );
         }
 
-        form.addPoints({
-          positions,
-          colors: [
-            this.varyCap(shade),
-            this.varyCap(shade),
-            this.varyCap(shade),
-            this.varyCap(shade),
-            this.varyCap(shade),
-            this.varyCap(shade),
-          ],
-          // [255, 100, 0, 255], [255, 100, 0, 255],
-        });
+        colors.push(
+          this.varyCap(shade),
+          this.varyCap(shade),
+          this.varyCap(shade),
+          this.varyCap(shade),
+          this.varyCap(shade),
+          this.varyCap(shade)
+        );
+        // [255, 100, 0, 255], [255, 100, 0, 255],
       }
 
       // This is a general case now.
@@ -2398,57 +2395,49 @@ class Tube {
         // between this and the next point, skipping the last.
         for (let i = 1; i < pathP.shape.length - 1; i += 1) {
           if (!ring) {
-            form.addPoints({
-              // Check the rotation here...
-              positions: [pathP.shape[i], center, pathP.shape[i + 1]],
-              colors: [
-                this.varyCap(shade), // Inner color for a gradient.
-                this.varyCap(shade),
-                this.varyCap(shade),
-              ],
-            });
+            // Check the rotation here...
+            positions.push(pathP.shape[i], center, pathP.shape[i + 1]);
+            colors.push(
+              this.varyCap(shade), // Inner color for a gradient.
+              this.varyCap(shade),
+              this.varyCap(shade)
+            );
           } else {
-            form.addPoints({
-              positions: [center, pathP.shape[i], pathP.shape[i + 1]],
-              colors: [
-                this.varyCap(shade), // Inner color for a gradient.
-                this.varyCap(shade),
-                this.varyCap(shade),
-              ],
-            });
+            positions.push(center, pathP.shape[i], pathP.shape[i + 1]);
+            colors.push(
+              this.varyCap(shade), // Inner color for a gradient.
+              this.varyCap(shade),
+              this.varyCap(shade)
+            );
           }
         }
 
         if (!ring) {
           // And wrap around to the beginning for the final point.
-          form.addPoints({
-            positions: [
-              center,
-              pathP.shape[1],
-              pathP.shape[pathP.shape.length - 1],
-            ],
-            colors: [
-              this.varyCap(shade), // Inner color for a gradient.
-              this.varyCap(shade),
-              this.varyCap(shade),
-              // [255, 0, 0, 255],
-              // [255, 255, 0, 255],
-              // [0, 0, 255, 255],
-            ],
-          });
+          positions.push(
+            center,
+            pathP.shape[1],
+            pathP.shape[pathP.shape.length - 1]
+          );
+          colors.push(
+            this.varyCap(shade), // Inner color for a gradient.
+            this.varyCap(shade),
+            this.varyCap(shade)
+            // [255, 0, 0, 255],
+            // [255, 255, 0, 255],
+            // [0, 0, 255, 255],
+          );
         } else {
-          form.addPoints({
-            positions: [
-              pathP.shape[1],
-              center,
-              pathP.shape[pathP.shape.length - 1],
-            ],
-            colors: [
-              this.varyCap(shade), // Inner color for a gradient.
-              this.varyCap(shade),
-              this.varyCap(shade),
-            ],
-          });
+          positions.push(
+            pathP.shape[1],
+            center,
+            pathP.shape[pathP.shape.length - 1]
+          );
+          colors.push(
+            this.varyCap(shade), // Inner color for a gradient.
+            this.varyCap(shade),
+            this.varyCap(shade)
+          );
         }
       }
     } else {
@@ -2457,95 +2446,97 @@ class Tube {
       // TODO: I might be overdrawing a few lines here... 22.11.16.04.36
 
       if (this.sides === 3) {
-        form.addPoints({
-          positions: [
-            pathP.shape[1],
-            pathP.shape[2],
-            pathP.shape[2],
-            pathP.shape[3],
-            pathP.shape[3],
-            pathP.shape[1],
-          ],
-          colors: [
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-          ],
-        });
+        positions.push(
+          pathP.shape[1],
+          pathP.shape[2],
+          pathP.shape[2],
+          pathP.shape[3],
+          pathP.shape[3],
+          pathP.shape[1]
+        );
+        colors.push(
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade)
+        );
       }
 
       if (this.sides === 4) {
-        form.addPoints({
-          positions: [
-            pathP.shape[1],
-            pathP.shape[2],
-            pathP.shape[2],
-            pathP.shape[3],
-            pathP.shape[3],
-            pathP.shape[4],
-            pathP.shape[4],
-            pathP.shape[1],
-            pathP.shape[1],
-            pathP.shape[3],
-          ],
-          colors: [
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-            this.varyCapLine(shade),
-          ],
-        });
+        positions.push(
+          pathP.shape[1],
+          pathP.shape[2],
+          pathP.shape[2],
+          pathP.shape[3],
+          pathP.shape[3],
+          pathP.shape[4],
+          pathP.shape[4],
+          pathP.shape[1],
+          pathP.shape[1],
+          pathP.shape[3]
+        );
+        colors.push(
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade),
+          this.varyCapLine(shade)
+        );
       }
 
       if (this.sides > 4) {
         for (let i = 0; i < pathP.shape.length; i += 1) {
           // Pie: Radiate out from core point
           if (i > 0 && this.sides > 4) {
-            form.addPoints({
-              positions: [pathP.shape[0], pathP.shape[i]],
-              colors: [this.varyCapLine(shade), this.varyCapLine(shade)],
-            });
+            positions.push(pathP.shape[0], pathP.shape[i]);
+            colors.push(this.varyCapLine(shade), this.varyCapLine(shade));
           }
 
           // Single diagonal for a quad.
           if (i === 0 && this.sides === 4) {
-            form.addPoints({
-              positions: [pathP.shape[1], pathP.shape[3]],
-              colors: [this.varyCapLine(shade), this.varyCapLine(shade)],
-            });
+            positions.push(pathP.shape[1], pathP.shape[3]);
+            colors.push(this.varyCapLine(shade), this.varyCapLine(shade));
           }
 
           // Ring: Skip core point
           if (i > 1 && ring) {
-            form.addPoints({
-              positions: [pathP.shape[i - 1], pathP.shape[i]],
-              colors: [this.varyCapLine(shade), this.varyCapLine(shade)],
-              // colors: [
-              //   [255, 0, 0, 255],
-              //   [0, 255, 0, 255],
-              // ],
-            });
+            positions.push(pathP.shape[i - 1], pathP.shape[i]);
+            colors.push(this.varyCapLine(shade), this.varyCapLine(shade));
           }
         }
       }
 
       // Ring: add final point
       if ((this.sides > 4 && ring) || this.sides === 2) {
-        form.addPoints({
-          positions: [pathP.shape[1], pathP.shape[pathP.shape.length - 1]],
-          colors: [this.varyCapLine(shade), this.varyCapLine(shade)],
-        });
+        positions.push(pathP.shape[1], pathP.shape[pathP.shape.length - 1]);
+        colors.push(this.varyCapLine(shade), this.varyCapLine(shade));
       }
     }
+
+    // Generate normals for each triangle in the cap.
+    // Note: Technically every normal should be the same for every cap so I only
+    //       need to make one from the first triangle and copy it over.
+    if (form.primitive === "triangle" && positions.length >= 3) {
+      const A = positions[0];
+      const B = positions[1];
+      const C = positions[2];
+
+      const AB = vec3.sub(vec3.create(), B, A);
+      const AC = vec3.sub(vec3.create(), C, A);
+
+      const normal = vec3.cross(vec3.create(), AB, AC);
+
+      for (let i = 0; i < positions.length; i += 1) normals.push(normal);
+    }
+
+    if (positions.length > 0) form.addPoints({ positions, colors, normals });
   }
 
   // Transform the cookie-cutter by the pathP, returning the pathP back.
@@ -2646,8 +2637,10 @@ class Tube {
   // Copy each point in the shape, transforming it by the added path positions
   // and angles to `positions` and `colors` which can get added to the `form`.
   #consumePath(pathPoints, form) {
+    const { vec3 } = this.$.num;
     const positions = [];
     const colors = [];
+    const normals = [];
 
     let tris;
     if (form === undefined) {
@@ -2694,17 +2687,8 @@ class Tube {
           if (tris) {
             // Two Sides
             if (this.sides === 2) {
-              if (si === 1) {
-                // Double up the sides here.
-                positions.push(this.lastPathP.shape[si]);
-                positions.push(pathP.shape[si]);
-                positions.push(pathP.shape[si + 1]);
-                colors.push(
-                  this.vary(shade),
-                  this.vary(shade),
-                  this.vary(shade)
-                );
 
+              if (si === 1) {
                 if (!unreal) {
                   positions.push(pathP.shape[si]);
                   positions.push(this.lastPathP.shape[si]);
@@ -2716,15 +2700,6 @@ class Tube {
                   );
                 }
 
-                positions.push(this.lastPathP.shape[si]);
-                positions.push(pathP.shape[si + 1]);
-                positions.push(this.lastPathP.shape[si + 1]);
-                colors.push(
-                  this.vary(shade),
-                  this.vary(shade),
-                  this.vary(shade)
-                );
-
                 if (!unreal) {
                   positions.push(pathP.shape[si + 1]);
                   positions.push(this.lastPathP.shape[si]);
@@ -2735,6 +2710,26 @@ class Tube {
                     this.vary(shade)
                   );
                 }
+
+                // Double up the sides here.
+                positions.push(this.lastPathP.shape[si]);
+                positions.push(pathP.shape[si]);
+                positions.push(pathP.shape[si + 1]);
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
+
+                positions.push(this.lastPathP.shape[si]);
+                positions.push(pathP.shape[si + 1]);
+                positions.push(this.lastPathP.shape[si + 1]);
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
+
               }
 
               // positions.push(pathP.shape[si]);
@@ -2772,31 +2767,27 @@ class Tube {
             }
             // Four Sides
             if (this.sides === 4) {
+
               if (si === 1) {
-                positions.push(this.lastPathP.shape[si]);
-                positions.push(pathP.shape[si]);
-                colors.push(this.vary(shade), this.vary(shade));
+                // positions.push(this.lastPathP.shape[si]);
+                // positions.push(pathP.shape[si]);
+                //colors.push(this.vary(shade), this.vary(shade));
+                //colors.push([255, 0, 0, 255], [255, 0, 0, 255]);
               }
 
-              if (si === 2) {
-                positions.push(pathP.shape[si]);
-                positions.push(this.lastPathP.shape[si]);
-                colors.push(this.vary(shade), this.vary(shade));
-              }
+              // if (si === 2) {
+              //   positions.push(pathP.shape[si]);
+              //   positions.push(this.lastPathP.shape[si]);
+              //   //colors.push(this.vary(shade), this.vary(shade));
+              //   colors.push([0, 0, 255, 255], [0, 0, 255, 255]);
+              // }
 
-              if (si === 3) {
-                positions.push(pathP.shape[si]);
-                positions.push(this.lastPathP.shape[si]);
-                colors.push(this.vary(shade), this.vary(shade));
-              }
-              /*
-
-              if (si === 4) {
-                positions.push(pathP.shape[si]);
-                positions.push(this.lastPathP.shape[si]);
-                colors.push(this.vary(shade), this.vary(shade));
-              }
-              */
+              // if (si === 3) {
+              //   positions.push(pathP.shape[si]);
+              //   positions.push(this.lastPathP.shape[si]);
+              //   //colors.push(this.vary(shade), this.vary(shade));
+              //   colors.push([255, 0, 0, 255], [255, 0, 0, 255]);
+              // }
             }
             if (this.sides >= 5) {
               if (si === 1) {
@@ -2831,14 +2822,18 @@ class Tube {
             }
 
             if (this.sides === 4) {
+              /*
               if (si === 2) {
                 positions.push(pathP.shape[si - 1]);
-                colors.push(this.vary(shade));
+                // colors.push(this.vary(shade));
+                colors.push([0, 0, 255, 255]);
               }
               if (si === 3) {
                 positions.push(pathP.shape[si - 1]);
-                colors.push(this.vary(shade));
+                //colors.push(this.vary(shade));
+                colors.push([255, 0, 0, 255]);
               }
+              */
             }
 
             if (this.sides >= 5) {
@@ -2859,12 +2854,6 @@ class Tube {
         if (si > 0 && si < pathP.shape.length - 1) {
           // 📐
           if (tris) {
-            // Two sided
-            //if (sides === 2 && si === 1) {
-            //  positions.push(pathP.shape[si]);
-            //  colors.push(this.vary(shade));
-            //}
-
             // 3️⃣
             // Three sided
             if (this.sides === 3) {
@@ -2892,16 +2881,14 @@ class Tube {
             // Four sided
             if (this.sides === 4) {
               if (si === 1) {
-                positions.push(this.lastPathP.shape[si + 1]);
-                colors.push(this.vary(shade));
-              }
-
-              if (si === 2) {
+                // positions.push(this.lastPathP.shape[si + 1]);
+                // colors.push(this.vary(shade));
                 positions.push(
                   this.lastPathP.shape[si],
                   pathP.shape[si],
                   this.lastPathP.shape[si + 1]
                 );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
@@ -2913,6 +2900,33 @@ class Tube {
                   pathP.shape[si + 1],
                   this.lastPathP.shape[si + 1]
                 );
+
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
+              }
+
+              if (si === 2) {
+                positions.push(
+                  this.lastPathP.shape[si],
+                  pathP.shape[si],
+                  this.lastPathP.shape[si + 1]
+                );
+
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
+
+                positions.push(
+                  pathP.shape[si],
+                  pathP.shape[si + 1],
+                  this.lastPathP.shape[si + 1]
+                );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
@@ -2926,7 +2940,11 @@ class Tube {
                   pathP.shape[si],
                   this.lastPathP.shape[si + 1]
                 );
+
                 colors.push(
+                  // [255, 0, 0, 255],
+                  // [255, 0, 0, 255],
+                  // [255, 0, 0, 255]
                   this.vary(shade),
                   this.vary(shade),
                   this.vary(shade)
@@ -2990,6 +3008,19 @@ class Tube {
         }
 
         if (this.sides === 4) {
+          positions.push(
+            this.lastPathP.shape[1],
+            pathP.shape[pathP.shape.length - 1],
+            pathP.shape[1],
+          );
+
+          colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
+          // colors.push(
+          //   [100, 255, 0, 255],
+          //   [100, 255, 0, 255],
+          //   [100, 255, 0, 255]
+          // );
+
           // First closer.
           positions.push(
             pathP.shape[pathP.shape.length - 1],
@@ -2998,14 +3029,11 @@ class Tube {
           );
 
           colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
-
-          positions.push(
-            this.lastPathP.shape[1],
-            pathP.shape[pathP.shape.length - 1],
-            pathP.shape[1]
-          );
-
-          colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
+          // colors.push(
+          //   [100, 255, 0, 255],
+          //   [100, 255, 0, 255],
+          //   [100, 255, 0, 255]
+          // );
         }
 
         if (this.sides >= 5) {
@@ -3052,13 +3080,34 @@ class Tube {
       this.lastPathP = pathP;
     }
 
-    if (positions.length > 0) {
-      if (form) {
-        form.addPoints({ positions, colors });
-      } else {
-        this.form.addPoints({ positions, colors });
+    form = form || this.form;
+
+    // Generate identical normals for each quad!
+    // Note: Technically every 6 positions here should result in
+    //       the same normals, so I can compute them at the end now.
+
+    //       It's also a good test because the resulting positions should
+    //       always be divisible by 6 here.
+
+    // if (this.sides !== 2) return;
+    // console.log(positions.length);
+    if (form.primitive === "triangle") {
+      for (let i = 0; i < positions.length; i += 6) {
+        const A = positions[i];
+        const B = positions[i + 1];
+        const C = positions[i + 2];
+
+        const AB = vec3.sub(vec3.create(), B, A);
+        const AC = vec3.sub(vec3.create(), C, A);
+
+        const normal = vec3.cross(vec3.create(), AB, AC);
+
+        // Copy the normal for each position.
+        normals.push(normal, normal, normal, normal, normal, normal);
       }
     }
+
+    if (positions.length > 0) form.addPoints({ positions, colors, normals });
   }
 }
 

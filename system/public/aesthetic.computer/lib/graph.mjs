@@ -1418,7 +1418,8 @@ class Form {
           attributes.positions[i],
           attributes.colors?.[i],
           // this.#gradientColors[i % 3],
-          texCoord //this.#texCoords[i % 3] // Replace to enable bespoke texture coordinates.
+          texCoord, //this.#texCoords[i % 3] // Replace to enable bespoke texture coordinates.
+          attributes.normals?.[i]
         )
       );
 
@@ -1596,6 +1597,7 @@ class Vertex {
   pos; // vec4
   color; // vec4
   texCoords; // vec4
+  normal; // vec3 (gpu only for now)
 
   get x() {
     return this.pos[X];
@@ -1621,11 +1623,13 @@ class Vertex {
   constructor(
     pos = [0, 0, 0, 1],
     color = [...c, 1.0],
-    texCoords = [0, 0, 0, 0]
+    texCoords = [0, 0, 0, 0],
+    normal = [0, 0, 0]
   ) {
     this.pos = vec4.fromValues(...pos);
     this.color = vec4.fromValues(...color);
     this.texCoords = vec4.fromValues(...texCoords);
+    this.normal = vec3.fromValues(...normal);
   }
 
   // TODO: Optimize this function for large vertex counts. 22.10.13.00.14
