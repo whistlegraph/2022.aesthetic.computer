@@ -34,9 +34,6 @@ fastify.get("/", async () => {
 });
 
 // *** Live Reload of Pieces in Development ***
-// TODO: Make sure this still works on the piece server? 22.12.02.16.18
-// TODO: This will probably have to be an edge function that can 
-//       hit all connected clients or something?
 fastify.post("/reload", async (req) => {
   everyone(pack("reload", req.body, "pieces"));
   // console.log("Reload!", req.body);

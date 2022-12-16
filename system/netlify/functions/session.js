@@ -26,8 +26,6 @@ async function fun(event, context) {
     out = { url: "http://localhost:8889" };
   } else {
 
-    debugger;
-
     const { got } = await import("got");
     const slug = event.path.slice(1).split("/")[1];
     const jamSocketToken = process.env.JAMSOCKET_ACCESS_TOKEN;
@@ -42,7 +40,6 @@ async function fun(event, context) {
     }
 
     // Check to see if an "existing" backend for this slug is still alive.
-    let headers;
 
     // Connect to redis...
     const client = !dev

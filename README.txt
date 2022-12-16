@@ -52,7 +52,9 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order ***
- - [] Get developer reload working again.
+ - [-] Get developer reload working again.
+  - [-] Deploy and test everything to see if it works. 
+  - [x] Add a post request edge function called "reload". 
  - [] Delete / kill `socket.js` server.
  - [😀] Finish basic version of `play`.
  - [] Mintable Paintings
