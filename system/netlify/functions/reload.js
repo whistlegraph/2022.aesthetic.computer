@@ -36,6 +36,10 @@ async function fun(event, context) {
       // 2. Check to see if a backend is already available...
       const currentBackend = await client.HGET("backends", piece);
 
+      // ❤️‍🔥
+      // TODO: To make this faster I could just set a value in redis
+      //       and then the jamsocket backend could sub to that message. 
+
       // 3. Send a reload request to the `currentBackend` (ignoring its status).
       if (currentBackend) {
         const { got } = await import("got");

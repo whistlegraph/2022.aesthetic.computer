@@ -925,6 +925,22 @@ async function load(parsed, fromHistory = false, alias = false) {
     }
   };
 
+  // 🧨
+
+  // 🅱️ Load the piece.
+  // TODO: What happens if source is undefined?
+  // const moduleLoadTime = performance.now();
+  const module = await import(fullUrl).catch((err) => {
+    console.error(`😡 "${path}" load failure:`, err);
+    loadFailure = err;
+  });
+  // console.log(performance.now() - moduleLoadTime, module);
+
+  if (module === undefined) {
+    loading = false;
+    return;
+  }
+
   const forceProd = true; // Just a helpful flag for testing production backends
   //                         in development.
 
@@ -948,22 +964,6 @@ async function load(parsed, fromHistory = false, alias = false) {
     receiver = receive;
     return socket;
   };
-
-  // 🧨
-
-  // 🅱️ Load the piece.
-  // TODO: What happens if source is undefined?
-  // const moduleLoadTime = performance.now();
-  const module = await import(fullUrl).catch((err) => {
-    console.error(`😡 "${path}" load failure:`, err);
-    loadFailure = err;
-  });
-  // console.log(performance.now() - moduleLoadTime, module);
-
-  if (module === undefined) {
-    loading = false;
-    return;
-  }
 
   // This would also get the source code, in case meta-programming is needed.
   // const source = await (await fetch(fullUrl)).text();

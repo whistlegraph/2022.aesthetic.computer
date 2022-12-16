@@ -4,10 +4,11 @@
 // that requests it.
 
 /* #region todo 📓 
- - [] Get "developer" live reloading working again. 
+ - [] Speed up developer reload by using redis pub/sub.
  - [] Cache some stuff in redis / connect to redis here.
  - [] Send a signal to everyone once a user leaves.
  + Done
+ - [x] Get "developer" live reloading working again. 
  - [x] Add sockets back.
  - [x] Make a "local" option.
  - [x] Read through: https://redis.io/docs/data-types

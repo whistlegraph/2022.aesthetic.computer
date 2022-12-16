@@ -52,17 +52,20 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order ***
- - [-] Get developer reload working again.
-  - [-] Deploy and test everything to see if it works. 
-  - [x] Add a post request edge function called "reload". 
- - [] Delete / kill `socket.js` server.
+ - [-] Write visualizer for whistlegraph album.
+ - [-] Add glyphs to sparkle brush.
+ ---
  - [😀] Finish basic version of `play`.
  - [] Mintable Paintings
   - [] Finish all Brushes todos: https://www.notion.so/aesthetic-computer/aesthetic-computer-hq-97376f353dbd4503970910777d6c7241
   - [] Get smart contract launched. See "Mintable Paintings" below.
  - [] Finish Freaky Flowers client
   - [] Hook up multiplayer presence. 
+ - [] Re-deploy / re-invoke `socket.js` server to test geckos udp.
  + Done
+ - [x] Get developer live reload working again.
+  - [x] Deploy and test everything to see if it works. 
+  - [x] Add a post request edge function called "reload". 
  - [x] Wire up plot for Amalia.
  - [x] Queue any sent socket messages to be sent once the socket
       backend connects. 
