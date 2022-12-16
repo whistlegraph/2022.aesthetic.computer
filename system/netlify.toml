@@ -54,8 +54,8 @@
   status = 301
   force = true
 [[redirects]]
-  from = "https://prompt.ac"
-  to = "https://aesthetic.computer/prompt"
+  from = "https://prompt.ac/*"
+  to = "https://aesthetic.computer/:splat"
   status = 301
   force = true
 [[redirects]]
