@@ -925,7 +925,7 @@ async function load(parsed, fromHistory = false, alias = false) {
     }
   };
 
-  const forceProd = true; // Just a helpful flag for testing production backends
+  const forceProd = false; // Just a helpful flag for testing production backends
   //                         in development.
 
   socket = new Socket(debug);

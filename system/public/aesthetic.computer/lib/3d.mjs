@@ -23,7 +23,7 @@
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from "../dep/three/GLTFExporter.js";
-import { mergeVertices, computeMikkTSpaceTangents } from "../dep/three/BufferGeometryUtils.js";
+import { mergeVertices } from "../dep/three/BufferGeometryUtils.js";
 // import { OBJExporter } from "../dep/three/OBJExporter.js";
 import { Safari } from "./platform.mjs";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
@@ -89,12 +89,12 @@ export function initialize(
   if (!NO_FOG)
     scene.fog = new THREE.Fog(new THREE.Color(0, 0, 0), FOG_NEAR, FOG_FAR); // More basic fog.
 
-  scene.add(new THREE.HemisphereLight(0xff9900, 0xff0000));
-  //   const ambientLight = new THREE.AmbientLight();
-  //   const pointLight = new THREE.PointLight();
-  //  pointLight.position.set(10, 10, 10);
-  //  scene.add(ambientLight);
-  // scene.add(pointLight);
+  //scene.add(new THREE.HemisphereLight(0xff9900, 0xff0000));
+  const ambientLight = new THREE.AmbientLight();
+  const pointLight = new THREE.PointLight(0xffffff, 1, 200);
+  pointLight.position.set(-0.75, 0.5, 1);
+  scene.add(ambientLight);
+  scene.add(pointLight);
 
   // Set up VR.
   button = VRButton.createButton(
@@ -367,13 +367,17 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         material = new THREE.MeshBasicMaterial({ map: tex });
       } else {
         if (f.vertices[0]?.color) {
-          material = new THREE.MeshBasicMaterial();
+          //material = new THREE.MeshBasicMaterial();
+          material = new THREE.MeshStandardMaterial();
         } else {
-          material = new THREE.MeshBasicMaterial({
+          //material = new THREE.MeshBasicMaterial({
+          material = new THREE.MeshStandardMaterial({
             color: rgbToHex(...(f.color || color)),
           });
         }
       }
+
+      //material.emissiveIntensity = 0;
 
       // TODO: ❤️‍🔥 I should be able to set this per form...
 
@@ -394,22 +398,29 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       let points = [];
       let pointColors = [];
+      let pointNormals = [];
 
       // Generate points from vertices if there are any to load at the start.
       if (f.vertices.length > 0) {
         points = f.vertices.map((v) => new THREE.Vector3(...v.pos));
         pointColors = f.vertices.map((v) => new THREE.Vector4(...v.color));
+        pointNormals = f.vertices.map((v) => new THREE.Vector3(...v.normal));
       }
 
-      const geometry = new THREE.BufferGeometry();
+      let geometry = new THREE.BufferGeometry();
       const positionsArr = new Float32Array(f.MAX_POINTS * 3);
+      const normalsArr = new Float32Array(f.MAX_POINTS * 3);
       const colorsArr = new Float32Array(f.MAX_POINTS * 4);
 
       for (let i = 0; i < points.length; i += 1) {
         const posStart = i * 3;
-        positionsArr[posStart] = points[i].x;
+        positionsArr[posStart] = points[i].x; // Add vertices.
         positionsArr[posStart + 1] = points[i].y;
         positionsArr[posStart + 2] = points[i].z;
+
+        normalsArr[posStart] = pointNormals[i].x; // Add normals.
+        normalsArr[posStart + 1] = pointNormals[i].y;
+        normalsArr[posStart + 2] = pointNormals[i].z;
       }
 
       for (let i = 0; i < pointColors.length; i += 1) {
@@ -427,11 +438,15 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       }
 
       const positions = new THREE.BufferAttribute(positionsArr, 3);
+      const normals = new THREE.BufferAttribute(normalsArr, 3);
       const colors = new THREE.BufferAttribute(colorsArr, 4, true);
+
       positions.usage = THREE.DynamicDrawUsage;
+      normals.usage = THREE.DynamicDrawUsage;
       colors.usage = THREE.DynamicDrawUsage;
 
       geometry.setAttribute("position", positions);
+      geometry.setAttribute("normal", normals);
       geometry.setAttribute("color", colors);
 
       if (tex) {
@@ -443,6 +458,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       //geometry.setPositions(positions);
       //geometry.setColors(colors);
+
+      //geometry = mergeVertices(geometry); // Combine vertices here.
+      //geometry.computeVertexNormals();
+      //debugger;
 
       const tri = new THREE.Mesh(geometry, material);
       tri.frustumCulled = false;
@@ -794,10 +813,12 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         // Add points.
         const points = [];
         const pointColors = [];
+        const pointNormals = [];
 
         for (let i = 0; i < formUpdate.vertices.length; i += 1) {
           points.push(new THREE.Vector3(...formUpdate.vertices[i].pos));
           pointColors.push(new THREE.Vector4(...formUpdate.vertices[i].color));
+          pointNormals.push(new THREE.Vector3(...formUpdate.vertices[i].normal));
         }
 
         // Set custom properties on the form to keep track of where we are
@@ -817,12 +838,17 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
         const positions = form.geometry.attributes.position.array;
         const colors = form.geometry.attributes.color.array;
+        const normals = form.geometry.attributes.normal.array;
 
         for (let i = 0; i < points.length; i += 1) {
           const posStart = (form.userData.ac_lastLength + i) * 3;
           positions[posStart] = points[i].x;
           positions[posStart + 1] = points[i].y;
           positions[posStart + 2] = points[i].z;
+
+          normals[posStart] = pointNormals[i].x;
+          normals[posStart + 1] = pointNormals[i].y;
+          normals[posStart + 2] = pointNormals[i].z;
         }
 
         for (let i = 0; i < pointColors.length; i += 1) {
@@ -842,9 +868,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
         form.geometry.setDrawRange(0, form.userData.ac_length);
         form.geometry.attributes.position.needsUpdate = true;
+        form.geometry.attributes.normal.needsUpdate = true;
         form.geometry.attributes.color.needsUpdate = true;
 
-        //form.geometry.computeVertexNormals(true);
+        //form.geometry.computeVertexNormals();
 
         //form.geometry.computeBoundingBox();
         //form.geometry.computeBoundingSphere();
@@ -960,14 +987,20 @@ export function handleEvent(event) {
       const maxPoints = sculpture.userData.ac_length;
       const positions = new Float32Array(maxPoints * 3);
       const colors = new Float32Array(maxPoints * 4);
+      const normals = new Float32Array(maxPoints * 3);
       const points = sculpture.geometry.attributes.position.array;
+      const pointNormals = sculpture.geometry.attributes.normal.array;
       const pointColors = sculpture.geometry.attributes.color.array;
 
-      // Offset sculpture height.
+      // Set positions & normals.
       for (let i = 0; i < positions.length; i += 3) {
         positions[i] = points[i];
-        positions[i + 1] = points[i + 1] - sculptureHeight;
+        positions[i + 1] = points[i + 1] - sculptureHeight; // Offset height.
         positions[i + 2] = points[i + 2];
+
+        normals[i] = pointNormals[i];
+        normals[i + 1] = pointNormals[i + 1];
+        normals[i + 2] = pointNormals[i + 2];
       }
 
       // Convert to linear color space.
@@ -983,21 +1016,24 @@ export function handleEvent(event) {
         colors[i + 2] = color.b;
         // Skip alpha.
       }
+
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
       geo.setAttribute("color", new THREE.BufferAttribute(colors, 4, true));
 
-      // geo.computeVertexNormals();
       // geo.normalizeNormals();
       // geo.computeTangents();
-      geo = mergeVertices(geo); // Combine vertices here.
+      // geo = mergeVertices(geo); // Combine vertices here.
+      // geo.computeVertexNormals();
 
       // sculpture.userData.gltfExtensions = {
-        // KHR_materials_unlit: {},
+      //   KHR_materials_unlit: {},
       // };
 
       sculpture.geometry = geo;
       sculpture.geometry.attributes.position.needsUpdate = true;
       sculpture.geometry.attributes.color.needsUpdate = true;
+      //sculpture.geometry.attributes.normal.needsUpdate = true;
 
       //debugger;
 
@@ -1042,8 +1078,9 @@ export function handleEvent(event) {
         } else {
           // Assume "local".
           download({
-            filename: `${slug}.glb`,
+            // filename: `${slug}.gltf`,
             // data: JSON.stringify(glb),
+            filename: `${slug}.glb`,
             data: glb,
           });
         }
