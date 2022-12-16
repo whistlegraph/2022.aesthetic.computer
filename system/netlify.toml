@@ -14,7 +14,7 @@
 [functions.session]
   external_node_modules = ["got", "redis"]
 [functions.reload]
-  external_node_modules = ["redis"]
+  external_node_modules = ["got", "redis"]
 [dev]
   NODE_ENV = "development"
   publish = "public/"
