@@ -27,7 +27,7 @@ async function fun(event, context) {
   } else {
 
     const { got } = await import("got");
-    const slug = event.path.slice(1).split("/")[1];
+    const slug = event.path.replace("/session/", ""); // Take everything after the path.
     const jamSocketToken = process.env.JAMSOCKET_ACCESS_TOKEN;
     out = {};
 

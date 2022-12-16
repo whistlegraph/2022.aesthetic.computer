@@ -34,7 +34,7 @@ async function fun(event, context) {
       await client.connect();
 
       // 2. Check to see if a backend is already available...
-      const currentBackend = await client.HGET("backends", slug);
+      const currentBackend = await client.HGET("backends", piece);
 
       // 3. Send a reload request to the `currentBackend` (ignoring its status).
       if (currentBackend) {
