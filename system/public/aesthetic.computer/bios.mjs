@@ -420,6 +420,7 @@ async function boot(parsed, bpm = 60, resolution, debug) {
   let requestMicrophoneAmplitude, requestMicrophoneWaveform;
 
   // TODO: Eventually this would be replaced with a more dynamic system.
+
   const backgroundTrackURLs = [
     "0 - analog multiplication.m4a",
     "1 - castlecowards.m4a",

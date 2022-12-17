@@ -1,14 +1,5 @@
-// BGM, 22.12.07.12.56
-// Play indexed background music and run a visualizer.
-
-/* #region 🏁 todo
- - [] Add a clickable play button overlay if bgm is used as a landing page.
-  - [] Draw a rasterized, filled triangle for the play button!
-  - [] Draw thicker rasterized lines for the visualizer?
-    - [] Use ChatGPT to generate the bresenham thickness code again.
- - [] Experiment with a nicer visualizer.
- - [] Radiate lines out from the center?
-#endregion */
+// Music 2 Whistlegraph 2, 22.12.16.03.18
+// Plays and visualizes tracks from Charlie's Whistlegraph instrumental album.
 
 const trackCount = 17; // See `backgroundTrackURLs` in `bios.mjs`. 
 

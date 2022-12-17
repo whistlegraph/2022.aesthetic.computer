@@ -52,7 +52,7 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order ***
- - [-] Write visualizer for whistlegraph album.
+ - [-] Write visualizer for whistlegraph album. (m2w2)
  - [-] Add glyphs to sparkle brush.
  ---
  - [😀] Finish basic version of `play`.
