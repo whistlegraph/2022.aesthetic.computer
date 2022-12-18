@@ -269,7 +269,7 @@ function boot({
   camdoll = new CamDoll(Camera, Dolly, {
     z: 0.9,
     y: cubeHeight,
-    sensitivity: 0.00025,
+    sensitivity: 0.00025 / 2,
   }); // Camera controls.
   stage = new Form(
     QUAD,
@@ -2665,6 +2665,97 @@ class Tube {
 
       // console.log("Number of sections so far:", this.gesture.length);
 
+      // Get normals for each vertex in the triangle based on the
+      // direction from the center to the triangle face.
+
+      function calculateTriangleNormal(a, b, c) {
+        /*
+        const ab = vec3.create();
+        vec3.subtract(ab, b, a); // calculate the edge vector from vertex a to vertex b
+        const tangent = vec3.normalize([], ab); // normalize the edge vector to get the tangent of the edge
+        const ac = vec3.create();
+        vec3.subtract(ac, c, a); // calculate the vector from the center of the triangle to the vertex
+        const normal = vec3.create();
+        vec3.cross(normal, tangent, ac); // take the cross product of the tangent and this vector to get the normal
+        vec3.normalize(normal, normal); // normalize the result
+        return normal;
+        */
+
+        // Import the vec3 class from the glMatrix library
+
+        // Calculate the two edges of the triangle
+        const e1 = vec3.subtract([], b, a);
+        const e2 = vec3.subtract([], c, a);
+
+        // Use the cross product to calculate the normal for the triangle
+        const normal = vec3.normalize([], vec3.cross([], e1, e2));
+        return normal;
+      }
+
+      function calculateStrip(vertices) {
+        /*
+        const normals = [];
+        // Calculate the normals for each triangle in the strip
+        for (let i = 0; i < triangleVertices.length; i += 3) {
+          const v1 = triangleVertices[i];
+          const v2 = triangleVertices[i + 1];
+          const v3 = triangleVertices[i + 2];
+
+          // Calculate the two edges of the triangle
+          const e1 = v2.clone().sub(v1);
+          const e2 = v3.clone().sub(v1);
+
+          // Use the cross product to calculate the normal for the triangle
+          const normal = e1.cross(e2).normalize();
+
+          // Add the normal to the sum for each vertex
+          vertexNormals[v1.index].add(normal);
+          vertexNormals[v2.index].add(normal);
+          vertexNormals[v3.index].add(normal);
+        }
+
+        // Normalize the sum of the normals for each vertex to get the angle weighted normal
+        for (let i = 0; i < vertexNormals.length; i++) {
+          vertexNormals[i].normalize();
+        }
+
+        // Set the normal attribute of each vertex to the angle weighted normal
+        for (let i = 0; i < triangleVertices.length; i++) {
+          triangleVertices[i].normal.copy(
+            vertexNormals[triangleVertices[i].index]
+          );
+        }
+        */
+      }
+
+      // // Draw a line from each vertex to it's shape[0].
+
+      // function norms(coreLine, triCen, vertices) {
+      //   const normals = [];
+      //   const normal = calculateTriangleNormal(...vertices);
+      //   normals.push(normal, normal, normal);
+      //   return normals;
+      // }
+
+      function norm(core, edge) {
+        // Get the normal from the rotatedPoint to the core.
+        return vec3.normalize([], vec3.sub([], edge, core));
+      }
+
+      // function midPoint(a, b) {
+      //   return vec3.lerp([], a, b, 0.5);
+      // }
+
+      const coreLine = [this.lastPathP.shape[0], pathP.shape[0]];
+
+      function triCenter(a, b, c) {
+        const center = vec3.create();
+        vec3.add(center, a, b);
+        vec3.add(center, center, c);
+        vec3.scale(center, center, 1 / 3);
+        return center;
+      }
+
       // ⚠️
       // This is a complicated loop that generates triangulated vertices
       // or line segment vertices and sets all their colors for a given
@@ -2687,12 +2778,20 @@ class Tube {
           if (tris) {
             // Two Sides
             if (this.sides === 2) {
-
               if (si === 1) {
                 if (!unreal) {
-                  positions.push(pathP.shape[si]);
-                  positions.push(this.lastPathP.shape[si]);
                   positions.push(pathP.shape[si + 1]);
+                  positions.push(this.lastPathP.shape[si + 1]);
+                  positions.push(this.lastPathP.shape[si]);
+
+                  
+                    const n = calculateTriangleNormal(...positions.slice(-3));
+                    // vec3.negate(n, n);
+                    // const n = [0, -1, 0];
+                    normals.push(n, n, n);
+                    normals.push(n, n, n);
+                 // }
+
                   colors.push(
                     this.vary(shade),
                     this.vary(shade),
@@ -2701,9 +2800,17 @@ class Tube {
                 }
 
                 if (!unreal) {
-                  positions.push(pathP.shape[si + 1]);
                   positions.push(this.lastPathP.shape[si]);
-                  positions.push(this.lastPathP.shape[si + 1]);
+                  positions.push(pathP.shape[si]);
+                  positions.push(pathP.shape[si + 1]);
+
+                  {
+                  //  const n = calculateTriangleNormal(...positions.slice(-3));
+                    // vec3.negate(n, n);
+                    // const n = [0, -1, 0];
+                    //normals.push(n, n, n);
+                  }
+
                   colors.push(
                     this.vary(shade),
                     this.vary(shade),
@@ -2712,9 +2819,16 @@ class Tube {
                 }
 
                 // Double up the sides here.
-                positions.push(this.lastPathP.shape[si]);
+                positions.push(pathP.shape[si + 1]);
                 positions.push(pathP.shape[si]);
-                positions.push(pathP.shape[si + 1]);
+                positions.push(this.lastPathP.shape[si]);
+
+                  const n2 = calculateTriangleNormal(...positions.slice(-3));
+                  //vec3.negate(n, n);
+                  // const n = [0, -1, 0];
+                  normals.push(n2, n2, n2);
+                  normals.push(n2, n2, n2);
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
@@ -2722,88 +2836,79 @@ class Tube {
                 );
 
                 positions.push(this.lastPathP.shape[si]);
-                positions.push(pathP.shape[si + 1]);
                 positions.push(this.lastPathP.shape[si + 1]);
+                positions.push(pathP.shape[si + 1]);
+
+                  // const n = calculateTriangleNormal(...positions.slice(-3));
+                  // vec3.negate(n, n);
+                  // const n = [0, -1, 0];
+                  //normals.push(n2, n2, n2);
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
                   this.vary(shade)
                 );
-
               }
-
-              // positions.push(pathP.shape[si]);
-              // positions.push(this.lastPathP.shape[si]);
-              // positions.push(pathP.shape[si + 1]);
-              // colors.push( [255, 255, 0, 255], [255, 255, 0, 255], [255, 255, 0, 255]);
-
-              /*
-              positions.push(this.lastPathP.shape[si + 1]);
-              positions.push(this.lastPathP.shape[si]);
-              positions.push(pathP.shape[si]);
-              colors.push( [0, 255, 0, 255], [0, 255, 0, 255], [0, 255, 0, 255]);
-              positions.push(this.lastPathP.shape[si]);
-              positions.push(this.lastPathP.shape[si + 1]);
-              positions.push(pathP.shape[si]);
-              colors.push( [0, 255, 0, 255], [0, 255, 0, 255], [0, 255, 0, 255]);
-              */
-
-              /*
-              positions.push(pathP.shape[si]);
-              positions.push(this.lastPathP.shape[si]);
-              positions.push(pathP.shape[si + 1]);
-              colors.push( [255, 255, 0, 255], [255, 255, 0, 255], [255, 255, 0, 255]);
-              */
-
-              //}
-              // this.vary(shade),
-              // this.vary(shade),
-              // this.vary(shade)
             }
             // Three Sides
             if (this.sides === 3) {
-              positions.push(pathP.shape[si]);
-              colors.push(this.vary(shade));
-            }
-            // Four Sides
-            if (this.sides === 4) {
-
               if (si === 1) {
-                // positions.push(this.lastPathP.shape[si]);
-                // positions.push(pathP.shape[si]);
-                //colors.push(this.vary(shade), this.vary(shade));
-                //colors.push([255, 0, 0, 255], [255, 0, 0, 255]);
+                positions.push(
+                  pathP.shape[si],
+                  this.lastPathP.shape[si + 1],
+                  this.lastPathP.shape[si]
+                );
+
+                // The outward facing normal from pathP.shape[si] would be
+                // the direction from pathP.shape[0] to pathP.shape[si]
+
+                // The outward facing normal for each triangle would be
+                // the direction from the center of each triangle to
+                // the midpoint between pathP and lastPathP.
+
+                // pathP.shape[si] would be
+                // the direction from pathP.shape[0] to pathP.shape[si]
+
+                // normals.push(
+                //   ...norms(
+                //     coreLine,
+                //     triCenter(...positions.slice(-3)),
+                //     positions.slice(-3)
+                //   )
+                // );
+                normals.push(
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si])
+                );
+
+                colors.push(
+                  this.vary(shade),
+                  this.vary(shade),
+                  this.vary(shade)
+                );
               }
-
-              // if (si === 2) {
-              //   positions.push(pathP.shape[si]);
-              //   positions.push(this.lastPathP.shape[si]);
-              //   //colors.push(this.vary(shade), this.vary(shade));
-              //   colors.push([0, 0, 255, 255], [0, 0, 255, 255]);
-              // }
-
-              // if (si === 3) {
-              //   positions.push(pathP.shape[si]);
-              //   positions.push(this.lastPathP.shape[si]);
-              //   //colors.push(this.vary(shade), this.vary(shade));
-              //   colors.push([255, 0, 0, 255], [255, 0, 0, 255]);
-              // }
             }
             if (this.sides >= 5) {
               if (si === 1) {
                 positions.push(this.lastPathP.shape[si]);
                 positions.push(pathP.shape[si]);
                 positions.push(this.lastPathP.shape[si + 1]);
+
+                normals.push(
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
+                );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
                   this.vary(shade)
                 );
-              } else {
-                positions.push(pathP.shape[si]);
-                positions.push(this.lastPathP.shape[si]);
-                colors.push(this.vary(shade), this.vary(shade));
-              }
+              } //else {
+              //}
             }
           } else {
             // 📈 Lines
@@ -2817,10 +2922,28 @@ class Tube {
           // 📐
           if (tris) {
             if (this.sides === 3) {
-              positions.push(this.lastPathP.shape[si], pathP.shape[si - 1]);
-              colors.push(this.vary(shade), this.vary(shade));
-            }
+              positions.push(
+                pathP.shape[si],
+                this.lastPathP.shape[si],
+                pathP.shape[si - 1]
+              );
 
+              // normals.push(
+              //   ...norms(
+              //     coreLine,
+              //     triCenter(...positions.slice(-3)),
+              //     positions.slice(-3)
+              //   )
+              // );
+
+              normals.push(
+                norm(pathP.shape[0], pathP.shape[si]),
+                norm(this.lastPathP.shape[0], this.lastPathP.shape[si]),
+                norm(pathP.shape[0], pathP.shape[si - 1])
+              );
+
+              colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
+            }
             if (this.sides === 4) {
               /*
               if (si === 2) {
@@ -2837,8 +2960,20 @@ class Tube {
             }
 
             if (this.sides >= 5) {
-              positions.push(pathP.shape[si - 1]);
-              colors.push(this.vary(shade));
+              positions.push(
+                pathP.shape[si],
+                this.lastPathP.shape[si],
+                pathP.shape[si - 1]
+              );
+
+              normals.push(
+                norm(pathP.shape[0], pathP.shape[si]),
+                norm(this.lastPathP.shape[0], this.lastPathP.shape[si]),
+                norm(pathP.shape[0], pathP.shape[si - 1])
+              );
+
+              //              colors.push(this.vary(shade));
+              colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
             }
           } else {
             // 📈 Lines
@@ -2857,18 +2992,27 @@ class Tube {
             // 3️⃣
             // Three sided
             if (this.sides === 3) {
-              if (si === 1) {
-                positions.push(
-                  this.lastPathP.shape[si + 1],
-                  this.lastPathP.shape[si]
-                );
-                colors.push(this.vary(shade), this.vary(shade));
-              } else if (si === 2) {
+              if (si === 2) {
                 positions.push(
                   this.lastPathP.shape[si],
                   pathP.shape[si],
                   this.lastPathP.shape[si + 1]
                 );
+
+                // normals.push(
+                //   ...norms(
+                //     coreLine,
+                //     triCenter(...positions.slice(-3)),
+                //     positions.slice(-3)
+                //   )
+                // );
+
+                normals.push(
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
+                );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
@@ -2889,6 +3033,12 @@ class Tube {
                   this.lastPathP.shape[si + 1]
                 );
 
+                normals.push(
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
+                );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
@@ -2901,11 +3051,22 @@ class Tube {
                   this.lastPathP.shape[si + 1]
                 );
 
+                normals.push(
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si + 1]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
+                );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
                   this.vary(shade)
                 );
+                // colors.push(
+                //   this.vary(shade),
+                //   this.vary(shade),
+                //   this.vary(shade)
+                // );
               }
 
               if (si === 2) {
@@ -2915,6 +3076,12 @@ class Tube {
                   this.lastPathP.shape[si + 1]
                 );
 
+                normals.push(
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
+                );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
@@ -2925,6 +3092,12 @@ class Tube {
                   pathP.shape[si],
                   pathP.shape[si + 1],
                   this.lastPathP.shape[si + 1]
+                );
+
+                normals.push(
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si + 1]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
                 );
 
                 colors.push(
@@ -2941,6 +3114,12 @@ class Tube {
                   this.lastPathP.shape[si + 1]
                 );
 
+                normals.push(
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
+                );
+
                 colors.push(
                   // [255, 0, 0, 255],
                   // [255, 0, 0, 255],
@@ -2955,6 +3134,13 @@ class Tube {
                   pathP.shape[si + 1],
                   this.lastPathP.shape[si + 1]
                 );
+
+                normals.push(
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si + 1]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
+                );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
@@ -2970,6 +3156,13 @@ class Tube {
                   pathP.shape[si],
                   this.lastPathP.shape[si + 1]
                 );
+
+                normals.push(
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si]),
+                  norm(pathP.shape[0], pathP.shape[si]),
+                  norm(this.lastPathP.shape[0], this.lastPathP.shape[si + 1])
+                );
+
                 colors.push(
                   this.vary(shade),
                   this.vary(shade),
@@ -2996,7 +3189,17 @@ class Tube {
             this.lastPathP.shape[pathP.shape.length - 1]
           );
 
+          normals.push(
+            norm(pathP.shape[0], pathP.shape[pathP.shape.length - 1]),
+            norm(this.lastPathP.shape[0], this.lastPathP.shape[1]),
+            norm(
+              this.lastPathP.shape[0],
+              this.lastPathP.shape[pathP.shape.length - 1]
+            )
+          );
+
           colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
+          //colors.push([255, 0, 0, 255], [255, 0, 0, 255], [255, 0, 0, 255]);
 
           positions.push(
             this.lastPathP.shape[1],
@@ -3004,22 +3207,52 @@ class Tube {
             pathP.shape[1]
           );
 
+          // normals.push(
+          //   ...norms(
+          //     coreLine,
+          //     triCenter(...positions.slice(-3)),
+          //     positions.slice(-3)
+          //   )
+          // );
+
+          normals.push(
+            norm(this.lastPathP.shape[0], this.lastPathP.shape[1]),
+            norm(pathP.shape[0], pathP.shape[pathP.shape.length - 1]),
+            norm(pathP.shape[0], pathP.shape[1])
+          );
+
           colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
+          //colors.push([255, 0, 0, 255], [255, 0, 0, 255], [255, 0, 0, 255]);
+
+          // TODO: Given this quad, draw a normal out from the mid point
+          //       of the lastpathp and current pathp
+
+          // for (let i = positions.length - 6; i < positions.length; i += 3) {
+          //   const A = positions[i];
+          //   const B = positions[i + 1];
+          //   const C = positions[i + 2];
+          //   const AB = vec3.sub(vec3.create(), B, A);
+          //   const AC = vec3.sub(vec3.create(), C, A);
+          //   const normal = vec3.cross(vec3.create(), AB, AC);
+          //   // Copy the normal for each position.
+          //   normals.push(normal, normal, normal);
+          // }
         }
 
         if (this.sides === 4) {
           positions.push(
             this.lastPathP.shape[1],
             pathP.shape[pathP.shape.length - 1],
-            pathP.shape[1],
+            pathP.shape[1]
+          );
+
+          normals.push(
+            norm(this.lastPathP.shape[0], this.lastPathP.shape[1]),
+            norm(pathP.shape[0], pathP.shape[pathP.shape.length - 1]),
+            norm(pathP.shape[0], pathP.shape[1])
           );
 
           colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
-          // colors.push(
-          //   [100, 255, 0, 255],
-          //   [100, 255, 0, 255],
-          //   [100, 255, 0, 255]
-          // );
 
           // First closer.
           positions.push(
@@ -3028,7 +3261,17 @@ class Tube {
             this.lastPathP.shape[pathP.shape.length - 1]
           );
 
+          normals.push(
+            norm(pathP.shape[0], pathP.shape[pathP.shape.length - 1]),
+            norm(this.lastPathP.shape[0], this.lastPathP.shape[1]),
+            norm(
+              this.lastPathP.shape[0],
+              this.lastPathP.shape[pathP.shape.length - 1]
+            )
+          );
+
           colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
+
           // colors.push(
           //   [100, 255, 0, 255],
           //   [100, 255, 0, 255],
@@ -3043,6 +3286,15 @@ class Tube {
             pathP.shape[pathP.shape.length - 1]
           );
 
+          normals.push(
+            norm(this.lastPathP.shape[0], this.lastPathP.shape[1]),
+            norm(
+              this.lastPathP.shape[0],
+              this.lastPathP.shape[pathP.shape.length - 1]
+            ),
+            norm(pathP.shape[0], pathP.shape[pathP.shape.length - 1])
+          );
+
           colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
 
           positions.push(
@@ -3050,6 +3302,13 @@ class Tube {
             pathP.shape[1],
             this.lastPathP.shape[1]
           );
+
+          normals.push(
+            norm(pathP.shape[0], pathP.shape[pathP.shape.length - 1]),
+            norm(pathP.shape[0], pathP.shape[1]),
+            norm(this.lastPathP.shape[0], this.lastPathP.shape[1])
+          );
+
           colors.push(this.vary(shade), this.vary(shade), this.vary(shade));
         }
       } else {
@@ -3089,10 +3348,14 @@ class Tube {
     //       It's also a good test because the resulting positions should
     //       always be divisible by 6 here.
 
-    // if (this.sides !== 2) return;
+    //if (this.sides !== 2) return;
     // console.log(positions.length);
+
+    // Draw a line from the center shape point to the current vertex position.
+
     if (form.primitive === "triangle") {
-      for (let i = 0; i < positions.length; i += 6) {
+      /*
+      for (let i = 0; i < positions.length; i += 3) {
         const A = positions[i];
         const B = positions[i + 1];
         const C = positions[i + 2];
@@ -3103,8 +3366,9 @@ class Tube {
         const normal = vec3.cross(vec3.create(), AB, AC);
 
         // Copy the normal for each position.
-        normals.push(normal, normal, normal, normal, normal, normal);
+        normals.push(normal, normal, normal);
       }
+      */
     }
 
     if (positions.length > 0) form.addPoints({ positions, colors, normals });

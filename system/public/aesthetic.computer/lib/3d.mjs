@@ -24,6 +24,7 @@ import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from "../dep/three/GLTFExporter.js";
 import { mergeVertices } from "../dep/three/BufferGeometryUtils.js";
+import { VertexNormalsHelper } from "../dep/three/VertexNormalsHelper.js";
 // import { OBJExporter } from "../dep/three/OBJExporter.js";
 import { Safari } from "./platform.mjs";
 import { radians, rgbToHex, timestamp } from "./num.mjs";
@@ -89,12 +90,19 @@ export function initialize(
   if (!NO_FOG)
     scene.fog = new THREE.Fog(new THREE.Color(0, 0, 0), FOG_NEAR, FOG_FAR); // More basic fog.
 
-  //scene.add(new THREE.HemisphereLight(0xff9900, 0xff0000));
-  const ambientLight = new THREE.AmbientLight();
-  const pointLight = new THREE.PointLight(0xffffff, 1, 200);
-  pointLight.position.set(-0.75, 0.5, 1);
-  scene.add(ambientLight);
-  scene.add(pointLight);
+  // scene.add(new THREE.HemisphereLight(0xff0000, 0x0000ff, 0.1));
+  // const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+  // scene.add(ambientLight);
+  // scene.add(pointLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.25);
+  directionalLight.position.set(0, 1.5, 0.75);
+  scene.add(directionalLight);
+  directionalLight.target.position.set(0, 2, 1);
+  //directionalLight.target = [0, 0, 0];
+
+  const dirLightHelper = new THREE.DirectionalLightHelper(directionalLight, 0.1);
+  scene.add(dirLightHelper);
 
   // Set up VR.
   button = VRButton.createButton(
@@ -367,11 +375,12 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         material = new THREE.MeshBasicMaterial({ map: tex });
       } else {
         if (f.vertices[0]?.color) {
-          //material = new THREE.MeshBasicMaterial();
-          material = new THREE.MeshStandardMaterial();
+          material = new THREE.MeshPhysicalMaterial();
+          // material = new THREE.MeshStandardMaterial();
         } else {
-          //material = new THREE.MeshBasicMaterial({
-          material = new THREE.MeshStandardMaterial({
+          // material = new THREE.MeshStandardMaterial({
+          material = new THREE.MeshPhysicalMaterial({
+          // material = new THREE.MeshStandardMaterial({
             color: rgbToHex(...(f.color || color)),
           });
         }
@@ -394,7 +403,8 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       material.vertexColors = true;
       material.vertexAlphas = false;
-      //material.shading = THREE.SmoothShading;
+
+      material.flatShading = false;
 
       let points = [];
       let pointColors = [];
@@ -449,6 +459,13 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       geometry.setAttribute("normal", normals);
       geometry.setAttribute("color", colors);
 
+      //////////
+
+      // Assume that 'geometry' is a BufferGeometry object that represents a mesh
+
+      /////////////////
+
+
       if (tex) {
         geometry.setAttribute(
           "uv",
@@ -484,7 +501,11 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       tri.rotateZ(radians(f.rotation[2]));
       tri.scale.set(...f.scale);
 
+      // mergeVertices(geometry)
+      const helper = new VertexNormalsHelper(tri, 0.004, 0xff0000);
+
       scene.add(tri);
+      scene.add(helper);
 
       geometry.setDrawRange(0, points.length);
       geometry.attributes.position.needsUpdate = true;
