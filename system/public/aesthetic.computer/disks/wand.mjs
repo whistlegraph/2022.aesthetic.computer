@@ -1,54 +1,57 @@
 // ️🪄 Wand, 22.11.19.04.40
 // ️🪄 Cadwand, 22.11.05.00.30 ⚙️
 
+/* #region 📓 versions
 // v2: (Wand) Now will be used as the official wand program.
 // v1: (Cadwand) A laboratory & development piece for designing the geometry in `wand`.
-
-/* #region 🐕‍🦺 docs
-  Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
-*/
+#endregion */
 
 /* #region 🏁 todo
 + January Launch 
+ - [🟡] Generate final model assets for Unreal.
 
-*** Metadata ***
-  - [] Proofread all titles and descriptions.
-  - [] Re-enable Twitter player? Check `index` and `bios` "twitter";
-    - [] https://developer. twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
-  - [] Add metadata / attributes and tags from the Google Sheet to the JSON.
-    - [] Ask about the Google Sheet / json generation flow.
+*** 1️⃣ System ***
+  *** Behavior ***
+  - [] Make instant demo playback much, much faster.
+  - [] Add demo scrubbing.
+  - [] Prevent users from viewing or moving outside a certain range.
+  + Later
+  - [] Auto jump from piece to piece / show an option?
 
-*** Asset Generation ***
-  - [] Record some turn-around animation GIFs.
+  *** Networking ***
+  - [] Integrate `oldwand` multiplayer architecture.
+    - [] Read both pieces side by side.
+    - [] Model each wand as a single skinny tube (with colored stripes).
+        (Bring Tube geometry into Wand)
 
-*** Behavior ***
-- [] Auto jump from piece to piece.
-- [] Make instant demo playback much, much faster.
-- [] Add demo scrubbing.
-- [] Prevent users from viewing or moving outside a certain range.
+  *** UI ***
+  - [] Switch shift and space in camdoll (space should move up).
+  - [] Show a full preview cursor while running a demo for demoWand? (Need a `demoWandCapForm`)
+  - [] Master the main materials and lights in the scene.
+    - [] Use G key to toggle lighting.
+  - [] Implement final keyboard controls / desktop controls / also make a UI.
+  - [] Implement final mobile controls.
 
-*** Networking ***
-- [] Wire up multiplayer (limited to the line buffer) using plane session backed backends. (One per piece...)
-  - [] Keep the light and dark idea?
-- [] Integrate `oldwand` multiplayer architecture.
-  - [] Read both pieces side by side.
-  - [] Model each wand as a single skinny tube (with colored stripes).
-      (Bring Tube geometry into Wand)
-  - [] Remove strips from the tube as needed.
-  - [] Allow
+*** 2️⃣ Artwork Passes ***
+  *** Metadata ***
+    - [] Proofread all titles and descriptions.
+    - [] Re-enable Twitter player? Check `index` and `bios` "twitter";
+      - [] https://developer. twitter.com/en/docs/twitter-for-websites/cards/overview/player-card
+    - [] Add metadata / attributes and tags from the Google Sheet to the JSON.
+      - [] Ask about the Google Sheet / json generation flow.
 
-*** UI ***
-- [] Switch shift and space in camdoll (space should move up).
+  *** Asset Generation ***
+    - [] Record some turn-around animation GIFs.
+
+  *** Camera ***
+  - [] Reload last camera position on refresh... make sense for users too?
+
++ Later / Bonus / Next Release
 - [] What would happen if I just randomly started removing or vibrating sets of vertices after
      a piece loaded?
-- [] Show a full preview cursor while running a demo for demoWand? (Need a `demoWandCapForm`)
-- [] Reload last camera position on refresh... make sense for users too?
-- [] Master the main materials and lights in the scene.
 - [] There should be an "inner" and "outer" triangulation option.
       - [] Inner ONLY for complexity 1 and 2.
       - [] Optional elsewhere.
-
-+ Later / Bonus / User Release
 - [] Add a generic `turn` function to `Spider` for fun procedural stuff.
 - [] Make sure no demo can record beyond the alotted geometry MAX. See `Tube` MAX.
 - [] Upgrade demo format to support overloaded color parameters for
@@ -99,6 +102,10 @@
 - [x] What would it be like if I tried to rotate the form around it's center slowly...
      in orthographic mode?
 #endregion */
+
+/* #region 🐕‍🦺 docs
+  Pipe uploaded sculptures into vim: `aws s3api list-objects-v2 --bucket "wand.aesthetic.computer" --endpoint-url "https://sfo3.digitaloceanspaces.com" --query 'Contents[?LastModified>`2022-11-19`].Key' | nvim`
+*/
 
 // #region 🗺️ global
 import { CamDoll } from "../lib/cam-doll.mjs";
@@ -1252,6 +1259,13 @@ function act({
       measuringCube.resetUID();
       origin.resetUID();
     }
+  }
+
+  // Switch camera mode.
+  if (e.is("keyboard:down:g")) {
+    gpu.message({
+      type: "scene:lighting-switch",
+    });
   }
 
   // Switch camera mode.

@@ -23,7 +23,6 @@
 import * as THREE from "../dep/three/three.module.js";
 import { VRButton } from "../dep/three/VRButton.js";
 import { GLTFExporter } from "../dep/three/GLTFExporter.js";
-import { mergeVertices } from "../dep/three/BufferGeometryUtils.js";
 import { VertexNormalsHelper } from "../dep/three/VertexNormalsHelper.js";
 // import { OBJExporter } from "../dep/three/OBJExporter.js";
 import { Safari } from "./platform.mjs";
@@ -52,6 +51,9 @@ let jiggleForm,
   needsSphere = false;
 
 let button, vrSession, controller1, controller2; // VR Specific.
+
+let ambi, hemi; // Lighting
+let ambiMode = true;
 
 export const penEvents = []; // VR pointer events.
 export const bakeQueue = [];
@@ -90,19 +92,25 @@ export function initialize(
   if (!NO_FOG)
     scene.fog = new THREE.Fog(new THREE.Color(0, 0, 0), FOG_NEAR, FOG_FAR); // More basic fog.
 
-  // scene.add(new THREE.HemisphereLight(0xff0000, 0x0000ff, 0.1));
-  // const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
-  // scene.add(ambientLight);
+
+  hemi = new THREE.HemisphereLight(0xffffff, 0x000000, 2.5);
+  ambi = new THREE.AmbientLight(0xffffff, 1.0);
+  scene.add(ambi);
+  // scene.add(hemi);
+
   // scene.add(pointLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.25);
-  directionalLight.position.set(0, 1.5, 0.75);
-  scene.add(directionalLight);
-  directionalLight.target.position.set(0, 2, 1);
+  // const directionalLight = new THREE.DirectionalLight(0xffffff, 1.25);
+  // directionalLight.position.set(0, 1.5, 0.75);
+  // scene.add(directionalLight);
+  // directionalLight.target.position.set(0, 2, 1);
   //directionalLight.target = [0, 0, 0];
 
-  const dirLightHelper = new THREE.DirectionalLightHelper(directionalLight, 0.1);
-  scene.add(dirLightHelper);
+  // const dirLightHelper = new THREE.DirectionalLightHelper(
+  //   directionalLight,
+  //   0.1
+  // );
+  // scene.add(dirLightHelper);
 
   // Set up VR.
   button = VRButton.createButton(
@@ -363,6 +371,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       let material;
       let tex;
 
+      const MaterialType = THREE.MeshPhysicalMaterial;
+      // const MaterialType = THREE.MeshLambertMaterial;
+
       if (f.texture) {
         // Add texture if one exists.
         tex = new THREE.DataTexture(
@@ -372,15 +383,15 @@ export function bake({ cam, forms, color }, { width, height }, size) {
           THREE.RGBAFormat
         );
         tex.needsUpdate = true;
-        material = new THREE.MeshBasicMaterial({ map: tex });
+        material = new MaterialType({ map: tex });
       } else {
         if (f.vertices[0]?.color) {
-          material = new THREE.MeshPhysicalMaterial();
+          material = new MaterialType();
           // material = new THREE.MeshStandardMaterial();
         } else {
           // material = new THREE.MeshStandardMaterial({
-          material = new THREE.MeshPhysicalMaterial({
-          // material = new THREE.MeshStandardMaterial({
+          material = new MaterialType({
+            // material = new THREE.MeshStandardMaterial({
             color: rgbToHex(...(f.color || color)),
           });
         }
@@ -465,7 +476,6 @@ export function bake({ cam, forms, color }, { width, height }, size) {
 
       /////////////////
 
-
       if (tex) {
         geometry.setAttribute(
           "uv",
@@ -502,10 +512,10 @@ export function bake({ cam, forms, color }, { width, height }, size) {
       tri.scale.set(...f.scale);
 
       // mergeVertices(geometry)
-      const helper = new VertexNormalsHelper(tri, 0.004, 0xff0000);
+      // const helper = new VertexNormalsHelper(tri, 0.004, 0xff0000);
 
       scene.add(tri);
-      scene.add(helper);
+      // scene.add(helper);
 
       geometry.setDrawRange(0, points.length);
       geometry.attributes.position.needsUpdate = true;
@@ -839,7 +849,9 @@ export function bake({ cam, forms, color }, { width, height }, size) {
         for (let i = 0; i < formUpdate.vertices.length; i += 1) {
           points.push(new THREE.Vector3(...formUpdate.vertices[i].pos));
           pointColors.push(new THREE.Vector4(...formUpdate.vertices[i].color));
-          pointNormals.push(new THREE.Vector3(...formUpdate.vertices[i].normal));
+          pointNormals.push(
+            new THREE.Vector3(...formUpdate.vertices[i].normal)
+          );
         }
 
         // Set custom properties on the form to keep track of where we are
@@ -1121,6 +1133,18 @@ export function handleEvent(event) {
     orthoZoom = event.content;
     makeOrthoCamera(1);
     return;
+  }
+
+  if (event.type === "scene:lighting-switch") {
+    ambiMode = !ambiMode;
+    if (ambiMode) {
+      scene.remove(hemi);
+      scene.add(ambi);
+    } else {
+      scene.remove(ambi);
+      scene.add(hemi);
+    }
+
   }
 
   if (event.type === "camera:mode-switch") {
