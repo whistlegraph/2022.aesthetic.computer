@@ -52,8 +52,12 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order ***
- - [-] Write visualizer for whistlegraph album. (m2w2)
  - [-] Add glyphs to sparkle brush.
+  - [-] Spin up sparkle brush prototype.
+ - [] Add support for camera brush.
+ - [] Fix image download function.
+
+ - [-] Write visualizer for whistlegraph album. (m2w2)
  ---
  - [😀] Finish basic version of `play`.
  - [] Mintable Paintings

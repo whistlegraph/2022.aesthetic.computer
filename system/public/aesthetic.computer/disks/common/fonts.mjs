@@ -96,3 +96,17 @@ export const font1 = {
   _: "symbols/underscore - 2022.1.11.17.04.46",
   "|": "symbols/vertical line - 2022.1.11.18.07.22",
 };
+
+export const sparkles = {
+  a: "lowercase/A",
+  e: "lowercase/E",
+  i: "lowercase/I",
+  o: "lowercase/O",
+  p: "lowercase/P",
+  q: "lowercase/Q",
+  r: "lowercase/R",
+  t: "lowercase/T",
+  u: "lowercase/U",
+  w: "lowercase/W",
+  y: "lowercase/Y",
+};

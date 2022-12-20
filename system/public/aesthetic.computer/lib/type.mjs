@@ -17,11 +17,11 @@ class Typeface {
   data;
   glyphs = {};
 
-  constructor($preload, data) {
+  constructor($preload, data, name = "font-1") {
     this.data = data;
     entries(data).forEach(([glyph, location]) => {
       $preload(
-        `aesthetic.computer/disks/drawings/font-1/${location}.json`
+        `aesthetic.computer/disks/drawings/${name}/${location}.json`
       ).then((res) => {
         this.glyphs[glyph] = res;
       });
