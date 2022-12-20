@@ -32,6 +32,7 @@ chokidar
     "/home/p1xelfool/pieces",
     "/home/artur/pieces",
     "/home/mxsage/pieces",
+    "/home/maya/pieces",
   ])
   .on("all", async (event, path) => {
     if (event === "change") {
