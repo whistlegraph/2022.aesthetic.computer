@@ -30,7 +30,7 @@ const shortcuts = {
   sdog: "slinky-dog",
   puzz: "puzzle",
   wiyh: "whats-inside-your-heart",
-  m2w2: "music-to-whistlegraph-to",
+  m2w2: "music-2-whistlegraph-2",
 };
 
 const butterflyCosplayer = {
@@ -383,7 +383,7 @@ const whatsInsideYourHeart = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
-const musicToWhistlegraphTo = {
+const music2Whistlegraph2 = {
   title: "Music 2 Whistlegraph 2",
   byline: "Composed by Charlie Kamin-Allen ⋅ December 22, 2022",
   glow: "rgba(0, 0, 245, 1)",
@@ -417,7 +417,7 @@ const whistlegraphs = {
   "mommy-wow": mommyWow,
   "people-pleaser": peoplePleaser,
   "whats-inside-your-heart": whatsInsideYourHeart,
-  "music-to-whistlegraph-to": musicToWhistlegraphTo,
+  "music-2-whistlegraph-2": music2Whistlegraph2,
 };
 // #endregion
 
@@ -480,7 +480,7 @@ function boot({
   );
   // #endregion
 
-  if (wg === "music-to-whistlegraph-to") {
+  if (wg === "music-2-whistlegraph-2") {
     whistlegraph.videos?.forEach((video, index) => {
       cardsMarkup += `
         <div
@@ -500,9 +500,7 @@ function boot({
               preload="auto"
               playsinline
               disablepictureinpicture
-              src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-${
-        video.slug
-      }.webm"
+              src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-${video.slug}-web.mp4"
             ></video>
             <div class="card-cover"></div>
             <div
@@ -516,7 +514,7 @@ function boot({
     });
   }
 
-  // TODO: [] These can be considered legacy now, where "music-to-whistlegraph-to" above represents a mode generic model. 22.12.21.18.22
+  // TODO: [] These can be considered legacy now, where "music-2-whistlegraph-2" above represents a mode generic model. 22.12.21.18.22
   if (whistlegraph.video) {
     cardsMarkup += `
       <div
@@ -551,13 +549,6 @@ function boot({
           </div>
         </div>
       </div>
-    `;
-
-    cardsStyles += `
-      .card-view[data-type="video"] .card {
-        background: ${whistlegraph.video.color};
-        box-shadow: ${whistlegraph.video.boxShadow};
-      }
     `;
   }
 
