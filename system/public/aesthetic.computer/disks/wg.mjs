@@ -1,11 +1,24 @@
-// 📖 Parameter 1: imab, grow, idni, l8ly, lonr, w0w, ppl, slink, puzz, wiyh
+// Whistlegraph Cards, 22.12.21.03.21
+// 📖 Parameter 1: imab, grow, idni, l8ly, lonr, w0w, ppl, slink, puzz, wiyh, m2w2
 
 // ❓ Made on occasion of Whistlegraph's Feral File exhibition.
 // This player currently orchestrates the data for displaying 10 different
 // whistlegraphs.
 
+/* #region 🏁 todo
+- [-] Add in Charlie's intro video along with the poster image for the "score?" 
+  - [🟡] Write special html code for custom cards for the video / separate out.
+       from the old data.
+    - [-] Randomize spinner for m2w2. 
+  - [x] Re-encode and add video 'music-2-whistlegraph-2-intro-web'
+- [] Template a "link" card type that links somewhere else
+      and has a button that isn't the whole card so you can move from
+      one to the other.
+#endregion */
+
 import { anyKey } from "../lib/help.mjs";
 
+// #region 🧮 data
 const shortcuts = {
   imab: "butterfly-cosplayer",
   grow: "time-to-grow",
@@ -17,6 +30,7 @@ const shortcuts = {
   sdog: "slinky-dog",
   puzz: "puzzle",
   wiyh: "whats-inside-your-heart",
+  m2w2: "music-to-whistlegraph-to",
 };
 
 const butterflyCosplayer = {
@@ -369,6 +383,29 @@ const whatsInsideYourHeart = {
     highlight: "rgba(120, 120, 120, 1)",
   },
 };
+const musicToWhistlegraphTo = {
+  title: "Music 2 Whistlegraph 2",
+  byline: "Composed by Charlie Kamin-Allen ⋅ December 22, 2022",
+  glow: "rgba(0, 0, 245, 1)",
+  fuzz: 5n,
+  bg: {
+    tint: [0, 10, 70], // rgb
+    tintAmount: 0.65,
+    pixelSaturation: 1,
+  },
+  videos: [
+    {
+      slug: "intro",
+      border: 0.25,
+      outerRadius: 0.25,
+      innerRadius: 0.15,
+      color: "rgb(20, 20, 40)",
+      boxShadow: "0.25vmin 0.25vmin 4vmin rgba(255, 10, 10, 0.7)",
+      highlight: "rgba(80, 80, 80, 1)",
+    },
+  ],
+};
+
 const whistlegraphs = {
   "butterfly-cosplayer": butterflyCosplayer,
   "time-to-grow": timeToGrow,
@@ -380,7 +417,9 @@ const whistlegraphs = {
   "mommy-wow": mommyWow,
   "people-pleaser": peoplePleaser,
   "whats-inside-your-heart": whatsInsideYourHeart,
+  "music-to-whistlegraph-to": musicToWhistlegraphTo,
 };
+// #endregion
 
 // Choose a random whistlegraph in case none are specified when the player loads.
 const defaultWhistlegraph = anyKey(whistlegraphs);
@@ -394,9 +433,9 @@ function boot({
   params,
   dom: { html },
   net: { waitForPreload },
-  resize
+  resize,
 }) {
-  resize({gap: 0});
+  resize({ gap: 0 });
   waitForPreload();
   cursor("native");
 
@@ -408,6 +447,18 @@ function boot({
 
   // meta({ title: whistlegraph.title });
 
+  let cardsMarkup = "";
+
+  const playButton = `
+    <div id="card-play">
+      <img src="/aesthetic.computer/disks/whistlegraph/play-circle.svg" />
+      <img
+        src="/aesthetic.computer/disks/whistlegraph/play-triangle.svg"
+      />
+    </div>
+  `;
+
+  // #region headers
   console.log(
     `%cWhistlegraph → ${whistlegraph.title}`,
     `background-color: rgb(50, 50, 0);
@@ -427,56 +478,47 @@ function boot({
    border-left: 0.75px solid rgb(120, 120, 0);
    border-right: 0.75px solid rgb(120, 120, 0);`
   );
+  // #endregion
 
-  html`
-    <div class="card-deck loading">
-      <div
-        class="card-view"
-        data-type="compilation"
-        data-outer-radius="${whistlegraph.compilation.outerRadius}"
-        data-inner-radius="${whistlegraph.compilation.innerRadius}"
-        data-border-setting="${whistlegraph.compilation.border}"
-        style="z-index: 0"
-      >
-        <div class="card" data-type="compilation" data-ratio="720x1280">
-          <video
-            class="card-content"
-            width="100%"
-            height="100%"
-            preload="auto"
-            playsinline
-            disablepictureinpicture
-            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4"
-            type="video/mp4"
-          ></video>
-          <div class="card-cover"></div>
-          <div
-            class="card-outline"
-            style="border-color: ${whistlegraph.compilation.highlight}"
-          ></div>
+  if (wg === "music-to-whistlegraph-to") {
+    whistlegraph.videos?.forEach((video, index) => {
+      cardsMarkup += `
+        <div
+          class="card-view active"
+          data-type="video"
+          data-outer-radius="${video.outerRadius}"
+          data-inner-radius="${video.innerRadius}"
+          data-border-setting="${video.border}"
+          style="z-index: 2"
+        >
+          <div class="card" data-type="video" data-ratio="4x5"
+           style="background: ${video.color}; box-shadow: ${video.boxShadow};">
+            <video
+              class="card-content"
+              width="100%"
+              height="100%"
+              preload="auto"
+              playsinline
+              disablepictureinpicture
+              src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-${
+        video.slug
+      }.webm"
+            ></video>
+            <div class="card-cover"></div>
+            <div
+              class="card-outline"
+              style="border-color: ${video.highlight}"
+            ></div>
+            ${index === 0 ? playButton : ""}
+          </div>
         </div>
-      </div>
+      `;
+    });
+  }
 
-      <div
-        class="card-view"
-        data-type="score"
-        data-outer-radius="${whistlegraph.score.outerRadius}"
-        data-inner-radius="${whistlegraph.score.innerRadius}"
-        data-border-setting="${whistlegraph.score.border}"
-        style="z-index: 1"
-      >
-        <div class="card" data-type="score" data-ratio="8.5x11">
-          <img
-            class="card-content"
-            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png"
-          />
-          <div
-            class="card-outline"
-            style="border-color: ${whistlegraph.score.highlight}"
-          ></div>
-        </div>
-      </div>
-
+  // TODO: [] These can be considered legacy now, where "music-to-whistlegraph-to" above represents a mode generic model. 22.12.21.18.22
+  if (whistlegraph.video) {
+    cardsMarkup += `
       <div
         class="card-view active"
         data-type="video"
@@ -485,7 +527,8 @@ function boot({
         data-border-setting="${whistlegraph.video.border}"
         style="z-index: 2"
       >
-        <div class="card" data-type="video" data-ratio="4x5">
+        <div class="card" data-type="video" data-ratio="4x5"
+          style="background: ${whistlegraph.video.color}; box-shadow: ${whistlegraph.video.boxShadow};">
           <video
             class="card-content"
             width="100%"
@@ -508,6 +551,76 @@ function boot({
           </div>
         </div>
       </div>
+    `;
+
+    cardsStyles += `
+      .card-view[data-type="video"] .card {
+        background: ${whistlegraph.video.color};
+        box-shadow: ${whistlegraph.video.boxShadow};
+      }
+    `;
+  }
+
+  if (whistlegraph.score) {
+    cardsMarkup += `
+      <div
+        class="card-view"
+        data-type="score"
+        data-outer-radius="${whistlegraph.score.outerRadius}"
+        data-inner-radius="${whistlegraph.score.innerRadius}"
+        data-border-setting="${whistlegraph.score.border}"
+        style="z-index: 1"
+      >
+        <div class="card" data-type="score" data-ratio="8.5x11"
+          style="background: ${whistlegraph.score.color}; box-shadow: ${whistlegraph.score.boxShadow};">
+          <img
+            class="card-content"
+            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png"
+          />
+          <div
+            class="card-outline"
+            style="border-color: ${whistlegraph.score.highlight}"
+          ></div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (whistlegraph.compilation) {
+    cardsMarkup += `
+      <div
+        class="card-view"
+        data-type="compilation"
+        data-outer-radius="${whistlegraph.compilation.outerRadius}"
+        data-inner-radius="${whistlegraph.compilation.innerRadius}"
+        data-border-setting="${whistlegraph.compilation.border}"
+        style="z-index: 0"
+      >
+        <div class="card" data-type="compilation" data-ratio="720x1280"
+          style="background: ${whistlegraph.compilation.color}; box-shadow: ${whistlegraph.compilation.boxShadow};">
+          <video
+            class="card-content"
+            width="100%"
+            height="100%"
+            preload="auto"
+            playsinline
+            disablepictureinpicture
+            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4"
+            type="video/mp4"
+          ></video>
+          <div class="card-cover"></div>
+          <div
+            class="card-outline"
+            style="border-color: ${whistlegraph.compilation.highlight}"
+          ></div>
+        </div>
+      </div>
+    `;
+  }
+
+  html`
+    <div class="card-deck loading">
+      ${cardsMarkup}
       <div id="card-deck-loading">
         <div
           id="spinner"
@@ -740,21 +853,6 @@ function boot({
       .card-view[data-type="compilation"] .card video {
         object-fit: cover;
         pointer-events: none;
-      }
-
-      .card-view[data-type="video"] .card {
-        background: ${whistlegraph.video.color};
-        box-shadow: ${whistlegraph.video.boxShadow};
-      }
-
-      .card-view[data-type="score"] .card {
-        background: ${whistlegraph.score.color};
-        box-shadow: ${whistlegraph.score.boxShadow};
-      }
-
-      .card-view[data-type="compilation"] .card {
-        background: ${whistlegraph.compilation.color};
-        box-shadow: ${whistlegraph.compilation.boxShadow};
       }
 
       /* Contents inside each card */

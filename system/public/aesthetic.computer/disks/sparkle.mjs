@@ -2,6 +2,10 @@
 // Add sparkles to an image, with graphics by Molly Soda.
 
 /* #region 🏁 todo
+- [] How can Amalia login...
+  - [] Make plots and associate them with letters or dump them.
+  - [] Browse, delete, and tag or rename them.
+
 - [-] Load in glyphs.
 - [-] Add drawing support. 
 - [] Add keyboard key support.

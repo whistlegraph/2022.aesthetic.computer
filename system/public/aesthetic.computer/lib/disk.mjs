@@ -941,8 +941,7 @@ async function load(parsed, fromHistory = false, alias = false) {
     return;
   }
 
-  const forceProd = false; // Just a helpful flag for testing production backends
-  //                         in development.
+  const forceProd = false; // For testing production servers in development.
 
   socket = new Socket(debug);
 
@@ -1304,13 +1303,12 @@ function send(data, shared = []) {
 class Content {
   nodes = [];
   #id = 0;
-  constructor() {
-    //console.log("📖 Content: On");
-  }
 
+  constructor() {}
+
+  // Make a request to add new content to the DOM.
   add(content) {
-    console.log("Added:", content);
-    // Make a request to add new content to the DOM.
+    // if (debug) console.log("📃 Adding content:", content);
     this.nodes.push({ id: this.#id });
     this.#id = this.nodes.length - 1;
     send({ type: "content-create", content: { id: this.#id, content } });

@@ -52,6 +52,9 @@ Welcome to...
 🌟 Projects In Progress (PIP) 🌟
 
 *** Project Order ***
+ - [] Explore SDF Sculpting for Hamzhat
+ - [] Use and look at: https://stephaneginier.com/archive/editSDF
+
  - [-] Add glyphs to sparkle brush.
   - [-] Spin up sparkle brush prototype.
  - [] Add support for camera brush.

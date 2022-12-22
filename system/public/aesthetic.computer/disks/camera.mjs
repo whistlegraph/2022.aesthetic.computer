@@ -2,6 +2,11 @@
 // A simple video feedback test.
 // TODO: Get this working on iOS (Mobile Safari).
 
+/* #region 🏁 todo
+- [] Add this camera to the "nopaint" system and make it 
+     always fill the whole screen!
+#endregion */
+
 const { floor } = Math;
 let vid;
 
