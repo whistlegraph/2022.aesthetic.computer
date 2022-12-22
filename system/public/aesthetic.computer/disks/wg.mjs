@@ -7,6 +7,10 @@
 
 /* #region 🏁 todo
 - [-] Add in Charlie's intro video along with the poster image for the "score?" 
+- [] Keep git lfs and netlify lm in place for the time being so videos are tracked.
+- [] Move all wg video assets to an S3 bucket, behind a dev flag that loads them
+     locally...
+     (Or if they work in production still then use a local web server again?)
   - [🟡] Write special html code for custom cards for the video / separate out.
        from the old data.
     - [-] Randomize spinner for m2w2. 
