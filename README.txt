@@ -18,16 +18,9 @@ Welcome to...
     - Pieces can transition from one to another (instantly) without refreshing
       the page or losing context. 
     - Pieces can load remotely off any `https://` url and link to other pieces.
+      (This is broken right now...)
     - Pieces that stick to software-rendering are guaranteed accurate results on
       future runtimes.
-
-*** Piecemaker Sources ***
-  - Niki:  https://glitch.com/edit/#!/niki-aesthetic-computer
-  - Artur: https://glitch.com/edit/#!/artur-aesthetic-computer 
-    - [] Move this account off Glitch.
-    - [] Make simple lessons.
-  - Reas: https://glitch.com/edit/#!/reas-aesthetic-computer
-  - Sage: https://glitch.com/edit/#!/sage--aesthetic--computer
 
 🐞 Annoying Bugs & Regressions (Some dev only.)
   + API
