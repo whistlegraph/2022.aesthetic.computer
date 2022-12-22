@@ -500,9 +500,7 @@ function boot({
               preload="auto"
               playsinline
               disablepictureinpicture
-              src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-${
-        video.slug
-      }.mp4"
+              src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-${video.slug}.mp4"
             ></video>
             <div class="card-cover"></div>
             <div
@@ -551,13 +549,6 @@ function boot({
           </div>
         </div>
       </div>
-    `;
-
-    cardsStyles += `
-      .card-view[data-type="video"] .card {
-        background: ${whistlegraph.video.color};
-        box-shadow: ${whistlegraph.video.boxShadow};
-      }
     `;
   }
 
