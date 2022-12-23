@@ -390,16 +390,31 @@ const whatsInsideYourHeart = {
 const music2Whistlegraph2 = {
   title: "Music 2 Whistlegraph 2",
   byline: "Composed by Charlie Kamin-Allen ⋅ December 22, 2022",
-  glow: "rgba(0, 0, 245, 1)",
+  glow: "rgba(0, 50, 245, 1)",
   fuzz: 5n,
   bg: {
-    tint: [0, 10, 70], // rgb
+    tint: [100, 100, 200], // rgb
     tintAmount: 0.65,
     pixelSaturation: 1,
   },
   videos: [
     {
+      ratio: "1x1",
       slug: "intro",
+      border: 0.25,
+      outerRadius: 0.25,
+      innerRadius: 0.15,
+      color: "rgb(20, 20, 40)",
+      boxShadow: "0.25vmin 0.25vmin 4vmin rgba(255, 10, 10, 0.7)",
+      highlight: "rgba(80, 80, 80, 1)",
+    },
+  ],
+  activities: [
+    {
+      ratio: "3x2",
+      url: "https://open.spotify.com/embed/album/579pQc7XBrVrVnV360zrAU?utm_source=generator",
+      // url: "https://aesthetic.computer",
+      // url: "https://localhost:8888",
       border: 0.25,
       outerRadius: 0.25,
       innerRadius: 0.15,
@@ -484,7 +499,39 @@ function boot({
   );
   // #endregion
 
+  // TODO: Cards must be added in back to front order, and then
+  //       need to be stacked with a z-index.
+  //       Only the top card can be "active".
+
   if (wg === "music-2-whistlegraph-2") {
+    whistlegraph.activities?.forEach((card, index) => {
+      cardsMarkup += `
+        <div
+          class="card-view"
+          data-type="interactive"
+          data-outer-radius="${card.outerRadius}"
+          data-inner-radius="${card.innerRadius}"
+          data-border-setting="${card.border}"
+          style="z-index: 0">
+          <div class="card" data-type="interactive" data-ratio="${card.ratio}"
+           style="background: ${card.color}; box-shadow: ${card.boxShadow};">
+            <iframe
+              class="card-content"
+              width="100%"
+              height="100%"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              src="${card.url}"></iframe>
+            <div class="card-cover"></div>
+            <div
+              class="card-outline"
+              style="border-color: ${card.highlight}"
+            ></div>
+          </div>
+        </div>
+      `;
+    });
+
     whistlegraph.videos?.forEach((video, index) => {
       cardsMarkup += `
         <div
@@ -493,9 +540,9 @@ function boot({
           data-outer-radius="${video.outerRadius}"
           data-inner-radius="${video.innerRadius}"
           data-border-setting="${video.border}"
-          style="z-index: 2"
+          style="z-index: 1"
         >
-          <div class="card" data-type="video" data-ratio="4x5"
+          <div class="card" data-type="video" data-ratio="${video.ratio}"
            style="background: ${video.color}; box-shadow: ${video.boxShadow};">
             <video
               class="card-content"
@@ -504,7 +551,9 @@ function boot({
               preload="auto"
               playsinline
               disablepictureinpicture
-              src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-${video.slug}-web.mp4"
+              src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-${
+        video.slug
+      }.mp4"
             ></video>
             <div class="card-cover"></div>
             <div
@@ -516,9 +565,68 @@ function boot({
         </div>
       `;
     });
+
+
   }
 
   // TODO: [] These can be considered legacy now, where "music-2-whistlegraph-2" above represents a mode generic model. 22.12.21.18.22
+  if (whistlegraph.compilation) {
+    cardsMarkup += `
+      <div
+        class="card-view"
+        data-type="compilation"
+        data-outer-radius="${whistlegraph.compilation.outerRadius}"
+        data-inner-radius="${whistlegraph.compilation.innerRadius}"
+        data-border-setting="${whistlegraph.compilation.border}"
+        style="z-index: 0"
+      >
+        <div class="card" data-type="compilation" data-ratio="720x1280"
+          style="background: ${whistlegraph.compilation.color}; box-shadow: ${whistlegraph.compilation.boxShadow};">
+          <video
+            class="card-content"
+            width="100%"
+            height="100%"
+            preload="auto"
+            playsinline
+            disablepictureinpicture
+            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4"
+            type="video/mp4"
+          ></video>
+          <div class="card-cover"></div>
+          <div
+            class="card-outline"
+            style="border-color: ${whistlegraph.compilation.highlight}"
+          ></div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (whistlegraph.score) {
+    cardsMarkup += `
+      <div
+        class="card-view"
+        data-type="score"
+        data-outer-radius="${whistlegraph.score.outerRadius}"
+        data-inner-radius="${whistlegraph.score.innerRadius}"
+        data-border-setting="${whistlegraph.score.border}"
+        style="z-index: 1"
+      >
+        <div class="card" data-type="score" data-ratio="8.5x11"
+          style="background: ${whistlegraph.score.color}; box-shadow: ${whistlegraph.score.boxShadow};">
+          <img
+            class="card-content"
+            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png"
+          />
+          <div
+            class="card-outline"
+            style="border-color: ${whistlegraph.score.highlight}"
+          ></div>
+        </div>
+      </div>
+    `;
+  }
+
   if (whistlegraph.video) {
     cardsMarkup += `
       <div
@@ -551,63 +659,6 @@ function boot({
               src="/aesthetic.computer/disks/whistlegraph/play-triangle.svg"
             />
           </div>
-        </div>
-      </div>
-    `;
-  }
-
-  if (whistlegraph.score) {
-    cardsMarkup += `
-      <div
-        class="card-view"
-        data-type="score"
-        data-outer-radius="${whistlegraph.score.outerRadius}"
-        data-inner-radius="${whistlegraph.score.innerRadius}"
-        data-border-setting="${whistlegraph.score.border}"
-        style="z-index: 1"
-      >
-        <div class="card" data-type="score" data-ratio="8.5x11"
-          style="background: ${whistlegraph.score.color}; box-shadow: ${whistlegraph.score.boxShadow};">
-          <img
-            class="card-content"
-            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-score.png"
-          />
-          <div
-            class="card-outline"
-            style="border-color: ${whistlegraph.score.highlight}"
-          ></div>
-        </div>
-      </div>
-    `;
-  }
-
-  if (whistlegraph.compilation) {
-    cardsMarkup += `
-      <div
-        class="card-view"
-        data-type="compilation"
-        data-outer-radius="${whistlegraph.compilation.outerRadius}"
-        data-inner-radius="${whistlegraph.compilation.innerRadius}"
-        data-border-setting="${whistlegraph.compilation.border}"
-        style="z-index: 0"
-      >
-        <div class="card" data-type="compilation" data-ratio="720x1280"
-          style="background: ${whistlegraph.compilation.color}; box-shadow: ${whistlegraph.compilation.boxShadow};">
-          <video
-            class="card-content"
-            width="100%"
-            height="100%"
-            preload="auto"
-            playsinline
-            disablepictureinpicture
-            src="/aesthetic.computer/disks/whistlegraph/${wg}/${wg}-tt-compilation.mp4"
-            type="video/mp4"
-          ></video>
-          <div class="card-cover"></div>
-          <div
-            class="card-outline"
-            style="border-color: ${whistlegraph.compilation.highlight}"
-          ></div>
         </div>
       </div>
     `;
@@ -658,9 +709,11 @@ function boot({
         pointer-events: none;
       }
 
+      /*
       #content .card-view:not(.active):not(.running) {
-        /*transition: 1s ease-out transform;*/
+        transition: 1s ease-out transform;
       }
+      */
 
       #card-deck-loading {
         position: absolute;
@@ -844,10 +897,15 @@ function boot({
       }
 
       /* Card types */
+      .card-view[data-type="activity"] .card iframe,
       .card-view[data-type="video"] .card video,
       .card-view[data-type="compilation"] .card video {
         object-fit: cover;
         pointer-events: none;
+      }
+
+      iframe.card-content {
+        border: none;
       }
 
       /* Contents inside each card */

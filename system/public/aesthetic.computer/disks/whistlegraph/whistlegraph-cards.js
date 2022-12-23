@@ -5,10 +5,11 @@ const { min, random, floor } = Math;
 const iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent);
 
 const deck = document.querySelector(".card-deck");
-const layerOrder = ["video", "score", "compilation"];
-const videos = document.querySelectorAll("#content .card-deck .card video");
 const cardViews = deck.querySelectorAll(".card-deck .card-view");
 const cards = deck.querySelectorAll(".card-deck .card-view .card");
+const layerOrder = [...cards].map((c) => c.dataset.type).reverse();
+
+const videos = document.querySelectorAll("#content .card-deck .card video");
 const loadingScreen = deck.querySelector("#card-deck-loading");
 const spinnerCtx = deck.querySelector("#spinner-canvas").getContext("2d");
 const spinnerImg = deck.querySelector("#spinner img");
@@ -17,7 +18,6 @@ const cardScale = 0.9;
 
 let pointerDown = false;
 let videosReady = 0;
-let allVideosReady = false;
 let multipleTouches = false;
 let activated = false;
 let deactivateTimeout;
@@ -29,9 +29,8 @@ videos.forEach((video) => {
   video.load();
   video.addEventListener("canplaythrough", () => {
     videosReady += 1;
-    if (videosReady === videos.length - 1) {
+    if (videosReady === videos.length) {
       // console.log("📹 Whistlegraph videos are ready to play!");
-      allVideosReady = true;
       setTimeout(() => {
         deck.classList.remove("loading");
         spinnerCtx.drawImage(spinnerImg, 0, 0);
@@ -129,6 +128,7 @@ deck.addEventListener("pointerup", (e) => {
   if (!e.isPrimary) return;
 
   const activeView = deck.querySelector(".card-view.active");
+
   if (!activeView) return; // Cancel if there are no 'active' cards.
 
   // Cancel if we didn't click on the actual card.
@@ -185,8 +185,8 @@ deck.addEventListener("pointerup", (e) => {
       }
     });
     return;
-  } else if (video) {
-    // Fade volume out.
+  } else if (video && cards.length > 1) {
+    // Or fade it out if it's already playing and not the only card.
     // console.log("Fading out volume on:", video);
     if (iOS) {
       video.muted = true;
@@ -203,9 +203,9 @@ deck.addEventListener("pointerup", (e) => {
     }
   }
 
-  // Fade in audio if it's necessary for the next layer.
+  // Fade in audio if it's necessary for the next layer, if it exists.
   const nextLayer = layers[layerOrder[1]];
-  const nextVideo = nextLayer.querySelector(".card video");
+  const nextVideo = nextLayer?.querySelector(".card video");
   if (nextVideo) {
     const nextCard = nextVideo.closest(".card");
     if (nextVideo.paused) {
@@ -244,10 +244,12 @@ deck.addEventListener("pointerup", (e) => {
   // 2. Animate the top one off the screen, after the press animation ends.
   // Note: For some reason adding a delay here helps prevent the animation from
   //       triggering too early.
+
   setTimeout(function () {
     activeView.addEventListener(
       "animationend",
       () => {
+        if (cards.length === 1) return; // Cancel all behaviors if there is only one card.
         const cardView = layers[layerOrder[0]];
         const card = cardView.querySelector(".card");
         layerOrder.push(layerOrder.shift()); // Move the 1st element to the end...
@@ -302,18 +304,22 @@ deck.addEventListener("pointerup", (e) => {
 
         // Remove the transform from the next cardView.
         const nextCardView = layers[layerOrder[0]];
-        const nextCard = nextCardView.querySelector(".card");
-        nextCard.style.transition = "0.3s ease-out transform";
-        nextCard.style.transform = "none";
+        const nextCard = nextCardView?.querySelector(".card");
 
-        nextCard.addEventListener(
-          "transitionend",
-          () => {
-            nextCardView.classList.add("active");
-            nextCard.style.transition = "";
-          },
-          { once: true }
-        );
+        if (nextCard) {
+          nextCard.style.transition = "0.3s ease-out transform";
+          nextCard.style.transform = "none";
+
+          nextCard.addEventListener(
+            "transitionend",
+            () => {
+              console.log("NEXT CARD VIEW", nextCardView);
+              nextCardView.classList.add("active");
+              nextCard.style.transition = "";
+            },
+            { once: true }
+          );
+        }
 
         cardView.classList.remove("active");
         card.classList.remove("running");
